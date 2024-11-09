@@ -1,4 +1,5 @@
 import type { FormatsCriteria, FormatsInstance } from "../formats";
+export type InputSchema = FormatsCriteria;
 export type SchemaTreeNodeFormat = {
     format: FormatsInstance;
 };
@@ -16,9 +17,8 @@ export type SchemaTreeNodeBranch = {
     branch: null;
 };
 export type SchemaTreeNode = SchemaTreeNodeFormat & SchemaTreeNodeBranch;
-export type InputSchema = FormatsCriteria;
 export type BuildedSchema = SchemaTreeNode;
-export interface CheckedSchema {
+export interface SchemaCheckerResult {
     error: {
         depth: number;
         code: string;

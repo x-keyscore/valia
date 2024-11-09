@@ -1,2 +1,2 @@
-import { BuildedSchema, CheckedSchema } from "./types";
-export declare function schemaChecker(input: unknown, node: BuildedSchema): CheckedSchema;
+import { BuildedSchema, SchemaCheckerResult } from "./types";
+export declare function schemaChecker(input: unknown, node: BuildedSchema): SchemaCheckerResult;
