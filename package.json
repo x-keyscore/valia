@@ -1,0 +1,20 @@
+{
+  "name": "vali.ts",
+  "version": "1.0.0",
+  "description": "Full-featured, high-performance validator",
+  "main": "./dist/index.js",
+  "scripts": {
+	"start": "tsc && node dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Validator",
+    "Checker",
+    "Typescript"
+  ],
+  "author": "XKeyscore",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^5.6.3"
+  }
+}

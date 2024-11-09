@@ -1,0 +1,10 @@
+import type { PlainObject, PlainFunction, AsyncFunction } from "./types";
+export declare function isObject(x: unknown): x is object;
+export declare function isPlainObject(x: unknown): x is PlainObject;
+export declare function isArray(x: unknown): x is unknown[];
+export declare function isPlainFunction(x: unknown): x is PlainFunction;
+export declare function isAsyncFunction(x: unknown): x is AsyncFunction;
+export declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
+export declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
+export declare function isGenerator(x: unknown): x is Generator;
+export declare function isAsyncGenerator(x: unknown): x is AsyncGenerator;
