@@ -1,25 +1,53 @@
-import type { FormatCheckerResult, FormatsCriteria, PredefinedCriteria } from "./types";
+import { SchemaMountTask, SchemaCheckTask } from "../schema/types";
+import type {
+	FormatsCriteria,
+	MountedCriteria,
+	PredefinedCriteria,
+	FormatCheckValueResult,
+} from "./types";
 
-const defaultCriteria = {
+export const isMountedSymbol = Symbol('isMounted');
+
+export function isAlreadyMounted(criteria: object): criteria is MountedCriteria<FormatsCriteria> {
+	if (criteria.hasOwnProperty(isMountedSymbol)) return (true);
+	return (false);
+}
+
+export const defaultCriteria = {
 	require: true
 }
 
-export abstract class AbstractFormat<DefinedCriteria extends FormatsCriteria> {
-	protected abstract readonly predefinedCriteria: PredefinedCriteria<DefinedCriteria>;
-	protected readonly definedCriteria: DefinedCriteria;
+export abstract class AbstractFormat<Criteria extends FormatsCriteria> {
+	protected readonly baseMountedCriteria: typeof defaultCriteria & PredefinedCriteria<Criteria>;
 
-	constructor(definedCriteria: DefinedCriteria) {
-		this.definedCriteria = definedCriteria;
+	constructor(predefinedCriteria: PredefinedCriteria<Criteria>) {
+		const obj = {};
+		Object.defineProperty(obj, isMountedSymbol, {
+			value: true,
+			writable: false,
+			enumerable: false,
+			configurable: false
+		});
+		this.baseMountedCriteria = Object.assign(obj, defaultCriteria, predefinedCriteria);
 	}
 
-	get criteria() {
-		return { ...defaultCriteria, ...this.predefinedCriteria, ...this.definedCriteria };
-	}
+	abstract mountCriteria(
+		definedCriteria: Criteria,
+		mountedCriteria: MountedCriteria<Criteria>
+	): MountedCriteria<Criteria>;
 
-	abstract checker(src: unknown): FormatCheckerResult;
+	abstract getMountingTasks(
+		definedCriteria: Criteria,
+		mountedCriteria: MountedCriteria<Criteria>
+	): SchemaMountTask[];
 
-	/*
-	public check(input: FormatInput<DefinedCriteria>) {
-		return this.checker(input)
-	}*/
+	abstract checkValue(
+		mountedCriteria: MountedCriteria<Criteria>,
+		value: unknown
+	): FormatCheckValueResult;
+
+	abstract getCheckingTasks(
+		mountedCriteria: MountedCriteria<Criteria>,
+		value: any
+	): SchemaCheckTask[];
 }

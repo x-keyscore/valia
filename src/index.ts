@@ -1,74 +1,130 @@
-
 import { Schema } from "./schema";
 
-const schemaEntry: Record<string, unknown> = {};
-for (let i = 1; i <= 110000; i++) {
-	schemaEntry[i.toString()] = {
-		empty: true,
-		type: "array",
-		array: [{ type: "string" }]
-	};
-}
+/*
 const schemaArray: Array<unknown> = [];
-for (let i = 1; i <= 100000; i++) {
+for (let i = 0; i <= 2500; i++) {
 	schemaArray[i] = { type: "string" };
 }
-console.log("start")
+
+const schemaEntry: Record<string, unknown> = {};
+for (let i = 0; i <= 2500; i++) {
+	schemaEntry[i.toString()] = {
+		require: false,
+		type: "tuple",
+		tuple: schemaArray
+	};
+}
+
 const userSchema = new Schema({
-	type: "record",
+	type: "struct",
 	label: "merde c'est ici",
-	record: {
+	struct: {
 		test_0: {
 			label: "c'est ici le probleme mec",
-			type: "record",
-			record: schemaEntry as any
+			type: "struct",
+			struct: schemaEntry as any
 		},
 		test_1: {
 			label: "ou la",
-			type: "record",
-			record: {
+			type: "struct",
+			struct: {
 				test_1_0: { type: "string" },
 				test_1_1: { type: "string" }
 			}
 		},
 		test_2: {
+			type: "tuple",
 			label: "ou ici",
-			type: "array",
-			array: [{ type: "string"}]
+			require: false,
+			tuple: [{ type: "string"}]
+		},
+		test_3: {
+			type: "record",
+			key: {
+				type: "string"
+			},
+			value: {
+				type: "string"
+			}
 		}
 	}
 })
 
+const inputArray: Array<unknown> = [];
+for (let i = 0; i <= 2500; i++) {
+	inputArray[i] = i.toString();
+}
+
+const inputEntry: Record<string, unknown> = {};
+for (let i = 0; i <= 2500; i++) {
+	inputEntry[i.toString()] = inputArray;
+}
+
 const input: unknown = {
-	test2: {
-		test2_1: "test1_1",
-		test2_2: "test1_2",
+	test_0: inputEntry,
+	test_1: {
+		test_1_0: "test1_1",
+		test_1_1: "test1_2",
 	}
 }
 
-console.log(userSchema.check(input))
-
-/*
-const stringArray = [];
-for (let i = 1; i <= 100000; i++) {
-    stringArray.push(`string${i}`);
-}
-//stringArray[10000] = 1;
-const input: unknown = {
-	test1: [...stringArray],
-	test2: {
-		test2_1: "test1_1",
-		test2_2: "test1_2",
-	}
-}
 const start = performance.now();
-
-if (user.check(input)) {
-	console.log(input.test1[0])
-}
-
+console.log(userSchema.check(input))
 const end = performance.now();
 const timeTaken = end - start;
-console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);*/
+console.log(`Schema check - Execution Time: ${timeTaken.toFixed(2)} ms`);
+*/
 
-while(true) {}
+const stringSchema = new Schema({
+	type: "number",
+	//kind: { name: "isAlpha", params: undefined }
+})
+const recordSchema = new Schema({
+	type: "record",
+	label: "root",
+	key: {
+		type: "string"
+	},
+	value: stringSchema.mountedCriteria
+})
+
+let test = {
+	test: "test"
+} as unknown;
+
+if (recordSchema.checkGuard(test)) {
+	
+}
+/*
+const recordSchema = new Schema({
+	type: "record",
+	label: "root",
+	key: {
+		type: "string"
+	},
+	value: stringSchema
+})
+
+const inputArray: Array<unknown> = [];
+for (let i = 0; i <= 5000; i++) {
+	inputArray[i] = i.toString();
+}
+
+const inputEntry: Record<string, unknown> = {};
+for (let i = 0; i <= 5000; i++) {
+	inputEntry[i.toString()] = inputArray;
+}
+
+const input = inputEntry
+
+const start = performance.now();
+if (recordSchema.checkGuard(input)) {
+	let tt = input.test
+}
+const end = performance.now();
+const timeTaken = end - start;
+console.log(`Schema check - Execution Time: ${timeTaken.toFixed(2)} ms`);
+while(true) {}*/
+
+
+

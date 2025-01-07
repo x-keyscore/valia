@@ -1,27 +1,22 @@
-import type { FormatsCriteria, FormatsInstance } from "../formats";
-export type InputSchema = FormatsCriteria;
-export type SchemaTreeNodeFormat = {
-    format: FormatsInstance;
-};
-export type SchemaTreeNodeBranch = {
-    branchType: "entry";
-    branch: Record<string, SchemaTreeNode>;
-} | {
-    branchType: "array";
-    branch: Array<SchemaTreeNode>;
-} | {
-    branchType: "onely";
-    branch: SchemaTreeNode;
-} | {
-    branchType: "empty";
-    branch: null;
-};
-export type SchemaTreeNode = SchemaTreeNodeFormat & SchemaTreeNodeBranch;
-export type BuildedSchema = SchemaTreeNode;
+import type { FormatsCriteria } from "../formats";
+import type { MountedCriteria } from "../formats/types";
+import { Schema } from "./Schema";
+export interface SchemaMountTask {
+    definedCriteria: FormatsCriteria;
+    mountedCriteria: MountedCriteria<FormatsCriteria>;
+}
+export interface SchemaCheckTask {
+    mountedCriteria: MountedCriteria<FormatsCriteria>;
+    value: any;
+}
 export interface SchemaCheckerResult {
     error: {
-        depth: number;
         code: string;
         label: string | undefined;
     } | null;
 }
+/** Important to avoid the type error: `is referenced directly or indirectly in its own type annotation` */
+type SchemaType = typeof Schema;
+export type SchemaInstance = InstanceType<SchemaType>;
+export type SchemaInstanceExtractCriteria<T extends FormatsCriteria | SchemaInstance> = T extends FormatsCriteria ? T : T extends SchemaInstance ? T['mountedCriteria'] : never;
+export {};

@@ -1,13 +1,26 @@
+export * as strings from './strings';
 export {
+	isDomain,
+	isPhone,
+	isAscii,
+	isEmail,
+	isAlpha,
+	isDigit,
+	isIp
+} from "./strings";
+
+export * as primitives from './primitives';
+export {
+	isBoolean,
 	isString,
 	isNumber,
-	isBoolean,
+	isBigint,
 	isSymbol,
 	isUndefined,
 	isNull,
-	isBigint
 } from "./primitives";
 
+export * as objects from './objects';
 export  {
 	isObject,
 	isPlainObject,
@@ -18,10 +31,12 @@ export  {
 	isAsyncGeneratorFunction,
 	isGenerator,
 	isAsyncGenerator
-} from "./auxiliaries";
+} from "./objects";
 
-export { hasTag } from "./utils";
+export * as tools from './tools';
+export { hasTag } from "./tools";
 
+export type * as types from './types';
 export type {
 	PrimitiveTypes,
 	StandardTags,

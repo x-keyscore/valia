@@ -1,10 +1,13 @@
-import type { ArrayContext, ArrayCriteria } from "./array/array";
-import type { NumberCriteria, NumberContext } from "./number/number";
-import type { RecordCriteria, RecordContext } from "./record/record";
-import type { StringCriteria, StringContext } from "./string/string";
+import type { TupleCriteria, TupleContext } from "./tuple/types";
+import type { StructCriteria, StructContext } from "./struct/types";
+import type { NumberCriteria, NumberContext } from "./number/types";
+import type { StringCriteria, StringContext } from "./string/types";
+import { defaultCriteria } from "./AbstractFormat";
 import { formats } from "./formats";
-
-type ConstructorFirstArgType<T> = T extends new (first: infer F, ...args: any[]) => any ? F : never;
+import { ArrayContext, ArrayCriteria } from "./array/types";
+import { RecordContext, RecordCriteria } from "./record/types";
+import { BooleanContext, BooleanCriteria } from "./boolean/types";
+import { SymbolContext, SymbolCriteria } from "./symbol/types";
 
 // FORMAT Criteria
 
@@ -20,6 +23,11 @@ export interface TemplateCriteria<T extends string> {
 	label?: string;
 }
 
+export type PredefinedCriteria<T extends FormatsCriteria> = FormatsContextByCriteria<T>['predefinedCriteria']
+
+export type MountedCriteria<T extends FormatsCriteria> =
+	typeof defaultCriteria & PredefinedCriteria<T> & T & FormatsContextByCriteria<T>['mountedCriteria']
+
 // FORMAT Context
 
 /**
@@ -30,51 +38,61 @@ export interface TemplateCriteria<T extends string> {
 export type TemplateContext<
 	T extends FormatsCriteria,
 	U,
-	V extends Exclude<keyof T, keyof TemplateCriteria<T['type']>> = never
+	V extends Partial<T>,
+	W
 > = {
 	type: T['type'];
 	guard: U;
-	predefinedCriteria: Required<Pick<T, V>>;
+	predefinedCriteria: V;
+	mountedCriteria: W
 }
 
+// FORMAT
+
+export interface FormatCheckValueResult {
+	error: {
+		code: string;
+	} | null;
+}
+
+// FORMATS
+
+export type Formats = typeof formats[keyof typeof formats];
+
+export type FormatsInstances = InstanceType<Formats>;
+
+export type FormatsCriteria =
+	| ArrayCriteria
+	| TupleCriteria
+	| RecordCriteria
+	| StructCriteria
+	| NumberCriteria
+	| StringCriteria
+	| SymbolCriteria
+	| BooleanCriteria
+
+export type FormatsCriteriaMap = {
+	[T in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: T }>
+};
+
 export type FormatsContext<T extends FormatsCriteria> =
-	| RecordContext<T>
 	| ArrayContext<T>
+	| TupleContext<T>
+	| RecordContext<T>
+	| StructContext<T>
+	| NumberContext
 	| StringContext
-	| NumberContext;
+	| SymbolContext
+	| BooleanContext;
 
 export type FormatsContextByCriteria<T extends FormatsCriteria> = {
 	[U in FormatsContext<T>['type']]: Extract<FormatsContext<T>, { type: U }>
 }[T['type']];
 
-// FORMAT Predefinable Criteria
+type DiscernFormatsGuard<T extends FormatsCriteria> = FormatsContextByCriteria<T>['guard'];
 
-export type PredefinedCriteria<T extends FormatsCriteria> = NonNullable<FormatsContextByCriteria<T>['predefinedCriteria']>;
-
-// FORMAT
-
-export interface FormatCheckerResult {
-	error: {
-		code: string;
-	} | null
-}
-
-export type Formats = typeof formats[keyof typeof formats];
-
-export type FormatsInstance = InstanceType<Formats>;
-
-export type FormatsCriteria = ConstructorFirstArgType<Formats>
-
-export type FormatsCriteriaTypeMap = {
-	[T in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: T }>
-};
-
-// FORMAT Guard
-
-type FormatGuardDiscern<T extends FormatsCriteria> = FormatsContextByCriteria<T>['guard'];
-
-export type FormatGuard<T extends FormatsCriteria> =
+export type FormatsGuard<T extends FormatsCriteria> =
 	T['require'] extends false
-		? FormatGuardDiscern<T> | undefined
-		: NonNullable<FormatGuardDiscern<T>>;
+		? DiscernFormatsGuard<T> | undefined
+		: NonNullable<DiscernFormatsGuard<T>>;
 

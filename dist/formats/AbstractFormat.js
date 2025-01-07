@@ -1,16 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractFormat = void 0;
-const defaultCriteria = {
+exports.AbstractFormat = exports.defaultCriteria = void 0;
+exports.defaultCriteria = {
     require: true
 };
 class AbstractFormat {
-    definedCriteria;
-    constructor(definedCriteria) {
-        this.definedCriteria = definedCriteria;
-    }
-    get criteria() {
-        return { ...defaultCriteria, ...this.predefinedCriteria, ...this.definedCriteria };
+    baseCriteria;
+    constructor(predefinedCriteria) {
+        this.baseCriteria = Object.assign({}, exports.defaultCriteria, predefinedCriteria);
     }
 }
 exports.AbstractFormat = AbstractFormat;

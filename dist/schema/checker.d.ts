@@ -1,2 +1,3 @@
-import { BuildedSchema, SchemaCheckerResult } from "./types";
-export declare function schemaChecker(input: unknown, node: BuildedSchema): SchemaCheckerResult;
+import { FormatsCriteria, MountedCriteria } from "../formats";
+import { SchemaCheckerResult } from "./types";
+export declare function schemaChecker(mountedCriteria: MountedCriteria<FormatsCriteria>, value: unknown): SchemaCheckerResult;

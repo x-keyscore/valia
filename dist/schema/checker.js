@@ -1,56 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.schemaChecker = schemaChecker;
-function checkFormat(task) {
-    return (task.node.format.checker(task.value));
+const formats_1 = require("../formats");
+function processTask(task) {
+    const format = formats_1.formatsInstances[task.mountedCriteria.type];
+    const checkResult = format.checkValue(task.mountedCriteria, task.value);
+    const checkTasks = format.getCheckingTasks(task.mountedCriteria, task.value);
+    return ({ checkResult, checkTasks });
 }
-function extractTasks(task) {
-    const { node: { branchType, branch }, value, depth } = task;
-    const queue = [];
-    if (!value || !branch)
-        return (queue);
-    let newDepth = depth + 1;
-    if (branchType === "entry") {
-        for (const key in value) {
-            queue.push({
-                node: branch[key],
-                value: value[key],
-                depth: newDepth
-            });
-        }
-    }
-    else if (branchType === "array") {
-        for (const item of value) {
-            queue.push({
-                node: branch[0],
-                value: item,
-                depth: newDepth
-            });
-        }
-    }
-    else {
-        throw new Error("'next' could not be processed, because it does not meet the expected type.");
-    }
-    return (queue);
-}
-function schemaChecker(input, node) {
-    let queue = [{ node, value: input, depth: 0 }];
+function schemaChecker(mountedCriteria, value) {
+    let queue = [{ mountedCriteria, value }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const checkResult = checkFormat(currentTask);
+        const { checkResult, checkTasks } = processTask(currentTask);
         if (checkResult.error) {
             return ({
                 error: {
-                    depth: currentTask.depth,
-                    code: checkResult.error?.code || "UNKNOWN",
-                    label: currentTask.node.format.criteria.label || undefined
+                    code: checkResult.error.code,
+                    label: currentTask.mountedCriteria.label
                 }
             });
         }
-        const tasks = extractTasks(currentTask);
-        if (tasks.length) {
-            queue.push(...tasks);
-        }
+        queue.push(...checkTasks);
     }
     return ({
         error: null

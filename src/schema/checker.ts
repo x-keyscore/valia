@@ -1,66 +1,36 @@
-import { FormatCheckerResult } from "../formats";
-import { BuildedSchema, SchemaCheckerResult } from "./types";
+import { FormatsCriteria, MountedCriteria, formatsInstances } from "../formats";
+import { SchemaCheckTask, SchemaCheckerResult } from "./types";
 
-interface Task {
-	node: BuildedSchema;
-	value: any;
-	depth: number;
+function processTask(task: SchemaCheckTask) {
+	const format = formatsInstances[task.mountedCriteria.type];
+
+	const checkResult = format.checkValue(task.mountedCriteria as any, task.value);
+	const checkingTasks = format.getCheckingTasks(task.mountedCriteria as any, task.value);
+
+	return ({ checkResult, checkingTasks });
 }
 
-function checkFormat(task: Task): FormatCheckerResult {
-	return (task.node.format.checker(task.value));
-}
-
-function extractTasks(task: Task): Task[] {
-	const { node: { branchType, branch }, value, depth } = task;
-	const queue: Task[] = [];
-
-	if (!value || !branch) return (queue);
-
-	let newDepth = depth + 1;
-	if (branchType === "entry") {
-		for (const key in value) {
-			queue.push({
-				node: branch[key],
-				value: value[key],
-				depth: newDepth
-			});
-		}
-	} else if (branchType === "array") {
-		for (const item of value) {
-			queue.push({
-				node: branch[0],
-				value: item,
-				depth: newDepth
-			});
-		}
-	} else {
-		throw new Error("'next' could not be processed, because it does not meet the expected type.");
-	}
-	return (queue);
-}
-
-export function schemaChecker(input: unknown, node: BuildedSchema): SchemaCheckerResult {
-	let queue: Task[] = [{ node, value: input, depth: 0 }];
+export function schemaChecker(
+	mountedCriteria: MountedCriteria<FormatsCriteria>,
+	value: unknown
+): SchemaCheckerResult {
+	let queue: SchemaCheckTask[] = [{ mountedCriteria, value }];
 
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
-		const checkResult = checkFormat(currentTask);
+		const { checkResult, checkingTasks } = processTask(currentTask);
+
 		if (checkResult.error) {
 			return ({
 				error: {
-					depth: currentTask.depth,
-					code: checkResult.error?.code || "UNKNOWN",
-					label: currentTask.node.format.criteria.label || undefined
+					code: checkResult.error.code,
+					label: currentTask.mountedCriteria.label
 				}
 			});
 		}
 
-		const tasks = extractTasks(currentTask);
-		if (tasks.length) {
-			queue.push(...tasks);
-		}
+		queue.push(...checkingTasks);
 	}
 	return ({
 		error: null

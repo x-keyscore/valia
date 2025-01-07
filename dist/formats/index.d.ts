@@ -1,3 +1,3 @@
-export type { FormatsCriteria, FormatsCriteriaTypeMap, FormatsInstance, FormatCheckerResult, FormatGuard } from './types';
+export type { FormatsCriteria, FormatsCriteriaMap, FormatsInstances, FormatsGuard, MountedCriteria } from './types';
 export { AbstractFormat } from './AbstractFormat';
-export { formats } from './formats';
+export { formats, formatsInstances } from './formats';

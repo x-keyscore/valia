@@ -1,9 +1,9 @@
 export type {
 	FormatsCriteria,
-	FormatsCriteriaTypeMap,
-	FormatsInstance,
-	FormatCheckerResult,
-	FormatGuard
-} from './types'
-export { AbstractFormat } from './AbstractFormat'
-export { formats } from './formats'
+	FormatsCriteriaMap,
+	FormatsInstances,
+	FormatsGuard,
+	MountedCriteria
+} from './types';
+export { AbstractFormat } from './AbstractFormat';
+export { formats, formatsInstances } from './formats';

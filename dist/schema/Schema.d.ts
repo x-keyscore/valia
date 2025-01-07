@@ -1,8 +1,12 @@
-import type { InputSchema, BuildedSchema } from "./types";
-import { FormatGuard } from "../formats";
-export declare class Schema<DefinedSchema extends InputSchema> {
-    readonly defined: DefinedSchema;
-    readonly builded: BuildedSchema;
-    constructor(inputSchema: DefinedSchema);
-    check(input: unknown): input is FormatGuard<DefinedSchema>;
+import type { FormatsCriteria, FormatsGuard, MountedCriteria } from "../formats";
+import type { SchemaInstance } from "./types";
+export declare class Schema<DefinedCriteria extends FormatsCriteria> {
+    readonly mountedCriteria: MountedCriteria<DefinedCriteria>;
+    constructor(definedCriteria: DefinedCriteria);
+    checkGuard(value: unknown): value is FormatsGuard<DefinedCriteria>;
+    checkError(value: unknown): {
+        code: string;
+        label: string | undefined;
+    } | null;
 }
+export declare function isSchemaInstance(x: unknown): x is SchemaInstance;

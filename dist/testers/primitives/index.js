@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNull = exports.isUndefined = exports.isSymbol = exports.isBigint = exports.isNumber = exports.isBoolean = exports.isString = void 0;
+var primitives_1 = require("./primitives");
+Object.defineProperty(exports, "isString", { enumerable: true, get: function () { return primitives_1.isString; } });
+Object.defineProperty(exports, "isBoolean", { enumerable: true, get: function () { return primitives_1.isBoolean; } });
+Object.defineProperty(exports, "isNumber", { enumerable: true, get: function () { return primitives_1.isNumber; } });
+Object.defineProperty(exports, "isBigint", { enumerable: true, get: function () { return primitives_1.isBigint; } });
+Object.defineProperty(exports, "isSymbol", { enumerable: true, get: function () { return primitives_1.isSymbol; } });
+Object.defineProperty(exports, "isUndefined", { enumerable: true, get: function () { return primitives_1.isUndefined; } });
+Object.defineProperty(exports, "isNull", { enumerable: true, get: function () { return primitives_1.isNull; } });
