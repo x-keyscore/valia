@@ -1,10 +1,13 @@
 import type { SchemaCheckTask, SchemaMountTask } from "../../schema/types";
-import type { FormatCheckValueResult, MountedCriteria } from "../types";
+import type { FormatCheckEntry, MountedCriteria } from "../types";
 import type { StringCriteria } from "./types";
 import { AbstractFormat } from "../AbstractFormat";
-import { isString, strings } from "../../testers";
+import { isString } from "../../testers";
+import { testers } from "../../";
 
 export class StringFormat<Criteria extends StringCriteria> extends AbstractFormat<Criteria> {
+	public type: Criteria["type"] = "string";
+
 	constructor() {
 		super({
 			empty: true,
@@ -26,59 +29,45 @@ export class StringFormat<Criteria extends StringCriteria> extends AbstractForma
 		return ([]);
 	}
 
-	checkValue(
+	checkEntry(
 		mountedCriteria: MountedCriteria<Criteria>,
-		value: unknown
-	): FormatCheckValueResult {
+		entry: unknown
+	): FormatCheckEntry {
 		const criteria = mountedCriteria;
 	
-		if (value === undefined) {
-			return {
-				error: !criteria.require ? null : { code: "STRING_IS_UNDEFINED" }
-			}
+		if (entry === undefined) {
+			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
 		}
-		else if (!isString(value)) {
-			return {
-				error: { code: "STRING_NOT_STRING" }
-			};
+		else if (!isString(entry)) {
+			return ("REJECT_TYPE_NOT_STRING");
 		}
 
-		let str = value;
+		let str = entry;
 		if (criteria.trim) str = str.trim();
 
 		if (!str.length) {
-			return {
-				error: criteria.empty ? null : { code: "STRING_IS_EMPTY" }
-			}
+			return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
 		}
 		else if (criteria.min !== undefined && str.length < criteria.min) {
-			return {
-				error: { code: "STRING_TOO_SHORT" }
-			}
+			return ("REJECT_VALUE_TOO_SHORT");
 		}
 		else if (criteria.max !== undefined && str.length > criteria.max) {
-			return {
-				error: { code: "STRING_TOO_LONG" }
-			}
+			return ("REJECT_VALUE_TOO_LONG");
 		}
-		else if (criteria.accept !== undefined && !criteria.accept.test(str)) {
-			return {
-				error: { code: "STRING_NOT_RESPECT_REGEX" }
-			}
-		} else if (criteria.kind && !strings[criteria.kind.name](str, criteria.kind.params as any)) {
-			return {
-				error: { code: "STRING_NOT_RESPECT_KIND" }
-			}
+		else if (criteria.regex !== undefined && !criteria.regex.test(str)) {
+			return ("REJECT_TEST_REGEX");
+		} else if (criteria.test && !testers.string[criteria.test.name](str, criteria.test?.params as any)) {
+			return ("REJECT_TEST_STRING");
+		} else if (criteria.custom && !criteria.custom(str)) {
+			return ("REJECT_TEST_CUSTOM");
 		}
 
-		return {
-			error: null
-		}
+		return null;
 	}
 
 	getCheckingTasks(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: any
+		criteria: MountedCriteria<Criteria>,
+		entry: any
 	): SchemaCheckTask[] {
 		return ([]);
 	}

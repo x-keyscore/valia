@@ -8,9 +8,10 @@ class ArrayFormat extends AbstractFormat_1.AbstractFormat {
         super({
             empty: true
         });
+        this.type = "array";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         let buildTasks = [{
@@ -19,47 +20,33 @@ class ArrayFormat extends AbstractFormat_1.AbstractFormat {
             }];
         return (buildTasks);
     }
-    checkValue(mountedCriteria, value) {
-        const criteria = mountedCriteria;
-        if (value === undefined) {
-            const isCompliant = !criteria.require;
-            return {
-                error: isCompliant ? null : { code: "ARRAY_IS_UNDEFINED" }
-            };
+    checkEntry(criteria, entry) {
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isObject)(value)) {
-            return {
-                error: { code: "ARRAY_NOT_OBJECT" }
-            };
+        else if (!(0, testers_1.isObject)(entry)) {
+            return ("REJECT_TYPE_NOT_OBJECT");
         }
-        else if (!(0, testers_1.isArray)(value)) {
-            return {
-                error: { code: "ARRAY_NOT_ARRAY" }
-            };
+        else if (!(0, testers_1.isArray)(entry)) {
+            return ("REJECT_TYPE_NOT_ARRAY");
         }
-        else if (!value.length) {
-            return {
-                error: criteria.empty ? null : { code: "ARRAY_IS_EMPTY" }
-            };
+        else if (!entry.length) {
+            return ("REJECT_VALUE_EMPTY");
         }
-        else if (criteria.min !== undefined && value.length < criteria.min) {
-            return {
-                error: { code: "ARRAY_INFERIOR_MIN_LENGTH" }
-            };
+        else if (criteria.min !== undefined && entry.length < criteria.min) {
+            return ("REJECT_VALUE_INFERIOR_MIN");
         }
-        else if (criteria.max !== undefined && value.length > criteria.max) {
-            return {
-                error: { code: "ARRAY_SUPERIOR_MAX_LENGTH" }
-            };
+        else if (criteria.max !== undefined && entry.length > criteria.max) {
+            return ("REJECT_VALUE_SUPERIOR_MAX");
         }
-        return { error: null };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         let checkTasks = [];
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i < entry.length; i++) {
             checkTasks.push({
-                mountedCriteria: mountedCriteria.item,
-                value: value[i]
+                criteria: criteria.item,
+                entry: entry[i]
             });
         }
         return (checkTasks);

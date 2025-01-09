@@ -1,10 +1,12 @@
 import type { SchemaMountTask, SchemaCheckTask } from "../../schema/types";
-import type { MountedCriteria, FormatCheckValueResult } from "../types";
+import type { MountedCriteria, FormatCheckEntry } from "../types";
 import type { TupleCriteria } from "./types";
 import { isArray, isObject } from "../../testers";
 import { AbstractFormat } from "../AbstractFormat";
 
 export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<Criteria> {
+	public type: Criteria["type"] = "tuple";
+
 	constructor() {
 		super({
 			empty: false
@@ -34,68 +36,52 @@ export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<
 		return (buildTasks);
 	}
 
-	checkValue(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: unknown
-	): FormatCheckValueResult {
-		const criteria = mountedCriteria;
+	checkEntry(
+		criteria: MountedCriteria<Criteria>,
+		entry: unknown
+	): FormatCheckEntry {
+		if (entry === undefined) {
+			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+		}
+		else if (!isObject(entry)) {
+			return ("REJECT_TYPE_NOT_OBJECT");
+		}
+		else if (!isArray(entry)) {
+			return ("REJECT_TYPE_NOT_ARRAY");
+		}
 
-		if (value === undefined) {
-			const isCompliant = !criteria.require;
-			return {
-				error: isCompliant ? null : { code: "TUPLE_IS_UNDEFINED" }
-			}
+		const entryLength = entry.length 
+
+		if (!entryLength) {
+			return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
 		}
-		else if (!isObject(value)) {
-			return {
-				error: { code: "TUPLE_NOT_OBJECT" }
-			}
+		else if (criteria.min !== undefined && entryLength < criteria.min) {
+			return ("REJECT_VALUE_INFERIOR_MIN");
 		}
-		else if (!isArray(value)) {
-			return {
-				error: { code: "TUPLE_NOT_ARRAY" }
-			}
-		}
-		else if (!value.length) {
-			return {
-				error: criteria.empty ? null : { code: "TUPLE_IS_EMPTY" }
-			}
-		}
-		else if (criteria.min !== undefined && value.length < criteria.min) {
-			return {
-				error: { code: "TUPLE_INFERIOR_MIN_LENGTH" }
-			}
-		}
-		else if (criteria.max !== undefined && value.length > criteria.max) {
-			return {
-				error: { code: "TUPLE_SUPERIOR_MAX_LENGTH" }
-			}
+		else if (criteria.max !== undefined && entryLength > criteria.max) {
+			return ("REJECT_VALUE_SUPERIOR_MAX");
 		}
 		else if (criteria.min === undefined && criteria.max === undefined) {
-			if (value.length < criteria.tuple.length) {
-				return {
-					error: { code: "TUPLE_INFERIOR_TUPLE_LENGTH" }
-				}
+			if (entryLength < criteria.tuple.length) {
+				return ("REJECT_VALUE_INFERIOR_TUPLE");
 			}
-		} else if (value.length > criteria.tuple.length) {
-			return {
-				error: { code: "TUPLE_SUPERIOR_TUPLE_LENGTH" }
-			}
+		} else if (entryLength > criteria.tuple.length) {
+			return ("REJECT_VALUE_SUPERIOR_TUPLE");
 		}
 
-		return { error: null }
+		return (null);
 	}
 
 	getCheckingTasks(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: any
+		criteria: MountedCriteria<Criteria>,
+		entry: any
 	): SchemaCheckTask[] {
 		let checkTasks: SchemaCheckTask[] = [];
 
-		for (let i = 0; i < value.length; i++) {
+		for (let i = 0; i < entry.length; i++) {
 			checkTasks.push({
-				mountedCriteria: mountedCriteria.tuple[i],
-				value: value[i]
+				criteria: criteria.tuple[i],
+				entry: entry[i]
 			});
 		}
 

@@ -1,2 +1,2 @@
-export type { SchemaInstance, SchemaInstanceExtractCriteria } from "./types";
-export { Schema, isSchemaInstance } from "./Schema";
+export type { SchemaCheckReject } from "./types";
+export { Schema } from "./Schema";

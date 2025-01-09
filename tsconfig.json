@@ -1,18 +1,16 @@
 {
 	"compilerOptions": {
-		"noErrorTruncation": true,
-
-		"target": "ES2023",
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
-		"module": "NodeNext",
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
+		"outDir": "./dist",
+		"target": "ES2015",
 		"strict": true,
-		"declaration": true,
+		"module": "NodeNext",
 		"skipLibCheck": true,
-		"outDir": "./dist"
+		"esModuleInterop": true,
+		"noErrorTruncation": true,
+		"forceConsistentCasingInFileNames": true,
+		"declaration": true,
+		//"declarationMap": true,
 	},
 	"include": ["src"],
-    "exclude": ["**/node_modules", "**/.*/"],
+    "exclude": ["**/node_modules", "**/.*/"]
 }

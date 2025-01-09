@@ -9,48 +9,30 @@ class NumberFormat extends AbstractFormat_1.AbstractFormat {
             empty: true,
             trim: true
         });
+        this.type = "number";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         return ([]);
     }
-    checkValue(mountedCriteria, value) {
-        const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "NUMBER_IS_UNDEFINED" }
-            };
+    checkEntry(criteria, entry) {
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isNumber)(value)) {
-            return {
-                error: { code: "NUMBER_NOT_NUMBER" }
-            };
+        else if (!(0, testers_1.isNumber)(entry)) {
+            return ("REJECT_TYPE_NOT_NUMBER");
         }
-        else if (criteria.min !== undefined && value < criteria.min) {
-            return {
-                error: { code: "NUMBER_TOO_SMALL" }
-            };
+        else if (criteria.min !== undefined && entry < criteria.min) {
+            return ("REJECT_VALUE_TOO_SMALL");
         }
-        else if (criteria.max !== undefined && value > criteria.max) {
-            return {
-                error: { code: "NUMBER_TOO_BIG" }
-            };
+        else if (criteria.max !== undefined && entry > criteria.max) {
+            return ("REJECT_VALUE_TOO_BIG");
         }
-        else if (criteria.accept !== undefined) {
-            let string = value.toString();
-            if (!criteria.accept.test(string)) {
-                return {
-                    error: { code: "NUMBER_NOT_RESPECT_REGEX" }
-                };
-            }
-        }
-        return {
-            error: null
-        };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         return ([]);
     }
 }

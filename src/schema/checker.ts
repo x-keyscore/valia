@@ -1,38 +1,40 @@
 import { FormatsCriteria, MountedCriteria, formatsInstances } from "../formats";
-import { SchemaCheckTask, SchemaCheckerResult } from "./types";
+import { SchemaCheckTask, SchemaCheckReject } from "./types";
 
 function processTask(task: SchemaCheckTask) {
-	const format = formatsInstances[task.mountedCriteria.type];
+	const format = formatsInstances[task.criteria.type];
 
-	const checkResult = format.checkValue(task.mountedCriteria as any, task.value);
-	const checkingTasks = format.getCheckingTasks(task.mountedCriteria as any, task.value);
+	const rejectCode = format.checkEntry(task.criteria as any, task.entry);
+	const checkingTasks = format.getCheckingTasks(task.criteria as any, task.entry);
 
-	return ({ checkResult, checkingTasks });
+	return ({
+		rejectCode,
+		checkingTasks
+	});
 }
 
 export function schemaChecker(
-	mountedCriteria: MountedCriteria<FormatsCriteria>,
-	value: unknown
-): SchemaCheckerResult {
-	let queue: SchemaCheckTask[] = [{ mountedCriteria, value }];
+	criteria: MountedCriteria<FormatsCriteria>,
+	entry: unknown
+): SchemaCheckReject | null {
+	let queue: SchemaCheckTask[] = [{ criteria, entry }];
 
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
-		const { checkResult, checkingTasks } = processTask(currentTask);
+		const { rejectCode, checkingTasks } = processTask(currentTask);
 
-		if (checkResult.error) {
+		if (rejectCode) {
 			return ({
-				error: {
-					code: checkResult.error.code,
-					label: currentTask.mountedCriteria.label
-				}
+				code: rejectCode,
+				type: currentTask.criteria.type,
+				label: currentTask.criteria.label,
+				message: currentTask.criteria.message
 			});
 		}
 
 		queue.push(...checkingTasks);
 	}
-	return ({
-		error: null
-	});
+
+	return (null);
 };

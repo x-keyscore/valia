@@ -3,15 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecordFormat = void 0;
 const testers_1 = require("../../testers");
 const AbstractFormat_1 = require("../AbstractFormat");
-const schema_1 = require("../../schema");
 class RecordFormat extends AbstractFormat_1.AbstractFormat {
     constructor() {
         super({
             empty: false
         });
+        this.type = "record";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         let buildTasks = [];
@@ -19,8 +19,8 @@ class RecordFormat extends AbstractFormat_1.AbstractFormat {
             definedCriteria: definedCriteria.key,
             mountedCriteria: mountedCriteria.key
         });
-        if ((0, schema_1.isSchemaInstance)(definedCriteria.value)) {
-            mountedCriteria.value = definedCriteria.value.mountedCriteria;
+        if ((0, AbstractFormat_1.isAlreadyMounted)(definedCriteria.value)) {
+            mountedCriteria.value = definedCriteria.value;
         }
         else {
             buildTasks.push({
@@ -33,55 +33,40 @@ class RecordFormat extends AbstractFormat_1.AbstractFormat {
     objectLength(obj) {
         return (Object.keys(obj).length + Object.getOwnPropertySymbols(obj).length);
     }
-    checkValue(mountedCriteria, value) {
-        const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "RECORD_IS_UNDEFINED" }
-            };
+    checkEntry(criteria, entry) {
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isObject)(value)) {
-            return {
-                error: { code: "RECORD_NOT_OBJECT" }
-            };
+        else if (!(0, testers_1.isObject)(entry)) {
+            return ("REJECT_TYPE_NOT_OBJECT");
         }
-        else if (!(0, testers_1.isPlainObject)(value)) {
-            return {
-                error: { code: "RECORD_NOT_PLAIN_OBJECT" }
-            };
+        else if (!(0, testers_1.isPlainObject)(entry)) {
+            return ("REJECT_TYPE_NOT_PLAIN_OBJECT");
         }
-        const valueLength = this.objectLength(value);
-        if (valueLength === 0) {
-            return {
-                error: criteria.empty ? null : { code: "RECORD_IS_EMPTY" }
-            };
+        const numberKeys = Object.keys(entry).length;
+        if (numberKeys === 0) {
+            return ("REJECT_VALUE_EMPTY");
         }
-        else if (criteria.min !== undefined && valueLength < criteria.min) {
-            return {
-                error: { code: "RECORD_INFERIOR_MIN_LENGTH" }
-            };
+        else if (criteria.min !== undefined && numberKeys < criteria.min) {
+            return ("REJECT_VALUE_INFERIOR_MIN");
         }
-        else if (criteria.max !== undefined && valueLength > criteria.max) {
-            return {
-                error: { code: "RECORD_SUPERIOR_MAX_LENGTH" }
-            };
+        else if (criteria.max !== undefined && numberKeys > criteria.max) {
+            return ("REJECT_VALUE_SUPERIOR_MAX");
         }
-        return {
-            error: null
-        };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         let checkTasks = [];
-        const keys = Object.keys(value);
+        const keys = Object.keys(entry);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             checkTasks.push({
-                mountedCriteria: mountedCriteria.key,
-                value: key
+                criteria: criteria.key,
+                entry: key
             });
             checkTasks.push({
-                mountedCriteria: mountedCriteria.value,
-                value: value[key]
+                criteria: criteria.value,
+                entry: entry[key]
             });
         }
         return (checkTasks);

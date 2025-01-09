@@ -1,10 +1,12 @@
 import type { SchemaCheckTask, SchemaMountTask } from "../../schema/types";
-import type { FormatCheckValueResult, MountedCriteria } from "../types";
+import type { FormatCheckEntry, MountedCriteria } from "../types";
 import type { NumberCriteria } from "./types";
 import { isNumber } from "../../testers";
 import { AbstractFormat } from "../AbstractFormat";
 
 export class NumberFormat<Criteria extends NumberCriteria> extends AbstractFormat<Criteria> {
+	public type: Criteria["type"] = "number";
+
 	constructor() {
 		super({
 			empty: true,
@@ -26,49 +28,29 @@ export class NumberFormat<Criteria extends NumberCriteria> extends AbstractForma
 		return ([]);
 	}
 	
-	checkValue(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: unknown
-	): FormatCheckValueResult {
-		const criteria = mountedCriteria;
+	checkEntry(
+		criteria: MountedCriteria<Criteria>,
+		entry: unknown
+	): FormatCheckEntry {
+		if (entry === undefined) {
+			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+		}
+		else if (!isNumber(entry)) {
+			return ("REJECT_TYPE_NOT_NUMBER");
+		}
+		else if (criteria.min !== undefined && entry < criteria.min) {
+			return ("REJECT_VALUE_TOO_SMALL");
+		}
+		else if (criteria.max !== undefined && entry > criteria.max) {
+			return ("REJECT_VALUE_TOO_BIG");
+		}
 
-		if (value === undefined) {
-			return {
-				error: !criteria.require ? null : { code: "NUMBER_IS_UNDEFINED" }
-			}
-		}
-		else if (!isNumber(value)) {
-			return {
-				error: { code: "NUMBER_NOT_NUMBER" }
-			};
-		}
-		else if (criteria.min !== undefined && value < criteria.min) {
-			return {
-				error: { code: "NUMBER_TOO_SMALL" }
-			}
-		}
-		else if (criteria.max !== undefined && value > criteria.max) {
-			return {
-				error: { code: "NUMBER_TOO_BIG" }
-			}
-		}
-		else if (criteria.accept !== undefined) {
-			let string = value.toString();
-
-			if (!criteria.accept.test(string)) {
-				return {
-					error: { code: "NUMBER_NOT_RESPECT_REGEX" }
-				}
-			}
-		}
-		return {
-			error: null
-		}
+		return (null);
 	}
 
 	getCheckingTasks(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: any
+		criteria: MountedCriteria<Criteria>,
+		entry: any
 	): SchemaCheckTask[] {
 		return ([]);
 	}

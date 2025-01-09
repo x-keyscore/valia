@@ -3,28 +3,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.schemaChecker = schemaChecker;
 const formats_1 = require("../formats");
 function processTask(task) {
-    const format = formats_1.formatsInstances[task.mountedCriteria.type];
-    const checkResult = format.checkValue(task.mountedCriteria, task.value);
-    const checkTasks = format.getCheckingTasks(task.mountedCriteria, task.value);
-    return ({ checkResult, checkTasks });
+    const format = formats_1.formatsInstances[task.criteria.type];
+    const rejectCode = format.checkEntry(task.criteria, task.entry);
+    const checkingTasks = format.getCheckingTasks(task.criteria, task.entry);
+    return ({
+        rejectCode,
+        checkingTasks
+    });
 }
-function schemaChecker(mountedCriteria, value) {
-    let queue = [{ mountedCriteria, value }];
+function schemaChecker(criteria, entry) {
+    let queue = [{ criteria, entry }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const { checkResult, checkTasks } = processTask(currentTask);
-        if (checkResult.error) {
+        const { rejectCode, checkingTasks } = processTask(currentTask);
+        if (rejectCode) {
             return ({
-                error: {
-                    code: checkResult.error.code,
-                    label: currentTask.mountedCriteria.label
-                }
+                code: rejectCode,
+                type: currentTask.criteria.type,
+                label: currentTask.criteria.label,
+                message: currentTask.criteria.message
             });
         }
-        queue.push(...checkTasks);
+        queue.push(...checkingTasks);
     }
-    return ({
-        error: null
-    });
+    return (null);
 }
 ;

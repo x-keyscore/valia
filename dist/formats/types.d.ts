@@ -2,7 +2,7 @@ import type { TupleCriteria, TupleContext } from "./tuple/types";
 import type { StructCriteria, StructContext } from "./struct/types";
 import type { NumberCriteria, NumberContext } from "./number/types";
 import type { StringCriteria, StringContext } from "./string/types";
-import { defaultCriteria } from "./AbstractFormat";
+import { globalCriteria } from "./AbstractFormat";
 import { formats } from "./formats";
 import { ArrayContext, ArrayCriteria } from "./array/types";
 import { RecordContext, RecordCriteria } from "./record/types";
@@ -13,14 +13,15 @@ import { SymbolContext, SymbolCriteria } from "./symbol/types";
  */
 export interface TemplateCriteria<T extends string> {
     type: T;
+    label?: string;
+    message?: string;
     /**
      * @default true
      */
     require?: boolean;
-    label?: string;
 }
 export type PredefinedCriteria<T extends FormatsCriteria> = FormatsContextByCriteria<T>['predefinedCriteria'];
-export type MountedCriteria<T extends FormatsCriteria> = typeof defaultCriteria & PredefinedCriteria<T> & T & FormatsContextByCriteria<T>['mountedCriteria'];
+export type MountedCriteria<T extends FormatsCriteria> = typeof globalCriteria & PredefinedCriteria<T> & T & FormatsContextByCriteria<T>['mountedCriteria'];
 /**
  * @template T Criteria type
  * @template U Guard type
@@ -32,11 +33,7 @@ export type TemplateContext<T extends FormatsCriteria, U, V extends Partial<T>, 
     predefinedCriteria: V;
     mountedCriteria: W;
 };
-export interface FormatCheckValueResult {
-    error: {
-        code: string;
-    } | null;
-}
+export type FormatCheckEntry = null | string;
 export type Formats = typeof formats[keyof typeof formats];
 export type FormatsInstances = InstanceType<Formats>;
 export type FormatsCriteria = ArrayCriteria | TupleCriteria | RecordCriteria | StructCriteria | NumberCriteria | StringCriteria | SymbolCriteria | BooleanCriteria;

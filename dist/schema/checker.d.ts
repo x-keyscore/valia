@@ -1,3 +1,3 @@
 import { FormatsCriteria, MountedCriteria } from "../formats";
-import { SchemaCheckerResult } from "./types";
-export declare function schemaChecker(mountedCriteria: MountedCriteria<FormatsCriteria>, value: unknown): SchemaCheckerResult;
+import { SchemaCheckReject } from "./types";
+export declare function schemaChecker(criteria: MountedCriteria<FormatsCriteria>, entry: unknown): SchemaCheckReject | null;

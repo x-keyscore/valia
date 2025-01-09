@@ -1,10 +1,12 @@
-export * as strings from './strings';
-export { isDomain, isPhone, isAscii, isEmail, isAlpha, isDigit, isIp } from "./strings";
-export * as primitives from './primitives';
-export { isBoolean, isString, isNumber, isBigint, isSymbol, isUndefined, isNull, } from "./primitives";
-export * as objects from './objects';
-export { isObject, isPlainObject, isArray, isPlainFunction, isAsyncFunction, isGeneratorFunction, isAsyncGeneratorFunction, isGenerator, isAsyncGenerator } from "./objects";
-export * as tools from './tools';
-export { hasTag } from "./tools";
-export type * as types from './types';
-export type { PrimitiveTypes, StandardTags, PlainObject, PlainFunction, AsyncFunction } from "./types";
+import * as string from './string';
+import * as primitive from './primitive';
+import * as object from './object';
+export type * from "./types";
+export * from './string';
+export * from './primitive';
+export * from './object';
+export declare const testers: {
+    string: typeof string;
+    primitive: typeof primitive;
+    object: typeof object;
+};

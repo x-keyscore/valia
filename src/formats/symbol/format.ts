@@ -1,10 +1,12 @@
 import type { SchemaCheckTask, SchemaMountTask } from "../../schema/types";
-import type { FormatCheckValueResult, MountedCriteria } from "../types";
+import type { FormatCheckEntry, MountedCriteria } from "../types";
 import type { SymbolCriteria } from "./types";
 import { isBoolean, isSymbol } from "../../testers";
 import { AbstractFormat } from "../AbstractFormat";
 
 export class SymbolFormat<Criteria extends SymbolCriteria> extends AbstractFormat<Criteria> {
+	public type: Criteria["type"] = "symbol";
+
 	constructor() {
 		super({});
 	}
@@ -23,31 +25,25 @@ export class SymbolFormat<Criteria extends SymbolCriteria> extends AbstractForma
 		return ([]);
 	}
 
-	checkValue(
+	checkEntry(
 		mountedCriteria: MountedCriteria<Criteria>,
-		value: unknown
-	): FormatCheckValueResult {
+		entry: unknown
+	): FormatCheckEntry {
 		const criteria = mountedCriteria;
 	
-		if (value === undefined) {
-			return {
-				error: !criteria.require ? null : { code: "SYMBOL_IS_UNDEFINED" }
-			}
+		if (entry === undefined) {
+			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
 		}
-		else if (!isSymbol(value)) {
-			return {
-				error: { code: "SYMBOL_NOT_SYMBOL" }
-			};
+		else if (!isSymbol(entry)) {
+			return "REJECT_TYPE_NOT_SYMBOL";
 		}
 
-		return {
-			error: null
-		}
+		return (null);
 	}
 
 	getCheckingTasks(
 		mountedCriteria: MountedCriteria<Criteria>,
-		value: any
+		entry: any
 	): SchemaCheckTask[] {
 		return ([]);
 	}

@@ -6,30 +6,25 @@ const AbstractFormat_1 = require("../AbstractFormat");
 class SymbolFormat extends AbstractFormat_1.AbstractFormat {
     constructor() {
         super({});
+        this.type = "symbol";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         return ([]);
     }
-    checkValue(mountedCriteria, value) {
+    checkEntry(mountedCriteria, entry) {
         const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "SYMBOL_IS_UNDEFINED" }
-            };
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isSymbol)(value)) {
-            return {
-                error: { code: "SYMBOL_NOT_SYMBOL" }
-            };
+        else if (!(0, testers_1.isSymbol)(entry)) {
+            return "REJECT_TYPE_NOT_SYMBOL";
         }
-        return {
-            error: null
-        };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(mountedCriteria, entry) {
         return ([]);
     }
 }

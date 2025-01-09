@@ -8,9 +8,10 @@ class TupleFormat extends AbstractFormat_1.AbstractFormat {
         super({
             empty: false
         });
+        this.type = "tuple";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         let buildTasks = [];
@@ -22,59 +23,42 @@ class TupleFormat extends AbstractFormat_1.AbstractFormat {
         }
         return (buildTasks);
     }
-    checkValue(mountedCriteria, value) {
-        const criteria = mountedCriteria;
-        if (value === undefined) {
-            const isCompliant = !criteria.require;
-            return {
-                error: isCompliant ? null : { code: "TUPLE_IS_UNDEFINED" }
-            };
+    checkEntry(criteria, entry) {
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isObject)(value)) {
-            return {
-                error: { code: "TUPLE_NOT_OBJECT" }
-            };
+        else if (!(0, testers_1.isObject)(entry)) {
+            return ("REJECT_TYPE_NOT_OBJECT");
         }
-        else if (!(0, testers_1.isArray)(value)) {
-            return {
-                error: { code: "TUPLE_NOT_ARRAY" }
-            };
+        else if (!(0, testers_1.isArray)(entry)) {
+            return ("REJECT_TYPE_NOT_ARRAY");
         }
-        else if (!value.length) {
-            return {
-                error: criteria.empty ? null : { code: "TUPLE_IS_EMPTY" }
-            };
+        const entryLength = entry.length;
+        if (!entryLength) {
+            return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
         }
-        else if (criteria.min !== undefined && value.length < criteria.min) {
-            return {
-                error: { code: "TUPLE_INFERIOR_MIN_LENGTH" }
-            };
+        else if (criteria.min !== undefined && entryLength < criteria.min) {
+            return ("REJECT_VALUE_INFERIOR_MIN");
         }
-        else if (criteria.max !== undefined && value.length > criteria.max) {
-            return {
-                error: { code: "TUPLE_SUPERIOR_MAX_LENGTH" }
-            };
+        else if (criteria.max !== undefined && entryLength > criteria.max) {
+            return ("REJECT_VALUE_SUPERIOR_MAX");
         }
         else if (criteria.min === undefined && criteria.max === undefined) {
-            if (value.length < criteria.tuple.length) {
-                return {
-                    error: { code: "TUPLE_INFERIOR_TUPLE_LENGTH" }
-                };
+            if (entryLength < criteria.tuple.length) {
+                return ("REJECT_VALUE_INFERIOR_TUPLE");
             }
         }
-        else if (value.length > criteria.tuple.length) {
-            return {
-                error: { code: "TUPLE_SUPERIOR_TUPLE_LENGTH" }
-            };
+        else if (entryLength > criteria.tuple.length) {
+            return ("REJECT_VALUE_SUPERIOR_TUPLE");
         }
-        return { error: null };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         let checkTasks = [];
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i < entry.length; i++) {
             checkTasks.push({
-                mountedCriteria: mountedCriteria.tuple[i],
-                value: value[i]
+                criteria: criteria.tuple[i],
+                entry: entry[i]
             });
         }
         return (checkTasks);

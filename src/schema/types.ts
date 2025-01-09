@@ -1,6 +1,4 @@
-import type { FormatsCriteria } from "../formats";
-import type { MountedCriteria } from "../formats/types";
-import { Schema } from "./Schema";
+import type { FormatsCriteria, MountedCriteria } from "../formats";
 
 export interface SchemaMountTask {
 	definedCriteria: FormatsCriteria;
@@ -8,13 +6,15 @@ export interface SchemaMountTask {
 }
 
 export interface SchemaCheckTask {
-	mountedCriteria: MountedCriteria<FormatsCriteria>;
-	value: any;
+	criteria: MountedCriteria<FormatsCriteria>;
+	/** Entry root or entry subpart */
+	entry: any;
 }
 
-export interface SchemaCheckerResult {
-	error: {
-		code: string;
-		label: string | undefined;
-	} | null
-}
+export interface SchemaCheckReject {
+	type: string;
+	/** `REJECT_<CATEGORY>_<DETAIL>` */
+	code: string;
+	label: string | undefined;
+	message: string | undefined;
+};

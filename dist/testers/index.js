@@ -32,37 +32,19 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.hasTag = exports.tools = exports.isAsyncGenerator = exports.isGenerator = exports.isAsyncGeneratorFunction = exports.isGeneratorFunction = exports.isAsyncFunction = exports.isPlainFunction = exports.isArray = exports.isPlainObject = exports.isObject = exports.objects = exports.isNull = exports.isUndefined = exports.isSymbol = exports.isBigint = exports.isNumber = exports.isString = exports.isBoolean = exports.primitives = exports.isIp = exports.isDigit = exports.isAlpha = exports.isEmail = exports.isAscii = exports.isPhone = exports.isDomain = exports.strings = void 0;
-exports.strings = __importStar(require("./strings"));
-var strings_1 = require("./strings");
-Object.defineProperty(exports, "isDomain", { enumerable: true, get: function () { return strings_1.isDomain; } });
-Object.defineProperty(exports, "isPhone", { enumerable: true, get: function () { return strings_1.isPhone; } });
-Object.defineProperty(exports, "isAscii", { enumerable: true, get: function () { return strings_1.isAscii; } });
-Object.defineProperty(exports, "isEmail", { enumerable: true, get: function () { return strings_1.isEmail; } });
-Object.defineProperty(exports, "isAlpha", { enumerable: true, get: function () { return strings_1.isAlpha; } });
-Object.defineProperty(exports, "isDigit", { enumerable: true, get: function () { return strings_1.isDigit; } });
-Object.defineProperty(exports, "isIp", { enumerable: true, get: function () { return strings_1.isIp; } });
-exports.primitives = __importStar(require("./primitives"));
-var primitives_1 = require("./primitives");
-Object.defineProperty(exports, "isBoolean", { enumerable: true, get: function () { return primitives_1.isBoolean; } });
-Object.defineProperty(exports, "isString", { enumerable: true, get: function () { return primitives_1.isString; } });
-Object.defineProperty(exports, "isNumber", { enumerable: true, get: function () { return primitives_1.isNumber; } });
-Object.defineProperty(exports, "isBigint", { enumerable: true, get: function () { return primitives_1.isBigint; } });
-Object.defineProperty(exports, "isSymbol", { enumerable: true, get: function () { return primitives_1.isSymbol; } });
-Object.defineProperty(exports, "isUndefined", { enumerable: true, get: function () { return primitives_1.isUndefined; } });
-Object.defineProperty(exports, "isNull", { enumerable: true, get: function () { return primitives_1.isNull; } });
-exports.objects = __importStar(require("./objects"));
-var objects_1 = require("./objects");
-Object.defineProperty(exports, "isObject", { enumerable: true, get: function () { return objects_1.isObject; } });
-Object.defineProperty(exports, "isPlainObject", { enumerable: true, get: function () { return objects_1.isPlainObject; } });
-Object.defineProperty(exports, "isArray", { enumerable: true, get: function () { return objects_1.isArray; } });
-Object.defineProperty(exports, "isPlainFunction", { enumerable: true, get: function () { return objects_1.isPlainFunction; } });
-Object.defineProperty(exports, "isAsyncFunction", { enumerable: true, get: function () { return objects_1.isAsyncFunction; } });
-Object.defineProperty(exports, "isGeneratorFunction", { enumerable: true, get: function () { return objects_1.isGeneratorFunction; } });
-Object.defineProperty(exports, "isAsyncGeneratorFunction", { enumerable: true, get: function () { return objects_1.isAsyncGeneratorFunction; } });
-Object.defineProperty(exports, "isGenerator", { enumerable: true, get: function () { return objects_1.isGenerator; } });
-Object.defineProperty(exports, "isAsyncGenerator", { enumerable: true, get: function () { return objects_1.isAsyncGenerator; } });
-exports.tools = __importStar(require("./tools"));
-var tools_1 = require("./tools");
-Object.defineProperty(exports, "hasTag", { enumerable: true, get: function () { return tools_1.hasTag; } });
+exports.testers = void 0;
+const string = __importStar(require("./string"));
+const primitive = __importStar(require("./primitive"));
+const object = __importStar(require("./object"));
+__exportStar(require("./string"), exports);
+__exportStar(require("./primitive"), exports);
+__exportStar(require("./object"), exports);
+exports.testers = {
+    string,
+    primitive,
+    object
+};

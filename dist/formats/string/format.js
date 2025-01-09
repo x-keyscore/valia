@@ -3,64 +3,54 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StringFormat = void 0;
 const AbstractFormat_1 = require("../AbstractFormat");
 const testers_1 = require("../../testers");
+const __1 = require("../../");
 class StringFormat extends AbstractFormat_1.AbstractFormat {
     constructor() {
         super({
             empty: true,
             trim: false
         });
+        this.type = "string";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         return ([]);
     }
-    checkValue(mountedCriteria, value) {
+    checkEntry(mountedCriteria, entry) {
+        var _a;
         const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "STRING_IS_UNDEFINED" }
-            };
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isString)(value)) {
-            return {
-                error: { code: "STRING_NOT_STRING" }
-            };
+        else if (!(0, testers_1.isString)(entry)) {
+            return ("REJECT_TYPE_NOT_STRING");
         }
-        let str = value;
+        let str = entry;
         if (criteria.trim)
             str = str.trim();
         if (!str.length) {
-            return {
-                error: criteria.empty ? null : { code: "STRING_IS_EMPTY" }
-            };
+            return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
         }
         else if (criteria.min !== undefined && str.length < criteria.min) {
-            return {
-                error: { code: "STRING_TOO_SHORT" }
-            };
+            return ("REJECT_VALUE_TOO_SHORT");
         }
         else if (criteria.max !== undefined && str.length > criteria.max) {
-            return {
-                error: { code: "STRING_TOO_LONG" }
-            };
+            return ("REJECT_VALUE_TOO_LONG");
         }
-        else if (criteria.accept !== undefined && !criteria.accept.test(str)) {
-            return {
-                error: { code: "STRING_NOT_RESPECT_REGEX" }
-            };
+        else if (criteria.regex !== undefined && !criteria.regex.test(str)) {
+            return ("REJECT_TEST_REGEX");
         }
-        else if (criteria.kind && !testers_1.strings[criteria.kind.name](str, criteria.kind.params)) {
-            return {
-                error: { code: "STRING_NOT_RESPECT_KIND" }
-            };
+        else if (criteria.test && !__1.testers.string[criteria.test.name](str, (_a = criteria.test) === null || _a === void 0 ? void 0 : _a.params)) {
+            return ("REJECT_TEST_STRING");
         }
-        return {
-            error: null
-        };
+        else if (criteria.custom && !criteria.custom(str)) {
+            return ("REJECT_TEST_CUSTOM");
+        }
+        return null;
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         return ([]);
     }
 }

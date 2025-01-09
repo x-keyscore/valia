@@ -1,10 +1,12 @@
 import type { SchemaCheckTask, SchemaMountTask } from "../../schema/types";
-import type { FormatCheckValueResult, MountedCriteria } from "../types";
+import type { FormatCheckEntry, MountedCriteria } from "../types";
 import type { BooleanCriteria } from "./types";
 import { isBoolean } from "../../testers";
 import { AbstractFormat } from "../AbstractFormat";
 
 export class BooleanFormat<Criteria extends BooleanCriteria> extends AbstractFormat<Criteria> {
+	public type: Criteria["type"] = "boolean";
+
 	constructor() {
 		super({});
 	}
@@ -23,31 +25,23 @@ export class BooleanFormat<Criteria extends BooleanCriteria> extends AbstractFor
 		return ([]);
 	}
 
-	checkValue(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: unknown
-	): FormatCheckValueResult {
-		const criteria = mountedCriteria;
-	
-		if (value === undefined) {
-			return {
-				error: !criteria.require ? null : { code: "BOOLEAN_IS_UNDEFINED" }
-			}
+	checkEntry(
+		criteria: MountedCriteria<Criteria>,
+		entry: unknown
+	): FormatCheckEntry {
+		if (entry === undefined) {
+			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
 		}
-		else if (!isBoolean(value)) {
-			return {
-				error: { code: "BOOLEAN_NOT_BOOLEAN" }
-			};
+		else if (!isBoolean(entry)) {
+			return ("REJECT_TYPE_NOT_BOOLEAN");
 		}
 
-		return {
-			error: null
-		}
+		return (null);
 	}
 
 	getCheckingTasks(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: any
+		criteria: MountedCriteria<Criteria>,
+		entry: any
 	): SchemaCheckTask[] {
 		return ([]);
 	}

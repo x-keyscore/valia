@@ -1,13 +1,16 @@
 import { SchemaMountTask, SchemaCheckTask } from "../schema/types";
-import type { FormatsCriteria, MountedCriteria, PredefinedCriteria, FormatCheckValueResult } from "./types";
-export declare const defaultCriteria: {
+import type { FormatsCriteria, MountedCriteria, PredefinedCriteria, FormatCheckEntry } from "./types";
+export declare const isMountedSymbol: unique symbol;
+export declare function isAlreadyMounted(criteria: object): criteria is MountedCriteria<FormatsCriteria>;
+export declare const globalCriteria: {
     require: boolean;
 };
 export declare abstract class AbstractFormat<Criteria extends FormatsCriteria> {
-    protected readonly baseCriteria: typeof defaultCriteria & PredefinedCriteria<Criteria>;
+    abstract readonly type: Criteria['type'];
+    protected readonly baseMountedCriteria: typeof globalCriteria & PredefinedCriteria<Criteria>;
     constructor(predefinedCriteria: PredefinedCriteria<Criteria>);
     abstract mountCriteria(definedCriteria: Criteria, mountedCriteria: MountedCriteria<Criteria>): MountedCriteria<Criteria>;
     abstract getMountingTasks(definedCriteria: Criteria, mountedCriteria: MountedCriteria<Criteria>): SchemaMountTask[];
-    abstract checkValue(mountedCriteria: MountedCriteria<Criteria>, value: unknown): FormatCheckValueResult;
-    abstract getCheckingTasks(mountedCriteria: MountedCriteria<Criteria>, value: any): SchemaCheckTask[];
+    abstract checkEntry(criteria: MountedCriteria<Criteria>, entry: unknown): FormatCheckEntry;
+    abstract getCheckingTasks(criteria: MountedCriteria<Criteria>, entry: any): SchemaCheckTask[];
 }

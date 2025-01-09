@@ -6,30 +6,24 @@ const AbstractFormat_1 = require("../AbstractFormat");
 class BooleanFormat extends AbstractFormat_1.AbstractFormat {
     constructor() {
         super({});
+        this.type = "boolean";
     }
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         return ([]);
     }
-    checkValue(mountedCriteria, value) {
-        const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "BOOLEAN_IS_UNDEFINED" }
-            };
+    checkEntry(criteria, entry) {
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isBoolean)(value)) {
-            return {
-                error: { code: "BOOLEAN_NOT_BOOLEAN" }
-            };
+        else if (!(0, testers_1.isBoolean)(entry)) {
+            return ("REJECT_TYPE_NOT_BOOLEAN");
         }
-        return {
-            error: null
-        };
+        return (null);
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         return ([]);
     }
 }

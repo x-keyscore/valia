@@ -7,16 +7,16 @@ function processTask(task) {
     if (!format)
         throw new Error("Unknown format type");
     format.mountCriteria(task.definedCriteria, task.mountedCriteria);
-    const mountTasks = format.getMountingTasks(task.definedCriteria, task.mountedCriteria);
-    return (mountTasks);
+    const mountingTasks = format.getMountingTasks(task.definedCriteria, task.mountedCriteria);
+    return (mountingTasks);
 }
 function schemaMounter(definedCriteria) {
     let mountedCriteria = {};
     let queue = [{ definedCriteria, mountedCriteria }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const mountTasks = processTask(currentTask);
-        queue.push(...mountTasks);
+        const mountingTasks = processTask(currentTask);
+        queue.push(...mountingTasks);
     }
     return (mountedCriteria);
 }

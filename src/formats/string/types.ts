@@ -1,29 +1,30 @@
 import { TemplateCriteria, TemplateContext } from "../types";
-import { strings } from "../../testers";
+import { testers } from "../../";
 
-type ExtractParamsType<T extends (input: any, params?: any) => any> = 
-  T extends (input: any, params: infer U) => any ? U : never;
+export type ExtractParams<T extends (arg1: any, arg2: any) => any> = 
+  T extends (input: any, params: infer U) => boolean ? U : never;
 
-type StringCriteriaKinds<Kinds extends Record<string, any>> = {
-	[K in keyof Kinds]: {
+type TestFunctions<Functions extends Record<string, (arg1: any, arg2: any) => any>> = {
+	[K in keyof Functions]: {
 		name: K,
-		params: ExtractParamsType<Kinds[K]>
-	}
-}[keyof Kinds];
+		params?: ExtractParams<Functions[K]>
+	};
+}[keyof Functions];
 
 export interface StringCriteria extends TemplateCriteria<"string"> {
-	kind?: StringCriteriaKinds<typeof strings>;
-	accept?: RegExp;
 	min?: number;
 	max?: number;
-	/**
-	 * @default true
-	 */
-	empty?: boolean;
 	/**
 	 * @default false
 	 */
 	trim?: boolean;
+	/**
+	 * @default true
+	 */
+	empty?: boolean;
+	regex?: RegExp;
+	test?: TestFunctions<typeof testers.string>;
+	custom?: (input: string) => boolean;
 }
 
 type StringGuard = string;

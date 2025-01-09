@@ -8,6 +8,7 @@ class StructFormat extends AbstractFormat_1.AbstractFormat {
         super({
             empty: false
         });
+        this.type = "struct";
     }
     hasRequiredKeys(mountedCriteria, value) {
         const requiredKeys = mountedCriteria.requiredKeys;
@@ -32,7 +33,7 @@ class StructFormat extends AbstractFormat_1.AbstractFormat {
             .filter(([key, criteria]) => criteria.require !== false)
             .map(([key]) => key);
         const definedKeys = Object.keys(definedCriteria.struct);
-        return (Object.assign(mountedCriteria, this.baseCriteria, definedCriteria, { requiredKeys, definedKeys }));
+        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria, { requiredKeys, definedKeys }));
     }
     getMountingTasks(definedCriteria, mountedCriteria) {
         let buildTasks = [];
@@ -46,54 +47,37 @@ class StructFormat extends AbstractFormat_1.AbstractFormat {
         }
         return (buildTasks);
     }
-    objectLength(obj) {
-        return (Object.keys(obj).length + Object.getOwnPropertySymbols(obj).length);
-    }
-    checkValue(mountedCriteria, value) {
+    checkEntry(mountedCriteria, entry) {
         const criteria = mountedCriteria;
-        if (value === undefined) {
-            return {
-                error: !criteria.require ? null : { code: "STRUCT_IS_UNDEFINED" }
-            };
+        if (entry === undefined) {
+            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
         }
-        else if (!(0, testers_1.isObject)(value)) {
-            return {
-                error: { code: "STRUCT_NOT_OBJECT" }
-            };
+        else if (!(0, testers_1.isObject)(entry)) {
+            return ("REJECT_TYPE_NOT_OBJECT");
         }
-        else if (!(0, testers_1.isPlainObject)(value)) {
-            return {
-                error: { code: "STRUCT_NOT_PLAIN_OBJECT" }
-            };
+        else if (!(0, testers_1.isPlainObject)(entry)) {
+            return ("REJECT_TYPE_NOT_PLAIN_OBJECT");
         }
-        else if (this.objectLength(value) === 0) {
-            return {
-                error: criteria.empty ? null : { code: "STRUCT_IS_EMPTY" }
-            };
+        else if (Object.keys(entry).length === 0) {
+            return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
         }
-        else if (!this.hasRequiredKeys(criteria, value)) {
-            return {
-                error: { code: "STRUCT_REQUIRE_KEY" }
-            };
+        else if (!this.hasRequiredKeys(criteria, entry)) {
+            return ("REJECT_VALUE_MISSING_KEY");
         }
-        else if (!this.hasDefinedKeys(criteria, value)) {
-            return {
-                error: { code: "STRUCT_DEFINED_KEY" }
-            };
+        else if (!this.hasDefinedKeys(criteria, entry)) {
+            return ("REJECT_VALUE_INVALID_KEY");
         }
         ;
-        return {
-            error: null
-        };
+        return null;
     }
-    getCheckingTasks(mountedCriteria, value) {
+    getCheckingTasks(criteria, entry) {
         let checkTasks = [];
-        const keys = Object.keys(value);
+        const keys = Object.keys(entry);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             checkTasks.push({
-                mountedCriteria: mountedCriteria.struct[key],
-                value: value[key]
+                criteria: criteria.struct[key],
+                entry: entry[key]
             });
         }
         return (checkTasks);
