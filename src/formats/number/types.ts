@@ -1,6 +1,7 @@
 import { TemplateContext, TemplateCriteria } from "../types";
 
-export interface NumberCriteria extends TemplateCriteria<"number"> {
+export interface NumberCriteria extends TemplateCriteria {
+	type: "number";
 	min?: number;
 	max?: number;
 }

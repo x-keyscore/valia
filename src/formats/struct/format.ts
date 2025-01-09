@@ -50,7 +50,8 @@ export class StructFormat<Criteria extends StructCriteria> extends AbstractForma
 
 		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria, { requiredKeys, definedKeys }));
 	}
-
+	
+	
 	getMountingTasks(
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>

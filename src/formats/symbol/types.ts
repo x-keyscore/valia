@@ -1,6 +1,8 @@
 import { TemplateCriteria, TemplateContext} from "../types";
 
-export interface SymbolCriteria extends TemplateCriteria<"symbol"> {}
+export interface SymbolCriteria extends TemplateCriteria {
+	type: "symbol";
+}
 
 type SymbolGuard = symbol;
 

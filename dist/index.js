@@ -27,44 +27,6 @@ const userSchema = new schema_1.Schema({
 let user = { name: 11 };
 console.log(userSchema.check(user));
 /*
-const schemaArray: Array<unknown> = [];
-for (let i = 0; i <= 2500; i++) {
-    schemaArray[i] = { type: "string" };
-}
-
-const schemaEntry: Record<string, unknown> = {};
-for (let i = 0; i <= 2500; i++) {
-    schemaEntry[i.toString()] = {
-        require: false,
-        type: "tuple",
-        tuple: schemaArray
-    };
-}
-
-const userSchema = new Schema({
-    type: "struct",
-    struct: {
-        username: { type: "string" },
-        avatar: { type: "string" },
-        ip: {
-            type: "string",
-            tester: { name: "isAlpha" },
-            custom(input) {
-                return (false);
-            },
-        }
-    }
-});
-
-const test = {
-    username: "tintin",
-    avatar: "picture",
-    ip: "192.168.00.0"
-} as unknown;
-if (userSchema.checkGuard(test)) {
-    console.log(test)
-}
-
 const start = performance.now();
 console.log(userSchema.check(input))
 const end = performance.now();

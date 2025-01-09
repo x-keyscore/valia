@@ -7,7 +7,8 @@ type TestFunctions<Functions extends Record<string, (arg1: any, arg2: any) => an
         params?: ExtractParams<Functions[K]>;
     };
 }[keyof Functions];
-export interface StringCriteria extends TemplateCriteria<"string"> {
+export interface StringCriteria extends TemplateCriteria {
+    type: "string";
     min?: number;
     max?: number;
     /**

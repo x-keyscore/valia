@@ -1,5 +1,6 @@
 import type { FormatsCriteria, FormatsGuard, MountedCriteria, TemplateContext, TemplateCriteria } from "../types";
-export interface StructCriteria extends TemplateCriteria<"struct"> {
+export interface StructCriteria extends TemplateCriteria {
+    type: "struct";
     empty?: boolean;
     struct: Record<PropertyKey, FormatsCriteria>;
 }

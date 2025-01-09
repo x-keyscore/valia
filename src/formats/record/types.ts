@@ -2,12 +2,13 @@ import type { FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria
 
 type RecordCriteriaKeys = FormatsCriteriaMap["string" | "boolean"];
 
-export interface RecordCriteria extends TemplateCriteria<"record"> {
-	key: RecordCriteriaKeys;
-	value: FormatsCriteria | MountedCriteria<FormatsCriteria>;
+export interface RecordCriteria extends TemplateCriteria {
+	type: "record";
 	min?: number;
 	max?: number;
 	empty?: boolean;
+	key: RecordCriteriaKeys;
+	value: FormatsCriteria | MountedCriteria<FormatsCriteria>;
 }
 
 type RecordGuard<T extends FormatsCriteria> =
