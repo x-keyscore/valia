@@ -1,2 +1,2 @@
 # VALI.TS
-Data validator specially designed for typescript.
+A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
