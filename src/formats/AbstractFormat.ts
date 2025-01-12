@@ -1,35 +1,32 @@
-import { SchemaMountTask, SchemaCheckTask } from "../schema/types";
-import type {
-	FormatsCriteria,
-	MountedCriteria,
-	PredefinedCriteria,
-	FormatCheckEntry,
-} from "./types";
+import type { FormatsCriteria, MountedCriteria, DefaultCriteria, CheckValueResult } from "./types";
+import { SchemaMountingTask, SchemaCheckingTask } from "../schema/types";
 
 export const isMountedSymbol = Symbol('isMounted');
 
-export function isAlreadyMounted(criteria: object): criteria is MountedCriteria<FormatsCriteria> {
-	if (criteria.hasOwnProperty(isMountedSymbol)) return (true);
-	return (false);
+export function isAlreadyMounted(
+	criteria: FormatsCriteria | MountedCriteria<FormatsCriteria>
+): criteria is MountedCriteria<FormatsCriteria> {
+	return (Object.prototype.hasOwnProperty(isMountedSymbol));
 }
 
-export const globalCriteria = {
+export const defaultGlobalCriteria = {
 	require: true
 }
 
-export abstract class AbstractFormat<Criteria extends FormatsCriteria> {
-	public abstract readonly type: Criteria['type'];
-	protected readonly baseMountedCriteria: typeof globalCriteria & PredefinedCriteria<Criteria>;
+export type DefaultGlobalCriteria = typeof defaultGlobalCriteria;
 
-	constructor(predefinedCriteria: PredefinedCriteria<Criteria>) {
-		const newObj = {};
-		Object.defineProperty(newObj, isMountedSymbol, {
-			value: true,
-			writable: false,
-			enumerable: false,
-			configurable: false
-		});
-		this.baseMountedCriteria = Object.assign(newObj, globalCriteria, predefinedCriteria);
+export abstract class AbstractFormat<Criteria extends FormatsCriteria> {
+	protected readonly baseMountedCriteria: 
+		& { [isMountedSymbol]: boolean }
+		& DefaultGlobalCriteria
+		& DefaultCriteria<Criteria>;
+
+	constructor(defaultCriteria: DefaultCriteria<Criteria>) {
+		this.baseMountedCriteria = Object.assign(
+			{ [isMountedSymbol]: true },
+			defaultGlobalCriteria,
+			defaultCriteria
+		);
 	}
 
 	abstract mountCriteria(
@@ -40,15 +37,15 @@ export abstract class AbstractFormat<Criteria extends FormatsCriteria> {
 	abstract getMountingTasks(
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountTask[];
+	): SchemaMountingTask[];
 
-	abstract checkEntry(
+	abstract checkValue(
 		criteria: MountedCriteria<Criteria>,
-		entry: unknown
-	): FormatCheckEntry;
+		value: unknown
+	): CheckValueResult;
 
 	abstract getCheckingTasks(
 		criteria: MountedCriteria<Criteria>,
-		entry: any
-	): SchemaCheckTask[];
+		value: any
+	): SchemaCheckingTask[];
 }

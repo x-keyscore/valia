@@ -1,14 +1,23 @@
-import { TemplateCriteria, TemplateContext} from "../types";
+import { FormatsCriteria, GlobalCriteria } from "../types";
 
-export interface BooleanCriteria extends TemplateCriteria {
-	type: "boolean";
+type FormatName = "boolean";
+
+export interface BooleanCriteria extends GlobalCriteria {
+	type: FormatName;
 }
 
-type BooleanGuard = boolean;
+export type BooleanConcretTypes = {
+	type: FormatName;
+	criteria: BooleanCriteria;
+	defaultCriteria: {};
+	mountedCritetia: {};
+}
 
-export type BooleanContext = TemplateContext<
-	BooleanCriteria,
-	BooleanGuard,
-	{},
-	{}
->
+type BooleanGuard<T extends FormatsCriteria> = T extends BooleanCriteria
+	? boolean
+	: never;
+
+export type BooleanGenericTypes<T extends FormatsCriteria> = {
+	type: FormatName;
+	guard: BooleanGuard<T>;
+}

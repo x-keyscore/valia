@@ -1,5 +1,5 @@
 import type { FormatsCriteria, FormatsGuard, MountedCriteria } from "../formats";
-import type { SchemaCheckReject } from "./types";
+import type { SchemaCheckResult } from "./types";
 import { schemaMounter } from "./mounter";
 import { schemaChecker } from "./checker";
 
@@ -28,9 +28,9 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	public readonly criteria: MountedCriteria<DefinedCriteria>;
 
 	/**
-	 * @param definedCriteria Definition of validation criteria.
+	 * @param criteria Definition of validation criteria.
 	 * Once the class has been instantiated, modifying
-	 * these criteria will have no effect.
+	 * these `criteria` will have no effect.
 	 * 
 	 * @example
 	 * ```ts
@@ -42,16 +42,16 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * });
 	 * ```
 	 */
-	constructor(definedCriteria: DefinedCriteria) {
-		const clonedCriteria = structuredClone(definedCriteria);
+	constructor(criteria: DefinedCriteria) {
+		const clonedCriteria = structuredClone(criteria);
 		const mountedCriteria = schemaMounter(clonedCriteria);
 		this.criteria = mountedCriteria;
 	}
 
 	/**
-	 * @param entry Data to be validated
+	 * @param value Data to be validated
 	 * 
-	 * @returns `true` if entry is compliant, otherwise `false`. For **Typescript** users,
+	 * @returns `true` if value is compliant, otherwise `false`. For **Typescript** users,
 	 * this function is a guard type that predicts validated data, see example below.
 	 * 
 	 * @example
@@ -70,15 +70,15 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * }
 	 * ```
 	 */
-	guard(entry: unknown): entry is FormatsGuard<DefinedCriteria> {
-		const error = schemaChecker(this.criteria, entry);
+	guard(value: unknown): value is FormatsGuard<DefinedCriteria> {
+		const error = schemaChecker(this.criteria, value);
 		return (!error);
 	}
 
 	/**
-	 * @param entry Data to be validated
+	 * @param value Data to be validated
 	 * 
-	 * @returns `null` if entry is compliant, otherwise `SchemaCheckReject`.
+	 * @returns `null` if value is compliant, otherwise `SchemaCheckReject`.
 	 * 
 	 * @example
 	 * ```ts
@@ -98,8 +98,8 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * }
 	 * ```
 	 */
-	check(entry: unknown): SchemaCheckReject | null {
-		const error = schemaChecker(this.criteria, entry);
+	check(value: unknown): SchemaCheckResult {
+		const error = schemaChecker(this.criteria, value);
 		return (error);
 	}
 }

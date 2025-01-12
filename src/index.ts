@@ -4,12 +4,32 @@ export * from './tools';
 
 import { Schema } from "./schema";
 
+const userNameType = new Schema({ type: "string" });
+
+const userTestType = new Schema({
+	type: "record",
+	require: false,
+	key: userNameType.criteria,
+	value: userNameType.criteria
+});
+
 const userSchema = new Schema({ 
     type: "struct",
-    struct: {
-        name: { type: "string" }
-    }
+	require: false,
+	struct: {
+		test: userNameType.criteria,
+		test2: userTestType.criteria
+	}
 });
+
+let test = {
+	test: "test",
+	test2: "test2"
+} as any;
+
+if (userSchema.guard(test)) {
+	let tt = test?.test2
+}
 
 let user = { name: 11 };
 

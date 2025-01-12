@@ -1,12 +1,10 @@
-import type { SchemaMountTask, SchemaCheckTask } from "../../schema/types";
-import type { FormatCheckEntry, MountedCriteria } from "../types";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
+import type { CheckValueResult, MountedCriteria } from "../types";
 import type { StructCriteria } from "./types";
+import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
 import { isObject, isPlainObject } from "../../testers";
-import { AbstractFormat } from "../AbstractFormat";
 
 export class StructFormat<Criteria extends StructCriteria> extends AbstractFormat<Criteria> {
-	public type: Criteria["type"] = "struct";
-
 	constructor() {
 		super({
 			empty: false
@@ -50,50 +48,51 @@ export class StructFormat<Criteria extends StructCriteria> extends AbstractForma
 
 		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria, { requiredKeys, definedKeys }));
 	}
-	
-	
+
 	getMountingTasks(
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountTask[] {
-		let buildTasks: SchemaMountTask[] = [];
+	): SchemaMountingTask[] {
+		let mountingTasks: SchemaMountingTask[] = [];
 		const keys = Object.keys(definedCriteria.struct);
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 
-			buildTasks.push({
-				definedCriteria: definedCriteria.struct[key],
-				mountedCriteria: mountedCriteria.struct[key]
-			});
+			if (isAlreadyMounted(definedCriteria.struct[key])) {
+				mountedCriteria.struct[key] = definedCriteria.struct[key];
+			} else {
+				mountingTasks.push({
+					definedCriteria: definedCriteria.struct[key],
+					mountedCriteria: mountedCriteria.struct[key]
+				});
+			}
 		}
 
-		return (buildTasks);
+		return (mountingTasks);
 	}
 
-	checkEntry(
-		mountedCriteria: MountedCriteria<Criteria>,
-		entry: unknown
-	): FormatCheckEntry {
-		const criteria = mountedCriteria;
-
-		if (entry === undefined) {
-			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+	checkValue(
+		criteria: MountedCriteria<Criteria>,
+		value: unknown
+	): CheckValueResult {
+		if (value === undefined) {
+			return (!criteria.require ? null : "TYPE_UNDEFINED");
 		}
-		else if (!isObject(entry)) {
-			return ("REJECT_TYPE_NOT_OBJECT");
+		else if (!isObject(value)) {
+			return ("TYPE_NOT_OBJECT");
 		}
-		else if (!isPlainObject(entry)) {
-			return ("REJECT_TYPE_NOT_PLAIN_OBJECT");
+		else if (!isPlainObject(value)) {
+			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
-		else if (Object.keys(entry).length === 0) {
-			return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
+		else if (Object.keys(value).length === 0) {
+			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (!this.hasRequiredKeys(criteria, entry)) {
-			return ("REJECT_VALUE_MISSING_KEY");
+		else if (!this.hasRequiredKeys(criteria, value)) {
+			return ("VALUE_MISSING_KEY");
 		}
-		else if (!this.hasDefinedKeys(criteria, entry)) {
-			return ("REJECT_VALUE_INVALID_KEY");
+		else if (!this.hasDefinedKeys(criteria, value)) {
+			return ("VALUE_INVALID_KEY");
 		};
 
 		return null
@@ -101,19 +100,19 @@ export class StructFormat<Criteria extends StructCriteria> extends AbstractForma
 
 	getCheckingTasks(
 		criteria: MountedCriteria<Criteria>,
-		entry: any
-	): SchemaCheckTask[] {
-		let checkTasks: SchemaCheckTask[] = [];
-		const keys = Object.keys(entry);
+		value: any
+	): SchemaCheckingTask[] {
+		let checkingTasks: SchemaCheckingTask[] = [];
+		const keys = Object.keys(value);
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
-			checkTasks.push({
+			checkingTasks.push({
 				criteria: criteria.struct[key],
-				entry: entry[key]
+				value: value[key]
 			});
 		}
 
-		return (checkTasks);
+		return (checkingTasks);
 	}
 }

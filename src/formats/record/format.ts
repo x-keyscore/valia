@@ -1,12 +1,10 @@
-import type { SchemaMountTask, SchemaCheckTask } from "../../schema/types";
-import type { FormatCheckEntry, MountedCriteria } from "../types";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
+import type { CheckValueResult, MountedCriteria } from "../types";
 import type { RecordCriteria } from "./types";
-import { isObject, isPlainObject } from "../../testers";
 import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
+import { isObject, isPlainObject } from "../../testers";
 
 export class RecordFormat<Criteria extends RecordCriteria> extends AbstractFormat<Criteria> {
-	public type: Criteria["type"] = "record";
-
 	constructor() {
 		super({
 			empty: false
@@ -23,54 +21,54 @@ export class RecordFormat<Criteria extends RecordCriteria> extends AbstractForma
 	getMountingTasks(
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountTask[] {
-		let buildTasks: SchemaMountTask[] = [];
+	): SchemaMountingTask[] {
+		let mountingTasks: SchemaMountingTask[] = [];
 
-		buildTasks.push({
-			definedCriteria: definedCriteria.key,
-			mountedCriteria: mountedCriteria.key
-		});
+		if (isAlreadyMounted(definedCriteria.key)) {
+			mountedCriteria.key = definedCriteria.key;
+		} else {
+			mountingTasks.push({
+				definedCriteria: definedCriteria.key,
+				mountedCriteria: mountedCriteria.key
+			});
+		}
 
 		if (isAlreadyMounted(definedCriteria.value)) {
 			mountedCriteria.value = definedCriteria.value;
 		} else {
-			buildTasks.push({
+			mountingTasks.push({
 				definedCriteria: definedCriteria.value,
 				mountedCriteria: mountedCriteria.value
 			});
 		}
 
-		return (buildTasks);
+		return (mountingTasks);
 	}
 
-	objectLength(obj: object): number {
-		return (Object.keys(obj).length + Object.getOwnPropertySymbols(obj).length);
-	}
-
-	checkEntry(
+	checkValue(
 		criteria: MountedCriteria<Criteria>,
-		entry: unknown
-	): FormatCheckEntry {
-		if (entry === undefined) {
-			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+		value: unknown
+	): CheckValueResult {
+		if (value === undefined) {
+			return (!criteria.require ? null : "TYPE_UNDEFINED");
 		}
-		else if (!isObject(entry)) {
-			return ("REJECT_TYPE_NOT_OBJECT");
+		else if (!isObject(value)) {
+			return ("TYPE_NOT_OBJECT");
 		}
-		else if (!isPlainObject(entry)) {
-			return ("REJECT_TYPE_NOT_PLAIN_OBJECT");
+		else if (!isPlainObject(value)) {
+			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 
-		const numberKeys = Object.keys(entry).length;
+		const keyCount = Object.keys(value).length;
 
-		if (numberKeys === 0) {
-			return ("REJECT_VALUE_EMPTY");
+		if (keyCount === 0) {
+			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (criteria.min !== undefined && numberKeys < criteria.min) {
-			return ("REJECT_VALUE_INFERIOR_MIN");
+		else if (criteria.min !== undefined && keyCount < criteria.min) {
+			return ("VALUE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && numberKeys > criteria.max) {
-			return ("REJECT_VALUE_SUPERIOR_MAX");
+		else if (criteria.max !== undefined && keyCount > criteria.max) {
+			return ("VALUE_SUPERIOR_MAX");
 		}
 
 		return (null);
@@ -78,24 +76,24 @@ export class RecordFormat<Criteria extends RecordCriteria> extends AbstractForma
 
 	getCheckingTasks(
 		criteria: MountedCriteria<Criteria>,
-		entry: any
-	): SchemaCheckTask[] {
-		let checkTasks: SchemaCheckTask[] = [];
-		const keys = Object.keys(entry);
+		value: any
+	): SchemaCheckingTask[] {
+		let checkingTasks: SchemaCheckingTask[] = [];
+		const keys = Object.keys(value);
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
-			checkTasks.push({
+			checkingTasks.push({
 				criteria: criteria.key,
-				entry: key
+				value: key
 			});
 
-			checkTasks.push({
+			checkingTasks.push({
 				criteria: criteria.value,
-				entry: entry[key]
+				value: value[key]
 			});
 		}
 
-		return (checkTasks);
+		return (checkingTasks);
 	}
 }

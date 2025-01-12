@@ -1,2 +1,2 @@
-export type { SchemaCheckReject } from "./types";
+export type { SchemaCheckResult } from "./types";
 export { Schema } from "./Schema";

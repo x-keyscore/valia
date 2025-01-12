@@ -1,7 +1,7 @@
 import { FormatsCriteria, MountedCriteria, formatsInstances } from "../formats";
-import { SchemaMountTask } from "./types";
+import { SchemaMountingTask } from "./types";
 
-function processTask(task: SchemaMountTask): SchemaMountTask[] {
+function processTask(task: SchemaMountingTask): SchemaMountingTask[] {
 	const format = formatsInstances[task.definedCriteria.type];
 	if (!format) throw new Error("Unknown format type");
 	
@@ -15,7 +15,7 @@ export function schemaMounter<T extends FormatsCriteria>(
 	definedCriteria: T
 ): MountedCriteria<T> {
 	let mountedCriteria: MountedCriteria<T> = {} as any;
-	let queue: SchemaMountTask[] = [{ definedCriteria, mountedCriteria }];
+	let queue: SchemaMountingTask[] = [{ definedCriteria, mountedCriteria }];
 
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;

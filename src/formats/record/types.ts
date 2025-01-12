@@ -1,33 +1,44 @@
-import type { FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria, TemplateContext, TemplateCriteria } from "../types";
+import type { GlobalCriteria, FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
 
-type RecordCriteriaKeys = FormatsCriteriaMap["string" | "boolean"];
+type FormatName = "record";
 
-export interface RecordCriteria extends TemplateCriteria {
-	type: "record";
+type RecordCriteriaKey = FormatsCriteriaMap["string" | "number" | "symbol"];
+
+export interface RecordCriteria extends GlobalCriteria {
+	type: FormatName;
 	min?: number;
 	max?: number;
 	empty?: boolean;
-	key: RecordCriteriaKeys;
-	value: FormatsCriteria | MountedCriteria<FormatsCriteria>;
+	key: RecordCriteriaKey;
+	value: FormatsCriteria;
+}
+
+type DefaultRecordCriteria = {
+	empty: boolean;
+}
+
+type MountedRecordCriteria = {
+	key: MountedCriteria<RecordCriteriaKey>;
+	value: MountedCriteria<FormatsCriteria>;
+}
+
+export type RecordConcretTypes = {
+	type: FormatName;
+	criteria: RecordCriteria;
+	defaultCriteria: DefaultRecordCriteria;
+	mountedCritetia: MountedRecordCriteria;
 }
 
 type RecordGuard<T extends FormatsCriteria> =
 	T extends RecordCriteria
 		? FormatsGuard<T['key']> extends infer K
-			? K extends string | symbol
+			? K extends PropertyKey
 				? { [P in K]: FormatsGuard<T['value']> }
 				: never
 			: never
 		: never;
 
-export type RecordContext<T extends FormatsCriteria> = TemplateContext<
-	RecordCriteria,
-	RecordGuard<T>,
-	{
-		empty: boolean;
-	},
-	{
-		key: MountedCriteria<RecordCriteriaKeys>;
-		value: MountedCriteria<FormatsCriteria>;
-	}
->
+export type RecordGenericTypes<T extends FormatsCriteria> = {
+	type: FormatName;
+	guard: RecordGuard<T>;
+}

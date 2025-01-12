@@ -17,6 +17,6 @@ export const formats = {
 	string: StringFormat,
 	symbol: SymbolFormat,
 	boolean: BooleanFormat
-}
+};
 
 export const formatsInstances = constructs(formats, []);

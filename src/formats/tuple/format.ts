@@ -1,12 +1,10 @@
-import type { SchemaMountTask, SchemaCheckTask } from "../../schema/types";
-import type { MountedCriteria, FormatCheckEntry } from "../types";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
+import type { MountedCriteria, CheckValueResult } from "../types";
 import type { TupleCriteria } from "./types";
+import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
 import { isArray, isObject } from "../../testers";
-import { AbstractFormat } from "../AbstractFormat";
 
 export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<Criteria> {
-	public type: Criteria["type"] = "tuple";
-
 	constructor() {
 		super({
 			empty: false
@@ -23,50 +21,55 @@ export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<
 	getMountingTasks(
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountTask[] {
-		let buildTasks: SchemaMountTask[] = [];
+	): SchemaMountingTask[] {
+		let mountingTasks: SchemaMountingTask[] = [];
 
 		for (let i = 0; i < definedCriteria.tuple.length; i++) {
-			buildTasks.push({
-				definedCriteria: definedCriteria.tuple[i],
-				mountedCriteria: mountedCriteria.tuple[i]
-			});
+			const definedCriteriaItem = definedCriteria.tuple[i];
+			if (isAlreadyMounted(definedCriteriaItem)) {
+				mountedCriteria.tuple[i] = definedCriteriaItem;
+			} else {
+				mountingTasks.push({
+					definedCriteria: definedCriteriaItem,
+					mountedCriteria: mountedCriteria.tuple[i]
+				});
+			}
 		}
 
-		return (buildTasks);
+		return (mountingTasks);
 	}
 
-	checkEntry(
+	checkValue(
 		criteria: MountedCriteria<Criteria>,
-		entry: unknown
-	): FormatCheckEntry {
-		if (entry === undefined) {
-			return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+		value: unknown
+	): CheckValueResult {
+		if (value === undefined) {
+			return (!criteria.require ? null : "TYPE_UNDEFINED");
 		}
-		else if (!isObject(entry)) {
-			return ("REJECT_TYPE_NOT_OBJECT");
+		else if (!isObject(value)) {
+			return ("TYPE_NOT_OBJECT");
 		}
-		else if (!isArray(entry)) {
-			return ("REJECT_TYPE_NOT_ARRAY");
+		else if (!isArray(value)) {
+			return ("TYPE_NOT_ARRAY");
 		}
 
-		const entryLength = entry.length 
+		const valueLength = value.length 
 
-		if (!entryLength) {
-			return (criteria.empty ? null : "REJECT_VALUE_EMPTY");
+		if (!valueLength) {
+			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (criteria.min !== undefined && entryLength < criteria.min) {
-			return ("REJECT_VALUE_INFERIOR_MIN");
+		else if (criteria.min !== undefined && valueLength < criteria.min) {
+			return ("VALUE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && entryLength > criteria.max) {
-			return ("REJECT_VALUE_SUPERIOR_MAX");
+		else if (criteria.max !== undefined && valueLength > criteria.max) {
+			return ("VALUE_SUPERIOR_MAX");
 		}
 		else if (criteria.min === undefined && criteria.max === undefined) {
-			if (entryLength < criteria.tuple.length) {
-				return ("REJECT_VALUE_INFERIOR_TUPLE");
+			if (valueLength < criteria.tuple.length) {
+				return ("VALUE_INFERIOR_TUPLE");
 			}
-		} else if (entryLength > criteria.tuple.length) {
-			return ("REJECT_VALUE_SUPERIOR_TUPLE");
+		} else if (valueLength > criteria.tuple.length) {
+			return ("VALUE_SUPERIOR_TUPLE");
 		}
 
 		return (null);
@@ -74,14 +77,14 @@ export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<
 
 	getCheckingTasks(
 		criteria: MountedCriteria<Criteria>,
-		entry: any
-	): SchemaCheckTask[] {
-		let checkTasks: SchemaCheckTask[] = [];
+		value: any
+	): SchemaCheckingTask[] {
+		let checkTasks: SchemaCheckingTask[] = [];
 
-		for (let i = 0; i < entry.length; i++) {
+		for (let i = 0; i < value.length; i++) {
 			checkTasks.push({
 				criteria: criteria.tuple[i],
-				entry: entry[i]
+				value: value[i]
 			});
 		}
 

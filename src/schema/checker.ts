@@ -1,32 +1,32 @@
 import { FormatsCriteria, MountedCriteria, formatsInstances } from "../formats";
-import { SchemaCheckTask, SchemaCheckReject } from "./types";
+import { SchemaCheckingTask, SchemaCheckerReject } from "./types";
 
-function processTask(task: SchemaCheckTask) {
+function processTask(task: SchemaCheckingTask) {
 	const format = formatsInstances[task.criteria.type];
 
-	const rejectCode = format.checkEntry(task.criteria as any, task.entry);
-	const checkingTasks = format.getCheckingTasks(task.criteria as any, task.entry);
+	const rejectState = format.checkValue(task.criteria as any, task.value);
+	const checkingTasks = format.getCheckingTasks(task.criteria as any, task.value);
 
 	return ({
-		rejectCode,
+		rejectState,
 		checkingTasks
 	});
 }
 
 export function schemaChecker(
 	criteria: MountedCriteria<FormatsCriteria>,
-	entry: unknown
-): SchemaCheckReject | null {
-	let queue: SchemaCheckTask[] = [{ criteria, entry }];
+	value: unknown
+): SchemaCheckerReject | null {
+	let queue: SchemaCheckingTask[] = [{ criteria, value }];
 
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
-		const { rejectCode, checkingTasks } = processTask(currentTask);
+		const { rejectState, checkingTasks } = processTask(currentTask);
 
-		if (rejectCode) {
+		if (rejectState) {
 			return ({
-				code: rejectCode,
+				code: "REJECT_" + rejectState,
 				type: currentTask.criteria.type,
 				label: currentTask.criteria.label,
 				message: currentTask.criteria.message

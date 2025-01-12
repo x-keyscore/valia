@@ -1,7 +1,9 @@
-import { FormatsCriteria, FormatsGuard, TemplateCriteria, TemplateContext, MountedCriteria } from "../types";
+import { FormatsCriteria, FormatsGuard, GlobalCriteria, MountedCriteria } from "../types";
 
-export interface TupleCriteria extends TemplateCriteria {
-	type: "tuple";
+type FormatName = "tuple";
+
+export interface TupleCriteria extends GlobalCriteria {
+	type: FormatName;
 	min?: number;
 	max?: number;
 	/**
@@ -11,17 +13,26 @@ export interface TupleCriteria extends TemplateCriteria {
 	tuple: [FormatsCriteria, ...FormatsCriteria[]];
 }
 
+interface DefaultTupleCriteria {
+	empty: boolean;
+}
+
+interface MountedTupleCriteria {
+	tuple: [MountedCriteria<FormatsCriteria>, ...MountedCriteria<FormatsCriteria>[]];
+}
+
+export type TupleConcretTypes = {
+	type: FormatName;
+	criteria: TupleCriteria;
+	defaultCriteria: DefaultTupleCriteria;
+	mountedCritetia: MountedTupleCriteria;
+}
+
 type TupleGuard<T extends FormatsCriteria> = T extends TupleCriteria
-	? { [Index in keyof T['tuple']]: FormatsGuard<Extract<T['tuple'][Index], FormatsCriteria>> }
+	? { [I in keyof T['tuple']]: FormatsGuard<Extract<T['tuple'][I], FormatsCriteria>> }
 	: never;
 
-export type TupleContext<T extends FormatsCriteria> = TemplateContext<
-	TupleCriteria,
-	TupleGuard<T>,
-	{
-		empty: boolean;
-	},
-	{
-		tuple: [MountedCriteria<TupleCriteria>, ...MountedCriteria<TupleCriteria>[]]
-	}
->
+export type TupleGenericTypes<T extends FormatsCriteria> = {
+	type: FormatName;
+	guard: TupleGuard<T>;
+}

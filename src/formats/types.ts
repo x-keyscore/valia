@@ -1,20 +1,20 @@
-import type { BooleanContext, BooleanCriteria } from "./boolean/types";
-import type { NumberCriteria, NumberContext } from "./number/types";
-import type { RecordContext, RecordCriteria } from "./record/types";
-import type { StringCriteria, StringContext } from "./string/types";
-import type { StructCriteria, StructContext } from "./struct/types";
-import type { SymbolContext, SymbolCriteria } from "./symbol/types";
-import type { TupleCriteria, TupleContext } from "./tuple/types";
-import type { ArrayContext, ArrayCriteria } from "./array/types";
-import { globalCriteria } from "./AbstractFormat";
+import type { ArrayConcretTypes, ArrayGenericTypes } from "./array/types";
+import type { BooleanConcretTypes, BooleanGenericTypes } from "./boolean/types";
+import type { NumberConcretTypes, NumberGenericTypes } from "./number/types";
+import type { RecordConcretTypes, RecordGenericTypes } from "./record/types";
+import type { StringConcretTypes, StringGenericTypes } from "./string/types";
+import type { StructConcretTypes, StructGenericTypes } from "./struct/types";
+import type { SymbolConcretTypes, SymbolGenericTypes } from "./symbol/types";
+import type { TupleConcretTypes, TupleGenericTypes } from "./tuple/types";
+import { DefaultGlobalCriteria } from "./AbstractFormat";
 import { formats } from "./formats";
 
 // CRITERIA
 
 /**
- * This template defines the basic parameters of the criteria.
+ * Defines the basic parameters of the criteria.
  */
-export interface TemplateCriteria {
+export interface GlobalCriteria {
 	label?: string;
 	message?: string;
 	/**
@@ -23,45 +23,16 @@ export interface TemplateCriteria {
 	require?: boolean;
 }
 
-export type PredefinedCriteria<T extends FormatsCriteria> = FormatsContextByCriteria<T>['predefinedCriteria']
-
-export type MountedCriteria<T extends FormatsCriteria> =
-	typeof globalCriteria & PredefinedCriteria<T> & T & FormatsContextByCriteria<T>['mountedCriteria']
-
-// CONTEXT
-
-/**
- * This template streamlines the definition of type parameters for formats.
- * 
- * @template T Criteria of the type that the user will be able to define.
- * @template U Guard type used to provide the data type if it is valid.
- * @template V Type of criteria that must be included in the final
- * criteria, even if they were not defined by the user.
- * @template W Type of criteria that will be added to the criteria
- * visible to the user after the said criteria have been mounted.
- */
-export type TemplateContext<
-	T extends FormatsCriteria,
-	U,
-	V extends Partial<T>,
-	W
-> = {
-	type: T['type'];
-	guard: U;
-	predefinedCriteria: V;
-	mountedCriteria: W
-}
-
 // FORMAT
 
-export type FormatCheckEntry = null | string;
+export type CheckValueResult = null | string;
 
-// FORMATS
+// FORMATS CRITERIA
 
 export type Formats = typeof formats[keyof typeof formats];
 
 export type FormatsInstances = InstanceType<Formats>;
-
+/*
 export type FormatsCriteria =
 	| ArrayCriteria
 	| TupleCriteria
@@ -70,30 +41,91 @@ export type FormatsCriteria =
 	| NumberCriteria
 	| StringCriteria
 	| SymbolCriteria
-	| BooleanCriteria
+	| BooleanCriteria;*/
+
+
+
 
 export type FormatsCriteriaMap = {
-	[T in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: T }>
+	[U in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: U }>
 };
 
-export type FormatsContext<T extends FormatsCriteria> =
-	| ArrayContext<T>
-	| TupleContext<T>
-	| RecordContext<T>
-	| StructContext<T>
-	| NumberContext
-	| StringContext
-	| SymbolContext
-	| BooleanContext;
+// FORMATS DEFAULT CRITERIA
+/*
+export type FormatsDefaultCriteria =
+	| DefaultTupleCriteria;
 
-export type FormatsContextByCriteria<T extends FormatsCriteria> = {
-	[U in FormatsContext<T>['type']]: Extract<FormatsContext<T>, { type: U }>
+export type FormatsDefaultCriteriaMap = {
+	[T in FormatsDefaultCriteria['type']]: Extract<FormatsDefaultCriteria, { type: T }>
+};*/
+
+// FORMATS MOUNTED CRITERIA
+/*
+export type FormatsMountedCriteria =
+	| MountedTupleCriteria;
+
+export type FormatsMountedCriteriaMap = {
+	[U in FormatsMountedCriteria['type']]: Extract<FormatsMountedCriteria, { type: U }>
+};*/
+/*
+export type MountedCriteria<T extends FormatsCriteria> = 
+	& DefaultGlobalCriteria
+	& FormatsConcretTypesMap[T['type']]['defaultCriteria']
+	& T
+	& FormatsConcretTypesMap[T['type']]['mountedCritetia'];*/
+
+export type MountedCriteria<T extends FormatsCriteria> = {
+	[U in T['type']]: 
+		& DefaultGlobalCriteria
+		& FormatsConcretTypesMap[U]['defaultCriteria']
+		& T
+		& FormatsConcretTypesMap[U]['mountedCritetia'];
 }[T['type']];
 
-type FormatsGuardDiscern<T extends FormatsCriteria> = FormatsContextByCriteria<T>['guard'];
+export type DefaultCriteria<T extends FormatsCriteria> = {
+	[U in T['type']]: FormatsConcretTypesMap[U]['defaultCriteria'];
+}[T['type']];
+
+// FORMATS CONCRET TYPES
+
+export type FormatsConcretTypes =
+	| ArrayConcretTypes
+	| BooleanConcretTypes
+	| NumberConcretTypes
+	| RecordConcretTypes
+	| StringConcretTypes
+	| StructConcretTypes
+	| SymbolConcretTypes
+	| TupleConcretTypes;
+
+export type FormatsConcretTypesMap = {
+	[U in FormatsConcretTypes['type']]: Extract<FormatsConcretTypes, { type: U }>
+};
+
+// FORMATS GENERIC TYPES
+
+export type FormatsGenericTypes<T extends FormatsCriteria> =
+	| ArrayGenericTypes<T>
+	| BooleanGenericTypes<T>
+	| NumberGenericTypes<T>
+	| RecordGenericTypes<T>
+	| StringGenericTypes<T>
+	| StructGenericTypes<T>
+	| SymbolGenericTypes<T>
+	| TupleGenericTypes<T>;
+
+export type FormatsGenericTypesMap<T extends FormatsCriteria> = {
+	[U in FormatsGenericTypes<T>['type']]: Extract<FormatsGenericTypes<T>, { type: U }>
+};
+
+// FORMATS
+
+export type FormatsCriteria = {
+	[U in FormatsConcretTypes['type']]: Extract<FormatsConcretTypes, { type: U }>['criteria']
+}[FormatsConcretTypes['type']];
+
 
 export type FormatsGuard<T extends FormatsCriteria> =
 	T['require'] extends false
-		? FormatsGuardDiscern<T> | undefined
-		: NonNullable<FormatsGuardDiscern<T>>;
-
+		? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined
+		: NonNullable<FormatsGenericTypesMap<T>[T['type']]['guard']>;

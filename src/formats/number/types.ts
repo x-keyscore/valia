@@ -1,16 +1,25 @@
-import { TemplateContext, TemplateCriteria } from "../types";
+import { GlobalCriteria, FormatsCriteria } from "../types";
 
-export interface NumberCriteria extends TemplateCriteria {
-	type: "number";
+type FormatName = "number";
+
+export interface NumberCriteria extends GlobalCriteria {
+	type: FormatName;
 	min?: number;
 	max?: number;
 }
 
-type NumberGuard = number;
+export type NumberConcretTypes = {
+	type: FormatName;
+	criteria: NumberCriteria;
+	defaultCriteria: {};
+	mountedCritetia: {};
+}
 
-export type NumberContext = TemplateContext<
-	NumberCriteria,
-	NumberGuard,
-	{},
-	{}
->
+type NumberGuard<T extends FormatsCriteria> = T extends NumberCriteria
+	? number
+	: never;
+
+export type NumberGenericTypes<T extends FormatsCriteria> = {
+	type: FormatName;
+	guard: NumberGuard<T>;
+}

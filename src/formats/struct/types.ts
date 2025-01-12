@@ -1,9 +1,34 @@
-import type { FormatsCriteria, FormatsGuard, MountedCriteria, TemplateContext, TemplateCriteria } from "../types";
+import type { GlobalCriteria, FormatsCriteria, FormatsGuard, MountedCriteria } from "../types";
 
-export interface StructCriteria extends TemplateCriteria {
-	type: "struct";
+type OmitIndexSignatures<K extends keyof any> =
+	string extends K ? never :
+	number extends K ? never :
+	symbol extends K ? never :
+	K;
+
+type FormatName = "struct";
+
+export interface StructCriteria extends GlobalCriteria {
+	type: FormatName;
 	empty?: boolean;
 	struct: Record<PropertyKey, FormatsCriteria>;
+}
+
+interface DefaultStructCriteria {
+	empty: boolean;
+}
+
+interface MountedStructCriteria {
+	definedKeys: string[];
+	requiredKeys: string[];
+	struct: Record<PropertyKey, MountedCriteria<FormatsCriteria>>;
+}
+
+export type StructConcretTypes = {
+	type: FormatName;
+	criteria: StructCriteria;
+	defaultCriteria: DefaultStructCriteria;
+	mountedCritetia: MountedStructCriteria;
 }
 
 type NotRequireKeyMap<T extends StructCriteria['struct']> = {
@@ -16,18 +41,10 @@ type NotRequireToOptional<T extends StructCriteria['struct']> =
 
 type StructGuard<T extends FormatsCriteria> =
 	T extends StructCriteria
-		? { [K in keyof NotRequireToOptional<T['struct']>]: FormatsGuard<T['struct'][K]> }
+		? { [K in keyof NotRequireToOptional<T['struct']> as OmitIndexSignatures<K>]: FormatsGuard<T['struct'][K]> }
 		: never;
 
-export type StructContext<T extends FormatsCriteria> = TemplateContext<
-	StructCriteria,
-	StructGuard<T>,
-	{
-		empty: boolean;
-	},
-	{
-		struct: Record<PropertyKey, MountedCriteria<FormatsCriteria>>;
-		definedKeys: string[];
-		requiredKeys: string[];
-	}
->
+export type StructGenericTypes<T extends FormatsCriteria> = {
+	type: FormatName;
+	guard: StructGuard<T>;
+}
