@@ -1,10 +1,10 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
 import type { MountedCriteria, CheckValueResult } from "../types";
-import type { TupleCriteria } from "./types";
+import type { TupleConcretTypes } from "./types";
 import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
 import { isArray, isObject } from "../../testers";
 
-export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<Criteria> {
+export class TupleFormat<Criteria extends TupleConcretTypes['criteria']> extends AbstractFormat<Criteria> {
 	constructor() {
 		super({
 			empty: false
@@ -58,17 +58,10 @@ export class TupleFormat<Criteria extends TupleCriteria> extends AbstractFormat<
 		if (!valueLength) {
 			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (criteria.min !== undefined && valueLength < criteria.min) {
-			return ("VALUE_INFERIOR_MIN");
+		else if (valueLength < criteria.tuple.length) {
+			return ("VALUE_INFERIOR_TUPLE");
 		}
-		else if (criteria.max !== undefined && valueLength > criteria.max) {
-			return ("VALUE_SUPERIOR_MAX");
-		}
-		else if (criteria.min === undefined && criteria.max === undefined) {
-			if (valueLength < criteria.tuple.length) {
-				return ("VALUE_INFERIOR_TUPLE");
-			}
-		} else if (valueLength > criteria.tuple.length) {
+		else if (valueLength > criteria.tuple.length) {
 			return ("VALUE_SUPERIOR_TUPLE");
 		}
 

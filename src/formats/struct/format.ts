@@ -1,10 +1,10 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
 import type { CheckValueResult, MountedCriteria } from "../types";
-import type { StructCriteria } from "./types";
+import type { StructConcretTypes } from "./types";
 import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
-import { isObject, isPlainObject } from "../../testers";
+import { isArray, isObject, isPlainObject } from "../../testers";
 
-export class StructFormat<Criteria extends StructCriteria> extends AbstractFormat<Criteria> {
+export class StructFormat<Criteria extends StructConcretTypes['criteria']> extends AbstractFormat<Criteria> {
 	constructor() {
 		super({
 			empty: false
@@ -58,6 +58,8 @@ export class StructFormat<Criteria extends StructCriteria> extends AbstractForma
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
+
+			if (isArray(definedCriteria.struct[key])) return ([]);
 
 			if (isAlreadyMounted(definedCriteria.struct[key])) {
 				mountedCriteria.struct[key] = definedCriteria.struct[key];

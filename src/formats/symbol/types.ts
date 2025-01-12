@@ -1,23 +1,18 @@
-import { FormatsCriteria, GlobalCriteria } from "../types";
+import { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes, FormatsCriteria } from "../types";
 
-type FormatName = "symbol";
+export interface SymbolCriteria extends TemplateCriteria<"symbol"> {}
 
-export interface SymbolCriteria extends GlobalCriteria {
-	type: FormatName;
-}
-
-export type SymbolConcretTypes = {
-	type: FormatName;
-	criteria: SymbolCriteria;
-	defaultCriteria: {};
-	mountedCritetia: {};
-}
+export interface SymbolConcretTypes extends TemplateConcretTypes<
+	SymbolCriteria,
+	{},
+	{}
+> {}
 
 type SymbolGuard<T extends FormatsCriteria> = T extends SymbolCriteria
 	? symbol
 	: never;
 
-export type SymbolGenericTypes<T extends FormatsCriteria> = {
-	type: FormatName;
-	guard: SymbolGuard<T>;
-}
+export interface SymbolGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
+	SymbolCriteria,
+	SymbolGuard<T>
+> {}

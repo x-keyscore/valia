@@ -1,7 +1,5 @@
-import { FormatsCriteria, GlobalCriteria } from "../types";
+import { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes, FormatsCriteria } from "../types";
 import { testers } from "../../";
-
-type FormatName = "string";
 
 type ExtractParams<T extends (arg1: any, arg2: any) => any> = 
   T extends (input: any, params: infer U) => boolean ? U : never;
@@ -13,8 +11,7 @@ type TestFunctions<Functions extends Record<string, (arg1: any, arg2: any) => an
 	};
 }[keyof Functions];
 
-export interface StringCriteria extends GlobalCriteria {
-	type: "string";
+export interface StringCriteria extends TemplateCriteria<"string"> {
 	min?: number;
 	max?: number;
 	/**
@@ -26,8 +23,8 @@ export interface StringCriteria extends GlobalCriteria {
 	 */
 	empty?: boolean;
 	regex?: RegExp;
-	test?: TestFunctions<typeof testers.string>;
 	custom?: (input: string) => boolean;
+	test?: TestFunctions<typeof testers.string>;
 }
 
 export interface DefaultStringCriteria {
@@ -35,18 +32,20 @@ export interface DefaultStringCriteria {
 	empty: boolean;
 }
 
-export type StringConcretTypes = {
-	type: FormatName;
-	criteria: StringCriteria;
-	defaultCriteria: DefaultStringCriteria;
-	mountedCritetia: {};
-}
+export interface StringConcretTypes extends TemplateConcretTypes<
+	StringCriteria,
+	{
+		trim: boolean;
+		empty: boolean;
+	},
+	{}
+> {}
 
 type StringGuard<T extends FormatsCriteria> = T extends StringCriteria
 	? string
 	: never;
 
-export type StringGenericTypes<T extends FormatsCriteria> = {
-	type: FormatName;
-	guard: StringGuard<T>;
-}
+export interface StringGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
+	StringCriteria,
+	StringGuard<T>
+> {}

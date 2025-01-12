@@ -1,11 +1,9 @@
-import type { GlobalCriteria, FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
+import type { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes,
+	FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
 
-type FormatName = "record";
+type RecordCriteriaKey = FormatsCriteriaMap["string" | "symbol"];
 
-type RecordCriteriaKey = FormatsCriteriaMap["string" | "number" | "symbol"];
-
-export interface RecordCriteria extends GlobalCriteria {
-	type: FormatName;
+export interface RecordCriteria extends TemplateCriteria<"record"> {
 	min?: number;
 	max?: number;
 	empty?: boolean;
@@ -13,21 +11,16 @@ export interface RecordCriteria extends GlobalCriteria {
 	value: FormatsCriteria;
 }
 
-type DefaultRecordCriteria = {
-	empty: boolean;
-}
-
-type MountedRecordCriteria = {
-	key: MountedCriteria<RecordCriteriaKey>;
-	value: MountedCriteria<FormatsCriteria>;
-}
-
-export type RecordConcretTypes = {
-	type: FormatName;
-	criteria: RecordCriteria;
-	defaultCriteria: DefaultRecordCriteria;
-	mountedCritetia: MountedRecordCriteria;
-}
+export interface RecordConcretTypes extends TemplateConcretTypes<
+	RecordCriteria,
+	{
+		empty: boolean;
+	},
+	{
+		key: MountedCriteria<RecordCriteriaKey>;
+		value: MountedCriteria<FormatsCriteria>;
+	}
+> {}
 
 type RecordGuard<T extends FormatsCriteria> =
 	T extends RecordCriteria
@@ -38,7 +31,7 @@ type RecordGuard<T extends FormatsCriteria> =
 			: never
 		: never;
 
-export type RecordGenericTypes<T extends FormatsCriteria> = {
-	type: FormatName;
-	guard: RecordGuard<T>;
-}
+export interface RecordGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
+	RecordCriteria,
+	RecordGuard<T>
+> {}

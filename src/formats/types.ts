@@ -13,8 +13,12 @@ import { formats } from "./formats";
 
 /**
  * Defines the basic parameters of the criteria.
+ * 
+ * @template T The name assigned to the format when the user selects
+ * the type within the schema.
  */
-export interface GlobalCriteria {
+export interface TemplateCriteria<T extends string> {
+	type: T,
 	label?: string;
 	message?: string;
 	/**
@@ -23,70 +27,28 @@ export interface GlobalCriteria {
 	require?: boolean;
 }
 
-// FORMAT
-
-export type CheckValueResult = null | string;
-
-// FORMATS CRITERIA
-
-export type Formats = typeof formats[keyof typeof formats];
-
-export type FormatsInstances = InstanceType<Formats>;
-/*
-export type FormatsCriteria =
-	| ArrayCriteria
-	| TupleCriteria
-	| RecordCriteria
-	| StructCriteria
-	| NumberCriteria
-	| StringCriteria
-	| SymbolCriteria
-	| BooleanCriteria;*/
-
-
-
-
-export type FormatsCriteriaMap = {
-	[U in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: U }>
-};
-
-// FORMATS DEFAULT CRITERIA
-/*
-export type FormatsDefaultCriteria =
-	| DefaultTupleCriteria;
-
-export type FormatsDefaultCriteriaMap = {
-	[T in FormatsDefaultCriteria['type']]: Extract<FormatsDefaultCriteria, { type: T }>
-};*/
-
-// FORMATS MOUNTED CRITERIA
-/*
-export type FormatsMountedCriteria =
-	| MountedTupleCriteria;
-
-export type FormatsMountedCriteriaMap = {
-	[U in FormatsMountedCriteria['type']]: Extract<FormatsMountedCriteria, { type: U }>
-};*/
-/*
-export type MountedCriteria<T extends FormatsCriteria> = 
-	& DefaultGlobalCriteria
-	& FormatsConcretTypesMap[T['type']]['defaultCriteria']
-	& T
-	& FormatsConcretTypesMap[T['type']]['mountedCritetia'];*/
-
-export type MountedCriteria<T extends FormatsCriteria> = {
-	[U in T['type']]: 
-		& DefaultGlobalCriteria
-		& FormatsConcretTypesMap[U]['defaultCriteria']
-		& T
-		& FormatsConcretTypesMap[U]['mountedCritetia'];
-}[T['type']];
-
-export type DefaultCriteria<T extends FormatsCriteria> = {
-	[U in T['type']]: FormatsConcretTypesMap[U]['defaultCriteria'];
-}[T['type']];
-
 // FORMATS CONCRET TYPES
+
+/**
+ * @template T Extended interface of `TemplateCriteria` that defines
+ * the format criteria users must or can specify.
+ * 
+ * @template U Default properties for those defined in `T` that must
+ * be specified in the superclass reference within the format class.
+ * 
+ * @template V Additional or replacement properties that will be
+ * defined after the criteria are mounted.
+ */
+export interface TemplateConcretTypes<
+	T extends TemplateCriteria<string>,
+	U extends Partial<T>,
+	V extends Record<string, unknown>,
+> {
+	type: T['type'],
+	criteria: T,
+	defaultCriteria: U,
+	mountedCritetia: V
+}
 
 export type FormatsConcretTypes =
 	| ArrayConcretTypes
@@ -104,6 +66,14 @@ export type FormatsConcretTypesMap = {
 
 // FORMATS GENERIC TYPES
 
+export interface TemplateGenericTypes<
+	T extends TemplateCriteria<string>,
+	U,
+> {
+	type: T['type'],
+	guard: U
+}
+
 export type FormatsGenericTypes<T extends FormatsCriteria> =
 	| ArrayGenericTypes<T>
 	| BooleanGenericTypes<T>
@@ -118,14 +88,41 @@ export type FormatsGenericTypesMap<T extends FormatsCriteria> = {
 	[U in FormatsGenericTypes<T>['type']]: Extract<FormatsGenericTypes<T>, { type: U }>
 };
 
-// FORMATS
+// FORMATS CRITERIA
 
 export type FormatsCriteria = {
 	[U in FormatsConcretTypes['type']]: Extract<FormatsConcretTypes, { type: U }>['criteria']
 }[FormatsConcretTypes['type']];
 
+export type FormatsCriteriaMap = {
+	[U in FormatsCriteria['type']]: Extract<FormatsCriteria, { type: U }>
+};
+
+export type DefaultCriteria<T extends FormatsCriteria> = {
+	[U in T['type']]: FormatsConcretTypesMap[U]['defaultCriteria'];
+}[T['type']];
+
+export type MountedCriteria<T extends FormatsCriteria> = {
+	[U in T['type']]:
+		& DefaultGlobalCriteria
+		& FormatsConcretTypesMap[U]['defaultCriteria']
+		& T
+		& FormatsConcretTypesMap[U]['mountedCritetia'];
+}[T['type']];
+
+// FORMATS GUARD
 
 export type FormatsGuard<T extends FormatsCriteria> =
 	T['require'] extends false
 		? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined
 		: NonNullable<FormatsGenericTypesMap<T>[T['type']]['guard']>;
+
+// FORMAT
+
+export type CheckValueResult = null | string;
+
+// FORMATS
+
+export type Formats = typeof formats[keyof typeof formats];
+
+export type FormatsInstances = InstanceType<Formats>;

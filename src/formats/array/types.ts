@@ -1,9 +1,6 @@
-import { FormatsCriteria, FormatsGuard, GlobalCriteria, MountedCriteria } from "../types";
+import { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes, FormatsCriteria, FormatsGuard, MountedCriteria } from "../types";
 
-type FormatName = "array";
-
-export interface ArrayCriteria extends GlobalCriteria {
-	type: FormatName;
+export interface ArrayCriteria extends TemplateCriteria<"array"> {
 	item: FormatsCriteria;
 	min?: number;
 	max?: number;
@@ -13,20 +10,15 @@ export interface ArrayCriteria extends GlobalCriteria {
 	empty?: boolean;
 }
 
-type DefaultArrayCriteria = {
-	empty: boolean;
-}
-
-type MountedArrayCriteria = {
-	item: MountedCriteria<FormatsCriteria>;
-}
-
-export type ArrayConcretTypes = {
-	type: FormatName;
-	criteria: ArrayCriteria;
-	defaultCriteria: DefaultArrayCriteria;
-	mountedCritetia: MountedArrayCriteria;
-}
+export interface ArrayConcretTypes extends TemplateConcretTypes<
+	ArrayCriteria,
+	{
+		empty: boolean;
+	},
+	{
+		item: MountedCriteria<FormatsCriteria>;
+	}
+> {}
 
 /**
  * The `ArrayGuard` type must represent the format type once it has been validated,
@@ -42,7 +34,7 @@ type ArrayGuard<T extends FormatsCriteria> = T extends ArrayCriteria
 	? FormatsGuard<T['item']>[]
 	: never;
 
-export type ArrayGenericTypes<T extends FormatsCriteria> = {
-	type: FormatName;
-	guard: ArrayGuard<T>;
-}
+export interface ArrayGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
+	ArrayCriteria,
+	ArrayGuard<T>
+> {}

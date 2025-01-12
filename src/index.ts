@@ -4,22 +4,19 @@ export * from './tools';
 
 import { Schema } from "./schema";
 
-const userNameType = new Schema({ type: "string" });
+const userNameType = new Schema({ require: false, type: "string" });
 
 const userTestType = new Schema({
-	type: "record",
-	require: false,
-	key: userNameType.criteria,
-	value: userNameType.criteria
+	type: "struct",
+	optionalKeys: "Y",
+	struct: {
+		name: { require: false, type: "string" }
+	}
 });
 
-const userSchema = new Schema({ 
-    type: "struct",
-	require: false,
-	struct: {
-		test: userNameType.criteria,
-		test2: userTestType.criteria
-	}
+const userSchema = new Schema({
+    type: "tuple",
+	tuple: [userTestType.criteria, userNameType.criteria]
 });
 
 let test = {
@@ -28,7 +25,7 @@ let test = {
 } as any;
 
 if (userSchema.guard(test)) {
-	let tt = test?.test2
+	let tt = test[0]
 }
 
 let user = { name: 11 };

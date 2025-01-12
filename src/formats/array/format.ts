@@ -1,8 +1,8 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
 import type { CheckValueResult, MountedCriteria  } from "../types";
 import type { ArrayCriteria } from "./types";
+import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
 import { isArray, isObject } from "../../testers";
-import { AbstractFormat } from "../AbstractFormat";
 
 export class ArrayFormat<Criteria extends ArrayCriteria> extends AbstractFormat<Criteria> {
 	constructor() {
@@ -22,10 +22,16 @@ export class ArrayFormat<Criteria extends ArrayCriteria> extends AbstractFormat<
 		definedCriteria: Criteria,
 		mountedCriteria: MountedCriteria<Criteria>
 	): SchemaMountingTask[] {
-		let mountingTasks: SchemaMountingTask[] = [{
-			definedCriteria: definedCriteria.item,
-			mountedCriteria: mountedCriteria.item
-		}];
+		let mountingTasks: SchemaMountingTask[] = [];
+
+		if (isAlreadyMounted(definedCriteria.item)) {
+			mountedCriteria.item = definedCriteria.item;
+		} else {
+			mountingTasks.push({
+				definedCriteria: definedCriteria.item,
+				mountedCriteria: mountedCriteria.item
+			});
+		}
 
 		return (mountingTasks);
 	}

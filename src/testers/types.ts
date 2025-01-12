@@ -1,4 +1,4 @@
-export type PlainObject = Record<string, unknown>;
+export type PlainObject = Record<string | symbol, unknown>;
 
 export type PlainFunction = (...args: unknown[]) => unknown;
 
