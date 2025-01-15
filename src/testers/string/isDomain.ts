@@ -1,4 +1,4 @@
-import { createUTF16UnitArray } from "../../tools";
+import { stringToUTF16UnitArray } from "../../tools";
 
 /**
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
@@ -27,7 +27,8 @@ function isDigit(codePoint: number) {
 }
 
 /**
- *  @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ *  @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  * 
  * **Implementation version :** 1.0.0-beta
  * 
@@ -47,7 +48,7 @@ function isDigit(codePoint: number) {
  * * `domain = label *("." label)`
  */
 export function isDomain(input: string | Uint16Array, params?: undefined): boolean {
-	const utf16UnitArray = typeof input === "string" ? createUTF16UnitArray(input) : input;
+	const utf16UnitArray = typeof input === "string" ? stringToUTF16UnitArray(input) : input;
 	const arrayLength = utf16UnitArray.length;
 	let labelLength = 0;
 	let prevIsDot = 1;

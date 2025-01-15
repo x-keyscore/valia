@@ -1,14 +1,20 @@
-import type { FormatsCriteria, MountedCriteria } from "../formats";
+import type { VariantCriteria, MountedCriteria } from "../formats";
 
 export interface SchemaMountingTask {
-	definedCriteria: FormatsCriteria;
-	mountedCriteria: MountedCriteria<FormatsCriteria>;
+	definedCriteria: VariantCriteria;
+	mountedCriteria: MountedCriteria<VariantCriteria>;
+}
+
+export interface CheckingTaskLink {
+	isClose: boolean;
+	totalLinks: number;
+	totalRejected: number;
 }
 
 export interface SchemaCheckingTask {
-	criteria: MountedCriteria<FormatsCriteria>;
-	/** value root or value subpart */
-	value: any;
+	criteria: MountedCriteria<VariantCriteria>;
+	value: unknown;
+	link?: CheckingTaskLink;
 }
 
 export interface SchemaCheckerReject {

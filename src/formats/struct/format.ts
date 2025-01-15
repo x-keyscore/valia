@@ -1,20 +1,25 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
-import type { CheckValueResult, MountedCriteria } from "../types";
-import type { StructConcretTypes } from "./types";
-import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
+import type { FormatTemplate, MountedCriteria } from "../types";
+import type { StructVariantCriteria } from "./types";
+import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
 import { isArray, isObject, isPlainObject } from "../../testers";
 
-export class StructFormat<Criteria extends StructConcretTypes['criteria']> extends AbstractFormat<Criteria> {
-	constructor() {
-		super({
-			empty: false
-		});
-	}
-
-	protected hasRequiredKeys(
-		mountedCriteria: MountedCriteria<Criteria>,
+interface CustomProperty {
+	hasRequiredKeys(
+		mountedCriteria: MountedCriteria<StructVariantCriteria>,
 		value: Record<string, unknown>
-	) {
+	): boolean;
+	hasDefinedKeys(
+		mountedCriteria: MountedCriteria<StructVariantCriteria>,
+		value: Record<string, unknown>
+	): boolean;
+}
+
+export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty> = {
+	defaultCriteria: {
+		empty: false
+	},
+	hasRequiredKeys(mountedCriteria, value) {
 		const requiredKeys = mountedCriteria.requiredKeys;
 		const inputKeys = Object.keys(value);
 
@@ -22,12 +27,8 @@ export class StructFormat<Criteria extends StructConcretTypes['criteria']> exten
 			if (!inputKeys.includes(key)) return (false)
 		}
 		return (true);
-	}
-
-	protected hasDefinedKeys(
-		mountedCriteria: MountedCriteria<Criteria>,
-		value: Record<string, unknown>
-	) {
+	},
+	hasDefinedKeys(mountedCriteria, value) {
 		const definedKeys = mountedCriteria.definedKeys;
 		const inputKeys = Object.keys(value);
 
@@ -35,24 +36,17 @@ export class StructFormat<Criteria extends StructConcretTypes['criteria']> exten
 			if (!definedKeys.includes(key)) return (false)
 		}
 		return (true);
-	}
-
-	mountCriteria(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): MountedCriteria<Criteria> {
-		const requiredKeys = Object.entries(definedCriteria.struct)
-			.filter(([key, criteria]) => criteria.require !== false)
-			.map(([key]) => key);
+	},
+	mountCriteria(definedCriteria, mountedCriteria) {
 		const definedKeys = Object.keys(definedCriteria.struct);
+		const optionalKeys = definedCriteria.optionalKeys;
 
-		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria, { requiredKeys, definedKeys }));
-	}
-
-	getMountingTasks(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountingTask[] {
+		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria, {
+			definedKeys: Object.keys(definedCriteria.struct),
+			requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : []
+		}));
+	},
+	getMountingTasks(definedCriteria, mountedCriteria) {
 		let mountingTasks: SchemaMountingTask[] = [];
 		const keys = Object.keys(definedCriteria.struct);
 
@@ -72,16 +66,9 @@ export class StructFormat<Criteria extends StructConcretTypes['criteria']> exten
 		}
 
 		return (mountingTasks);
-	}
-
-	checkValue(
-		criteria: MountedCriteria<Criteria>,
-		value: unknown
-	): CheckValueResult {
-		if (value === undefined) {
-			return (!criteria.require ? null : "TYPE_UNDEFINED");
-		}
-		else if (!isObject(value)) {
+	},
+	checkValue(criteria, value) {
+		if (!isObject(value)) {
 			return ("TYPE_NOT_OBJECT");
 		}
 		else if (!isPlainObject(value)) {
@@ -97,13 +84,9 @@ export class StructFormat<Criteria extends StructConcretTypes['criteria']> exten
 			return ("VALUE_INVALID_KEY");
 		};
 
-		return null
-	}
-
-	getCheckingTasks(
-		criteria: MountedCriteria<Criteria>,
-		value: any
-	): SchemaCheckingTask[] {
+		return (null);
+	},
+	getCheckingTasks(criteria, value) {
 		let checkingTasks: SchemaCheckingTask[] = [];
 		const keys = Object.keys(value);
 
@@ -116,5 +99,5 @@ export class StructFormat<Criteria extends StructConcretTypes['criteria']> exten
 		}
 
 		return (checkingTasks);
-	}
+	},
 }

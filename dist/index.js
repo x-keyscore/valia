@@ -18,14 +18,54 @@ __exportStar(require("./testers"), exports);
 __exportStar(require("./schema"), exports);
 __exportStar(require("./tools"), exports);
 const schema_1 = require("./schema");
-const userSchema = new schema_1.Schema({
+const stringType = new schema_1.Schema({ type: "string" });
+const unionType = new schema_1.Schema({
+    type: 'union',
+    union: [stringType.criteria, { type: "number", max: 20 }, { type: "boolean" }]
+});
+const recordType = new schema_1.Schema({
+    type: "record",
+    empty: "r",
+    key: { type: "string" },
+    value: unionType.criteria
+});
+let object = {};
+for (let i = 0; i < 50000; i++) {
+    Object.assign(object, { [`${i}`]: "r" });
+}
+/*
+let test = {};
+test as any
+if (structType.guard(test)) {
+    test
+}*/
+console.log("start");
+const start = performance.now();
+console.log(recordType.check(object));
+const end = performance.now();
+const timeTaken = end - start;
+console.log(`Schema check - Execution Time: ${timeTaken.toFixed(2)} ms`);
+/*
+const arrayType = new Schema({
+    type: "array",
+    item: unionType.criteria
+});
+const tupleType = new Schema({
+    type: "tuple",
+    tuple: [structType.criteria, { type: "number" }]
+});
+
+const structType = new Schema({
     type: "struct",
     struct: {
-        name: { type: "string" }
+        k: arrayType.criteria,
+        k2: unionType.criteria
     }
-});
-let user = { name: 11 };
-console.log(userSchema.check(user));
+});*/
+/*
+if (structType.guard(test)) {
+    test
+}*/
 /*
 const start = performance.now();
 console.log(userSchema.check(input))

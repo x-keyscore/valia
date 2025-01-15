@@ -27,7 +27,8 @@ function isDigit(codePoint) {
     return (false);
 }
 /**
- *  @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ *  @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  *
  * **Implementation version :** 1.0.0-beta
  *
@@ -47,7 +48,7 @@ function isDigit(codePoint) {
  * * `domain = label *("." label)`
  */
 function isDomain(input, params) {
-    const utf16UnitArray = typeof input === "string" ? (0, tools_1.createUTF16UnitArray)(input) : input;
+    const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
     const arrayLength = utf16UnitArray.length;
     let labelLength = 0;
     let prevIsDot = 1;

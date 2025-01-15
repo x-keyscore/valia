@@ -1,31 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SymbolFormat = void 0;
+const formats_1 = require("../formats");
 const testers_1 = require("../../testers");
-const AbstractFormat_1 = require("../AbstractFormat");
-class SymbolFormat extends AbstractFormat_1.AbstractFormat {
-    constructor() {
-        super({});
-        this.type = "symbol";
-    }
+exports.SymbolFormat = {
+    defaultCriteria: {},
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-    }
-    getMountingTasks(definedCriteria, mountedCriteria) {
-        return ([]);
-    }
-    checkEntry(mountedCriteria, entry) {
-        const criteria = mountedCriteria;
-        if (entry === undefined) {
-            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, definedCriteria));
+    },
+    checkValue(criteria, value) {
+        if (!(0, testers_1.isSymbol)(value)) {
+            return "TYPE_NOT_SYMBOL";
         }
-        else if (!(0, testers_1.isSymbol)(entry)) {
-            return "REJECT_TYPE_NOT_SYMBOL";
+        else if (criteria.symbol !== undefined && criteria.symbol === value) {
+            return "VALUE_INVALID_SYMBOL";
         }
         return (null);
     }
-    getCheckingTasks(mountedCriteria, entry) {
-        return ([]);
-    }
-}
-exports.SymbolFormat = SymbolFormat;
+};

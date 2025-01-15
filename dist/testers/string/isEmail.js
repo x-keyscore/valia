@@ -176,7 +176,7 @@ function skipDotString(utf16UnitArray, startIndex) {
 function isValidLocalPart(utf16UnitArray, allowQuotedString) {
     let i = 0;
     /** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1 */
-    if ((0, tools_1.getUTF8ByteLengthFromUTF16UnitArray)(utf16UnitArray) > 64)
+    if ((0, tools_1.getUTF8ByteLengthByUTF16UnitArray)(utf16UnitArray) > 64)
         return (false);
     if (allowQuotedString && utf16UnitArray[i] === 92) { // "\""
         i = skipQuotedString(utf16UnitArray, i);
@@ -307,7 +307,7 @@ function isValidDomainPart(utf16UnitArray, allowAddressLiteral) {
     }
     else if (isDomain(utf16UnitArray)) {
         /** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.2 */
-        if ((0, tools_1.getUTF8ByteLengthFromUTF16UnitArray)(utf16UnitArray) <= 255)
+        if ((0, tools_1.getUTF8ByteLengthByUTF16UnitArray)(utf16UnitArray) <= 255)
             return (true);
     }
     return (false);
@@ -342,7 +342,8 @@ function extractLocalAndDomain(utf16UnitArray) {
     };
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  *
  * **Implementation version :** 1.1.0-beta
  *
@@ -356,7 +357,7 @@ function extractLocalAndDomain(utf16UnitArray) {
  * `Mailbox`
  */
 function isEmail(input, params) {
-    const utf16UnitArray = typeof input === "string" ? (0, tools_1.createUTF16UnitArray)(input) : input;
+    const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
     const parts = extractLocalAndDomain(utf16UnitArray);
     if (parts === null)
         return (false);

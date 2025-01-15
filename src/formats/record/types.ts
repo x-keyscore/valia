@@ -1,37 +1,42 @@
-import type { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes,
-	FormatsCriteria, FormatsCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
+import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+	VariantCriteria, VariantCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
 
-type RecordCriteriaKey = FormatsCriteriaMap["string" | "symbol"];
+type RecordVariantCriteriaKeys = VariantCriteriaMap["string" | "symbol"];
 
-export interface RecordCriteria extends TemplateCriteria<"record"> {
+export interface RecordVariantCriteria extends VariantCriteriaTemplate<"record"> {
+	key: RecordVariantCriteriaKeys;
+	value: VariantCriteria;
+	/** @default true */
+	empty?: boolean;
 	min?: number;
 	max?: number;
-	empty?: boolean;
-	key: RecordCriteriaKey;
-	value: FormatsCriteria;
 }
 
-export interface RecordConcretTypes extends TemplateConcretTypes<
-	RecordCriteria,
-	{
-		empty: boolean;
-	},
-	{
-		key: MountedCriteria<RecordCriteriaKey>;
-		value: MountedCriteria<FormatsCriteria>;
-	}
+export interface RecordDefaultCriteria {
+	empty: boolean;
+}
+
+export interface RecordMountedCriteria {
+	key: MountedCriteria<RecordVariantCriteriaKeys>;
+	value: MountedCriteria<VariantCriteria>;
+}
+
+export interface RecordConcreteTypes extends ConcreteTypesTemplate<
+	RecordVariantCriteria,
+	RecordDefaultCriteria,
+	RecordMountedCriteria
 > {}
 
-type RecordGuard<T extends FormatsCriteria> =
-	T extends RecordCriteria
-		? FormatsGuard<T['key']> extends infer K
-			? K extends PropertyKey
-				? { [P in K]: FormatsGuard<T['value']> }
+type RecordGuard<T extends VariantCriteria> =
+	T extends RecordVariantCriteria
+		? FormatsGuard<T['key']> extends infer U
+			? U extends PropertyKey
+				? { [P in U]: FormatsGuard<T['value']> }
 				: never
 			: never
 		: never;
 
-export interface RecordGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
-	RecordCriteria,
+export interface RecordGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
+	RecordVariantCriteria,
 	RecordGuard<T>
 > {}

@@ -1,7 +1,8 @@
-import { createUTF16UnitArray } from "../../tools";
+import { stringToUTF16UnitArray } from "../../tools";
 
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  * 
  * **Implementation version :** 1.0.0-beta
  * 
@@ -15,6 +16,6 @@ import { createUTF16UnitArray } from "../../tools";
  * `dataurl`
  */
 export function isDataURL(input: string | Uint16Array, params?: undefined): boolean {
-	const utf16UnitArray = typeof input === "string" ? createUTF16UnitArray(input) : input;
+	const utf16UnitArray = typeof input === "string" ? stringToUTF16UnitArray(input) : input;
 	return (true);
 }

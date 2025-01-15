@@ -1,13 +1,18 @@
-import { FormatsCriteria, FormatsGuard, TemplateCriteria, TemplateContext, MountedCriteria } from "../types";
-export interface ArrayCriteria extends TemplateCriteria {
-    type: "array";
-    item: FormatsCriteria;
+import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, FormatsGuard, MountedCriteria, VariantCriteria } from "../types";
+export interface ArrayVariantCriteria extends VariantCriteriaTemplate<"array"> {
+    item: VariantCriteria;
+    /** @default true */
+    empty?: boolean;
     min?: number;
     max?: number;
-    /**
-     * @default true
-     */
-    empty?: boolean;
+}
+export interface ArrayDefaultCriteria {
+    empty: boolean;
+}
+export interface ArrayMountedCriteria {
+    item: MountedCriteria<VariantCriteria>;
+}
+export interface ArrayConcreteTypes extends ConcreteTypesTemplate<ArrayVariantCriteria, ArrayDefaultCriteria, ArrayMountedCriteria> {
 }
 /**
  * The `ArrayGuard` type must represent the format type once it has been validated,
@@ -19,10 +24,7 @@ export interface ArrayCriteria extends TemplateCriteria {
  *
  * @template T - The current criteria type of the recursive loop.
  */
-type ArrayGuard<T extends FormatsCriteria> = T extends ArrayCriteria ? FormatsGuard<T['item']>[] : never;
-export type ArrayContext<T extends FormatsCriteria> = TemplateContext<ArrayCriteria, ArrayGuard<T>, {
-    empty: boolean;
-}, {
-    item: MountedCriteria<ArrayCriteria>;
-}>;
+type ArrayGuard<T extends VariantCriteria> = T extends ArrayVariantCriteria ? FormatsGuard<T['item']>[] : never;
+export interface ArrayGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<ArrayVariantCriteria, ArrayGuard<T>> {
+}
 export {};

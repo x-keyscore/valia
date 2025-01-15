@@ -1,75 +1,70 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecordFormat = void 0;
+const formats_1 = require("../formats");
 const testers_1 = require("../../testers");
-const AbstractFormat_1 = require("../AbstractFormat");
-class RecordFormat extends AbstractFormat_1.AbstractFormat {
-    constructor() {
-        super({
-            empty: false
-        });
-        this.type = "record";
-    }
+exports.RecordFormat = {
+    defaultCriteria: {
+        empty: true
+    },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-    }
+        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+    },
     getMountingTasks(definedCriteria, mountedCriteria) {
-        let buildTasks = [];
-        buildTasks.push({
-            definedCriteria: definedCriteria.key,
-            mountedCriteria: mountedCriteria.key
-        });
-        if ((0, AbstractFormat_1.isAlreadyMounted)(definedCriteria.value)) {
+        let mountingTasks = [];
+        if ((0, formats_1.isAlreadyMounted)(definedCriteria.key)) {
+            mountedCriteria.key = definedCriteria.key;
+        }
+        else {
+            mountingTasks.push({
+                definedCriteria: definedCriteria.key,
+                mountedCriteria: mountedCriteria.key
+            });
+        }
+        if ((0, formats_1.isAlreadyMounted)(definedCriteria.value)) {
             mountedCriteria.value = definedCriteria.value;
         }
         else {
-            buildTasks.push({
+            mountingTasks.push({
                 definedCriteria: definedCriteria.value,
                 mountedCriteria: mountedCriteria.value
             });
         }
-        return (buildTasks);
-    }
-    objectLength(obj) {
-        return (Object.keys(obj).length + Object.getOwnPropertySymbols(obj).length);
-    }
-    checkEntry(criteria, entry) {
-        if (entry === undefined) {
-            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+        return (mountingTasks);
+    },
+    checkValue(criteria, value) {
+        if (!(0, testers_1.isObject)(value)) {
+            return ("TYPE_NOT_OBJECT");
         }
-        else if (!(0, testers_1.isObject)(entry)) {
-            return ("REJECT_TYPE_NOT_OBJECT");
+        else if (!(0, testers_1.isPlainObject)(value)) {
+            return ("TYPE_NOT_PLAIN_OBJECT");
         }
-        else if (!(0, testers_1.isPlainObject)(entry)) {
-            return ("REJECT_TYPE_NOT_PLAIN_OBJECT");
+        const totalKeys = Object.keys(value).length;
+        if (totalKeys === 0) {
+            return (criteria.empty ? null : "VALUE_EMPTY");
         }
-        const numberKeys = Object.keys(entry).length;
-        if (numberKeys === 0) {
-            return ("REJECT_VALUE_EMPTY");
+        else if (criteria.min !== undefined && totalKeys < criteria.min) {
+            return ("VALUE_INFERIOR_MIN");
         }
-        else if (criteria.min !== undefined && numberKeys < criteria.min) {
-            return ("REJECT_VALUE_INFERIOR_MIN");
-        }
-        else if (criteria.max !== undefined && numberKeys > criteria.max) {
-            return ("REJECT_VALUE_SUPERIOR_MAX");
+        else if (criteria.max !== undefined && totalKeys > criteria.max) {
+            return ("VALUE_SUPERIOR_MAX");
         }
         return (null);
-    }
-    getCheckingTasks(criteria, entry) {
-        let checkTasks = [];
-        const keys = Object.keys(entry);
+    },
+    getCheckingTasks(criteria, value) {
+        let checkingTasks = [];
+        const keys = Object.keys(value);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            checkTasks.push({
+            checkingTasks.push({
                 criteria: criteria.key,
-                entry: key
+                value: key
             });
-            checkTasks.push({
+            checkingTasks.push({
                 criteria: criteria.value,
-                entry: entry[key]
+                value: value[key]
             });
         }
-        return (checkTasks);
-    }
-}
-exports.RecordFormat = RecordFormat;
+        return (checkingTasks);
+    },
+};

@@ -1,22 +1,20 @@
-import { TemplateConcretTypes, TemplateCriteria, TemplateGenericTypes, FormatsCriteria } from "../types";
+import { ConcreteTypesTemplate, VariantCriteriaTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
 
-export interface NumberCriteria extends TemplateCriteria<"number"> {
+export interface NumberVariantCriteria extends VariantCriteriaTemplate<"number"> {
 	min?: number;
 	max?: number;
 	custom?: (input: number) => boolean;
 }
 
-export interface NumberConcretTypes extends TemplateConcretTypes<
-	NumberCriteria,
+export interface NumberConcreteTypes extends ConcreteTypesTemplate<
+	NumberVariantCriteria,
 	{},
 	{}
 > {}
 
-type NumberGuard<T extends FormatsCriteria> = T extends NumberCriteria
-	? number
-	: never;
+type NumberGuard<T extends VariantCriteria> = T extends NumberVariantCriteria ? number : never;
 
-export interface NumberGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
-	NumberCriteria,
+export interface NumberGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
+	NumberVariantCriteria,
 	NumberGuard<T>
 > {}

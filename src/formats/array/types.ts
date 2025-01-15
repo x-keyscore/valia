@@ -1,23 +1,25 @@
-import { TemplateCriteria, TemplateConcretTypes, TemplateGenericTypes, FormatsCriteria, FormatsGuard, MountedCriteria } from "../types";
+import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, FormatsGuard, MountedCriteria, VariantCriteria } from "../types";
 
-export interface ArrayCriteria extends TemplateCriteria<"array"> {
-	item: FormatsCriteria;
+export interface ArrayVariantCriteria extends VariantCriteriaTemplate<"array"> {
+	item: VariantCriteria;
+	/** @default true */
+	empty?: boolean;
 	min?: number;
 	max?: number;
-	/**
-	 * @default true
-	 */
-	empty?: boolean;
 }
 
-export interface ArrayConcretTypes extends TemplateConcretTypes<
-	ArrayCriteria,
-	{
-		empty: boolean;
-	},
-	{
-		item: MountedCriteria<FormatsCriteria>;
-	}
+export interface ArrayDefaultCriteria {
+	empty: boolean;
+}
+
+export interface ArrayMountedCriteria {
+	item: MountedCriteria<VariantCriteria>;
+}
+
+export interface ArrayConcreteTypes extends ConcreteTypesTemplate<
+	ArrayVariantCriteria,
+	ArrayDefaultCriteria,
+	ArrayMountedCriteria
 > {}
 
 /**
@@ -30,11 +32,11 @@ export interface ArrayConcretTypes extends TemplateConcretTypes<
  * 
  * @template T - The current criteria type of the recursive loop.
  */
-type ArrayGuard<T extends FormatsCriteria> = T extends ArrayCriteria
+type ArrayGuard<T extends VariantCriteria> = T extends ArrayVariantCriteria
 	? FormatsGuard<T['item']>[]
 	: never;
 
-export interface ArrayGenericTypes<T extends FormatsCriteria> extends TemplateGenericTypes<
-	ArrayCriteria,
+export interface ArrayGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
+	ArrayVariantCriteria,
 	ArrayGuard<T>
 > {}

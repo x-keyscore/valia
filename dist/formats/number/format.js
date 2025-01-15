@@ -1,39 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NumberFormat = void 0;
+const formats_1 = require("../formats");
 const testers_1 = require("../../testers");
-const AbstractFormat_1 = require("../AbstractFormat");
-class NumberFormat extends AbstractFormat_1.AbstractFormat {
-    constructor() {
-        super({
-            empty: true,
-            trim: true
-        });
-        this.type = "number";
-    }
+exports.NumberFormat = {
+    defaultCriteria: {},
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-    }
-    getMountingTasks(definedCriteria, mountedCriteria) {
-        return ([]);
-    }
-    checkEntry(criteria, entry) {
-        if (entry === undefined) {
-            return (!criteria.require ? null : "REJECT_TYPE_UNDEFINED");
+        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, definedCriteria));
+    },
+    checkValue(criteria, value) {
+        if (!(0, testers_1.isNumber)(value)) {
+            return ("TYPE_NOT_NUMBER");
         }
-        else if (!(0, testers_1.isNumber)(entry)) {
-            return ("REJECT_TYPE_NOT_NUMBER");
+        else if (criteria.min !== undefined && value < criteria.min) {
+            return ("VALUE_SUPERIOR_MIN");
         }
-        else if (criteria.min !== undefined && entry < criteria.min) {
-            return ("REJECT_VALUE_TOO_SMALL");
+        else if (criteria.max !== undefined && value > criteria.max) {
+            return ("VALUE_SUPERIOR_MAX");
         }
-        else if (criteria.max !== undefined && entry > criteria.max) {
-            return ("REJECT_VALUE_TOO_BIG");
+        else if (criteria.custom && !criteria.custom(value)) {
+            return ("TEST_CUSTOM_FAILED");
         }
         return (null);
     }
-    getCheckingTasks(criteria, entry) {
-        return ([]);
-    }
-}
-exports.NumberFormat = NumberFormat;
+};

@@ -1,27 +1,17 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
-import type { CheckValueResult, MountedCriteria  } from "../types";
-import type { ArrayCriteria } from "./types";
-import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
+import type { ArrayVariantCriteria } from "./types";
+import type { FormatTemplate  } from "../types";
+import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
 import { isArray, isObject } from "../../testers";
 
-export class ArrayFormat<Criteria extends ArrayCriteria> extends AbstractFormat<Criteria> {
-	constructor() {
-		super({
-			empty: true
-		});
-	}
-
-	mountCriteria(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): MountedCriteria<Criteria> {
-		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-	}
-
-	getMountingTasks(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountingTask[] {
+export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
+	defaultCriteria: {
+		empty: true
+	},
+	mountCriteria(definedCriteria, mountedCriteria) {
+		return (Object.assign(mountedCriteria,formatDefaultCriteria, this.defaultCriteria, definedCriteria));
+	},
+	getMountingTasks(definedCriteria, mountedCriteria) {
 		let mountingTasks: SchemaMountingTask[] = [];
 
 		if (isAlreadyMounted(definedCriteria.item)) {
@@ -34,23 +24,16 @@ export class ArrayFormat<Criteria extends ArrayCriteria> extends AbstractFormat<
 		}
 
 		return (mountingTasks);
-	}
-
-	checkValue(
-		criteria: MountedCriteria<Criteria>,
-		value: unknown
-	): CheckValueResult {
-		if (value === undefined) {
-			return (!criteria.require ? null : "TYPE_UNDEFINED");
-		}
-		else if (!isObject(value)) {
+	},
+	checkValue(criteria, value) {
+		if (!isObject(value)) {
 			return ("TYPE_NOT_OBJECT");
 		}
 		else if (!isArray(value)) {
 			return ("TYPE_NOT_ARRAY");
 		}
 		else if (!value.length) {
-			return ("VALUE_EMPTY");
+			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
 		else if (criteria.min !== undefined && value.length < criteria.min) {
 			return ("VALUE_INFERIOR_MIN");
@@ -60,12 +43,8 @@ export class ArrayFormat<Criteria extends ArrayCriteria> extends AbstractFormat<
 		}
 
 		return (null);
-	}
-
-	getCheckingTasks(
-		criteria: MountedCriteria<Criteria>,
-		value: any
-	): SchemaCheckingTask[] {
+	},
+	getCheckingTasks(criteria, value) {
 		let checkingTasks: SchemaCheckingTask[] = [];
 
 		for (let i = 0; i < value.length; i++) {

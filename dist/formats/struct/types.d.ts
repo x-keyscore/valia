@@ -1,21 +1,23 @@
-import type { FormatsCriteria, FormatsGuard, MountedCriteria, TemplateContext, TemplateCriteria } from "../types";
-export interface StructCriteria extends TemplateCriteria {
-    type: "struct";
+import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria, FormatsGuard, MountedCriteria } from "../types";
+export interface StructVariantCriteria extends VariantCriteriaTemplate<"struct"> {
+    struct: Record<PropertyKey, VariantCriteria>;
+    optionalKeys?: string[];
+    /** @default false */
     empty?: boolean;
-    struct: Record<PropertyKey, FormatsCriteria>;
 }
-type NotRequireKeyMap<T extends StructCriteria['struct']> = {
-    [P in keyof T]-?: T[P]['require'] extends false ? P : never;
-}[keyof T];
-type NotRequireToOptional<T extends StructCriteria['struct']> = Partial<Pick<T, NotRequireKeyMap<T>>> & Pick<T, Exclude<keyof T, NotRequireKeyMap<T>>>;
-type StructGuard<T extends FormatsCriteria> = T extends StructCriteria ? {
-    [K in keyof NotRequireToOptional<T['struct']>]: FormatsGuard<T['struct'][K]>;
-} : never;
-export type StructContext<T extends FormatsCriteria> = TemplateContext<StructCriteria, StructGuard<T>, {
+export interface StructDefaultCriteria {
     empty: boolean;
-}, {
-    struct: Record<PropertyKey, MountedCriteria<FormatsCriteria>>;
+}
+export interface StructMountedCriteria {
     definedKeys: string[];
     requiredKeys: string[];
-}>;
+    struct: Record<PropertyKey, MountedCriteria<VariantCriteria>>;
+}
+export interface StructConcreteTypes extends ConcreteTypesTemplate<StructVariantCriteria, StructDefaultCriteria, StructMountedCriteria> {
+}
+type StructGuard<T extends VariantCriteria> = T extends StructVariantCriteria ? {
+    -readonly [K in keyof T['struct']]: FormatsGuard<T['struct'][K]>;
+} : never;
+export interface StructGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<StructVariantCriteria, StructGuard<T>> {
+}
 export {};

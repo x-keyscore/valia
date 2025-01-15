@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDataURL = isDataURL;
 const tools_1 = require("../../tools");
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  *
  * **Implementation version :** 1.0.0-beta
  *
@@ -17,6 +18,6 @@ const tools_1 = require("../../tools");
  * `dataurl`
  */
 function isDataURL(input, params) {
-    const utf16UnitArray = typeof input === "string" ? (0, tools_1.createUTF16UnitArray)(input) : input;
+    const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
     return (true);
 }

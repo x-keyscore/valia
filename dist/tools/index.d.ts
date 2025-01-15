@@ -1,1 +1,1 @@
-export { createUTF16UnitArray, getUTF8ByteLengthFromCodePoint, getUTF8ByteLengthFromUTF16UnitArray } from './strings';
+export { stringToUTF16UnitArray, getUTF8ByteLengthByCodePoint, getUTF8ByteLengthByUTF16UnitArray } from './strings';

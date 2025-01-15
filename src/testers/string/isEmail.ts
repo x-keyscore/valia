@@ -1,4 +1,4 @@
-import { createUTF16UnitArray, getUTF8ByteLengthFromUTF16UnitArray } from "../../tools";
+import { stringToUTF16UnitArray, getUTF8ByteLengthByUTF16UnitArray } from "../../tools";
 import { isIp } from "./isIp";
 
 interface IsEmailParams {
@@ -194,7 +194,7 @@ function isValidLocalPart(utf16UnitArray: Uint16Array, allowQuotedString: boolea
 	let i = 0;
 
 	/** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1 */
-	if (getUTF8ByteLengthFromUTF16UnitArray(utf16UnitArray) > 64) return (false);
+	if (getUTF8ByteLengthByUTF16UnitArray(utf16UnitArray) > 64) return (false);
  
 	if (allowQuotedString && utf16UnitArray[i] === 92) {// "\""
 		i = skipQuotedString(utf16UnitArray, i);
@@ -330,7 +330,7 @@ function isValidDomainPart(utf16UnitArray: Uint16Array, allowAddressLiteral: boo
 		return (true);
 	} else if (isDomain(utf16UnitArray)) {
 		/** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.2 */
-		if (getUTF8ByteLengthFromUTF16UnitArray(utf16UnitArray) <= 255) return (true);
+		if (getUTF8ByteLengthByUTF16UnitArray(utf16UnitArray) <= 255) return (true);
 	}
 
 	return (false);
@@ -370,7 +370,8 @@ function extractLocalAndDomain(utf16UnitArray: Uint16Array) {
 }
 
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  * 
  * **Implementation version :** 1.1.0-beta
  * 
@@ -384,7 +385,7 @@ function extractLocalAndDomain(utf16UnitArray: Uint16Array) {
  * `Mailbox`
  */
 export function isEmail(input: string | Uint16Array, params?: IsEmailParams): boolean {
-	const utf16UnitArray = typeof input === "string" ? createUTF16UnitArray(input) : input;
+	const utf16UnitArray = typeof input === "string" ? stringToUTF16UnitArray(input) : input;
 
 	const parts = extractLocalAndDomain(utf16UnitArray);
 

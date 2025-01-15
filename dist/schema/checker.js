@@ -1,30 +1,69 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.schemaChecker = schemaChecker;
+exports.checker = checker;
 const formats_1 = require("../formats");
+function manageLink(link, rejectState) {
+    if (link) {
+        if (!rejectState) {
+            link.isClose = true;
+        }
+        else if (link.totalLinks !== link.totalRejected) {
+            return (true);
+        }
+    }
+    return (false);
+}
+function basicCheckValue(task) {
+    if (!task.criteria.nullable && task.value === null) {
+        return ("TYPE_NULL");
+    }
+    else if (!task.criteria.optional && task.value === undefined) {
+        return ("TYPE_UNDEFINED");
+    }
+    return (null);
+}
 function processTask(task) {
-    const format = formats_1.formatsInstances[task.criteria.type];
-    const rejectCode = format.checkEntry(task.criteria, task.entry);
-    const checkingTasks = format.getCheckingTasks(task.criteria, task.entry);
+    var _a;
+    const { criteria, link } = task;
+    const format = formats_1.formats[criteria.type];
+    if (link === null || link === void 0 ? void 0 : link.isClose)
+        return ({
+            skipTask: true
+        });
+    const rejectState = basicCheckValue(task) || format.checkValue(criteria, task.value);
+    const skipTask = manageLink(link, rejectState);
+    if (rejectState) {
+        return ({
+            skipTask,
+            rejectState
+        });
+    }
+    const checkingTasks = (_a = format.getCheckingTasks) === null || _a === void 0 ? void 0 : _a.call(format, criteria, task.value);
     return ({
-        rejectCode,
+        skipTask: false,
+        rejectState,
         checkingTasks
     });
 }
-function schemaChecker(criteria, entry) {
-    let queue = [{ criteria, entry }];
+function checker(criteria, value) {
+    let queue = [{ criteria, value }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const { rejectCode, checkingTasks } = processTask(currentTask);
-        if (rejectCode) {
+        const { skipTask, rejectState, checkingTasks } = processTask(currentTask);
+        if (skipTask) {
+            continue;
+        }
+        else if (rejectState) {
+            const { criteria } = currentTask;
             return ({
-                code: rejectCode,
-                type: currentTask.criteria.type,
-                label: currentTask.criteria.label,
-                message: currentTask.criteria.message
+                code: "REJECT_" + rejectState,
+                type: criteria.type,
+                label: criteria.label,
+                message: criteria.message
             });
         }
-        queue.push(...checkingTasks);
+        if (checkingTasks)
+            Array.prototype.push.apply(queue, checkingTasks);
     }
     return (null);
 }

@@ -3,7 +3,7 @@
  * @returns Returns a `Uint16Array` containing the unicode values ​​of each character in the string `str`,
  * if a character exceeds the 16-bit unit then it is encoded on two units.
  */
-export function createUTF16UnitArray(str: string) {
+export function stringToUTF16UnitArray(str: string) {
 	const utf16UnitArray = new Uint16Array(str.length);
 	let i = 0;
 
@@ -23,7 +23,7 @@ export function createUTF16UnitArray(str: string) {
     return (utf16UnitArray);
 }
 
-export function getUTF8ByteLengthFromCodePoint(codePoint: number): number {
+export function getUTF8ByteLengthByCodePoint(codePoint: number): number {
     if (codePoint <= 0x7F) {
         return (1);
     } else if (codePoint <= 0x7FF) {
@@ -36,7 +36,7 @@ export function getUTF8ByteLengthFromCodePoint(codePoint: number): number {
     return (0);
 }
 
-export function getUTF8ByteLengthFromUTF16UnitArray(utf16UnitArray: Uint16Array): number {
+export function getUTF8ByteLengthByUTF16UnitArray(utf16UnitArray: Uint16Array): number {
     let byteLength = 0;
     let i = 0;
 
@@ -45,11 +45,11 @@ export function getUTF8ByteLengthFromUTF16UnitArray(utf16UnitArray: Uint16Array)
 
         // CHECK HIGH SURROGATE
         if (unit >= 0xD800 && unit <= 0xDBFF) {
-            byteLength += getUTF8ByteLengthFromCodePoint(((unit - 0xD800) << 10)
+            byteLength += getUTF8ByteLengthByCodePoint(((unit - 0xD800) << 10)
 				+ (utf16UnitArray[i + 1] - 0xDC00) + 0x10000);
             i += 2;
         } else {
-            byteLength += getUTF8ByteLengthFromCodePoint(unit);
+            byteLength += getUTF8ByteLengthByCodePoint(unit);
 			i++;
 		}
     }

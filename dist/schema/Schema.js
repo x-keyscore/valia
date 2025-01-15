@@ -8,9 +8,9 @@ const checker_1 = require("./checker");
  */
 class Schema {
     /**
-     * @param definedCriteria Definition of validation criteria.
+     * @param criteria Definition of validation criteria.
      * Once the class has been instantiated, modifying
-     * these criteria will have no effect.
+     * these `criteria` will have no effect.
      *
      * @example
      * ```ts
@@ -22,15 +22,15 @@ class Schema {
      * });
      * ```
      */
-    constructor(definedCriteria) {
-        const clonedCriteria = structuredClone(definedCriteria);
-        const mountedCriteria = (0, mounter_1.schemaMounter)(clonedCriteria);
+    constructor(criteria) {
+        const clonedCriteria = structuredClone(criteria);
+        const mountedCriteria = (0, mounter_1.mounter)(clonedCriteria);
         this.criteria = mountedCriteria;
     }
     /**
-     * @param entry Data to be validated
+     * @param value Data to be validated
      *
-     * @returns `true` if entry is compliant, otherwise `false`. For **Typescript** users,
+     * @returns `true` if value is compliant, otherwise `false`. For **Typescript** users,
      * this function is a guard type that predicts validated data, see example below.
      *
      * @example
@@ -49,14 +49,14 @@ class Schema {
      * }
      * ```
      */
-    guard(entry) {
-        const error = (0, checker_1.schemaChecker)(this.criteria, entry);
-        return (!error);
+    guard(value) {
+        const reject = (0, checker_1.checker)(this.criteria, value);
+        return (!reject);
     }
     /**
-     * @param entry Data to be validated
+     * @param value Data to be validated
      *
-     * @returns `null` if entry is compliant, otherwise `SchemaCheckReject`.
+     * @returns `null` if value is compliant, otherwise `SchemaCheckReject`.
      *
      * @example
      * ```ts
@@ -76,9 +76,9 @@ class Schema {
      * }
      * ```
      */
-    check(entry) {
-        const error = (0, checker_1.schemaChecker)(this.criteria, entry);
-        return (error);
+    check(value) {
+        const reject = (0, checker_1.checker)(this.criteria, value);
+        return (reject);
     }
 }
 exports.Schema = Schema;

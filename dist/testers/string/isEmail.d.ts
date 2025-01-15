@@ -13,7 +13,8 @@ interface IsEmailParams {
     allowAddressLiteral?: boolean;
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  *
  * **Implementation version :** 1.1.0-beta
  *

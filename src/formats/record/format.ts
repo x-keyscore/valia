@@ -1,27 +1,18 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema/types";
-import type { CheckValueResult, MountedCriteria } from "../types";
-import type { RecordCriteria } from "./types";
-import { AbstractFormat, isAlreadyMounted } from "../AbstractFormat";
+import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
+import type { RecordVariantCriteria } from "./types";
+import type { FormatTemplate } from "../types";
+import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
 import { isObject, isPlainObject } from "../../testers";
 
-export class RecordFormat<Criteria extends RecordCriteria> extends AbstractFormat<Criteria> {
-	constructor() {
-		super({
-			empty: false
-		});
-	}
+export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
+	defaultCriteria: {
+		empty: true
+	},
 
-	mountCriteria(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): MountedCriteria<Criteria> {
-		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-	}
-
-	getMountingTasks(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountingTask[] {
+	mountCriteria(definedCriteria, mountedCriteria) {
+		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria));
+	},
+	getMountingTasks(definedCriteria, mountedCriteria) {
 		let mountingTasks: SchemaMountingTask[] = [];
 
 		if (isAlreadyMounted(definedCriteria.key)) {
@@ -43,41 +34,31 @@ export class RecordFormat<Criteria extends RecordCriteria> extends AbstractForma
 		}
 
 		return (mountingTasks);
-	}
+	},
 
-	checkValue(
-		criteria: MountedCriteria<Criteria>,
-		value: unknown
-	): CheckValueResult {
-		if (value === undefined) {
-			return (!criteria.require ? null : "TYPE_UNDEFINED");
-		}
-		else if (!isObject(value)) {
+	checkValue(criteria, value) {
+		if (!isObject(value)) {
 			return ("TYPE_NOT_OBJECT");
 		}
 		else if (!isPlainObject(value)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 
-		const keyCount = Object.keys(value).length;
+		const totalKeys = Object.keys(value).length;
 
-		if (keyCount === 0) {
+		if (totalKeys === 0) {
 			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (criteria.min !== undefined && keyCount < criteria.min) {
+		else if (criteria.min !== undefined && totalKeys < criteria.min) {
 			return ("VALUE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && keyCount > criteria.max) {
+		else if (criteria.max !== undefined && totalKeys > criteria.max) {
 			return ("VALUE_SUPERIOR_MAX");
 		}
 
 		return (null);
-	}
-
-	getCheckingTasks(
-		criteria: MountedCriteria<Criteria>,
-		value: any
-	): SchemaCheckingTask[] {
+	},
+	getCheckingTasks(criteria, value) {
 		let checkingTasks: SchemaCheckingTask[] = [];
 		const keys = Object.keys(value);
 
@@ -95,5 +76,5 @@ export class RecordFormat<Criteria extends RecordCriteria> extends AbstractForma
 		}
 
 		return (checkingTasks);
-	}
+	},
 }

@@ -1,4 +1,4 @@
-import { createUTF16UnitArray } from "../../tools";
+import { stringToUTF16UnitArray } from "../../tools";
 
 interface IsIpParams {
 	/** **Default:** `true` */
@@ -367,7 +367,8 @@ function extractAddrAndPrefix(utf16UnitArray: Uint16Array) {
 }
 
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  * 
  * **Implementation version :** 1.1.0-beta
  * 
@@ -402,7 +403,7 @@ function extractAddrAndPrefix(utf16UnitArray: Uint16Array) {
  * * `IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]`
  */
 export function isIp(input: string | Uint16Array, params?: IsIpParams) {
-	const utf16UnitArray = typeof input === "string" ? createUTF16UnitArray(input) : input;
+	const utf16UnitArray = typeof input === "string" ? stringToUTF16UnitArray(input) : input;
 
 	const parts = extractAddrAndPrefix(utf16UnitArray);
 	if (!parts) return (false);

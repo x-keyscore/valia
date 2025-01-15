@@ -1,31 +1,28 @@
-import { TemplateCriteria, TemplateContext } from "../types";
+import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
 import { testers } from "../../";
-export type ExtractParams<T extends (arg1: any, arg2: any) => any> = T extends (input: any, params: infer U) => boolean ? U : never;
-type TestFunctions<Functions extends Record<string, (arg1: any, arg2: any) => any>> = {
-    [K in keyof Functions]: {
+type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
+type FunctionsTesters = typeof testers.string;
+type Testers = {
+    [K in keyof FunctionsTesters]: {
         name: K;
-        params?: ExtractParams<Functions[K]>;
+        params?: ExtractParams<FunctionsTesters[K]>;
     };
-}[keyof Functions];
-export interface StringCriteria extends TemplateCriteria {
-    type: "string";
+}[keyof FunctionsTesters];
+export interface StringVariantCriteria extends VariantCriteriaTemplate<"string"> {
     min?: number;
     max?: number;
-    /**
-     * @default false
-     */
-    trim?: boolean;
-    /**
-     * @default true
-     */
+    /** @default true */
     empty?: boolean;
     regex?: RegExp;
-    test?: TestFunctions<typeof testers.string>;
+    tester?: Testers;
     custom?: (input: string) => boolean;
 }
-type StringGuard = string;
-export type StringContext = TemplateContext<StringCriteria, StringGuard, {
-    trim: boolean;
+export interface StringDefaultCriteria {
     empty: boolean;
-}, {}>;
+}
+export interface StringConcreteTypes extends ConcreteTypesTemplate<StringVariantCriteria, StringDefaultCriteria, {}> {
+}
+type StringGuard<T extends VariantCriteria> = T extends StringVariantCriteria ? string : never;
+export interface StringGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<StringVariantCriteria, StringGuard<T>> {
+}
 export {};

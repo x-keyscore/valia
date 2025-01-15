@@ -1,12 +1,12 @@
-import type { FormatsCriteria, FormatsGuard, MountedCriteria } from "../formats";
+import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
 import type { SchemaCheckResult } from "./types";
-import { schemaMounter } from "./mounter";
-import { schemaChecker } from "./checker";
+import { mounter } from "./mounter";
+import { checker } from "./checker";
 
 /**
  * Represents the validation criteria structure and its associated functions.
  */
-export class Schema<DefinedCriteria extends FormatsCriteria> {
+export class Schema<const T extends VariantCriteria> {
 	/**
 	 * Property used for schema reuse, see the example below.
 	 * 
@@ -15,17 +15,17 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * 
 	 * @example
 	 * ```ts
-	 * const userName = new Schema({ type: "string" });
+	 * const userNameType = new Schema({ type: "string" });
 	 * 
 	 * const userSchema = new Schema({ 
 	 *     type: "struct",
 	 *     struct: {
-	 *         name:  userName.criteria
+	 *         name: userNameType.criteria
 	 *     }
 	 * });
 	 * ```
 	 */
-	public readonly criteria: MountedCriteria<DefinedCriteria>;
+	public readonly criteria: MountedCriteria<T>;
 
 	/**
 	 * @param criteria Definition of validation criteria.
@@ -42,9 +42,9 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * });
 	 * ```
 	 */
-	constructor(criteria: DefinedCriteria) {
+	constructor(criteria: T) {
 		const clonedCriteria = structuredClone(criteria);
-		const mountedCriteria = schemaMounter(clonedCriteria);
+		const mountedCriteria = mounter(clonedCriteria);
 		this.criteria = mountedCriteria;
 	}
 
@@ -70,9 +70,9 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * }
 	 * ```
 	 */
-	guard(value: unknown): value is FormatsGuard<DefinedCriteria> {
-		const error = schemaChecker(this.criteria, value);
-		return (!error);
+	guard(value: unknown): value is FormatsGuard<T> {
+		const reject = checker(this.criteria, value);
+		return (!reject);
 	}
 
 	/**
@@ -99,7 +99,7 @@ export class Schema<DefinedCriteria extends FormatsCriteria> {
 	 * ```
 	 */
 	check(value: unknown): SchemaCheckResult {
-		const error = schemaChecker(this.criteria, value);
-		return (error);
+		const reject = checker(this.criteria, value);
+		return (reject);
 	}
 }

@@ -1,39 +1,15 @@
-import type { SchemaCheckingTask, SchemaMountingTask } from "../../schema/types";
-import type { CheckValueResult, MountedCriteria } from "../types";
-import type { NumberCriteria } from "./types";
+import type { NumberVariantCriteria } from "./types";
+import type { FormatTemplate } from "../types";
+import { formatDefaultCriteria } from "../formats";
 import { isNumber } from "../../testers";
-import { AbstractFormat } from "../AbstractFormat";
 
-export class NumberFormat<Criteria extends NumberCriteria> extends AbstractFormat<Criteria> {
-	constructor() {
-		super({
-			empty: true,
-			trim: true
-		});
-	}
-
-	mountCriteria(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): MountedCriteria<Criteria> {
-		return (Object.assign(mountedCriteria, this.baseMountedCriteria, definedCriteria));
-	}
-
-	getMountingTasks(
-		definedCriteria: Criteria,
-		mountedCriteria: MountedCriteria<Criteria>
-	): SchemaMountingTask[] {
-		return ([]);
-	}
-	
-	checkValue(
-		criteria: MountedCriteria<Criteria>,
-		value: unknown
-	): CheckValueResult {
-		if (value === undefined) {
-			return (!criteria.require ? null : "TYPE_UNDEFINED");
-		}
-		else if (!isNumber(value)) {
+export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
+	defaultCriteria: {},
+	mountCriteria(definedCriteria, mountedCriteria) {
+		return (Object.assign(mountedCriteria, formatDefaultCriteria, definedCriteria));
+	},
+	checkValue(criteria, value) {
+		if (!isNumber(value)) {
 			return ("TYPE_NOT_NUMBER");
 		}
 		else if (criteria.min !== undefined && value < criteria.min) {
@@ -47,12 +23,5 @@ export class NumberFormat<Criteria extends NumberCriteria> extends AbstractForma
 		}
 
 		return (null);
-	}
-
-	getCheckingTasks(
-		criteria: MountedCriteria<Criteria>,
-		value: any
-	): SchemaCheckingTask[] {
-		return ([]);
 	}
 }

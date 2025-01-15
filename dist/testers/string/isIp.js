@@ -345,7 +345,8 @@ function extractAddrAndPrefix(utf16UnitArray) {
     };
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` containing
+ * the decimal values ​​of the string in code point Unicode format.
  *
  * **Implementation version :** 1.1.0-beta
  *
@@ -380,7 +381,7 @@ function extractAddrAndPrefix(utf16UnitArray) {
  * * `IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]`
  */
 function isIp(input, params) {
-    const utf16UnitArray = typeof input === "string" ? (0, tools_1.createUTF16UnitArray)(input) : input;
+    const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
     const parts = extractAddrAndPrefix(utf16UnitArray);
     if (!parts)
         return (false);

@@ -1,57 +1,102 @@
-import type { BooleanContext, BooleanCriteria } from "./boolean/types";
-import type { NumberCriteria, NumberContext } from "./number/types";
-import type { RecordContext, RecordCriteria } from "./record/types";
-import type { StringCriteria, StringContext } from "./string/types";
-import type { StructCriteria, StructContext } from "./struct/types";
-import type { SymbolContext, SymbolCriteria } from "./symbol/types";
-import type { TupleCriteria, TupleContext } from "./tuple/types";
-import type { ArrayContext, ArrayCriteria } from "./array/types";
-import { globalCriteria } from "./AbstractFormat";
-import { formats } from "./formats";
+import type { ArrayConcreteTypes, ArrayGenericTypes } from "./array/types";
+import type { BooleanConcreteTypes, BooleanGenericTypes } from "./boolean/types";
+import type { NumberConcreteTypes, NumberGenericTypes } from "./number/types";
+import type { RecordConcreteTypes, RecordGenericTypes } from "./record/types";
+import type { StringConcreteTypes, StringGenericTypes } from "./string/types";
+import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
+import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
+import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
+import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
+import { SchemaCheckingTask, SchemaMountingTask } from "../schema";
+import { isMountedSymbol, formats } from "./formats";
 /**
- * This template defines the basic parameters of the criteria.
+ * Defines the criteria users must or can specify.
+ *
+ * @template T The name assigned to the format when the user selects the type.
  */
-export interface TemplateCriteria {
+export interface VariantCriteriaTemplate<T extends string> {
+    type: T;
     label?: string;
     message?: string;
-    /**
-     * @default true
-     */
-    require?: boolean;
+    /** @default false */
+    optional?: boolean;
+    /** @default false */
+    nullable?: boolean;
 }
-export type PredefinedCriteria<T extends FormatsCriteria> = FormatsContextByCriteria<T>['predefinedCriteria'];
-export type MountedCriteria<T extends FormatsCriteria> = typeof globalCriteria & PredefinedCriteria<T> & T & FormatsContextByCriteria<T>['mountedCriteria'];
 /**
- * This template streamlines the definition of type parameters for formats.
+ * @template T Extended interface of `VariantCriteriaTemplate` that
+ * defines the format criteria users must or can specify.
  *
- * @template T Criteria of the type that the user will be able to define.
- * @template U Guard type used to provide the data type if it is valid.
- * @template V Type of criteria that must be included in the final
- * criteria, even if they were not defined by the user.
- * @template W Type of criteria that will be added to the criteria
- * visible to the user after the said criteria have been mounted.
+ * @template U Default properties for those defined in `T` that must
+ * be specified in the superclass reference within the format class.
+ *
+ * @template V Properties that will be added to or override
+ * the format criteria after the mounting process.
  */
-export type TemplateContext<T extends FormatsCriteria, U, V extends Partial<T>, W> = {
+export interface ConcreteTypesTemplate<T extends VariantCriteriaTemplate<string>, U extends Partial<T>, V> {
     type: T['type'];
-    guard: U;
-    predefinedCriteria: V;
-    mountedCriteria: W;
-};
-export type FormatCheckEntry = null | string;
-export type Formats = typeof formats[keyof typeof formats];
-export type FormatsInstances = InstanceType<Formats>;
-export type FormatsCriteria = ArrayCriteria | TupleCriteria | RecordCriteria | StructCriteria | NumberCriteria | StringCriteria | SymbolCriteria | BooleanCriteria;
-export type FormatsCriteriaMap = {
-    [T in FormatsCriteria['type']]: Extract<FormatsCriteria, {
-        type: T;
-    }>;
-};
-export type FormatsContext<T extends FormatsCriteria> = ArrayContext<T> | TupleContext<T> | RecordContext<T> | StructContext<T> | NumberContext | StringContext | SymbolContext | BooleanContext;
-export type FormatsContextByCriteria<T extends FormatsCriteria> = {
-    [U in FormatsContext<T>['type']]: Extract<FormatsContext<T>, {
+    variantCriteria: T;
+    defaultCriteria: U;
+    mountedCritetia: V;
+}
+export type FormatsConcreteTypes = ArrayConcreteTypes | BooleanConcreteTypes | NumberConcreteTypes | RecordConcreteTypes | StringConcreteTypes | StructConcreteTypes | SymbolConcreteTypes | TupleConcreteTypes | UnionConcreteTypes;
+export type FormatsConcreteTypesMap = {
+    [U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, {
         type: U;
     }>;
+};
+/**
+ * @template T Extended interface of `VariantCriteriaTemplate` that
+ * defines the format criteria users must or can specify.
+ *
+ * @template U A type that takes a generic parameter extending
+ * 'VariantCriteria'. It is used to determine the type validated
+ * by the format it represents, based on the criteria defined
+ * by the user.
+ */
+export interface GenericTypesTemplate<T extends VariantCriteriaTemplate<string>, U> {
+    type: T['type'];
+    guard: U;
+}
+export type FormatsGenericTypes<T extends VariantCriteria> = ArrayGenericTypes<T> | BooleanGenericTypes<T> | NumberGenericTypes<T> | RecordGenericTypes<T> | StringGenericTypes<T> | StructGenericTypes<T> | SymbolGenericTypes<T> | TupleGenericTypes<T> | UnionGenericTypes<T>;
+export type FormatsGenericTypesMap<T extends VariantCriteria> = {
+    [U in FormatsGenericTypes<T>['type']]: Extract<FormatsGenericTypes<T>, {
+        type: U;
+    }>;
+};
+export type VariantCriteria = {
+    [U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, {
+        type: U;
+    }>['variantCriteria'];
+}[FormatsConcreteTypes['type']];
+export type VariantCriteriaMap = {
+    [U in VariantCriteria['type']]: Extract<VariantCriteria, {
+        type: U;
+    }>;
+};
+export type DefaultCriteria<T extends VariantCriteria> = {
+    [U in T['type']]: FormatsConcreteTypesMap[U]['defaultCriteria'];
 }[T['type']];
-type FormatsGuardDiscern<T extends FormatsCriteria> = FormatsContextByCriteria<T>['guard'];
-export type FormatsGuard<T extends FormatsCriteria> = T['require'] extends false ? FormatsGuardDiscern<T> | undefined : NonNullable<FormatsGuardDiscern<T>>;
-export {};
+export interface DefaulGlobalCriteria {
+    [isMountedSymbol]: boolean;
+    optional: boolean;
+    nullable: boolean;
+}
+export type MountedCriteria<T extends VariantCriteria> = {
+    [U in T['type']]: DefaulGlobalCriteria & FormatsConcreteTypesMap[U]['defaultCriteria'] & T & FormatsConcreteTypesMap[U]['mountedCritetia'];
+}[T['type']];
+export type FormatsGuard<T extends VariantCriteria> = T['optional'] extends false ? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined : FormatsGenericTypesMap<T>[T['type']]['guard'];
+/**
+ * @template T Extended interface of `VariantCriteriaTemplate` that
+ * defines the format criteria users must or can specify.
+ * @template U Custom property you want to add to the format.
+ */
+export type FormatTemplate<T extends VariantCriteria, U extends Record<string, any> = {}> = {
+    defaultCriteria?: DefaultCriteria<T>;
+    mountCriteria(definedCriteria: T, mountedCriteria: MountedCriteria<T>): MountedCriteria<T>;
+    getMountingTasks?(definedCriteria: T, mountedCriteria: MountedCriteria<T>): SchemaMountingTask[];
+    checkValue(criteria: MountedCriteria<T>, value: unknown): null | string;
+    getCheckingTasks?(criteria: MountedCriteria<T>, value: any): SchemaCheckingTask[];
+} & U;
+export type CheckValueResult = null | string;
+export type Formats = typeof formats[keyof typeof formats];

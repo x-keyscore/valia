@@ -1,17 +1,23 @@
-import type { FormatsCriteria, MountedCriteria } from "../formats";
-export interface SchemaMountTask {
-    definedCriteria: FormatsCriteria;
-    mountedCriteria: MountedCriteria<FormatsCriteria>;
+import type { VariantCriteria, MountedCriteria } from "../formats";
+export interface SchemaMountingTask {
+    definedCriteria: VariantCriteria;
+    mountedCriteria: MountedCriteria<VariantCriteria>;
 }
-export interface SchemaCheckTask {
-    criteria: MountedCriteria<FormatsCriteria>;
-    /** Entry root or entry subpart */
-    entry: any;
+export interface CheckingTaskLink {
+    isClose: boolean;
+    totalLinks: number;
+    totalRejected: number;
 }
-export interface SchemaCheckReject {
+export interface SchemaCheckingTask {
+    criteria: MountedCriteria<VariantCriteria>;
+    value: unknown;
+    link?: CheckingTaskLink;
+}
+export interface SchemaCheckerReject {
     type: string;
     /** `REJECT_<CATEGORY>_<DETAIL>` */
     code: string;
     label: string | undefined;
     message: string | undefined;
 }
+export type SchemaCheckResult = SchemaCheckerReject | null;

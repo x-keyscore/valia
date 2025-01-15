@@ -1,9 +1,9 @@
-import type { FormatsCriteria, FormatsGuard, MountedCriteria } from "../formats";
-import type { SchemaCheckReject } from "./types";
+import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
+import type { SchemaCheckResult } from "./types";
 /**
  * Represents the validation criteria structure and its associated functions.
  */
-export declare class Schema<DefinedCriteria extends FormatsCriteria> {
+export declare class Schema<const DefinedCriteria extends VariantCriteria> {
     /**
      * Property used for schema reuse, see the example below.
      *
@@ -12,21 +12,21 @@ export declare class Schema<DefinedCriteria extends FormatsCriteria> {
      *
      * @example
      * ```ts
-     * const userName = new Schema({ type: "string" });
+     * const userNameType = new Schema({ type: "string" });
      *
      * const userSchema = new Schema({
      *     type: "struct",
      *     struct: {
-     *         name:  userName.criteria
+     *         name: userNameType.criteria
      *     }
      * });
      * ```
      */
     readonly criteria: MountedCriteria<DefinedCriteria>;
     /**
-     * @param definedCriteria Definition of validation criteria.
+     * @param criteria Definition of validation criteria.
      * Once the class has been instantiated, modifying
-     * these criteria will have no effect.
+     * these `criteria` will have no effect.
      *
      * @example
      * ```ts
@@ -38,11 +38,11 @@ export declare class Schema<DefinedCriteria extends FormatsCriteria> {
      * });
      * ```
      */
-    constructor(definedCriteria: DefinedCriteria);
+    constructor(criteria: DefinedCriteria);
     /**
-     * @param entry Data to be validated
+     * @param value Data to be validated
      *
-     * @returns `true` if entry is compliant, otherwise `false`. For **Typescript** users,
+     * @returns `true` if value is compliant, otherwise `false`. For **Typescript** users,
      * this function is a guard type that predicts validated data, see example below.
      *
      * @example
@@ -61,11 +61,11 @@ export declare class Schema<DefinedCriteria extends FormatsCriteria> {
      * }
      * ```
      */
-    guard(entry: unknown): entry is FormatsGuard<DefinedCriteria>;
+    guard(value: unknown): value is FormatsGuard<DefinedCriteria>;
     /**
-     * @param entry Data to be validated
+     * @param value Data to be validated
      *
-     * @returns `null` if entry is compliant, otherwise `SchemaCheckReject`.
+     * @returns `null` if value is compliant, otherwise `SchemaCheckReject`.
      *
      * @example
      * ```ts
@@ -85,5 +85,5 @@ export declare class Schema<DefinedCriteria extends FormatsCriteria> {
      * }
      * ```
      */
-    check(entry: unknown): SchemaCheckReject | null;
+    check(value: unknown): SchemaCheckResult;
 }
