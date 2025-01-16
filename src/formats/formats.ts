@@ -9,16 +9,15 @@ import { SymbolFormat } from "./symbol/format";
 import { BooleanFormat } from "./boolean/format";
 import { UnionFormat } from "./union/format";
 
-export const isMountedSymbol = Symbol('isMounted');
+export const mountedMarkerSymbol = Symbol('mountedMarker');
 
-export function isAlreadyMounted(
-	criteria: VariantCriteria | MountedCriteria<VariantCriteria>
+export function isMountedCriteria(
+	criteria: object
 ): criteria is MountedCriteria<VariantCriteria> {
-	return (Object.prototype.hasOwnProperty(isMountedSymbol));
+	return (Reflect.has(criteria, mountedMarkerSymbol));
 }
 
 export const formatDefaultCriteria = {
-	[isMountedSymbol]: true,
 	optional: false,
 	nullable: false
 }
@@ -34,5 +33,3 @@ export const formats: Record<string, FormatTemplate<VariantCriteria>> = {
 	boolean: BooleanFormat,
 	union: UnionFormat
 };
-
-//export const formatsInstances = constructs(formats, []);

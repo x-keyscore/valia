@@ -1,14 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LibraryError = void 0;
-exports.construct = construct;
-exports.constructs = constructs;
-function construct(target, args) {
-    return Reflect.construct(target, args);
-}
-function constructs(constructors, args) {
-    return Object.fromEntries(Object.entries(constructors).map(([key, constructor]) => [key, construct(constructor, args)]));
-}
 class LibraryError extends Error {
     printError(context) {
         const timestamp = new Date().toISOString();

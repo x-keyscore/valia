@@ -28,9 +28,9 @@ exports.StructFormat = {
     mountCriteria(definedCriteria, mountedCriteria) {
         const definedKeys = Object.keys(definedCriteria.struct);
         const optionalKeys = definedCriteria.optionalKeys;
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria, {
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria, {
             definedKeys: Object.keys(definedCriteria.struct),
-            requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : []
+            requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : definedKeys
         }));
     },
     getMountingTasks(definedCriteria, mountedCriteria) {
@@ -38,9 +38,7 @@ exports.StructFormat = {
         const keys = Object.keys(definedCriteria.struct);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            if ((0, testers_1.isArray)(definedCriteria.struct[key]))
-                return ([]);
-            if ((0, formats_1.isAlreadyMounted)(definedCriteria.struct[key])) {
+            if ((0, formats_1.isMountedCriteria)(definedCriteria.struct[key])) {
                 mountedCriteria.struct[key] = definedCriteria.struct[key];
             }
             else {
@@ -53,10 +51,7 @@ exports.StructFormat = {
         return (mountingTasks);
     },
     checkValue(criteria, value) {
-        if (!(0, testers_1.isObject)(value)) {
-            return ("TYPE_NOT_OBJECT");
-        }
-        else if (!(0, testers_1.isPlainObject)(value)) {
+        if (!(0, testers_1.isPlainObject)(value)) { // WARNING !
             return ("TYPE_NOT_PLAIN_OBJECT");
         }
         else if (Object.keys(value).length === 0) {

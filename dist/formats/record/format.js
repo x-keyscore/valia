@@ -8,11 +8,11 @@ exports.RecordFormat = {
         empty: true
     },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
     },
     getMountingTasks(definedCriteria, mountedCriteria) {
         let mountingTasks = [];
-        if ((0, formats_1.isAlreadyMounted)(definedCriteria.key)) {
+        if ((0, formats_1.isMountedCriteria)(definedCriteria.key)) {
             mountedCriteria.key = definedCriteria.key;
         }
         else {
@@ -21,7 +21,7 @@ exports.RecordFormat = {
                 mountedCriteria: mountedCriteria.key
             });
         }
-        if ((0, formats_1.isAlreadyMounted)(definedCriteria.value)) {
+        if ((0, formats_1.isMountedCriteria)(definedCriteria.value)) {
             mountedCriteria.value = definedCriteria.value;
         }
         else {
@@ -33,10 +33,7 @@ exports.RecordFormat = {
         return (mountingTasks);
     },
     checkValue(criteria, value) {
-        if (!(0, testers_1.isObject)(value)) {
-            return ("TYPE_NOT_OBJECT");
-        }
-        else if (!(0, testers_1.isPlainObject)(value)) {
+        if (!(0, testers_1.isPlainObject)(value)) { // WARNING !
             return ("TYPE_NOT_PLAIN_OBJECT");
         }
         const totalKeys = Object.keys(value).length;

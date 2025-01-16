@@ -1,4 +1,11 @@
-import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria, FormatsGuard, MountedCriteria } from "../types";
+import {
+	VariantCriteriaTemplate,
+	ConcreteTypesTemplate,
+	GenericTypesTemplate,
+	VariantCriteria,
+	FormatsGuard,
+	MountedCriteria
+} from "../types";
 
 export interface TupleVariantCriteria extends VariantCriteriaTemplate<"tuple"> {
 	tuple: [VariantCriteria, ...VariantCriteria[]];

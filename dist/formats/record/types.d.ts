@@ -18,7 +18,7 @@ export interface RecordMountedCriteria {
 export interface RecordConcreteTypes extends ConcreteTypesTemplate<RecordVariantCriteria, RecordDefaultCriteria, RecordMountedCriteria> {
 }
 type RecordGuard<T extends VariantCriteria> = T extends RecordVariantCriteria ? FormatsGuard<T['key']> extends infer U ? U extends PropertyKey ? {
-    [P in U]: FormatsGuard<T['value']>;
+    [P in U]?: FormatsGuard<T['value']>;
 } : never : never : never;
 export interface RecordGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<RecordVariantCriteria, RecordGuard<T>> {
 }

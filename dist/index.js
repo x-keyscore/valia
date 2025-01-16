@@ -14,62 +14,78 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.testSchema = exports.stringToUTF16UnitArray = exports.Schema = void 0;
+var schema_1 = require("./schema");
+Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return schema_1.Schema; } });
+var tools_1 = require("./tools");
+Object.defineProperty(exports, "stringToUTF16UnitArray", { enumerable: true, get: function () { return tools_1.stringToUTF16UnitArray; } });
 __exportStar(require("./testers"), exports);
-__exportStar(require("./schema"), exports);
-__exportStar(require("./tools"), exports);
-const schema_1 = require("./schema");
-const stringType = new schema_1.Schema({ type: "string" });
-const unionType = new schema_1.Schema({
-    type: 'union',
-    union: [stringType.criteria, { type: "number", max: 20 }, { type: "boolean" }]
-});
-const recordType = new schema_1.Schema({
-    type: "record",
-    empty: "r",
-    key: { type: "string" },
-    value: unionType.criteria
-});
-let object = {};
-for (let i = 0; i < 50000; i++) {
-    Object.assign(object, { [`${i}`]: "r" });
-}
 /*
-let test = {};
-test as any
-if (structType.guard(test)) {
-    test
-}*/
-console.log("start");
 const start = performance.now();
-console.log(recordType.check(object));
 const end = performance.now();
 const timeTaken = end - start;
-console.log(`Schema check - Execution Time: ${timeTaken.toFixed(2)} ms`);
-/*
-const arrayType = new Schema({
-    type: "array",
-    item: unionType.criteria
-});
-const tupleType = new Schema({
-    type: "tuple",
-    tuple: [structType.criteria, { type: "number" }]
-});
-
-const structType = new Schema({
+console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);
+*/
+const schema_2 = require("./schema");
+const userCredentiaFormat = new schema_2.Schema({
     type: "struct",
     struct: {
-        k: arrayType.criteria,
-        k2: unionType.criteria
+        email: { type: "string", tester: { name: "isEmail" } },
+        password: { type: "string" }
     }
-});*/
-/*
-if (structType.guard(test)) {
-    test
-}*/
-/*
+});
+const userProfileFormat = new schema_2.Schema({
+    type: "struct",
+    struct: {
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+        color: { type: "string", regex: /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/ },
+        avatar: { type: "string" },
+        contact: {
+            type: "struct",
+            struct: {
+                email: { type: "string", tester: { name: "isEmail" } },
+                phoneNumber: { type: "string" }
+            }
+        }
+    }
+});
+const userSettingFormat = new schema_2.Schema({
+    type: "struct",
+    struct: {
+        notification: { type: "boolean" },
+        theme: { type: "string" }
+    }
+});
+const userSessionFormat = new schema_2.Schema({
+    type: "struct",
+    struct: {
+        ip: {
+            type: "struct",
+            struct: {
+                internal: { type: "string", tester: { name: "isIp", params: { allowIpV6: false } } },
+                external: { type: "string", tester: { name: "isIp", params: { allowIpV6: false } } }
+            }
+        },
+        agent: { type: "string" },
+        token: { type: "string" }
+    }
+});
+exports.testSchema = new schema_2.Schema({
+    type: "record",
+    key: { type: "string" },
+    value: { type: "union", union: [{ type: "string" }, { type: "number" }] }
+});
+let data = {};
+for (let i = 0; i < 100000; i++) {
+    if (i % 2 === 0)
+        data[`${i}`] = i;
+    else
+        data[`${i}`] = `${i}`;
+}
+exports.testSchema.check(data);
 const start = performance.now();
-console.log(userSchema.check(input))
+console.log(data);
 const end = performance.now();
 const timeTaken = end - start;
-console.log(`Schema check - Execution Time: ${timeTaken.toFixed(2)} ms`);
-*/
+console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);

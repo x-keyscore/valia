@@ -1,4 +1,5 @@
-import type { VariantCriteria, MountedCriteria } from "../formats";
+import type { VariantCriteria, MountedCriteria, FormatsGuard } from "../formats";
+import { Schema } from "./Schema";
 
 export interface SchemaMountingTask {
 	definedCriteria: VariantCriteria;
@@ -25,4 +26,9 @@ export interface SchemaCheckerReject {
 	message: string | undefined;
 };
 
-export type SchemaCheckResult = SchemaCheckerReject | null;
+// TYPE FOR USERS
+
+export type SchemaCheck = SchemaCheckerReject | null;
+
+export type SchemaGuard<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;
+	

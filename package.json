@@ -7,6 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc && node dist",
+	"build:pack": "tsc && npm pack && mv -f ./*.tgz temp-pack/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

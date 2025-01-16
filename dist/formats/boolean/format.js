@@ -5,7 +5,7 @@ const formats_1 = require("../formats");
 const testers_1 = require("../../testers");
 exports.BooleanFormat = {
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, definedCriteria));
     },
     checkValue(criteria, value) {
         if (!(0, testers_1.isBoolean)(value)) {

@@ -8,7 +8,7 @@ import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
 import { SchemaCheckingTask, SchemaMountingTask } from "../schema";
-import { isMountedSymbol, formats } from "./formats";
+import { mountedMarkerSymbol, formats } from "./formats";
 /**
  * Defines the criteria users must or can specify.
  *
@@ -74,18 +74,18 @@ export type VariantCriteriaMap = {
         type: U;
     }>;
 };
-export type DefaultCriteria<T extends VariantCriteria> = {
+export type DefaultCriteria<T extends VariantCriteria = VariantCriteria> = {
     [U in T['type']]: FormatsConcreteTypesMap[U]['defaultCriteria'];
 }[T['type']];
-export interface DefaulGlobalCriteria {
-    [isMountedSymbol]: boolean;
+export type MountedCriteria<T extends VariantCriteria> = {
+    [U in T['type']]: FormatDefaultCriteria & FormatsConcreteTypesMap[U]['defaultCriteria'] & T & FormatsConcreteTypesMap[U]['mountedCritetia'];
+}[T['type']];
+export type FormatsGuard<T extends VariantCriteria> = T['type'] extends FormatsGenericTypes<T>['type'] ? FormatsGenericTypes<T>['guard'] : never;
+export interface FormatDefaultCriteria {
+    [mountedMarkerSymbol]: string;
     optional: boolean;
     nullable: boolean;
 }
-export type MountedCriteria<T extends VariantCriteria> = {
-    [U in T['type']]: DefaulGlobalCriteria & FormatsConcreteTypesMap[U]['defaultCriteria'] & T & FormatsConcreteTypesMap[U]['mountedCritetia'];
-}[T['type']];
-export type FormatsGuard<T extends VariantCriteria> = T['optional'] extends false ? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined : FormatsGenericTypesMap<T>[T['type']]['guard'];
 /**
  * @template T Extended interface of `VariantCriteriaTemplate` that
  * defines the format criteria users must or can specify.

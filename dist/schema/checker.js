@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
 const formats_1 = require("../formats");
-function manageLink(link, rejectState) {
+function manageTaskLink(link, isReject) {
     if (link) {
-        if (!rejectState) {
+        if (!isReject) {
             link.isClose = true;
         }
         else if (link.totalLinks !== link.totalRejected) {
@@ -31,16 +31,16 @@ function processTask(task) {
             skipTask: true
         });
     const rejectState = basicCheckValue(task) || format.checkValue(criteria, task.value);
-    const skipTask = manageLink(link, rejectState);
+    const rejectBypass = manageTaskLink(link, !!rejectState);
     if (rejectState) {
         return ({
-            skipTask,
+            rejectBypass,
             rejectState
         });
     }
     const checkingTasks = (_a = format.getCheckingTasks) === null || _a === void 0 ? void 0 : _a.call(format, criteria, task.value);
     return ({
-        skipTask: false,
+        rejectBypass: false,
         rejectState,
         checkingTasks
     });
@@ -49,8 +49,8 @@ function checker(criteria, value) {
     let queue = [{ criteria, value }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const { skipTask, rejectState, checkingTasks } = processTask(currentTask);
-        if (skipTask) {
+        const { rejectBypass, rejectState, checkingTasks } = processTask(currentTask);
+        if (rejectBypass) {
             continue;
         }
         else if (rejectState) {

@@ -1,7 +1,7 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { ArrayVariantCriteria } from "./types";
 import type { FormatTemplate  } from "../types";
-import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
+import { formatDefaultCriteria, isMountedCriteria } from "../formats";
 import { isArray, isObject } from "../../testers";
 
 export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
@@ -14,7 +14,7 @@ export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
 	getMountingTasks(definedCriteria, mountedCriteria) {
 		let mountingTasks: SchemaMountingTask[] = [];
 
-		if (isAlreadyMounted(definedCriteria.item)) {
+		if (isMountedCriteria(definedCriteria.item)) {
 			mountedCriteria.item = definedCriteria.item;
 		} else {
 			mountingTasks.push({
@@ -26,10 +26,7 @@ export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
 		return (mountingTasks);
 	},
 	checkValue(criteria, value) {
-		if (!isObject(value)) {
-			return ("TYPE_NOT_OBJECT");
-		}
-		else if (!isArray(value)) {
+	 	if (!isArray(value)) {
 			return ("TYPE_NOT_ARRAY");
 		}
 		else if (!value.length) {

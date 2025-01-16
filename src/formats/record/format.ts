@@ -1,7 +1,7 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { RecordVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
+import { formatDefaultCriteria, isMountedCriteria } from "../formats";
 import { isObject, isPlainObject } from "../../testers";
 
 export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
@@ -15,7 +15,7 @@ export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
 	getMountingTasks(definedCriteria, mountedCriteria) {
 		let mountingTasks: SchemaMountingTask[] = [];
 
-		if (isAlreadyMounted(definedCriteria.key)) {
+		if (isMountedCriteria(definedCriteria.key)) {
 			mountedCriteria.key = definedCriteria.key;
 		} else {
 			mountingTasks.push({
@@ -24,7 +24,7 @@ export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
 			});
 		}
 
-		if (isAlreadyMounted(definedCriteria.value)) {
+		if (isMountedCriteria(definedCriteria.value)) {
 			mountedCriteria.value = definedCriteria.value;
 		} else {
 			mountingTasks.push({
@@ -37,10 +37,7 @@ export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
 	},
 
 	checkValue(criteria, value) {
-		if (!isObject(value)) {
-			return ("TYPE_NOT_OBJECT");
-		}
-		else if (!isPlainObject(value)) {
+		if (!isPlainObject(value)) {// WARNING !
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 

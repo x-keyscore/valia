@@ -23,9 +23,11 @@ export interface StructConcreteTypes extends ConcreteTypesTemplate<
 	StructMountedCriteria
 > {}
 
+type OmitIndexDynamic<K extends PropertyKey> = {} extends Record<K, unknown> ? never : K;
+
 type StructGuard<T extends VariantCriteria> =
 	T extends StructVariantCriteria
-		? { -readonly [K in keyof T['struct']]: FormatsGuard<T['struct'][K]> }
+		? { -readonly [K in keyof T['struct'] as OmitIndexDynamic<K>]: FormatsGuard<T['struct'][K]> }
 		: never;
 
 export interface StructGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<

@@ -1,2 +1,2 @@
-export type { SchemaMountingTask, SchemaCheckingTask, SchemaCheckResult } from "./types";
+export type { SchemaMountingTask, SchemaCheckingTask, SchemaCheck, SchemaGuard } from "./types";
 export { Schema } from "./Schema";

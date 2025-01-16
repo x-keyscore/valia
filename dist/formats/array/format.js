@@ -8,11 +8,11 @@ exports.ArrayFormat = {
         empty: true
     },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
     },
     getMountingTasks(definedCriteria, mountedCriteria) {
         let mountingTasks = [];
-        if ((0, formats_1.isAlreadyMounted)(definedCriteria.item)) {
+        if ((0, formats_1.isMountedCriteria)(definedCriteria.item)) {
             mountedCriteria.item = definedCriteria.item;
         }
         else {
@@ -24,10 +24,7 @@ exports.ArrayFormat = {
         return (mountingTasks);
     },
     checkValue(criteria, value) {
-        if (!(0, testers_1.isObject)(value)) {
-            return ("TYPE_NOT_OBJECT");
-        }
-        else if (!(0, testers_1.isArray)(value)) {
+        if (!(0, testers_1.isArray)(value)) {
             return ("TYPE_NOT_ARRAY");
         }
         else if (!value.length) {

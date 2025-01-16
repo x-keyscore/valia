@@ -8,7 +8,7 @@ exports.StringFormat = {
         empty: true
     },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
     },
     checkValue(criteria, value) {
         var _a;

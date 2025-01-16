@@ -1,7 +1,7 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { UnionVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
+import { formatDefaultCriteria, isMountedCriteria } from "../formats";
 
 export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 	defaultCriteria: {
@@ -17,7 +17,7 @@ export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 		for (let i = 0; i < definedCriteria.union.length; i++) {
 			const definedCriteriaItem = definedCriteria.union[i];
 
-			if (isAlreadyMounted(definedCriteriaItem)) {
+			if (isMountedCriteria(definedCriteriaItem)) {
 				mountedCriteria.union[i] = definedCriteriaItem;
 			} else {
 				mountingTasks.push({

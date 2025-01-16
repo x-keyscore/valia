@@ -1,7 +1,7 @@
 import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { FormatTemplate, MountedCriteria } from "../types";
 import type { StructVariantCriteria } from "./types";
-import { formatDefaultCriteria, isAlreadyMounted } from "../formats";
+import { formatDefaultCriteria, isMountedCriteria } from "../formats";
 import { isArray, isObject, isPlainObject } from "../../testers";
 
 interface CustomProperty {
@@ -43,7 +43,7 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty>
 
 		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria, {
 			definedKeys: Object.keys(definedCriteria.struct),
-			requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : []
+			requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : definedKeys
 		}));
 	},
 	getMountingTasks(definedCriteria, mountedCriteria) {
@@ -53,9 +53,7 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty>
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 
-			if (isArray(definedCriteria.struct[key])) return ([]);
-
-			if (isAlreadyMounted(definedCriteria.struct[key])) {
+			if (isMountedCriteria(definedCriteria.struct[key])) {
 				mountedCriteria.struct[key] = definedCriteria.struct[key];
 			} else {
 				mountingTasks.push({
@@ -68,10 +66,7 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty>
 		return (mountingTasks);
 	},
 	checkValue(criteria, value) {
-		if (!isObject(value)) {
-			return ("TYPE_NOT_OBJECT");
-		}
-		else if (!isPlainObject(value)) {
+		if (!isPlainObject(value)) {// WARNING !
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 		else if (Object.keys(value).length === 0) {

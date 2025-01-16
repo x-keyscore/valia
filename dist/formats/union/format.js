@@ -7,13 +7,13 @@ exports.UnionFormat = {
         empty: false
     },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
     },
     getMountingTasks(definedCriteria, mountedCriteria) {
         let mountingTasks = [];
         for (let i = 0; i < definedCriteria.union.length; i++) {
             const definedCriteriaItem = definedCriteria.union[i];
-            if ((0, formats_1.isAlreadyMounted)(definedCriteriaItem)) {
+            if ((0, formats_1.isMountedCriteria)(definedCriteriaItem)) {
                 mountedCriteria.union[i] = definedCriteriaItem;
             }
             else {

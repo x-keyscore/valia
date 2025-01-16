@@ -1,6 +1,7 @@
 import { VariantCriteria, MountedCriteria, formats } from "../formats";
 import { SchemaMountingTask } from "./types";
 import { LibraryError } from "../utils";
+import { mountedMarkerSymbol } from "../formats/formats";
 
 function processTask(task: SchemaMountingTask) {
 	const format = formats[task.definedCriteria.type];
@@ -23,6 +24,8 @@ export function mounter<T extends VariantCriteria>(
 	let mountedCriteria: MountedCriteria<T> = {} as any;
 	let queue: SchemaMountingTask[] = [{ definedCriteria, mountedCriteria }];
 
+	const timeStart = performance.now();
+
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
@@ -30,6 +33,10 @@ export function mounter<T extends VariantCriteria>(
 
 		if (mountingTasks) Array.prototype.push.apply(queue, mountingTasks);
 	}
+
+	const timeEnd = performance.now();
+	const timeTaken = timeEnd - timeStart;
+	Object.assign(mountedCriteria, { [mountedMarkerSymbol]: `${timeTaken.toFixed(2)}ms` });
 
 	return (mountedCriteria);
 };

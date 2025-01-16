@@ -1,9 +1,9 @@
 import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
-import type { SchemaCheckResult } from "./types";
+import type { SchemaCheck } from "./types";
 /**
  * Represents the validation criteria structure and its associated functions.
  */
-export declare class Schema<const DefinedCriteria extends VariantCriteria> {
+export declare class Schema<const T extends VariantCriteria> {
     /**
      * Property used for schema reuse, see the example below.
      *
@@ -22,7 +22,7 @@ export declare class Schema<const DefinedCriteria extends VariantCriteria> {
      * });
      * ```
      */
-    readonly criteria: MountedCriteria<DefinedCriteria>;
+    readonly criteria: MountedCriteria<T>;
     /**
      * @param criteria Definition of validation criteria.
      * Once the class has been instantiated, modifying
@@ -38,7 +38,7 @@ export declare class Schema<const DefinedCriteria extends VariantCriteria> {
      * });
      * ```
      */
-    constructor(criteria: DefinedCriteria);
+    constructor(criteria: T);
     /**
      * @param value Data to be validated
      *
@@ -61,7 +61,7 @@ export declare class Schema<const DefinedCriteria extends VariantCriteria> {
      * }
      * ```
      */
-    guard(value: unknown): value is FormatsGuard<DefinedCriteria>;
+    guard(value: unknown): value is FormatsGuard<T>;
     /**
      * @param value Data to be validated
      *
@@ -85,5 +85,5 @@ export declare class Schema<const DefinedCriteria extends VariantCriteria> {
      * }
      * ```
      */
-    check(value: unknown): SchemaCheckResult;
+    check(value: unknown): SchemaCheck;
 }

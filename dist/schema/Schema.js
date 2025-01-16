@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Schema = void 0;
 const mounter_1 = require("./mounter");
 const checker_1 = require("./checker");
+const cloner_1 = require("./cloner");
 /**
  * Represents the validation criteria structure and its associated functions.
  */
@@ -23,7 +24,7 @@ class Schema {
      * ```
      */
     constructor(criteria) {
-        const clonedCriteria = structuredClone(criteria);
+        const clonedCriteria = (0, cloner_1.cloner)(criteria);
         const mountedCriteria = (0, mounter_1.mounter)(clonedCriteria);
         this.criteria = mountedCriteria;
     }

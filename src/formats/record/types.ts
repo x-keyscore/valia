@@ -31,7 +31,7 @@ type RecordGuard<T extends VariantCriteria> =
 	T extends RecordVariantCriteria
 		? FormatsGuard<T['key']> extends infer U
 			? U extends PropertyKey
-				? { [P in U]: FormatsGuard<T['value']> }
+				? { [P in U]?: FormatsGuard<T['value']> }
 				: never
 			: never
 		: never;

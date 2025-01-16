@@ -1,7 +1,8 @@
 import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
-import type { SchemaCheckResult } from "./types";
+import type { SchemaCheck } from "./types";
 import { mounter } from "./mounter";
 import { checker } from "./checker";
+import { cloner } from "./cloner";
 
 /**
  * Represents the validation criteria structure and its associated functions.
@@ -43,7 +44,7 @@ export class Schema<const T extends VariantCriteria> {
 	 * ```
 	 */
 	constructor(criteria: T) {
-		const clonedCriteria = structuredClone(criteria);
+		const clonedCriteria = cloner(criteria);
 		const mountedCriteria = mounter(clonedCriteria);
 		this.criteria = mountedCriteria;
 	}
@@ -98,7 +99,7 @@ export class Schema<const T extends VariantCriteria> {
 	 * }
 	 * ```
 	 */
-	check(value: unknown): SchemaCheckResult {
+	check(value: unknown): SchemaCheck {
 		const reject = checker(this.criteria, value);
 		return (reject);
 	}

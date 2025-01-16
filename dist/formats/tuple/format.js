@@ -8,13 +8,13 @@ exports.TupleFormat = {
         empty: false
     },
     mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.defaultGlobalCriteria, this.defaultCriteria, definedCriteria));
+        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
     },
     getMountingTasks(definedCriteria, mountedCriteria) {
         let mountingTasks = [];
         for (let i = 0; i < definedCriteria.tuple.length; i++) {
             const definedCriteriaItem = definedCriteria.tuple[i];
-            if ((0, formats_1.isAlreadyMounted)(definedCriteriaItem)) {
+            if ((0, formats_1.isMountedCriteria)(definedCriteriaItem)) {
                 mountedCriteria.tuple[i] = definedCriteriaItem;
             }
             else {
@@ -27,10 +27,7 @@ exports.TupleFormat = {
         return (mountingTasks);
     },
     checkValue(criteria, value) {
-        if (!(0, testers_1.isObject)(value)) {
-            return ("TYPE_NOT_OBJECT");
-        }
-        else if (!(0, testers_1.isArray)(value)) {
+        if (!(0, testers_1.isArray)(value)) {
             return ("TYPE_NOT_ARRAY");
         }
         const valueLength = value.length;

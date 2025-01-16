@@ -8,7 +8,7 @@ import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
 import { SchemaCheckingTask, SchemaMountingTask } from "../schema";
-import { isMountedSymbol, formats } from "./formats";
+import { mountedMarkerSymbol, formats } from "./formats";
 
 // VARIANT CRITERIA
 
@@ -122,16 +122,22 @@ export type MountedCriteria<T extends VariantCriteria> = {
 }[T['type']];
 
 // FORMATS GUARD
-
+// FormatsGenericTypes<T>['type'] extends T['type'] ? FormatsGenericTypes<T>['type'] : 
+/*
 export type FormatsGuard<T extends VariantCriteria> =
  	T['optional'] extends false
 		? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined
-		: FormatsGenericTypesMap<T>[T['type']]['guard'];
+		: FormatsGenericTypesMap<T>[T['type']]['guard'];*/
+
+export type FormatsGuard<T extends VariantCriteria> =
+	T['type'] extends FormatsGenericTypes<T>['type']
+		? FormatsGenericTypes<T>['guard']
+		: never;
 
 // FORMAT
 
 export interface FormatDefaultCriteria {
-	[isMountedSymbol]: boolean;
+	[mountedMarkerSymbol]: string;
 	optional: boolean;
 	nullable: boolean;
 }

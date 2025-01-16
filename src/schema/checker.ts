@@ -1,12 +1,12 @@
 import { VariantCriteria, MountedCriteria, formats } from "../formats";
 import { SchemaCheckingTask, SchemaCheckerReject } from "./types";
 
-function manageLink(
+function manageTaskLink(
 	link: SchemaCheckingTask['link'],
-	rejectState: string | null
+	isReject: boolean
 ) {
 	if (link) {
-		if (!rejectState) {
+		if (!isReject) {
 			link.isClose = true;
 		} else if (link.totalLinks !== link.totalRejected) {
 			return (true);	
@@ -37,18 +37,18 @@ function processTask(task: SchemaCheckingTask) {
 
 	const rejectState = basicCheckValue(task) || format.checkValue(criteria, task.value);
 
-	const skipTask = manageLink(link, rejectState);
+	const rejectBypass = manageTaskLink(link, !!rejectState);
 
 	if (rejectState) {
 		return ({
-			skipTask,
+			rejectBypass,
 			rejectState
 		});
 	}
 
 	const checkingTasks = format.getCheckingTasks?.(criteria, task.value);
 	return ({
-		skipTask: false,
+		rejectBypass: false,
 		rejectState,
 		checkingTasks
 	});
@@ -63,9 +63,9 @@ export function checker(
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
-		const { skipTask, rejectState, checkingTasks } = processTask(currentTask);
+		const { rejectBypass, rejectState, checkingTasks } = processTask(currentTask);
 
-		if (skipTask) {
+		if (rejectBypass) {
 			continue;
 		} else if (rejectState) {
 			const { criteria } = currentTask;
@@ -79,7 +79,6 @@ export function checker(
 		}
 
 		if (checkingTasks) Array.prototype.push.apply(queue, checkingTasks);
-		
 	}
 
 	return (null);
