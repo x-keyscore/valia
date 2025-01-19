@@ -1,4 +1,4 @@
-import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "../formats";
+import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "./formats";
 import { SchemaMountingTask } from "./types";
 import { LibraryError } from "../utils";
 import { Register } from "./register";
@@ -6,7 +6,7 @@ import { Register } from "./register";
 export const metadataSymbol = Symbol('metadata');
 
 function checkCriteria(format: typeof formats, definedCriteria: VariantCriteria) {
-	
+
 }
 
 export function mounter<T extends VariantCriteria>(

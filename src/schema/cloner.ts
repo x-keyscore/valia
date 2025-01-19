@@ -1,5 +1,5 @@
 import { isArray, isPlainObject } from "../testers";
-import { VariantCriteria } from "../formats";
+import { VariantCriteria } from "./formats";
 import { isMountedCriteria } from "./mounter";
 
 interface SchemaCloningTask {

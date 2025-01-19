@@ -1,4 +1,4 @@
-import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
+import type { VariantCriteria, FormatsGuard, MountedCriteria } from "./formats";
 import type { SchemaCheck } from "./types";
 import { mounter } from "./mounter";
 import { checker } from "./checker";

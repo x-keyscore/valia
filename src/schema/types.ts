@@ -1,4 +1,4 @@
-import type { VariantCriteria, MountedCriteria, FormatsGuard } from "../formats";
+import type { VariantCriteria, MountedCriteria, FormatsGuard } from "./formats";
 import { Schema } from "./Schema";
 
 export interface SchemaMountingTask {

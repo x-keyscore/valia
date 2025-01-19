@@ -1,6 +1,6 @@
 import type { SymbolVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isSymbol } from "../../testers";
+import { isSymbol } from "../../../testers";
 
 export const SymbolFormat: FormatTemplate<SymbolVariantCriteria> = {
 	defaultCriteria: {},

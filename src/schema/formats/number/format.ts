@@ -1,6 +1,6 @@
 import type { NumberVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isNumber } from "../../testers";
+import { isNumber } from "../../../testers";
 
 export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
 	defaultCriteria: {},

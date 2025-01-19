@@ -1,5 +1,5 @@
 import type { SchemaCheckingTask, SchemaCheckerReject } from "./types";
-import { VariantCriteria, MountedCriteria, formats} from "../formats";
+import { VariantCriteria, MountedCriteria, formats} from "./formats";
 import { metadataSymbol } from './mounter'
 
 function manageTaskLink(

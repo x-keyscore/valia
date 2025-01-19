@@ -1,6 +1,6 @@
 import type { StringVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { testers, isString } from "../../";
+import { testers, isString } from "../../..";
 
 export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 	checkCriteria: {

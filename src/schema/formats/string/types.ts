@@ -1,5 +1,5 @@
 import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
-import { testers } from "../../";
+import { testers } from "../../..";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
   T extends (input: any, params: infer U) => any ? U : never;

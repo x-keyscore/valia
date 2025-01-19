@@ -1,4 +1,4 @@
-import type { MountedCriteria, VariantCriteria } from "../formats";
+import type { MountedCriteria, VariantCriteria } from "./formats";
 import { metadataSymbol } from "./mounter";
 import { LibraryError } from "../utils";
 

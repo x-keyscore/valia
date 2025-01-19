@@ -1,7 +1,7 @@
-import type { SchemaCheckingTask } from "../../schema";
+import type { SchemaCheckingTask } from "../..";
 import type { UnionVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../schema";
+import { isMountedCriteria } from "../..";
 
 export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 	defaultCriteria: {

@@ -1,6 +1,6 @@
 import type { BooleanVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isBoolean } from "../../testers";
+import { isBoolean } from "../../../testers";
 
 export const BooleanFormat: FormatTemplate<BooleanVariantCriteria> = {
 	defaultCriteria: {},

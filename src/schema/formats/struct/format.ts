@@ -1,7 +1,7 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
 import type { StructVariantCriteria } from "./types";
-import { isMountedCriteria } from "../../schema";
-import { isPlainObject } from "../../testers";
+import { isMountedCriteria } from "../..";
+import { isPlainObject } from "../../../testers";
 
 interface CustomProperties {
 	hasRequiredKeys(
