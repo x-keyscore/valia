@@ -1,5 +1,5 @@
 import type { MountedCriteria, VariantCriteria } from "./formats";
-import { metadataSymbol } from "./mounter";
+import { registerSymbol } from "./mounter";
 import { LibraryError } from "../utils";
 
 type RegisterKey = MountedCriteria<VariantCriteria>;
@@ -23,10 +23,10 @@ export class Register {
 	}
 
 	merge(prevCriteria: RegisterKey, currCriteria: RegisterKey, data: RegisterValue['data']) {
-		const sourceRegisterStore = currCriteria[metadataSymbol].register.storage;
+		const sourceRegisterStorage = currCriteria[registerSymbol].storage;
 
 		// MERGE REGISTER STORAGE
-		this.storage = new Map([...this.storage, ...sourceRegisterStore]);
+		this.storage = new Map([...this.storage, ...sourceRegisterStorage]);
 
 		this.storage.set(currCriteria, {
 			prev: prevCriteria,
@@ -38,9 +38,9 @@ export class Register {
 		let prev = this.storage.get(criteria);
 		if (!prev) throw new LibraryError(
 			"Register getPath",
-			"The criteria reference was not found in the registry"
+			"The criteria reference was not found in the register"
 		);
-		
+
 		let fullPath = prev.data.pathParts.join(separator);
 		while (prev.prev) {
 			prev = this.storage.get(prev.prev);

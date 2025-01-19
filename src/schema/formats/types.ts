@@ -7,7 +7,7 @@ import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
 import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
-import { SchemaCheckingTask, SchemaMountingTask, metadataSymbol, Register } from "..";
+import { SchemaCheckingTask, SchemaMountingTask, registerSymbol, Register } from "..";
 import { formats } from "./formats";
 
 // VARIANT CRITERIA
@@ -109,10 +109,7 @@ export interface DefaultVariantCriteria {
 export type RegisterInstance = InstanceType<typeof Register>;
 
 export interface DefaultMountedCriteria {
-	[metadataSymbol]: {
-		mountingTime: string;
-		register: RegisterInstance
-	}
+	[registerSymbol]: RegisterInstance
 }
 
 export type VariantCriteria = {

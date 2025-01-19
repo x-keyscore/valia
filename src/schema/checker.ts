@@ -1,6 +1,6 @@
 import type { SchemaCheckingTask, SchemaCheckerReject } from "./types";
 import { VariantCriteria, MountedCriteria, formats} from "./formats";
-import { metadataSymbol } from './mounter'
+import { registerSymbol } from './mounter'
 
 function manageTaskLink(
 	link: SchemaCheckingTask['link'],
@@ -36,7 +36,7 @@ export function checker(
 	criteria: MountedCriteria<VariantCriteria>,
 	value: unknown
 ): SchemaCheckerReject | null {
-	const register = criteria[metadataSymbol].register;
+	const register = criteria[registerSymbol];
 	let queue: SchemaCheckingTask[] = [{ criteria, value }];
 
 	while (queue.length > 0) {
