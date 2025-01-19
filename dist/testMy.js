@@ -1,46 +1,18 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.stringToUTF16UnitArray = exports.Schema = void 0;
-var schema_1 = require("./schema");
-Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return schema_1.Schema; } });
-var tools_1 = require("./tools");
-Object.defineProperty(exports, "stringToUTF16UnitArray", { enumerable: true, get: function () { return tools_1.stringToUTF16UnitArray; } });
-__exportStar(require("./testers"), exports);
-/*
-const start = performance.now();
-const end = performance.now();
-const timeTaken = end - start;
-console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);
-*/
-/*
-import { Schema, SchemaGuard } from "./schema";
-
-function formatMemoryUsage(memoryUsage: any) {
+exports.userFormat = void 0;
+const schema_1 = require("./schema");
+function formatMemoryUsage(memoryUsage) {
     return Object.entries(memoryUsage).reduce((acc, [key, value]) => {
         // @ts-ignore
         acc[key] = `${(value / 1024 / 1024).toFixed(2)} MB`;
         return acc;
     }, {});
 }
-
-const bigdata: SchemaGuard<typeof userFormat> = {
+const bigdata = {
     credential: {
         email: "test@test.ttt",
-        password: "test*test"
+        password: "test/*/*test"
     },
     profile: {
         firstName: "test",
@@ -59,23 +31,20 @@ const bigdata: SchemaGuard<typeof userFormat> = {
     sessions: [],
     permissions: []
 };
-
-let data: any = {};
+let data = {};
 let nbrElem = 10;
 console.log("Number of properties :" + nbrElem);
 for (let i = 0; i < nbrElem; i++) {
     data[`${i}`] = bigdata;
 }
-
-const userCredentiaFormat = new Schema({
+const userCredentiaFormat = new schema_1.Schema({
     type: "struct",
     struct: {
         email: { type: "string", tester: { name: "isEmail" } },
         password: { type: "string" }
     }
 });
-
-const userProfileFormat = new Schema({
+const userProfileFormat = new schema_1.Schema({
     type: "struct",
     struct: {
         firstName: { type: "string" },
@@ -91,16 +60,14 @@ const userProfileFormat = new Schema({
         }
     }
 });
-
-const userSettingFormat = new Schema({
+const userSettingFormat = new schema_1.Schema({
     type: "struct",
     struct: {
         notification: { type: "boolean" },
         theme: { type: "string" }
     }
 });
-
-const userSessionFormat = new Schema({
+const userSessionFormat = new schema_1.Schema({
     type: "struct",
     struct: {
         ip: {
@@ -126,8 +93,7 @@ const userSessionFormat = new Schema({
         token: { type: "string" }
     }
 });
-
-export const userFormat = new Schema({
+exports.userFormat = new schema_1.Schema({
     type: "struct",
     struct: {
         credential: userCredentiaFormat.criteria,
@@ -137,18 +103,14 @@ export const userFormat = new Schema({
         permissions: { type: "array", empty: true, item: { type: "string" } }
     }
 });
-
-const testSchema = new Schema({
+const testSchema = new schema_1.Schema({
     type: "record",
     key: { type: "string" },
-    value: userFormat.criteria
+    value: exports.userFormat.criteria
 });
-
 const start = performance.now();
 console.log(testSchema.check(data));
 console.log(formatMemoryUsage(process.memoryUsage()));
 const end = performance.now();
 const timeTaken = end - start;
 console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);
-
-while (true) {}*/ 

@@ -1,4 +1,4 @@
-import type { VariantCriteria } from "../formats";
+import { VariantCriteria } from "../formats";
 /**
  * Clones the object starting from the root and stops traversing a branch
  * when the `mountedMarker` symbol is encountered. In such cases, the object

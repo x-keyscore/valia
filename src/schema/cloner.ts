@@ -1,6 +1,6 @@
-import type { VariantCriteria } from "../formats";
-import { isMountedCriteria, mountedMarkerSymbol } from "../formats/formats";
-import { isArray, isObject, isPlainObject } from "../testers";
+import { isArray, isPlainObject } from "../testers";
+import { VariantCriteria } from "../formats";
+import { isMountedCriteria } from "./mounter";
 
 interface SchemaCloningTask {
 	src: unknown;
@@ -22,7 +22,7 @@ function processTask(task: SchemaCloningTask) {
 				const key = keys[i];
 
 				if (isPlainObject(task.src[key]) && isMountedCriteria(task.src)) {
-					Reflect.set(task.cpy, key, {});
+					task.cpy[key] = {};
 				}
 
 				cloningTasks.push({
@@ -37,7 +37,7 @@ function processTask(task: SchemaCloningTask) {
 
 		for (let i = 0; i < task.src.length; i++) {
 			if (isPlainObject(task.src[i]) && isMountedCriteria(task.src)) {
-				Reflect.set(task.cpy, i, {});
+				task.cpy[i] = {};
 			}
 
 			cloningTasks.push({

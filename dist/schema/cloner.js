@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cloner = cloner;
-const formats_1 = require("../formats/formats");
 const testers_1 = require("../testers");
+const mounter_1 = require("./mounter");
 function processTask(task) {
     let cloningTasks = [];
     if ((0, testers_1.isPlainObject)(task.src)) {
-        if ((0, formats_1.isMountedCriteria)(task.src)) {
+        if ((0, mounter_1.isMountedCriteria)(task.src)) {
             task.cpy = task.src;
         }
         else {
@@ -14,8 +14,8 @@ function processTask(task) {
             const keys = Object.keys(task.src);
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
-                if ((0, testers_1.isPlainObject)(task.src[key]) && (0, formats_1.isMountedCriteria)(task.src)) {
-                    Reflect.set(task.cpy, key, {});
+                if ((0, testers_1.isPlainObject)(task.src[key]) && (0, mounter_1.isMountedCriteria)(task.src)) {
+                    task.cpy[key] = {};
                 }
                 cloningTasks.push({
                     src: task.src[key],
@@ -27,8 +27,8 @@ function processTask(task) {
     else if ((0, testers_1.isArray)(task.src)) {
         task.cpy = Object.assign([], task.src);
         for (let i = 0; i < task.src.length; i++) {
-            if ((0, testers_1.isPlainObject)(task.src[i]) && (0, formats_1.isMountedCriteria)(task.src)) {
-                Reflect.set(task.cpy, i, {});
+            if ((0, testers_1.isPlainObject)(task.src[i]) && (0, mounter_1.isMountedCriteria)(task.src)) {
+                task.cpy[i] = {};
             }
             cloningTasks.push({
                 src: task.src[i],

@@ -9,7 +9,7 @@ export class LibraryError extends Error {
 		const reset = '\x1b[0m';
 
 		console.log(
-			`${red}[ERROR]${reset} ${cyan}[LIBRARY:vali.ts]${reset} ${gray}${timestamp}${reset}` +
+			`${red}[ERROR]${reset} ${cyan}[PACKAGE:vali.ts]${reset} ${gray}${timestamp}${reset}` +
 			`\nContext: ${context}` +
 			`\nMessage: ${this.message}`
 			

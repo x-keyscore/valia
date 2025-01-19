@@ -1,3 +1,3 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const formats_1 = require("./formats");
+const schema_1 = require("../schema");

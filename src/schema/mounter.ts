@@ -1,42 +1,50 @@
-import { VariantCriteria, MountedCriteria, formats } from "../formats";
+import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "../formats";
 import { SchemaMountingTask } from "./types";
 import { LibraryError } from "../utils";
-import { mountedMarkerSymbol } from "../formats/formats";
+import { Register } from "./register";
 
-function processTask(task: SchemaMountingTask) {
-	const format = formats[task.definedCriteria.type];
-	if (!format) throw new LibraryError(
-		"Criteria mounting",
-		"Format type '" + task.definedCriteria.type + "' is unknown"
-	);
+export const metadataSymbol = Symbol('metadata');
 
-	format.mountCriteria(task.definedCriteria, task.mountedCriteria);
-	const mountingTasks = format.getMountingTasks?.(task.definedCriteria, task.mountedCriteria);
-
-	return ({
-		mountingTasks
-	});
+function checkCriteria(format: typeof formats, definedCriteria: VariantCriteria) {
+	
 }
 
 export function mounter<T extends VariantCriteria>(
 	definedCriteria: T
 ): MountedCriteria<T> {
+	const register = new Register();
 	let mountedCriteria: MountedCriteria<T> = {} as any;
 	let queue: SchemaMountingTask[] = [{ definedCriteria, mountedCriteria }];
 
 	const timeStart = performance.now();
 
 	while (queue.length > 0) {
-		const currentTask = queue.pop()!;
+		const { definedCriteria, mountedCriteria } = queue.pop()!;
 
-		const { mountingTasks } = processTask(currentTask);
+		const format = formats[definedCriteria.type];
+		if (!format) throw new LibraryError(
+			"Criteria mounting",
+			"Format type '" + String(definedCriteria.type) + "' is unknown"
+		);
 
-		if (mountingTasks) Array.prototype.push.apply(queue, mountingTasks);
+		Object.assign(mountedCriteria, defaultVariantCriteria, format.defaultCriteria, definedCriteria);
+		if (format.mounting) format.mounting(queue, register, definedCriteria, mountedCriteria);
 	}
 
 	const timeEnd = performance.now();
 	const timeTaken = timeEnd - timeStart;
-	Object.assign(mountedCriteria, { [mountedMarkerSymbol]: `${timeTaken.toFixed(2)}ms` });
+	Object.assign(mountedCriteria, {
+		[metadataSymbol]: {
+			mountingTime: `${timeTaken.toFixed(2)}ms`,
+			register
+		}
+	});
 
 	return (mountedCriteria);
 };
+
+export function isMountedCriteria(
+	criteria: object
+): criteria is MountedCriteria<VariantCriteria> {
+	return (Reflect.has(criteria, metadataSymbol));
+}

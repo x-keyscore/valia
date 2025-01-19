@@ -1,32 +1,33 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TupleFormat = void 0;
-const formats_1 = require("../formats");
+const schema_1 = require("../../schema");
 const testers_1 = require("../../testers");
 exports.TupleFormat = {
     defaultCriteria: {
         empty: false
     },
-    mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-    },
-    getMountingTasks(definedCriteria, mountedCriteria) {
-        let mountingTasks = [];
+    mounting(queue, register, definedCriteria, mountedCriteria) {
         for (let i = 0; i < definedCriteria.tuple.length; i++) {
             const definedCriteriaItem = definedCriteria.tuple[i];
-            if ((0, formats_1.isMountedCriteria)(definedCriteriaItem)) {
+            if ((0, schema_1.isMountedCriteria)(definedCriteriaItem)) {
+                register.merge(mountedCriteria, definedCriteriaItem, {
+                    pathParts: [`tuple[${i}]`]
+                });
                 mountedCriteria.tuple[i] = definedCriteriaItem;
             }
             else {
-                mountingTasks.push({
+                register.add(mountedCriteria, mountedCriteria.tuple[i], {
+                    pathParts: [`tuple[${i}]`]
+                });
+                queue.push({
                     definedCriteria: definedCriteriaItem,
                     mountedCriteria: mountedCriteria.tuple[i]
                 });
             }
         }
-        return (mountingTasks);
     },
-    checkValue(criteria, value) {
+    checking(queue, criteria, value) {
         if (!(0, testers_1.isArray)(value)) {
             return ("TYPE_NOT_ARRAY");
         }
@@ -40,16 +41,12 @@ exports.TupleFormat = {
         else if (valueLength > criteria.tuple.length) {
             return ("VALUE_SUPERIOR_TUPLE");
         }
-        return (null);
-    },
-    getCheckingTasks(criteria, value) {
-        let checkTasks = [];
         for (let i = 0; i < value.length; i++) {
-            checkTasks.push({
+            queue.push({
                 criteria: criteria.tuple[i],
                 value: value[i]
             });
         }
-        return (checkTasks);
+        return (null);
     }
 };

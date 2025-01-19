@@ -1,98 +1,87 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { FormatTemplate, MountedCriteria } from "../types";
 import type { StructVariantCriteria } from "./types";
-import { formatDefaultCriteria, isMountedCriteria } from "../formats";
-import { isArray, isObject, isPlainObject } from "../../testers";
+import { isMountedCriteria } from "../../schema";
+import { isPlainObject } from "../../testers";
 
-interface CustomProperty {
+interface CustomProperties {
 	hasRequiredKeys(
 		mountedCriteria: MountedCriteria<StructVariantCriteria>,
-		value: Record<string, unknown>
+		value: (string | symbol)[]
 	): boolean;
-	hasDefinedKeys(
+	hasValidKeys(
 		mountedCriteria: MountedCriteria<StructVariantCriteria>,
-		value: Record<string, unknown>
+		value: (string | symbol)[]
 	): boolean;
 }
 
-export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty> = {
+export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperties> = {
 	defaultCriteria: {
 		empty: false
 	},
-	hasRequiredKeys(mountedCriteria, value) {
-		const requiredKeys = mountedCriteria.requiredKeys;
-		const inputKeys = Object.keys(value);
-
-		for (const key of requiredKeys) {
-			if (!inputKeys.includes(key)) return (false)
-		}
-		return (true);
-	},
-	hasDefinedKeys(mountedCriteria, value) {
-		const definedKeys = mountedCriteria.definedKeys;
-		const inputKeys = Object.keys(value);
-
-		for (const key of inputKeys) {
-			if (!definedKeys.includes(key)) return (false)
-		}
-		return (true);
-	},
-	mountCriteria(definedCriteria, mountedCriteria) {
-		const definedKeys = Object.keys(definedCriteria.struct);
+	mounting(queue, register, definedCriteria, mountedCriteria) {
+		const validKeys = [
+			...Object.keys(definedCriteria.struct),
+			...Object.getOwnPropertySymbols(definedCriteria.struct)
+		];
 		const optionalKeys = definedCriteria.optionalKeys;
 
-		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria, {
-			definedKeys: Object.keys(definedCriteria.struct),
-			requiredKeys: optionalKeys ? definedKeys.filter(key => !optionalKeys.includes(key)) : definedKeys
-		}));
-	},
-	getMountingTasks(definedCriteria, mountedCriteria) {
-		let mountingTasks: SchemaMountingTask[] = [];
-		const keys = Object.keys(definedCriteria.struct);
+		Object.assign(mountedCriteria, {
+			validKeys: validKeys,
+			requiredKeys: optionalKeys ? validKeys.filter(key => !optionalKeys.includes(key)) : validKeys
+		});
 
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
+		for (let i = 0; i < validKeys.length; i++) {
+			const key = validKeys[i];
 
 			if (isMountedCriteria(definedCriteria.struct[key])) {
+				register.merge(mountedCriteria, definedCriteria.struct[key], {
+					pathParts: ["struct", key.toString()]
+				});
 				mountedCriteria.struct[key] = definedCriteria.struct[key];
 			} else {
-				mountingTasks.push({
+				register.add(mountedCriteria, mountedCriteria.struct[key], {
+					pathParts: ["struct", key.toString()]
+				});
+				queue.push({
 					definedCriteria: definedCriteria.struct[key],
 					mountedCriteria: mountedCriteria.struct[key]
 				});
 			}
 		}
-
-		return (mountingTasks);
 	},
-	checkValue(criteria, value) {
-		if (!isPlainObject(value)) {// WARNING !
+	hasRequiredKeys(mountedCriteria, inputKeys) {
+		const requiredKeys = mountedCriteria.requiredKeys;
+		return (requiredKeys.length <= inputKeys.length && requiredKeys.every((key) => inputKeys.includes(key)));
+	},
+	hasValidKeys(mountedCriteria, inputKeys) {
+		const definedKeys = mountedCriteria.validKeys;
+		return (definedKeys.length === inputKeys.length && definedKeys.every((key, index) => key === inputKeys[index]));
+	},
+	checking(queue, criteria, value) {
+		if (!isPlainObject(value)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
-		else if (Object.keys(value).length === 0) {
+
+		const keys = Object.keys(value);
+
+		if (keys.length === 0) {
 			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (!this.hasRequiredKeys(criteria, value)) {
+		else if (!this.hasRequiredKeys(criteria, keys)) {
 			return ("VALUE_MISSING_KEY");
 		}
-		else if (!this.hasDefinedKeys(criteria, value)) {
+		else if (!this.hasValidKeys(criteria, keys)) {
 			return ("VALUE_INVALID_KEY");
 		};
 
-		return (null);
-	},
-	getCheckingTasks(criteria, value) {
-		let checkingTasks: SchemaCheckingTask[] = [];
-		const keys = Object.keys(value);
-
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
-			checkingTasks.push({
+			queue.push({
 				criteria: criteria.struct[key],
 				value: value[key]
 			});
 		}
 
-		return (checkingTasks);
-	},
+		return (null);
+	}
 }

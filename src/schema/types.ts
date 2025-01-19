@@ -7,7 +7,7 @@ export interface SchemaMountingTask {
 }
 
 export interface CheckingTaskLink {
-	isClose: boolean;
+	finished: boolean;
 	totalLinks: number;
 	totalRejected: number;
 }
@@ -21,6 +21,7 @@ export interface SchemaCheckingTask {
 export interface SchemaCheckerReject {
 	type: string;
 	/** `REJECT_<CATEGORY>_<DETAIL>` */
+	path: string;
 	code: string;
 	label: string | undefined;
 	message: string | undefined;

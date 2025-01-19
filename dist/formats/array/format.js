@@ -1,29 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArrayFormat = void 0;
-const formats_1 = require("../formats");
+const schema_1 = require("../../schema");
 const testers_1 = require("../../testers");
 exports.ArrayFormat = {
     defaultCriteria: {
         empty: true
     },
-    mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-    },
-    getMountingTasks(definedCriteria, mountedCriteria) {
-        let mountingTasks = [];
-        if ((0, formats_1.isMountedCriteria)(definedCriteria.item)) {
+    mounting(queue, register, definedCriteria, mountedCriteria) {
+        if ((0, schema_1.isMountedCriteria)(definedCriteria.item)) {
+            register.merge(mountedCriteria, definedCriteria.item, {
+                pathParts: ["item"]
+            });
             mountedCriteria.item = definedCriteria.item;
         }
         else {
-            mountingTasks.push({
+            register.add(mountedCriteria, mountedCriteria.item, {
+                pathParts: ["item"]
+            });
+            queue.push({
                 definedCriteria: definedCriteria.item,
                 mountedCriteria: mountedCriteria.item
             });
         }
-        return (mountingTasks);
     },
-    checkValue(criteria, value) {
+    checking(queue, criteria, value) {
         if (!(0, testers_1.isArray)(value)) {
             return ("TYPE_NOT_ARRAY");
         }
@@ -36,16 +37,12 @@ exports.ArrayFormat = {
         else if (criteria.max !== undefined && value.length > criteria.max) {
             return ("VALUE_SUPERIOR_MAX");
         }
-        return (null);
-    },
-    getCheckingTasks(criteria, value) {
-        let checkingTasks = [];
         for (let i = 0; i < value.length; i++) {
-            checkingTasks.push({
+            queue.push({
                 criteria: criteria.item,
                 value: value[i]
             });
         }
-        return (checkingTasks);
+        return (null);
     }
 };

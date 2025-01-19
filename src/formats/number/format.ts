@@ -1,14 +1,10 @@
 import type { NumberVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { formatDefaultCriteria } from "../formats";
 import { isNumber } from "../../testers";
 
 export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
 	defaultCriteria: {},
-	mountCriteria(definedCriteria, mountedCriteria) {
-		return (Object.assign(mountedCriteria, formatDefaultCriteria, definedCriteria));
-	},
-	checkValue(criteria, value) {
+	checking(queue, criteria, value) {
 		if (!isNumber(value)) {
 			return ("TYPE_NOT_NUMBER");
 		}

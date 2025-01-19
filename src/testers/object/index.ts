@@ -7,5 +7,6 @@ export {
 	isAsyncGenerator,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction,
-	isGenerator
+	isGenerator,
+	isRegex
 } from './object'

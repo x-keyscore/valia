@@ -1,4 +1,4 @@
-import type { FormatTemplate, VariantCriteria, MountedCriteria } from "./types";
+import type { FormatTemplate, VariantCriteria, MountedCriteria, DefaultVariantCriteria } from "./types";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { RecordFormat } from "./record/format";
@@ -9,15 +9,7 @@ import { SymbolFormat } from "./symbol/format";
 import { BooleanFormat } from "./boolean/format";
 import { UnionFormat } from "./union/format";
 
-export const mountedMarkerSymbol = Symbol('mountedMarker');
-
-export function isMountedCriteria(
-	criteria: object
-): criteria is MountedCriteria<VariantCriteria> {
-	return (Reflect.has(criteria, mountedMarkerSymbol));
-}
-
-export const formatDefaultCriteria = {
+export const defaultVariantCriteria: DefaultVariantCriteria = {
 	optional: false,
 	nullable: false
 }

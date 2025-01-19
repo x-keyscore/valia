@@ -20,7 +20,7 @@ export interface StringVariantCriteria extends VariantCriteriaTemplate<"string">
 	empty?: boolean;
 	regex?: RegExp;
 	tester?: Testers;
-	custom?: (input: string) => boolean;
+	custom?: (value: string) => boolean;
 	
 }
 

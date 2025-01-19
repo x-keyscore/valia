@@ -9,7 +9,7 @@ class LibraryError extends Error {
         const cyan = '\x1b[36m';
         const yellow = '\x1b[33m';
         const reset = '\x1b[0m';
-        console.log(`${red}[ERROR]${reset} ${cyan}[LIBRARY:vali.ts]${reset} ${gray}${timestamp}${reset}` +
+        console.log(`${red}[ERROR]${reset} ${cyan}[PACKAGE:vali.ts]${reset} ${gray}${timestamp}${reset}` +
             `\nContext: ${context}` +
             `\nMessage: ${this.message}`);
     }

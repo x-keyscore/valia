@@ -9,6 +9,7 @@ exports.isGeneratorFunction = isGeneratorFunction;
 exports.isAsyncGeneratorFunction = isAsyncGeneratorFunction;
 exports.isGenerator = isGenerator;
 exports.isAsyncGenerator = isAsyncGenerator;
+exports.isRegex = isRegex;
 const utils_1 = require("../utils");
 // OBJECT
 function isObject(x) {
@@ -40,4 +41,8 @@ function isGenerator(x) {
 }
 function isAsyncGenerator(x) {
     return (0, utils_1.hasTag)(x, "AsyncGenerator");
+}
+// OTHER
+function isRegex(x) {
+    return (0, utils_1.hasTag)(x, "RegExp");
 }

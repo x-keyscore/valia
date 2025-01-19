@@ -1,27 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StringFormat = void 0;
-const formats_1 = require("../formats");
 const __1 = require("../../");
 exports.StringFormat = {
+    checkCriteria: {
+        min: __1.testers.primitive.isNumber,
+        max: __1.testers.primitive.isNumber,
+        empty: __1.testers.primitive.isBoolean,
+        regex: __1.testers.object.isRegex,
+        tester: __1.testers.object.isPlainObject,
+        custom: __1.testers.object.isPlainFunction
+    },
     defaultCriteria: {
         empty: true
     },
-    mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-    },
-    checkValue(criteria, value) {
+    checking(queue, criteria, value) {
         var _a;
         if (!(0, __1.isString)(value)) {
             return ("TYPE_NOT_STRING");
         }
-        else if (!value.length) {
+        const valueLength = value.length;
+        if (!valueLength) {
             return (criteria.empty ? null : "VALUE_EMPTY");
         }
-        else if (criteria.min !== undefined && value.length < criteria.min) {
+        else if (criteria.min !== undefined && valueLength < criteria.min) {
             return ("VALUE_INFERIOR_MIN");
         }
-        else if (criteria.max !== undefined && value.length > criteria.max) {
+        else if (criteria.max !== undefined && valueLength > criteria.max) {
             return ("VALUE_SUPERIOR_MAX");
         }
         else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
@@ -33,6 +38,6 @@ exports.StringFormat = {
         else if (criteria.custom && !criteria.custom(value)) {
             return ("VALUE_CUSTOM_FAILED");
         }
-        return null;
-    }
+        return (null);
+    },
 };

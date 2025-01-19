@@ -1,8 +1,8 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
 import type { StructVariantCriteria } from "./types";
-interface CustomProperty {
-    hasRequiredKeys(mountedCriteria: MountedCriteria<StructVariantCriteria>, value: Record<string, unknown>): boolean;
-    hasDefinedKeys(mountedCriteria: MountedCriteria<StructVariantCriteria>, value: Record<string, unknown>): boolean;
+interface CustomProperties {
+    hasRequiredKeys(mountedCriteria: MountedCriteria<StructVariantCriteria>, value: (string | symbol)[]): boolean;
+    hasValidKeys(mountedCriteria: MountedCriteria<StructVariantCriteria>, value: (string | symbol)[]): boolean;
 }
-export declare const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperty>;
+export declare const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperties>;
 export {};

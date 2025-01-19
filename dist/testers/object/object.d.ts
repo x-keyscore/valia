@@ -8,3 +8,4 @@ export declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
 export declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
 export declare function isGenerator(x: unknown): x is Generator;
 export declare function isAsyncGenerator(x: unknown): x is AsyncGenerator;
+export declare function isRegex(x: unknown): x is RegExp;

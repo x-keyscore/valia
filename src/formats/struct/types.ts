@@ -2,7 +2,7 @@ import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTempla
 
 export interface StructVariantCriteria extends VariantCriteriaTemplate<"struct"> {
 	struct: Record<PropertyKey, VariantCriteria>;
-	optionalKeys?: string[];
+	optionalKeys?: (string | symbol)[];
 	/** @default false */
 	empty?: boolean;
 }
@@ -12,8 +12,8 @@ export interface StructDefaultCriteria {
 }
 
 export interface StructMountedCriteria {
-	definedKeys: string[];
-	requiredKeys: string[];
+	validKeys: (string | symbol)[];
+	requiredKeys: (string | symbol)[];
 	struct: Record<PropertyKey, MountedCriteria<VariantCriteria>>;
 }
 

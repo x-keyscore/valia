@@ -1,14 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NumberFormat = void 0;
-const formats_1 = require("../formats");
 const testers_1 = require("../../testers");
 exports.NumberFormat = {
     defaultCriteria: {},
-    mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, definedCriteria));
-    },
-    checkValue(criteria, value) {
+    checking(queue, criteria, value) {
         if (!(0, testers_1.isNumber)(value)) {
             return ("TYPE_NOT_NUMBER");
         }

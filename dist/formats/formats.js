@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formats = exports.formatDefaultCriteria = exports.mountedMarkerSymbol = void 0;
-exports.isMountedCriteria = isMountedCriteria;
+exports.formats = exports.defaultVariantCriteria = void 0;
 const format_1 = require("./array/format");
 const format_2 = require("./tuple/format");
 const format_3 = require("./record/format");
@@ -11,11 +10,7 @@ const format_6 = require("./string/format");
 const format_7 = require("./symbol/format");
 const format_8 = require("./boolean/format");
 const format_9 = require("./union/format");
-exports.mountedMarkerSymbol = Symbol('mountedMarker');
-function isMountedCriteria(criteria) {
-    return (Reflect.has(criteria, exports.mountedMarkerSymbol));
-}
-exports.formatDefaultCriteria = {
+exports.defaultVariantCriteria = {
     optional: false,
     nullable: false
 };

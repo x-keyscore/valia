@@ -1,32 +1,30 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
 import type { ArrayVariantCriteria } from "./types";
 import type { FormatTemplate  } from "../types";
-import { formatDefaultCriteria, isMountedCriteria } from "../formats";
-import { isArray, isObject } from "../../testers";
+import { isMountedCriteria } from "../../schema";
+import { isArray } from "../../testers";
 
 export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
-	mountCriteria(definedCriteria, mountedCriteria) {
-		return (Object.assign(mountedCriteria,formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-	},
-	getMountingTasks(definedCriteria, mountedCriteria) {
-		let mountingTasks: SchemaMountingTask[] = [];
-
+	mounting(queue, register, definedCriteria, mountedCriteria) {
 		if (isMountedCriteria(definedCriteria.item)) {
+			register.merge(mountedCriteria, definedCriteria.item, {
+				pathParts: ["item"]
+			});
 			mountedCriteria.item = definedCriteria.item;
 		} else {
-			mountingTasks.push({
+			register.add(mountedCriteria, mountedCriteria.item, {
+				pathParts: ["item"]
+			});
+			queue.push({
 				definedCriteria: definedCriteria.item,
 				mountedCriteria: mountedCriteria.item
 			});
 		}
-
-		return (mountingTasks);
 	},
-	checkValue(criteria, value) {
-	 	if (!isArray(value)) {
+	checking(queue, criteria, value) {
+		if (!isArray(value)) {
 			return ("TYPE_NOT_ARRAY");
 		}
 		else if (!value.length) {
@@ -39,18 +37,13 @@ export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
 			return ("VALUE_SUPERIOR_MAX");
 		}
 
-		return (null);
-	},
-	getCheckingTasks(criteria, value) {
-		let checkingTasks: SchemaCheckingTask[] = [];
-
 		for (let i = 0; i < value.length; i++) {
-			checkingTasks.push({
+			queue.push({
 				criteria: criteria.item,
 				value: value[i]
 			});
 		}
 
-		return (checkingTasks);
+		return (null);
 	}
 }

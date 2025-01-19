@@ -7,8 +7,8 @@ import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
 import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
-import { SchemaCheckingTask, SchemaMountingTask } from "../schema";
-import { mountedMarkerSymbol, formats } from "./formats";
+import { SchemaCheckingTask, SchemaMountingTask, metadataSymbol, Register } from "../schema";
+import { formats } from "./formats";
 
 // VARIANT CRITERIA
 
@@ -101,6 +101,20 @@ export type FormatsGenericTypesMap<T extends VariantCriteria> = {
 
 // FORMATS CRITERIA
 
+export interface DefaultVariantCriteria {
+	optional: boolean;
+	nullable: boolean;
+}
+
+export type RegisterInstance = InstanceType<typeof Register>;
+
+export interface DefaultMountedCriteria {
+	[metadataSymbol]: {
+		mountingTime: string;
+		register: RegisterInstance
+	}
+}
+
 export type VariantCriteria = {
 	[U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, { type: U }>['variantCriteria']
 }[FormatsConcreteTypes['type']];
@@ -115,19 +129,14 @@ export type DefaultCriteria<T extends VariantCriteria = VariantCriteria> = {
 
 export type MountedCriteria<T extends VariantCriteria> = {
 	[U in T['type']]:
-		& FormatDefaultCriteria
+		& DefaultVariantCriteria
 		& FormatsConcreteTypesMap[U]['defaultCriteria']
 		& T
-		& FormatsConcreteTypesMap[U]['mountedCritetia'];
+		& FormatsConcreteTypesMap[U]['mountedCritetia']
+		& DefaultMountedCriteria;
 }[T['type']];
 
 // FORMATS GUARD
-// FormatsGenericTypes<T>['type'] extends T['type'] ? FormatsGenericTypes<T>['type'] : 
-/*
-export type FormatsGuard<T extends VariantCriteria> =
- 	T['optional'] extends false
-		? FormatsGenericTypesMap<T>[T['type']]['guard'] | undefined
-		: FormatsGenericTypesMap<T>[T['type']]['guard'];*/
 
 export type FormatsGuard<T extends VariantCriteria> =
 	T['type'] extends FormatsGenericTypes<T>['type']
@@ -135,12 +144,6 @@ export type FormatsGuard<T extends VariantCriteria> =
 		: never;
 
 // FORMAT
-
-export interface FormatDefaultCriteria {
-	[mountedMarkerSymbol]: string;
-	optional: boolean;
-	nullable: boolean;
-}
 
 /**
  * @template T Extended interface of `VariantCriteriaTemplate` that
@@ -151,27 +154,19 @@ export type FormatTemplate<
 	T extends VariantCriteria,
 	U extends Record<string, any> = {}
 > = {
-	defaultCriteria?: DefaultCriteria<T>;
-
-	mountCriteria(
-        definedCriteria: T,
+	checkCriteria?: { [K in keyof Omit<T, 'type'>]: (x: unknown) => boolean},
+	defaultCriteria: DefaultCriteria<T>;
+	mounting?(
+		queue: SchemaMountingTask[],
+		register: RegisterInstance,
+		definedCriteria: T,
         mountedCriteria: MountedCriteria<T>
-    ): MountedCriteria<T>;
-
-    getMountingTasks?(
-        definedCriteria: T,
-        mountedCriteria: MountedCriteria<T>
-    ): SchemaMountingTask[];
-
-    checkValue(
+	): void;
+    checking(
+		queue: SchemaCheckingTask[],
         criteria: MountedCriteria<T>,
         value: unknown
     ): null | string;
-
-    getCheckingTasks?(
-        criteria: MountedCriteria<T>,
-        value: any
-    ): SchemaCheckingTask[];
 } & U;
 
 export type CheckValueResult = null | string;

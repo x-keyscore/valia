@@ -1,55 +1,49 @@
-import type { SchemaMountingTask, SchemaCheckingTask } from "../../schema";
+import type { SchemaCheckingTask } from "../../schema";
 import type { UnionVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { formatDefaultCriteria, isMountedCriteria } from "../formats";
+import { isMountedCriteria } from "../../schema";
 
 export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
-
-	mountCriteria(definedCriteria, mountedCriteria) {
-		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-	},
-	getMountingTasks(definedCriteria, mountedCriteria) {
-		let mountingTasks: SchemaMountingTask[] = [];
-
+	mounting(queue, register, definedCriteria, mountedCriteria) {
 		for (let i = 0; i < definedCriteria.union.length; i++) {
 			const definedCriteriaItem = definedCriteria.union[i];
 
 			if (isMountedCriteria(definedCriteriaItem)) {
+				register.merge(mountedCriteria, definedCriteriaItem, {
+					pathParts: [`union[${i}]`]
+				});
 				mountedCriteria.union[i] = definedCriteriaItem;
 			} else {
-				mountingTasks.push({
+				register.add(mountedCriteria, mountedCriteria.union[i], {
+					pathParts: [`union[${i}]`]
+				});
+				queue.push({
 					definedCriteria: definedCriteriaItem,
 					mountedCriteria: mountedCriteria.union[i]
 				});
 			}
 		}
-
-		return (mountingTasks);
 	},
-	checkValue(criteria, value) {
-		return (null);
-	},
-	getCheckingTasks(criteria, value) {
-		let checkTasks: SchemaCheckingTask[] = [];
+	checking(queue, criteria, value) {
 		const unionLength = criteria.union.length;
 
 		const link: NonNullable<SchemaCheckingTask['link']> = {
-			isClose: false,
+			finished: false,
 			totalLinks: unionLength,
 			totalRejected: 0,
 		}
 
 		for (let i = 0; i < unionLength; i++) {
-			checkTasks.push({
+			queue.push({
 				criteria: criteria.union[i],
-				value: value,
+				value,
 				link
 			});
 		}
 
-		return (checkTasks);
-	},
+		return (null);
+	}
 }

@@ -1,26 +1,33 @@
 import type { StringVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { formatDefaultCriteria } from "../formats";
 import { testers, isString } from "../../";
 
 export const StringFormat: FormatTemplate<StringVariantCriteria> = {
+	checkCriteria: {
+		min: testers.primitive.isNumber,
+		max: testers.primitive.isNumber,
+		empty: testers.primitive.isBoolean,
+		regex: testers.object.isRegex,
+		tester: testers.object.isPlainObject,
+		custom: testers.object.isPlainFunction
+	},
 	defaultCriteria: {
 		empty: true
 	},
-	mountCriteria(definedCriteria, mountedCriteria) {
-		return (Object.assign(mountedCriteria, formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-	},
-	checkValue(criteria, value) {
+	checking(queue, criteria, value) {
 		if (!isString(value)) {
 			return ("TYPE_NOT_STRING");
 		}
-		else if (!value.length) {
+
+		const valueLength = value.length;
+
+		if (!valueLength) {
 			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
-		else if (criteria.min !== undefined && value.length < criteria.min) {
+		else if (criteria.min !== undefined && valueLength < criteria.min) {
 			return ("VALUE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && value.length > criteria.max) {
+		else if (criteria.max !== undefined && valueLength > criteria.max) {
 			return ("VALUE_SUPERIOR_MAX");
 		}
 		else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
@@ -31,6 +38,6 @@ export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 			return ("VALUE_CUSTOM_FAILED");
 		}
 
-		return null;
-	}
+		return (null);
+	},
 }

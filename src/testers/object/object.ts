@@ -40,3 +40,8 @@ export function isGenerator(x: unknown): x is Generator {
 export function isAsyncGenerator(x: unknown): x is AsyncGenerator {
     return hasTag(x, "AsyncGenerator");
 }
+
+// OTHER
+export function isRegex(x: unknown): x is RegExp {
+	return hasTag(x, "RegExp");
+}

@@ -1,48 +1,45 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnionFormat = void 0;
-const formats_1 = require("../formats");
+const schema_1 = require("../../schema");
 exports.UnionFormat = {
     defaultCriteria: {
         empty: false
     },
-    mountCriteria(definedCriteria, mountedCriteria) {
-        return (Object.assign(mountedCriteria, formats_1.formatDefaultCriteria, this.defaultCriteria, definedCriteria));
-    },
-    getMountingTasks(definedCriteria, mountedCriteria) {
-        let mountingTasks = [];
+    mounting(queue, register, definedCriteria, mountedCriteria) {
         for (let i = 0; i < definedCriteria.union.length; i++) {
             const definedCriteriaItem = definedCriteria.union[i];
-            if ((0, formats_1.isMountedCriteria)(definedCriteriaItem)) {
+            if ((0, schema_1.isMountedCriteria)(definedCriteriaItem)) {
+                register.merge(mountedCriteria, definedCriteriaItem, {
+                    pathParts: [`union[${i}]`]
+                });
                 mountedCriteria.union[i] = definedCriteriaItem;
             }
             else {
-                mountingTasks.push({
+                register.add(mountedCriteria, mountedCriteria.union[i], {
+                    pathParts: [`union[${i}]`]
+                });
+                queue.push({
                     definedCriteria: definedCriteriaItem,
                     mountedCriteria: mountedCriteria.union[i]
                 });
             }
         }
-        return (mountingTasks);
     },
-    checkValue(criteria, value) {
-        return (null);
-    },
-    getCheckingTasks(criteria, value) {
-        let checkTasks = [];
+    checking(queue, criteria, value) {
         const unionLength = criteria.union.length;
         const link = {
-            isClose: false,
+            finished: false,
             totalLinks: unionLength,
             totalRejected: 0,
         };
         for (let i = 0; i < unionLength; i++) {
-            checkTasks.push({
+            queue.push({
                 criteria: criteria.union[i],
-                value: value,
+                value,
                 link
             });
         }
-        return (checkTasks);
-    },
+        return (null);
+    }
 };
