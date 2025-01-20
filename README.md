@@ -28,12 +28,12 @@ if (schema.guard(data)) {
 
 ### Number
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`|`"number"`||Type name|
-|`min`|`number`||Minimum value accepted|
-|`max`|`number`||Maximum value accepted|
-|`custom`|`(x: number) => boolean`||Customized test function|
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`  |`"number"`              ||Yes|Type name|
+|`min`   |`number`                ||No |Minimum value accepted|
+|`max`   |`number`                ||No |Maximum value accepted|
+|`custom`|`(x: number) => boolean`||No |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -48,14 +48,14 @@ const schema = new Schema({
 
 ### String
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`|`"string"`||Type name|
-|`min`|`number`||Minimum length accepted|
-|`max`|`number`||Maximum length accepted|
-|`empty`|`boolean`|`true`|If the string can be empty|
-|`regex`|`RegExp`||A native regex|
-|`custom`|`(x: string) => boolean`||Customized test function|
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`  |`"string"`              |      |Yes|Type name|
+|`min`   |`number`                |      |No |Minimum length accepted|
+|`max`   |`number`                |      |No |Maximum length accepted|
+|`empty` |`boolean`               |`true`|No |If the string can be empty|
+|`regex` |`RegExp`                |      |No |A native regex|
+|`custom`|`(x: string) => boolean`|      |No |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -73,9 +73,9 @@ const schema = new Schema({
 
 ### Boolean
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`|`"boolean"`||Type name|
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`|`"boolean"`||Yes|Type name|
 
 ```ts
 const schema = new Schema({
@@ -83,12 +83,34 @@ const schema = new Schema({
 });
 ```
 
+### Struct
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`        |`"struct"`                          |       |Yes|Type name|
+|`empty`       |`boolean`                           |`false`|No |If the object can be empty|
+|`struct`      |`Record<string \| symbol, Criteria>`|       |Yes|The object's keys represent the expected keys<br>and the attributes represent the expected types.|
+|`optionalKeys`|`Array<string \| symbol>`           |       |No |By default, the keys are considered required,<br>so you can define the optional keys in this array.|
+
+```ts
+const schema = new Schema({
+  type: "struct",
+  empty: true,
+  optionalKeys: ["description"],
+  struct: {
+    fistname: { type: "string" },
+    lastname: { type: "string" },
+    description: { type: "string" }
+  }
+});
+```
+
 ### Symbol
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`|`"symbol"`||Type name|
-|`symbol`|`symbol`||Symbol to check|
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`  |`"symbol"`||Yes|Type name|
+|`symbol`|`symbol`  ||No |Symbol to check|
 
 ```ts
 const mySymbol = Symbol("enjoy");
@@ -98,3 +120,4 @@ const schema = new Schema({
   symbol: mySymbol
 });
 ```
+
