@@ -17,6 +17,7 @@ const schema = new Schema({
 });
 
 let data: any = { name: "Tintin", age: 63 };
+
 if (schema.guard(data)) {
   // The “data” type is : { name: string; age: number: }
 }
@@ -130,8 +131,6 @@ const schema = new Schema({
 |`tuple`|`[Criteria, ...Criteria[]]`|       |Yes|Criteria of tuple|
 
 ```ts
-const mySymbol = Symbol("enjoy");
-
 const schema = new Schema({
   type: "tuple",
   empty: true,
