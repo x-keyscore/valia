@@ -18,9 +18,14 @@ const schema = new Schema({
 
 let data: any = { name: "Tintin", age: 63 };
 
+// This
 if (schema.guard(data)) {
   // The “data” type is : { name: string; age: number: }
 }
+// Or
+const reject = schema.check(data);
+
+if (reject) throw new Error("The reject code is :" reject.code);
 ```
 
 ## Schema types
