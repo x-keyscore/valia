@@ -8,7 +8,7 @@ npm install vali.ts
 ```ts
 import { Schema } from 'vali.ts';
 
-const schema = new Schema({ 
+const mySchema = new Schema({ 
   type: "struct",
   struct: {
     name: { type: "string" },
@@ -16,19 +16,21 @@ const schema = new Schema({
   }
 });
 
-let data: unknown = { name: "Tintin", age: 63 };
+let myData: unknown = { name: "Tintin", age: 63 };
 
-// This
-if (schema.guard(data)) {
+if (mySchema.guard(myData)) {
   console.log(data.user);// Type safe
 }
-// Or
-const reject = schema.check(data);
-
-if (reject) throw new Error("The reject code is :" reject.code);
 ```
+## Schema instance
+|Property|Type|Description|
+|--|--|--|
+|`criteria`|`MountedCriteria<VariantCriteria>`        |Property you need if you wish to use this schema in another one.|
+|`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a boolean.<br>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns SchemaReject if the value is rejected, otherwise null.|
 
-## Schema types
+
+## Schema definition
 
 > **Note:** The order of property definitions is the same as during the execution of tests by the checker.
 
@@ -45,12 +47,9 @@ if (reject) throw new Error("The reject code is :" reject.code);
 
 ```ts
 const schema = new Schema({
-  type: "number",
-  min: 0,
-  max: 50,
-  custom(x) {
-    return (x % 2 === 0);
-  }
+  type: "string",
+  optional: true,
+  label: "OPTIONAL_STRING"
 });
 ```
 
