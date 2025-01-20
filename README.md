@@ -58,6 +58,9 @@ const reject = userSchema.check(myData);
 
 console.log(reject);
 ```
+> [!NOTE]
+> The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
+> This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.
 ```
 {
   code: 'REJECT_VALUE_SUPERIOR_MAX',
