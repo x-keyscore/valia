@@ -1,16 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StringFormat = void 0;
-const __1 = require("../../..");
+const testers_1 = require("../../../testers");
 exports.StringFormat = {
-    checkCriteria: {
-        min: __1.testers.primitive.isNumber,
-        max: __1.testers.primitive.isNumber,
-        empty: __1.testers.primitive.isBoolean,
-        regex: __1.testers.object.isRegex,
-        tester: __1.testers.object.isPlainObject,
-        custom: __1.testers.object.isPlainFunction
-    },
     defaultCriteria: {
         empty: true
     },
@@ -32,12 +24,12 @@ exports.StringFormat = {
         else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
             return ("VALUE_REGEX_FAILED");
         }
-        else if (criteria.tester && !__1.testers.string[criteria.tester.name](value, (_a = criteria.tester) === null || _a === void 0 ? void 0 : _a.params)) {
+        else if (criteria.tester && !testers_1.testers.string[criteria.tester.name](value, (_a = criteria.tester) === null || _a === void 0 ? void 0 : _a.params)) {
             return ("VALUE_TESTER_FAILED");
         }
         else if (criteria.custom && !criteria.custom(value)) {
             return ("VALUE_CUSTOM_FAILED");
         }
         return (null);
-    },
+    }
 };

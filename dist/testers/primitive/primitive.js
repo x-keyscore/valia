@@ -28,3 +28,4 @@ function isUndefined(x) {
 function isNull(x) {
     return x === null;
 }
+//export const primitive = { isString, isBoolean, isNumber, isBigint, isSymbol, isUndefined, isNull };

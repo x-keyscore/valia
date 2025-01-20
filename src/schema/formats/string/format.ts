@@ -1,16 +1,8 @@
 import type { StringVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { testers } from "../../..";
+import { testers } from "../../../testers";
 
 export const StringFormat: FormatTemplate<StringVariantCriteria> = {
-	checkCriteria: {
-		min: testers.primitive.isNumber,
-		max: testers.primitive.isNumber,
-		empty: testers.primitive.isBoolean,
-		regex: testers.object.isRegex,
-		tester: testers.object.isPlainObject,
-		custom: testers.object.isPlainFunction
-	},
 	defaultCriteria: {
 		empty: true
 	},
@@ -39,5 +31,5 @@ export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 		}
 
 		return (null);
-	},
+	}
 }
