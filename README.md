@@ -29,7 +29,7 @@ if (mySchema.guard(myData)) {
 |Property|Type|Description|
 |--|--|--|
 |`criteria`|`MountedCriteria<VariantCriteria>`        |Property you need if you wish to use this schema in another one.|
-|`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a `boolean`.<br>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
 |`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
 
 #### `SchemaReject`
@@ -127,8 +127,8 @@ const schema = new Schema({
 |--|--|--|--|
 |`type`         |`"struct"`                          |       |Type name|
 |`empty?`       |`boolean`                           |`false`|If the object can be empty|
-|`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br>and the attributes represent the expected types.|
-|`optionalKeys?`|`Array<string \| symbol>`           |       |By default, the keys are considered required,<br>so you can define the optional keys in this array.|
+|`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br/>and the attributes represent the expected types.|
+|`optionalKeys?`|`Array<string \| symbol>`           |       |By default, the keys are considered required,<br/>so you can define the optional keys in this array.|
 
 ```ts
 const schema = new Schema({
@@ -236,9 +236,9 @@ const schema = new Schema({
 |`isAlpha` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between A and Z or a and z (%d65-%d90 / %d97-%d122)|
 |`isDigit` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between 0 and 9 (%d48-%d57)|
 |`isAscii` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are in the ascii table (%d0-%d127)|
-|`isDomain`|`(input: string \| Uint16Array) => boolean`|**Standard :** RFC 1035<br>**Implementation version :** 1.0.0-beta|
-|`isEmail` |`(input: string \| Uint16Array, params?: IsEmailParams) => boolean`|**Standard :** RFC 5321<br>**Implementation version :** 1.1.0-beta|
-|`isIp`    |`(input: string \| Uint16Array, params?: IsIpParams) => boolean`|**IPv4:**<br>**Standard:** No standard<br>**Implementation version :** 1.0.0<br>**IPv6:**<br>**Standard:** No standard<br>**Implementation version :** 1.0.0|
+|`isDomain`|`(input: string \| Uint16Array) => boolean`|**Standard :** RFC 1035<br/>**Implementation version :** 1.0.0-beta|
+|`isEmail` |`(input: string \| Uint16Array, params?: IsEmailParams) => boolean`|**Standard :** RFC 5321<br/>**Implementation version :** 1.1.0-beta|
+|`isIp`    |`(input: string \| Uint16Array, params?: IsIpParams) => boolean`|**IPv4:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0<br/>**IPv6:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0|
 
 
 
