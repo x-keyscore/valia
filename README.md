@@ -166,8 +166,8 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`         |`"struct"`                          |       |Type name|
+|`free?`        |`Array<string \| symbol>`           |       |Array of optional keys|
 |`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br/>and the attributes represent the expected types.|
-|`optionalKeys?`|`Array<string \| symbol>`           |       |By default, the keys are considered required,<br/>so you can define the optional keys in this array.|
 
 ```ts
 const schema = new Schema({
