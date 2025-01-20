@@ -40,6 +40,25 @@ if (mySchema.guard(myData)) {
 |`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
 |`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
 
+```ts
+const nameFormat = new Schema({ type: "string", min: 3, max: 32 });
+const ageFormat = new Schema({ type: "number", min: 13, max: 128 });
+
+const userSchema = new Schema({ 
+  type: "struct",
+  struct: {
+    name: nameFormat.criteria,
+    age: ageFormat.criteria
+  }
+});
+
+let myData: unknown = { name: "Waitron", age: 128 };
+
+if (userSchema.guard(myData)) {
+  console.log(myData.name);
+}
+```
+
 #### `SchemaReject`
 ```ts
 interface SchemaReject {
