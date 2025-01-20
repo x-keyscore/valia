@@ -1,6 +1,6 @@
 {
   "name": "vali.ts",
-  "version": "1.0.0-beta",
+  "version": "1.0.0",
   "description": "A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.",
   "main": "dist/index.js",
   "module": "dist/index.js",
