@@ -7,7 +7,7 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
   - [Schema instance](#schema-instance)
   - [Schema definition](#schema-definition)
 - [Testers](#testers)
-  - [String](#string)
+  - [String](#string-1)
 
 ## Getting started
 ```
