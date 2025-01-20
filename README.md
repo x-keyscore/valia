@@ -63,11 +63,7 @@ const schema = new Schema({
   min: 0,
   max: 6,
   empty: false,
-  regex: /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/,
   tester: { name: "isAscii" }
-  custom(x) {
-    return ();
-  }
 });
 ```
 
@@ -109,18 +105,69 @@ const schema = new Schema({
 
 |Property|Type|Default|Require|Description|
 |--|--|--|--|--|
-|`type` |`"record"`||Yes|Type name|
-|`min`  |`number`  ||No |Minimum properties accepted|
-|`max`  |`number`  ||No |Maximum properties accepted|
-|`key`  |`Criteria`||Yes|Symbol to check|
-|`value`|`Criteria`||Yes|Symbol to check|
+|`type` |`"record"`                  |       |Yes|Type name|
+|`min`  |`number`                    |       |No |Minimum properties accepted|
+|`max`  |`number`                    |       |No |Maximum properties accepted|
+|`empty`|`boolean`                   |`false`|No |If the object can be empty|
+|`key`  |`Criteria<string \| symbol>`|       |Yes|Criteria of key|
+|`value`|`Criteria`                  |       |Yes|Criteria of value|
+
+```ts
+const schema = new Schema({
+  type: "record",
+  max: 10,
+  key: { type: "string" },
+  value: { type: "number" }
+});
+```
+
+### Tuple
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type` |`"tuple"`                  |       |Yes|Type name|
+|`empty`|`boolean`                  |`false`|No |If the array can be empty|
+|`tuple`|`[Criteria, ...Criteria[]]`|       |Yes|Criteria of tuple|
 
 ```ts
 const mySymbol = Symbol("enjoy");
 
 const schema = new Schema({
-  type: "symbol",
-  symbol: mySymbol
+  type: "tuple",
+  empty: true,
+  tuple: [{ type: "string" }, { type: "number" }
+});
+```
+
+### Array
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type` |`"array"` |       |Yes|Type name|
+|`min`  |`number`  |       |No |Minimum items accepted|
+|`max`  |`number`  |       |No |Maximum items accepted|
+|`empty`|`boolean` |`false`|No |If the array can be empty|
+|`item` |`Criteria`|       |Yes|Criteria of the array items|
+
+```ts
+const schema = new Schema({
+  type: "array",
+  empty: true,
+  tuple: [{ type: "string" }, { type: "number" }
+});
+```
+
+### Union
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type`  |`"union"`                  ||Yes|Type name|
+|`union` |`[Criteria, ...Criteria[]]`||Yes|Array in which the possible criteria are listed|
+
+```ts
+const schema = new Schema({
+  type: "array",
+  union: { type: "union", union: [{ type: "string"}, { type: "number" }]
 });
 ```
 
