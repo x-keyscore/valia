@@ -16,11 +16,11 @@ const schema = new Schema({
   }
 });
 
-let data: any = { name: "Tintin", age: 63 };
+let data: unknown = { name: "Tintin", age: 63 };
 
 // This
 if (schema.guard(data)) {
-  // The “data” type is : { name: string; age: number: }
+  console.log(data.user);// Type safe
 }
 // Or
 const reject = schema.check(data);
