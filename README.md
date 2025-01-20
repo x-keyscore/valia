@@ -31,7 +31,7 @@ if (schema.guard(data)) {
 
 ### Global
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`optional`|`boolean`|`false`|No|Allows `undefined`|
 |`nullable`|`boolean`|`false`|No |Allows `null`|
@@ -51,7 +51,7 @@ const schema = new Schema({
 
 ### Number
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`  |`"number"`              ||Yes|Type name|
 |`min`   |`number`                ||No |Minimum value accepted|
@@ -71,7 +71,7 @@ const schema = new Schema({
 
 ### String
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`  |`"string"`              |      |Yes|Type name|
 |`min`   |`number`                |      |No |Minimum length accepted|
@@ -92,7 +92,7 @@ const schema = new Schema({
 
 ### Boolean
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`|`"boolean"`||Yes|Type name|
 
@@ -104,7 +104,7 @@ const schema = new Schema({
 
 ### Struct
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`        |`"struct"`                          |       |Yes|Type name|
 |`empty`       |`boolean`                           |`false`|No |If the object can be empty|
@@ -126,7 +126,7 @@ const schema = new Schema({
 
 ### Record
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type` |`"record"`                  |       |Yes|Type name|
 |`min`  |`number`                    |       |No |Minimum properties accepted|
@@ -146,7 +146,7 @@ const schema = new Schema({
 
 ### Tuple
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type` |`"tuple"`                  |       |Yes|Type name|
 |`empty`|`boolean`                  |`false`|No |If the array can be empty|
@@ -162,7 +162,7 @@ const schema = new Schema({
 
 ### Array
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type` |`"array"` |       |Yes|Type name|
 |`min`  |`number`  |       |No |Minimum items accepted|
@@ -180,7 +180,7 @@ const schema = new Schema({
 
 ### Union
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`  |`"union"`                  ||Yes|Type name|
 |`union` |`[Criteria, ...Criteria[]]`||Yes|Array in which the possible criteria are listed|
@@ -194,7 +194,7 @@ const schema = new Schema({
 
 ### Symbol
 
-|Property|Type|Default|Require|Description|
+|Property|Type|Default|Required|Description|
 |--|--|--|--|--|
 |`type`  |`"symbol"`||Yes|Type name|
 |`symbol`|`symbol`  ||No |Symbol to check|
