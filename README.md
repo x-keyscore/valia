@@ -1,4 +1,4 @@
-# VALI.TS - BETA
+# VALI.TS - Version: 1.0.0-beta
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
 ## Getting started
