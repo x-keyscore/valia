@@ -1,4 +1,4 @@
-# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react)
+# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
 ## Table of Contents
@@ -54,8 +54,8 @@ interface SchemaReject {
 
 ## Schema definition
 
-[Number](#number) &middot; [String](#string) &middot; [Boolean](#boolean) &middot; [Struct](#struct) &middot;
-[Record](#record) &middot; [Tuple](#tuple) &middot; [Array](#array) &middot; [Union](#union) &middot; [Symbol](#symbol)
+[Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) •
+[Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
 
 > [!NOTE]
 > The order of property definitions is the same as during the execution of tests by the checker.
