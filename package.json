@@ -1,6 +1,6 @@
 {
   "name": "vali.ts",
-  "version": "1.0.0",
+  "version": "1.0.0-beta",
   "description": "A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -28,7 +28,7 @@
     "schema-validation",
     "validation-library"
   ],
-  "author": "X-Keyscore",
+  "author": "x-keyscore",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.10.5",

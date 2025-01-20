@@ -8,9 +8,9 @@ import {
 } from "../types";
 
 export interface TupleVariantCriteria extends VariantCriteriaTemplate<"tuple"> {
-	tuple: [VariantCriteria, ...VariantCriteria[]];
 	/** @default false */
 	empty?: boolean;
+	tuple: [VariantCriteria, ...VariantCriteria[]];
 }
 
 export interface TupleDefaultCriteria {

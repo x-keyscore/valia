@@ -31,7 +31,7 @@ export interface SchemaCheckerReject {
 
 // TYPE FOR USERS
 
-export type SchemaCheck = SchemaCheckerReject | null;
+export type SchemaReject = SchemaCheckerReject;
 
 export type SchemaGuard<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;
 	

@@ -1,10 +1,10 @@
 import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria, FormatsGuard, MountedCriteria } from "../types";
 
 export interface StructVariantCriteria extends VariantCriteriaTemplate<"struct"> {
-	struct: Record<PropertyKey, VariantCriteria>;
-	optionalKeys?: (string | symbol)[];
 	/** @default false */
 	empty?: boolean;
+	struct: Record<string | symbol, VariantCriteria>;
+	optionalKeys?: (string | symbol)[];
 }
 
 export interface StructDefaultCriteria {
@@ -14,7 +14,7 @@ export interface StructDefaultCriteria {
 export interface StructMountedCriteria {
 	validKeys: (string | symbol)[];
 	requiredKeys: (string | symbol)[];
-	struct: Record<PropertyKey, MountedCriteria<VariantCriteria>>;
+	struct: Record<string | symbol, MountedCriteria<VariantCriteria>>;
 }
 
 export interface StructConcreteTypes extends ConcreteTypesTemplate<

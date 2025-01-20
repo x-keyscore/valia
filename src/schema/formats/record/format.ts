@@ -6,7 +6,7 @@ import { formats } from "../formats";
 
 export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
 	defaultCriteria: {
-		empty: true
+		empty: false
 	},
 	mounting(queue, register, definedCriteria, mountedCriteria) {
 		if (isMountedCriteria(definedCriteria.key)) {

@@ -5,7 +5,7 @@ import { isNumber } from "../../../testers";
 export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
 	defaultCriteria: {},
 	checking(queue, criteria, value) {
-		if (!isNumber(value)) {
+		if (typeof value !== "number") {
 			return ("TYPE_NOT_NUMBER");
 		}
 		else if (criteria.min !== undefined && value < criteria.min) {

@@ -388,7 +388,7 @@ function extractAddrAndPrefix(utf16UnitArray: Uint16Array) {
  * 
  * ==============================
  * 
- * **IPv6** 
+ * **IPv6**
  * 
  * **Standard :** No standard
  * 

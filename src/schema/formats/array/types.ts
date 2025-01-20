@@ -1,11 +1,11 @@
 import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, FormatsGuard, MountedCriteria, VariantCriteria } from "../types";
 
 export interface ArrayVariantCriteria extends VariantCriteriaTemplate<"array"> {
-	item: VariantCriteria;
 	/** @default true */
 	empty?: boolean;
 	min?: number;
 	max?: number;
+	item: VariantCriteria;
 }
 
 export interface ArrayDefaultCriteria {

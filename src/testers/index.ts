@@ -9,10 +9,10 @@ export * from './primitive';
 export * from './object';
 
 export const testers = {
-	hasTag,
-	string,
 	primitive,
-	object
+	object,
+	string,
+	hasTag
 };
 
 

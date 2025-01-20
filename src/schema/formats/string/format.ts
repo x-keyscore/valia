@@ -1,6 +1,6 @@
 import type { StringVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { testers, isString } from "../../..";
+import { testers } from "../../..";
 
 export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 	checkCriteria: {
@@ -15,7 +15,7 @@ export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 		empty: true
 	},
 	checking(queue, criteria, value) {
-		if (!isString(value)) {
+		if (typeof value !== "string") {
 			return ("TYPE_NOT_STRING");
 		}
 

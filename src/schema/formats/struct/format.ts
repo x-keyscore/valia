@@ -67,12 +67,12 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomPropertie
 		if (keys.length === 0) {
 			return (criteria.empty ? null : "VALUE_EMPTY");
 		}
+		else if (!this.hasValidKeys(criteria, keys)) {
+			return ("VALUE_INVALID_KEY");
+		}
 		else if (!this.hasRequiredKeys(criteria, keys)) {
 			return ("VALUE_MISSING_KEY");
 		}
-		else if (!this.hasValidKeys(criteria, keys)) {
-			return ("VALUE_INVALID_KEY");
-		};
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];

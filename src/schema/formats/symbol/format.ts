@@ -1,11 +1,10 @@
 import type { SymbolVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isSymbol } from "../../../testers";
 
 export const SymbolFormat: FormatTemplate<SymbolVariantCriteria> = {
 	defaultCriteria: {},
 	checking(queue, criteria, value) {
-		if (!isSymbol(value)) {
+		if (typeof value !== "symbol") {
 			return "TYPE_NOT_SYMBOL";
 		}
 		else if (criteria.symbol !== undefined && criteria.symbol === value) {

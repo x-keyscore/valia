@@ -2,12 +2,6 @@ import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, F
 
 export interface UnionVariantCriteria extends VariantCriteriaTemplate<"union"> {
 	union: [VariantCriteria, ...VariantCriteria[]];
-	/** @default false */
-	empty?: boolean;
-}
-
-export interface UnionDefaultCriteria {
-	empty: boolean;
 }
 
 export interface UnionMountedCriteria {
@@ -16,7 +10,7 @@ export interface UnionMountedCriteria {
 
 export interface UnionConcreteTypes extends ConcreteTypesTemplate<
 	UnionVariantCriteria,
-	UnionDefaultCriteria,
+	{},
 	UnionMountedCriteria
 > {}
 
