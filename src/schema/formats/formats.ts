@@ -1,4 +1,4 @@
-import type { FormatTemplate, VariantCriteria, MountedCriteria, DefaultVariantCriteria } from "./types";
+import type { FormatTemplate, VariantCriteria, DefaultVariantCriteria } from "./types";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { RecordFormat } from "./record/format";

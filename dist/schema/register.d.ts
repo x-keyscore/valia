@@ -1,4 +1,4 @@
-import type { MountedCriteria, VariantCriteria } from "../formats";
+import type { MountedCriteria, VariantCriteria } from "./formats";
 type RegisterKey = MountedCriteria<VariantCriteria>;
 interface RegisterValue {
     prev: RegisterKey | null;

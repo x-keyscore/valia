@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
-const formats_1 = require("../formats");
+const formats_1 = require("./formats");
 const mounter_1 = require("./mounter");
 function manageTaskLink(link, isReject) {
     if (link) {
@@ -26,7 +26,7 @@ function basicChecking(criteria, value) {
     return (null);
 }
 function checker(criteria, value) {
-    const register = criteria[mounter_1.metadataSymbol].register;
+    const register = criteria[mounter_1.registerSymbol];
     let queue = [{ criteria, value }];
     while (queue.length > 0) {
         const { criteria, value, link } = queue.pop();

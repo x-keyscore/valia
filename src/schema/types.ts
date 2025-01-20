@@ -19,12 +19,10 @@ export interface SchemaCheckingTask {
 }
 
 export interface SchemaCheckerReject {
-	/** Name of the type that rejected the value */
-	type: string;
-	/** Path of the type that rejected the value */
-	path: string;
 	/** `REJECT_<CATEGORY>_<DETAIL>` */
 	code: string;
+	type: string;
+	path: string;
 	label: string | undefined;
 	message: string | undefined;
 };

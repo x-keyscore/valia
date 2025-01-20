@@ -1,5 +1,5 @@
 import type { VariantCriteria, FormatsGuard, MountedCriteria } from "./formats";
-import type { SchemaCheck } from "./types";
+import type { SchemaReject } from "./types";
 import { mounter } from "./mounter";
 import { checker } from "./checker";
 import { cloner } from "./cloner";
@@ -99,7 +99,7 @@ export class Schema<const T extends VariantCriteria> {
 	 * }
 	 * ```
 	 */
-	check(value: unknown): SchemaCheck {
+	check(value: unknown): SchemaReject | null {
 		const reject = checker(this.criteria, value);
 		return (reject);
 	}

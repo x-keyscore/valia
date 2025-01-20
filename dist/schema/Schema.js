@@ -31,8 +31,8 @@ class Schema {
     /**
      * @param value Data to be validated
      *
-     * @returns `true` if value is compliant, otherwise `false`. For **Typescript** users,
-     * this function is a guard type that predicts validated data, see example below.
+     * @returns `true` if value is compliant, otherwise `false`. This function
+     * is a guard type that predicts validated data, see example below.
      *
      * @example
      * ```ts
@@ -46,7 +46,7 @@ class Schema {
      * let user = { name: "Tintin" };
      *
      * if (userSchema.guard(user)) {
-     *     // The “user” type is : { name: string }
+     *     // The “user” type is : { name: string; }
      * }
      * ```
      */
@@ -73,7 +73,7 @@ class Schema {
      * const reject = userSchema.check(user);
      *
      * if (reject) {
-     *     console.log("The " + reject.type + " type was rejected with the following code : " + reject.code);
+     *     console.log("The '" + reject.type + "' type was rejected with the following code : " + reject.code);
      * }
      * ```
      */

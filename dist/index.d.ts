@@ -1,3 +1,3 @@
-export { Schema, SchemaCheck, SchemaGuard } from './schema';
+export { Schema, SchemaReject, SchemaGuard } from './schema';
 export { stringToUTF16UnitArray } from './tools';
 export * from './testers';

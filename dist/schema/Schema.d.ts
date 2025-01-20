@@ -1,5 +1,5 @@
-import type { VariantCriteria, FormatsGuard, MountedCriteria } from "../formats";
-import type { SchemaCheck } from "./types";
+import type { VariantCriteria, FormatsGuard, MountedCriteria } from "./formats";
+import type { SchemaReject } from "./types";
 /**
  * Represents the validation criteria structure and its associated functions.
  */
@@ -42,8 +42,8 @@ export declare class Schema<const T extends VariantCriteria> {
     /**
      * @param value Data to be validated
      *
-     * @returns `true` if value is compliant, otherwise `false`. For **Typescript** users,
-     * this function is a guard type that predicts validated data, see example below.
+     * @returns `true` if value is compliant, otherwise `false`. This function
+     * is a guard type that predicts validated data, see example below.
      *
      * @example
      * ```ts
@@ -57,7 +57,7 @@ export declare class Schema<const T extends VariantCriteria> {
      * let user = { name: "Tintin" };
      *
      * if (userSchema.guard(user)) {
-     *     // The “user” type is : { name: string }
+     *     // The “user” type is : { name: string; }
      * }
      * ```
      */
@@ -81,9 +81,9 @@ export declare class Schema<const T extends VariantCriteria> {
      * const reject = userSchema.check(user);
      *
      * if (reject) {
-     *     console.log("The " + reject.type + " type was rejected with the following code : " + reject.code);
+     *     console.log("The '" + reject.type + "' type was rejected with the following code : " + reject.code);
      * }
      * ```
      */
-    check(value: unknown): SchemaCheck;
+    check(value: unknown): SchemaReject | null;
 }

@@ -7,8 +7,8 @@ export * from './string';
 export * from './primitive';
 export * from './object';
 export declare const testers: {
-    hasTag: typeof hasTag;
-    string: typeof string;
     primitive: typeof primitive;
     object: typeof object;
+    string: typeof string;
+    hasTag: typeof hasTag;
 };

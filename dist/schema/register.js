@@ -14,9 +14,9 @@ class Register {
         });
     }
     merge(prevCriteria, currCriteria, data) {
-        const sourceRegisterStore = currCriteria[mounter_1.metadataSymbol].register.storage;
+        const sourceRegisterStorage = currCriteria[mounter_1.registerSymbol].storage;
         // MERGE REGISTER STORAGE
-        this.storage = new Map([...this.storage, ...sourceRegisterStore]);
+        this.storage = new Map([...this.storage, ...sourceRegisterStorage]);
         this.storage.set(currCriteria, {
             prev: prevCriteria,
             data
@@ -25,7 +25,7 @@ class Register {
     getPath(criteria, separator) {
         let prev = this.storage.get(criteria);
         if (!prev)
-            throw new utils_1.LibraryError("Register getPath", "The criteria reference was not found in the registry");
+            throw new utils_1.LibraryError("Register getPath", "The criteria reference was not found in the register");
         let fullPath = prev.data.pathParts.join(separator);
         while (prev.prev) {
             prev = this.storage.get(prev.prev);
