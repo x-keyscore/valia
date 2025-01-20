@@ -105,6 +105,25 @@ const schema = new Schema({
 });
 ```
 
+### Record
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`type` |`"record"`||Yes|Type name|
+|`min`  |`number`  ||No |Minimum properties accepted|
+|`max`  |`number`  ||No |Maximum properties accepted|
+|`key`  |`Criteria`||Yes|Symbol to check|
+|`value`|`Criteria`||Yes|Symbol to check|
+
+```ts
+const mySymbol = Symbol("enjoy");
+
+const schema = new Schema({
+  type: "symbol",
+  symbol: mySymbol
+});
+```
+
 ### Symbol
 
 |Property|Type|Default|Require|Description|
