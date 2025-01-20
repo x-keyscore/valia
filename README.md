@@ -166,14 +166,12 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`         |`"struct"`                          |       |Type name|
-|`empty?`       |`boolean`                           |`false`|If the object can be empty|
 |`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br/>and the attributes represent the expected types.|
 |`optionalKeys?`|`Array<string \| symbol>`           |       |By default, the keys are considered required,<br/>so you can define the optional keys in this array.|
 
 ```ts
 const schema = new Schema({
   type: "struct",
-  empty: true,
   optionalKeys: ["description"],
   struct: {
     fistname: { type: "string" },
