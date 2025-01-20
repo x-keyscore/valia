@@ -27,6 +27,8 @@ if (schema.guard(data)) {
 
 > **Note:** The order of property definitions is the same as during the execution of tests by the checker.
 
+[Symbol](#symbol)
+
 ### Number
 
 |Property|Type|Default|Require|Description|
