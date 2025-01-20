@@ -19,7 +19,7 @@ const mySchema = new Schema({
 let myData: unknown = { name: "Tintin", age: 63 };
 
 if (mySchema.guard(myData)) {
-  console.log(data.user);// Type safe
+  console.log(myData.name);// Type safe
 }
 ```
 
