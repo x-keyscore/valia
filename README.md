@@ -46,9 +46,10 @@ interface SchemaReject {
 
 ## Schema definition
 
-> **Note:** The order of property definitions is the same as during the execution of tests by the checker.
+[Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) • [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
 
-[Number](#number) [String](#string) [Boolean](#boolean) [Struct](#struct) [Record](#record) [Tuple](#tuple) [Array](#array) [Union](#union) [Symbol](#symbol)
+> [!NOTE]
+> The order of property definitions is the same as during the execution of tests by the checker.
 
 ### Global
 
