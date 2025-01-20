@@ -1,6 +1,14 @@
 # VALI.TS
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
+## Table of Contents
+- [Getting started](#getting-started)
+- [Schema](#schema)
+  - [Schema instance](#schema-instance)
+  - [Schema definition](#schema-definition)
+- [Testers](#testers)
+  - [String](#string)
+
 ## Getting started
 ```
 npm install vali.ts
