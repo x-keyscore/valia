@@ -52,11 +52,11 @@ const userSchema = new Schema({
   }
 });
 
-let myData: unknown = { name: "Waitron", age: 128 };
+let myData: unknown = { name: "Waitron", age: 200 };
 
-if (userSchema.guard(myData)) {
-  console.log(myData.name);
-}
+const reject = userSchema.check(myData);
+
+console.log(reject);
 ```
 
 #### `SchemaReject`
