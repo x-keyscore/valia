@@ -27,7 +27,27 @@ if (schema.guard(data)) {
 
 > **Note:** The order of property definitions is the same as during the execution of tests by the checker.
 
-[Symbol](#symbol)
+[Number](#number) [String](#string) [Boolean](#boolean) [Struct](#struct) [Record](#record) [Tuple](#tuple) [Array](#array) [Union](#union) [Symbol](#symbol)
+
+### Global
+
+|Property|Type|Default|Require|Description|
+|--|--|--|--|--|
+|`optional`|`boolean`|`false`|No|Allows `undefined`|
+|`nullable`|`boolean`|`false`|No |Allows `null`|
+|`label`   |`string` |       |No |String that will be returned in the error. Ideal for adding your own error codes, for example.|
+|`message` |`string` |       |No |String that will be returned in the error.|
+
+```ts
+const schema = new Schema({
+  type: "number",
+  min: 0,
+  max: 50,
+  custom(x) {
+    return (x % 2 === 0);
+  }
+});
+```
 
 ### Number
 
