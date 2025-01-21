@@ -25,4 +25,3 @@ export function isUndefined(x: unknown): x is undefined {
 export function isNull(x: unknown): x is null {
 	return x === null;
 }
-//export const primitive = { isString, isBoolean, isNumber, isBigint, isSymbol, isUndefined, isNull };

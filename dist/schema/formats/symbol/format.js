@@ -7,7 +7,7 @@ exports.SymbolFormat = {
         if (typeof value !== "symbol") {
             return "TYPE_NOT_SYMBOL";
         }
-        else if (criteria.symbol !== undefined && criteria.symbol === value) {
+        else if (criteria.symbol !== undefined && criteria.symbol !== value) {
             return "VALUE_INVALID_SYMBOL";
         }
         return (null);

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TupleFormat = void 0;
-const __1 = require("../..");
+const mounter_1 = require("../../mounter");
 const testers_1 = require("../../../testers");
 exports.TupleFormat = {
     defaultCriteria: {
@@ -10,7 +10,7 @@ exports.TupleFormat = {
     mounting(queue, register, definedCriteria, mountedCriteria) {
         for (let i = 0; i < definedCriteria.tuple.length; i++) {
             const definedCriteriaItem = definedCriteria.tuple[i];
-            if ((0, __1.isMountedCriteria)(definedCriteriaItem)) {
+            if ((0, mounter_1.isMountedCriteria)(definedCriteriaItem)) {
                 register.merge(mountedCriteria, definedCriteriaItem, {
                     pathParts: [`tuple[${i}]`]
                 });

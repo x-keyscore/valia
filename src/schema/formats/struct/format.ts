@@ -1,6 +1,6 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
 import type { StructVariantCriteria } from "./types";
-import { isMountedCriteria } from "../..";
+import { isMountedCriteria } from "../../mounter";
 import { isPlainObject } from "../../../testers";
 
 interface CustomProperties {
@@ -15,19 +15,14 @@ interface CustomProperties {
 }
 
 export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperties> = {
-	defaultCriteria: {
-		empty: false
-	},
+	defaultCriteria: {},
 	mounting(queue, register, definedCriteria, mountedCriteria) {
-		const validKeys = [
-			...Object.keys(definedCriteria.struct),
-			...Object.getOwnPropertySymbols(definedCriteria.struct)
-		];
-		const optionalKeys = definedCriteria.optionalKeys;
+		const validKeys = Reflect.ownKeys(definedCriteria.struct);
+		const freeKeys = definedCriteria.free;
 
 		Object.assign(mountedCriteria, {
 			validKeys: validKeys,
-			requiredKeys: optionalKeys ? validKeys.filter(key => !optionalKeys.includes(key)) : validKeys
+			requiredKeys: freeKeys ? validKeys.filter(key => !freeKeys.includes(key)) : validKeys
 		});
 
 		for (let i = 0; i < validKeys.length; i++) {
@@ -55,19 +50,15 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomPropertie
 	},
 	hasValidKeys(mountedCriteria, inputKeys) {
 		const definedKeys = mountedCriteria.validKeys;
-		return (definedKeys.length === inputKeys.length && definedKeys.every((key, index) => key === inputKeys[index]));
+		return (inputKeys.length <= definedKeys.length && inputKeys.every((key) => definedKeys.includes(key)));
 	},
 	checking(queue, criteria, value) {
 		if (!isPlainObject(value)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 
-		const keys = Object.keys(value);
-
-		if (keys.length === 0) {
-			return (criteria.empty ? null : "VALUE_EMPTY");
-		}
-		else if (!this.hasValidKeys(criteria, keys)) {
+		const keys = Reflect.ownKeys(value);
+		if (!this.hasValidKeys(criteria, keys)) {
 			return ("VALUE_INVALID_KEY");
 		}
 		else if (!this.hasRequiredKeys(criteria, keys)) {

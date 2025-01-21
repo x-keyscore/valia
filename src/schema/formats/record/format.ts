@@ -1,6 +1,6 @@
 import type { RecordVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../..";
+import { isMountedCriteria } from "../../mounter";
 import { isPlainObject } from "../../../testers";
 import { formats } from "../formats";
 

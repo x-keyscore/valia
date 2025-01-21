@@ -1,6 +1,6 @@
 import type { TupleVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../..";
+import { isMountedCriteria } from "../../mounter";
 import { isArray } from "../../../testers";
 
 export const TupleFormat: FormatTemplate<TupleVariantCriteria> = {

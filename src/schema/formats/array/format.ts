@@ -1,6 +1,6 @@
 import type { ArrayVariantCriteria } from "./types";
 import type { FormatTemplate  } from "../types";
-import { isMountedCriteria } from "../..";
+import { isMountedCriteria } from "../../mounter";
 import { isArray } from "../../../testers";
 
 export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {

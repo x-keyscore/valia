@@ -14,7 +14,7 @@ export interface SchemaCheckingTask {
     value: unknown;
     link?: CheckingTaskLink;
 }
-export interface SchemaCheckerReject {
+export interface SchemaReject {
     /** `REJECT_<CATEGORY>_<DETAIL>` */
     code: string;
     type: string;
@@ -22,5 +22,4 @@ export interface SchemaCheckerReject {
     label: string | undefined;
     message: string | undefined;
 }
-export type SchemaReject = SchemaCheckerReject;
 export type SchemaGuard<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;

@@ -2,14 +2,15 @@
   "name": "vali.ts",
   "version": "1.1.1",
   "description": "A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.",
+  "homepage": "https://github.com/x-keyscore/VALI.TS#readme",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc && node dist",
-    "match": "tsc && node ./dist/testMy.js && node ./dist/testAjv.js",
+	"build": "tsc",
     "build:pack": "tsc && npm pack && mv -f ./*.tgz pack/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsc && node --test"
   },
   "keywords": [
     "vali",

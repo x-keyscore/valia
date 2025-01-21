@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArrayFormat = void 0;
-const __1 = require("../..");
+const mounter_1 = require("../../mounter");
 const testers_1 = require("../../../testers");
 exports.ArrayFormat = {
     defaultCriteria: {
         empty: true
     },
     mounting(queue, register, definedCriteria, mountedCriteria) {
-        if ((0, __1.isMountedCriteria)(definedCriteria.item)) {
+        if ((0, mounter_1.isMountedCriteria)(definedCriteria.item)) {
             register.merge(mountedCriteria, definedCriteria.item, {
                 pathParts: ["item"]
             });

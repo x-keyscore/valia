@@ -3,45 +3,69 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.cloner = cloner;
 const testers_1 = require("../testers");
 const mounter_1 = require("./mounter");
-function processTask(task) {
-    let cloningTasks = [];
-    if ((0, testers_1.isPlainObject)(task.src)) {
-        if ((0, mounter_1.isMountedCriteria)(task.src)) {
-            task.cpy = task.src;
+function processTask(queue, { src, cpy }) {
+    if ((0, testers_1.isPlainObject)(src)) {
+        if ((0, mounter_1.isMountedCriteria)(src)) {
+            cpy = src;
         }
         else {
-            Object.assign(task.cpy, task.src);
-            const keys = Object.keys(task.src);
+            const keys = Reflect.ownKeys(src);
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
-                if ((0, testers_1.isPlainObject)(task.src[key]) && (0, mounter_1.isMountedCriteria)(task.src)) {
-                    task.cpy[key] = {};
+                if ((0, testers_1.isPlainObject)(src[key])) {
+                    if ((0, mounter_1.isMountedCriteria)(src[key])) {
+                        cpy[key] = src[key];
+                    }
+                    else {
+                        cpy[key] = {};
+                        queue.push({
+                            src: src[key],
+                            cpy: cpy[key]
+                        });
+                    }
                 }
-                cloningTasks.push({
-                    src: task.src[key],
-                    cpy: task.cpy[key]
-                });
+                else if ((0, testers_1.isArray)(src[key])) {
+                    cpy[key] = [];
+                    queue.push({
+                        src: src[key],
+                        cpy: cpy[key]
+                    });
+                }
+                else {
+                    cpy[key] = src[key];
+                }
             }
         }
     }
-    else if ((0, testers_1.isArray)(task.src)) {
-        task.cpy = Object.assign([], task.src);
-        for (let i = 0; i < task.src.length; i++) {
-            if ((0, testers_1.isPlainObject)(task.src[i]) && (0, mounter_1.isMountedCriteria)(task.src)) {
-                task.cpy[i] = {};
+    else if ((0, testers_1.isArray)(src)) {
+        for (let i = 0; i < src.length; i++) {
+            if ((0, testers_1.isPlainObject)(src[i])) {
+                if ((0, mounter_1.isMountedCriteria)(src[i])) {
+                    cpy[i] = src[i];
+                }
+                else {
+                    cpy[i] = {};
+                    queue.push({
+                        src: src[i],
+                        cpy: cpy[i]
+                    });
+                }
             }
-            cloningTasks.push({
-                src: task.src[i],
-                cpy: task.cpy[i]
-            });
+            else if ((0, testers_1.isArray)(src[i])) {
+                cpy[i] = [];
+                queue.push({
+                    src: src[i],
+                    cpy: cpy[i]
+                });
+            }
+            else {
+                cpy[i] = src[i];
+            }
         }
     }
     else {
-        task.cpy = task.src;
+        cpy = src;
     }
-    return ({
-        cloningTasks
-    });
 }
 /**
  * Clones the object starting from the root and stops traversing a branch
@@ -56,9 +80,7 @@ function cloner(src) {
     let queue = [{ src, cpy }];
     while (queue.length > 0) {
         const currentTask = queue.pop();
-        const { cloningTasks } = processTask(currentTask);
-        if (cloningTasks)
-            Array.prototype.push.apply(queue, cloningTasks);
+        processTask(queue, currentTask);
     }
     return cpy;
 }

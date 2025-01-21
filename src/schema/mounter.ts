@@ -1,9 +1,8 @@
+import type { SchemaMountingTask } from "./types";
 import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "./formats";
-import { SchemaMountingTask } from "./types";
+import { Registry, registrySymbol } from "./Registry";
 import { LibraryError } from "../utils";
-import { Register } from "./register";
 
-export const registerSymbol = Symbol('register');
 
 function checkCriteria(format: typeof formats, definedCriteria: VariantCriteria) {
 
@@ -12,31 +11,30 @@ function checkCriteria(format: typeof formats, definedCriteria: VariantCriteria)
 export function mounter<T extends VariantCriteria>(
 	definedCriteria: T
 ): MountedCriteria<T> {
-	const register = new Register();
+	const registry = new Registry();
 	let mountedCriteria: MountedCriteria<T> = {} as any;
 	let queue: SchemaMountingTask[] = [{ definedCriteria, mountedCriteria }];
 
+	registry.add(null, mountedCriteria, {
+		pathParts: ["root"]
+	})
+
 	while (queue.length > 0) {
-		// RETRIVE THE PROPERTIES OF THE CURRENT TASK
 		const { definedCriteria, mountedCriteria } = queue.pop()!;
 
-		// RETRIVE THE FORMAT
 		const format = formats[definedCriteria.type];
 		if (!format) throw new LibraryError(
 			"Criteria mounting",
 			"Format type '" + String(definedCriteria.type) + "' is unknown"
 		);
 
-		// ASSIGNING DEFAULT CRITERIA AND DEFINED CRITERIA ON THE MOUNTED CRITERIA REFERENCE
 		Object.assign(mountedCriteria, defaultVariantCriteria, format.defaultCriteria, definedCriteria);
 
-		// FORMAT SPECIFIC MOUNTING
-		if (format.mounting) format.mounting(queue, register, definedCriteria, mountedCriteria);
+		if (format.mounting) format.mounting(queue, registry, definedCriteria, mountedCriteria);
 	}
 
-	// REGISTER ASSIGNMENT ON THE ROOT OF RHE MOUNTED CRITERIA
 	Object.assign(mountedCriteria, {
-		[registerSymbol]: register
+		[registrySymbol]: registry
 	});
 
 	return (mountedCriteria);
@@ -45,5 +43,5 @@ export function mounter<T extends VariantCriteria>(
 export function isMountedCriteria(
 	criteria: object
 ): criteria is MountedCriteria<VariantCriteria> {
-	return (Reflect.has(criteria, registerSymbol));
+	return (Reflect.has(criteria, registrySymbol));
 }

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
 const formats_1 = require("./formats");
-const mounter_1 = require("./mounter");
+const Registry_1 = require("./Registry");
 function manageTaskLink(link, isReject) {
     if (link) {
         if (!isReject) {
@@ -16,33 +16,37 @@ function manageTaskLink(link, isReject) {
     }
     return (false);
 }
-function basicChecking(criteria, value) {
-    if (!criteria.nullable && value === null) {
-        return ("TYPE_NULL");
-    }
-    else if (!criteria.optional && value === undefined) {
-        return ("TYPE_UNDEFINED");
-    }
-    return (null);
+function reject(registry, criteria, rejectState) {
+    return ({
+        code: "REJECT_" + rejectState,
+        path: registry.getPath(criteria, "."),
+        type: criteria.type,
+        label: criteria.label,
+        message: criteria.message
+    });
 }
 function checker(criteria, value) {
-    const register = criteria[mounter_1.registerSymbol];
+    const registry = criteria[Registry_1.registrySymbol];
     let queue = [{ criteria, value }];
     while (queue.length > 0) {
         const { criteria, value, link } = queue.pop();
         if (link === null || link === void 0 ? void 0 : link.finished)
             continue;
+        if (value === null) {
+            if (criteria.nullable)
+                continue;
+            reject(registry, criteria, "TYPE_NULL");
+        }
+        else if (value === undefined) {
+            if (criteria.optional)
+                continue;
+            reject(registry, criteria, "TYPE_UNDEFINED");
+        }
         const format = formats_1.formats[criteria.type];
-        const rejectState = basicChecking(criteria, value) || format.checking(queue, criteria, value);
+        const rejectState = format.checking(queue, criteria, value);
         const rejectBypass = manageTaskLink(link, !!rejectState);
         if (!rejectBypass && rejectState) {
-            return ({
-                code: "REJECT_" + rejectState,
-                path: register.getPath(criteria, "."),
-                type: criteria.type,
-                label: criteria.label,
-                message: criteria.message
-            });
+            return (reject(registry, criteria, rejectState));
         }
     }
     return (null);

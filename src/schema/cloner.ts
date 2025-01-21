@@ -7,53 +7,72 @@ interface SchemaCloningTask {
 	cpy: any;
 }
 
-function processTask(task: SchemaCloningTask) {
-	let cloningTasks: SchemaCloningTask[] = [];
-
-	if (isPlainObject(task.src)) {
-		if (isMountedCriteria(task.src)) {
-			task.cpy = task.src;
+function processTask(
+	queue: SchemaCloningTask[],
+	{ src, cpy }: SchemaCloningTask
+) {
+	if (isPlainObject(src)) {
+		if (isMountedCriteria(src)) {
+			cpy = src;
 		}
 		else {
-			Object.assign(task.cpy, task.src);
-
-			const keys = Object.keys(task.src);
+			const keys = Reflect.ownKeys(src);
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
+				
+				if (isPlainObject(src[key])) {
+					if (isMountedCriteria(src[key])) {
+						cpy[key] = src[key];
+					} else {
+						cpy[key] = {};
 
-				if (isPlainObject(task.src[key]) && isMountedCriteria(task.src)) {
-					task.cpy[key] = {};
+						queue.push({
+							src: src[key],
+							cpy: cpy[key]
+						});
+					}
+				} else if (isArray(src[key])) {
+					cpy[key] = [];
+
+					queue.push({
+						src: src[key],
+						cpy: cpy[key]
+					});
+				} else {
+					cpy[key] = src[key];
 				}
-
-				cloningTasks.push({
-					src: task.src[key],
-					cpy: task.cpy[key]
-				});
 			}
 		}
 	}
-	else if (isArray(task.src)) {
-		task.cpy = Object.assign([], task.src);
-
-		for (let i = 0; i < task.src.length; i++) {
-			if (isPlainObject(task.src[i]) && isMountedCriteria(task.src)) {
-				task.cpy[i] = {};
-			}
-
-			cloningTasks.push({
-				src: task.src[i],
-				cpy: task.cpy[i]
-			})
+	else if (isArray(src)) {
+		for (let i = 0; i < src.length; i++) {
 			
+			if (isPlainObject(src[i])) {
+				if (isMountedCriteria(src[i] as object)) {
+					cpy[i] = src[i];
+				} else {
+					cpy[i] = {};
+
+					queue.push({
+						src: src[i],
+						cpy: cpy[i]
+					});
+				}
+			} else if (isArray(src[i])) {
+				cpy[i] = [];
+
+				queue.push({
+					src: src[i],
+					cpy: cpy[i]
+				});
+			} else {
+				cpy[i] = src[i];
+			}
 		}
 	}
 	else {
-		task.cpy = task.src;
+		cpy = src;
 	}
-
-	return ({
-		cloningTasks
-	});
 }
 
 /**
@@ -73,9 +92,7 @@ export function cloner<T extends VariantCriteria>(
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;
 
-		const { cloningTasks } = processTask(currentTask);
-
-		if (cloningTasks) Array.prototype.push.apply(queue, cloningTasks);
+		processTask(queue, currentTask);
 	}
 
 	return (cpy as T);

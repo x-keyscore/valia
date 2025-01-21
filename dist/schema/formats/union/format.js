@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnionFormat = void 0;
-const __1 = require("../..");
+const mounter_1 = require("../../mounter");
 exports.UnionFormat = {
     defaultCriteria: {
         empty: false
@@ -9,7 +9,7 @@ exports.UnionFormat = {
     mounting(queue, register, definedCriteria, mountedCriteria) {
         for (let i = 0; i < definedCriteria.union.length; i++) {
             const definedCriteriaItem = definedCriteria.union[i];
-            if ((0, __1.isMountedCriteria)(definedCriteriaItem)) {
+            if ((0, mounter_1.isMountedCriteria)(definedCriteriaItem)) {
                 register.merge(mountedCriteria, definedCriteriaItem, {
                     pathParts: [`union[${i}]`]
                 });

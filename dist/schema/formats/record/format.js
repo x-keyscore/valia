@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecordFormat = void 0;
-const __1 = require("../..");
+const mounter_1 = require("../../mounter");
 const testers_1 = require("../../../testers");
 const formats_1 = require("../formats");
 exports.RecordFormat = {
@@ -9,7 +9,7 @@ exports.RecordFormat = {
         empty: false
     },
     mounting(queue, register, definedCriteria, mountedCriteria) {
-        if ((0, __1.isMountedCriteria)(definedCriteria.key)) {
+        if ((0, mounter_1.isMountedCriteria)(definedCriteria.key)) {
             register.merge(mountedCriteria, definedCriteria.key, {
                 pathParts: ["key"]
             });
@@ -24,7 +24,7 @@ exports.RecordFormat = {
                 mountedCriteria: mountedCriteria.key
             });
         }
-        if ((0, __1.isMountedCriteria)(definedCriteria.value)) {
+        if ((0, mounter_1.isMountedCriteria)(definedCriteria.value)) {
             register.merge(mountedCriteria, definedCriteria.value, {
                 pathParts: ["value"]
             });

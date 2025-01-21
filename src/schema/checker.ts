@@ -1,6 +1,6 @@
-import type { SchemaCheckingTask, SchemaCheckerReject } from "./types";
+import type { SchemaCheckingTask, SchemaReject } from "./types";
 import { VariantCriteria, MountedCriteria, formats} from "./formats";
-import { registerSymbol } from './mounter'
+import { RegistryInstance, registrySymbol } from './Registry'
 
 function manageTaskLink(
 	link: SchemaCheckingTask['link'],
@@ -18,25 +18,25 @@ function manageTaskLink(
 	return (false);
 }
 
-function basicChecking(
+function reject(
+	registry: RegistryInstance,
 	criteria: SchemaCheckingTask['criteria'],
-	value: unknown
-): string | null {
-	if (!criteria.nullable && value === null) {
-		return ("TYPE_NULL");
-	}
-	else if (!criteria.optional && value === undefined) {
-		return ("TYPE_UNDEFINED");
-	}
-
-	return (null);
+	rejectState: string
+): SchemaReject {
+	return ({
+		code: "REJECT_" + rejectState,
+		path: registry.getPath(criteria, "."),
+		type: criteria.type,
+		label: criteria.label,
+		message: criteria.message
+	});
 }
 
 export function checker(
 	criteria: MountedCriteria<VariantCriteria>,
 	value: unknown
-): SchemaCheckerReject | null {
-	const register = criteria[registerSymbol];
+): SchemaReject | null {
+	const registry = criteria[registrySymbol];
 	let queue: SchemaCheckingTask[] = [{ criteria, value }];
 
 	while (queue.length > 0) {
@@ -44,18 +44,21 @@ export function checker(
 
 		if (link?.finished) continue;
 
+		if (value === null) {
+			if (criteria.nullable) continue;
+			reject(registry, criteria, "TYPE_NULL");
+		}
+		else if (value === undefined) {
+			if (criteria.optional) continue;
+			reject(registry, criteria, "TYPE_UNDEFINED");
+		}
+
 		const format = formats[criteria.type];
-		const rejectState = basicChecking(criteria, value) || format.checking(queue, criteria, value);
+		const rejectState = format.checking(queue, criteria, value);
 		const rejectBypass = manageTaskLink(link, !!rejectState);
 
 		if (!rejectBypass && rejectState) {
-			return ({
-				code: "REJECT_" + rejectState,
-				path: register.getPath(criteria, "."),
-				type: criteria.type,
-				label: criteria.label,
-				message: criteria.message
-			});
+			return (reject(registry, criteria, rejectState));
 		}
 	}
 

@@ -7,7 +7,8 @@ import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
 import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
-import { SchemaCheckingTask, SchemaMountingTask, registerSymbol, Register } from "..";
+import type { SchemaCheckingTask, SchemaMountingTask } from "../types";
+import { RegistryInstance, registrySymbol } from "../Registry";
 import { formats } from "./formats";
 /**
  * Defines the criteria users must or can specify.
@@ -68,9 +69,8 @@ export interface DefaultVariantCriteria {
     optional: boolean;
     nullable: boolean;
 }
-export type RegisterInstance = InstanceType<typeof Register>;
 export interface DefaultMountedCriteria {
-    [registerSymbol]: RegisterInstance;
+    [registrySymbol]: RegistryInstance;
 }
 export type VariantCriteria = {
     [U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, {
@@ -99,7 +99,7 @@ export type FormatTemplate<T extends VariantCriteria, U extends Record<string, a
         [K in keyof Omit<T, 'type'>]: (x: unknown) => boolean;
     };
     defaultCriteria: DefaultCriteria<T>;
-    mounting?(queue: SchemaMountingTask[], register: RegisterInstance, definedCriteria: T, mountedCriteria: MountedCriteria<T>): void;
+    mounting?(queue: SchemaMountingTask[], registry: RegistryInstance, definedCriteria: T, mountedCriteria: MountedCriteria<T>): void;
     checking(queue: SchemaCheckingTask[], criteria: MountedCriteria<T>, value: unknown): null | string;
 } & U;
 export type CheckValueResult = null | string;

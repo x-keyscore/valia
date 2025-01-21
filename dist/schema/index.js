@@ -1,10 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Schema = exports.isMountedCriteria = exports.registerSymbol = exports.Register = void 0;
-var register_1 = require("./register");
-Object.defineProperty(exports, "Register", { enumerable: true, get: function () { return register_1.Register; } });
-var mounter_1 = require("./mounter");
-Object.defineProperty(exports, "registerSymbol", { enumerable: true, get: function () { return mounter_1.registerSymbol; } });
-Object.defineProperty(exports, "isMountedCriteria", { enumerable: true, get: function () { return mounter_1.isMountedCriteria; } });
+exports.Schema = void 0;
 var Schema_1 = require("./Schema");
 Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return Schema_1.Schema; } });

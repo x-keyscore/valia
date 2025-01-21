@@ -7,7 +7,8 @@ import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
 import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
-import { SchemaCheckingTask, SchemaMountingTask, registerSymbol, Register } from "..";
+import type { SchemaCheckingTask, SchemaMountingTask } from "../types";
+import { RegistryInstance,registrySymbol } from "../Registry";
 import { formats } from "./formats";
 
 // VARIANT CRITERIA
@@ -106,10 +107,8 @@ export interface DefaultVariantCriteria {
 	nullable: boolean;
 }
 
-export type RegisterInstance = InstanceType<typeof Register>;
-
 export interface DefaultMountedCriteria {
-	[registerSymbol]: RegisterInstance
+	[registrySymbol]: RegistryInstance
 }
 
 export type VariantCriteria = {
@@ -155,7 +154,7 @@ export type FormatTemplate<
 	defaultCriteria: DefaultCriteria<T>;
 	mounting?(
 		queue: SchemaMountingTask[],
-		register: RegisterInstance,
+		registry: RegistryInstance,
 		definedCriteria: T,
         mountedCriteria: MountedCriteria<T>
 	): void;
