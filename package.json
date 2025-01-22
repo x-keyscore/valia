@@ -1,6 +1,6 @@
 {
   "name": "vali.ts",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.",
   "homepage": "https://github.com/x-keyscore/VALI.TS#readme",
   "main": "dist/index.js",
