@@ -26,8 +26,3 @@ const end = performance.now();
 const timeTaken = end - start;
 console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);
 */
-const test = {
-    // @ts-ignore
-    [{ type: "string", max: 10 }]: {}
-};
-console.log(Object.entries(test));
