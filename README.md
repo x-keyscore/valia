@@ -41,8 +41,18 @@ if (mySchema.guard(myData)) {
 |`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
 
 ```ts
-const nameFormat = new Schema({ label: "NAME_FORMAT", type: "string", min: 3, max: 32 });
-const ageFormat = new Schema({ label: "AGE_FORMAT", type: "number", min: 13, max: 128 });
+const nameFormat = new Schema({
+  label: "NAME_FORMAT",
+  type: "string",
+  min: 3,
+  max: 32
+});
+const ageFormat = new Schema({
+  label: "AGE_FORMAT",
+  type: "number",
+  min: 13,
+  max: 128
+});
 
 const userSchema = new Schema({ 
   type: "struct",
@@ -64,7 +74,7 @@ console.log(reject);
 ```
 {
   code: 'REJECT_VALUE_SUPERIOR_MAX',
-  path: 'struct.age',
+  path: 'root.struct.age',
   type: 'number',
   label: 'AGE_FORMAT',
   message: undefined
