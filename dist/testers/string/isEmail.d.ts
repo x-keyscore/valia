@@ -13,12 +13,8 @@ interface IsEmailParams {
     allowAddressLiteral?: boolean;
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
- *
- * **Implementation version :** 1.1.0-beta
- *
- * ==============================
+ * @param input Can be either a `string` or a `Uint16Array`
+ * containing the decimal values ​​of the string.
  *
  * **Standard :** RFC 5321
  *
@@ -26,6 +22,8 @@ interface IsEmailParams {
  *
  * **Follows :**
  * `Mailbox`
+ *
+ * @version 1.1.0-beta
  */
 export declare function isEmail(input: string | Uint16Array, params?: IsEmailParams): boolean;
 export {};

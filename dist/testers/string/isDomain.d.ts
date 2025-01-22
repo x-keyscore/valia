@@ -1,10 +1,6 @@
 /**
- *  @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
- *
- * **Implementation version :** 1.0.0-beta
- *
- * ==============================
+ * @param input Can be either a `string` or a `Uint16Array`
+ * containing the decimal values ​​of the string.
  *
  * **Standard :** RFC 1035
  *
@@ -18,5 +14,7 @@
  * * `digit = %x30-39` 0-9
  * * `label = letter [*(digit / letter / "-") digit / letter]`
  * * `domain = label *("." label)`
+ *
+ * @version 1.0.0-beta
  */
 export declare function isDomain(input: string | Uint16Array, params?: undefined): boolean;

@@ -1,3 +1,4 @@
+import { isIP } from "net";
 import { stringToUTF16UnitArray } from "../../tools";
 
 interface IsIpParams {
@@ -6,23 +7,23 @@ interface IsIpParams {
 	/** **Default:** `true` */
 	allowIpV6?: boolean;
 	/**
-	 * **Classless Inter-Domain Routing**
+	 * Indicates whether the input is in CIDR* notation (e.g., `192.168.0.1/22`).
 	 * 
-	 * **Possible value :** `D` = Deny | `A` = Allow  | `R` = Require 
+	 * **Default:** `false`
 	 * 
-	 * **Default :** `D`
+	 * *Classless Inter-Domain Routing
 	 */
-	CIDR?: "D" | "A" | "R";
+	prefix?: boolean;
 }
 
 /**
  * **Checked character :**
  * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"`
+ * * `HEXDIG = DIGIT / A-F / a-f`
  */
 function isHexadecimal(codePoint: number) {
-	// "A"-"F"
-	if (codePoint >= 65 && codePoint <= 70) return (true);
+	// A-F / a-f
+	if ((codePoint | 32) >= 97 && (codePoint | 32) <= 102) return (true);
 	// DIGIT
 	if (codePoint >= 48 && codePoint <= 57) return (true);
 
@@ -48,6 +49,7 @@ function isIpV4Address(utf16UnitArray: Uint16Array) {
 	if (arrayLength < 7 || arrayLength > 15) return (false);
 
 	while (i < arrayLength) {
+		
 		digCount = 0;
 		decByte = 0;
 		isNull = 0;
@@ -118,7 +120,6 @@ function isIpV4Prefix(utf16UnitArray: Uint16Array) {
 	return (true);
 }
 
-
 /**
  * **No standard**
  * 
@@ -132,7 +133,7 @@ function isIPv6Full(utf16UnitArray: Uint16Array) {
 
 	while (i >= 0) {
 		const code = utf16UnitArray[i];
-
+		
 		if (code === 58) {// ":"
 			if (hexCount < 1 || hexCount > 4) return (false);
 			hexCount = 0;
@@ -145,7 +146,7 @@ function isIPv6Full(utf16UnitArray: Uint16Array) {
 
 		i--;
 	}
-	
+
 	if (hexCount < 1 || hexCount > 4 || colonCount !== 7) return (false);
 
 	return (true);
@@ -367,14 +368,10 @@ function extractAddrAndPrefix(utf16UnitArray: Uint16Array) {
 }
 
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array` 
+ * containing the decimal values ​​of the string.
  * 
- * **Implementation version :** 1.1.0-beta
- * 
- * ==============================
- * 
- * **IPv4** 
+ * **IPv4**
  * 
  * **Standard:** No standard
  * 
@@ -386,21 +383,21 @@ function extractAddrAndPrefix(utf16UnitArray: Uint16Array) {
  * 
  * **Implementation version :** 1.0.0
  * 
- * ==============================
- * 
  * **IPv6**
  * 
  * **Standard :** No standard
  * 
  * **Checked composition :**
  * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"`
+ * * `HEXDIG = DIGIT / A-F / a-f`
  * * `IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)`
  * * `IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]`
  * * `IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4`
  * * `IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4`
  * * `prefix = 1*3DIGIT` Representing a decimal integer value in the range 0 through 128.
  * * `IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]`
+ * 
+ * @version 1.1.0-beta
  */
 export function isIp(input: string | Uint16Array, params?: IsIpParams) {
 	const utf16UnitArray = typeof input === "string" ? stringToUTF16UnitArray(input) : input;
@@ -408,11 +405,10 @@ export function isIp(input: string | Uint16Array, params?: IsIpParams) {
 	const parts = extractAddrAndPrefix(utf16UnitArray);
 	if (!parts) return (false);
 
-	if (((!params?.CIDR || params?.CIDR === "D") && parts.prefix)
-		|| (params?.CIDR === "R" && !parts.prefix)) return (false);
+	if ((!params?.prefix && parts.prefix) || (params?.prefix && !parts.prefix)) return (false);
 
 	// CHECK IPV4 ADDRESS
-	if (params?.allowIpV6 !== false && isIpV4Address(parts.addr)) {
+	if (params?.allowIpV4 !== false && isIpV4Address(parts.addr)) {
 		if (parts.prefix) {
 			// CHECK IPV4 PREFIX
 			if (!isIpV4Prefix(parts.prefix)) return (false);

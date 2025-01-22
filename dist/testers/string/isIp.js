@@ -5,11 +5,11 @@ const tools_1 = require("../../tools");
 /**
  * **Checked character :**
  * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"`
+ * * `HEXDIG = DIGIT / A-F / a-f`
  */
 function isHexadecimal(codePoint) {
-    // "A"-"F"
-    if (codePoint >= 65 && codePoint <= 70)
+    // A-F / a-f
+    if ((codePoint | 32) >= 97 && (codePoint | 32) <= 102)
         return (true);
     // DIGIT
     if (codePoint >= 48 && codePoint <= 57)
@@ -345,12 +345,8 @@ function extractAddrAndPrefix(utf16UnitArray) {
     };
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
- *
- * **Implementation version :** 1.1.0-beta
- *
- * ==============================
+ * @param input Can be either a `string` or a `Uint16Array`
+ * containing the decimal values ​​of the string.
  *
  * **IPv4**
  *
@@ -364,32 +360,31 @@ function extractAddrAndPrefix(utf16UnitArray) {
  *
  * **Implementation version :** 1.0.0
  *
- * ==============================
- *
  * **IPv6**
  *
  * **Standard :** No standard
  *
  * **Checked composition :**
  * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"`
+ * * `HEXDIG = DIGIT / A-F / a-f`
  * * `IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)`
  * * `IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]`
  * * `IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4`
  * * `IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4`
  * * `prefix = 1*3DIGIT` Representing a decimal integer value in the range 0 through 128.
  * * `IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]`
+ *
+ * @version 1.1.0-beta
  */
 function isIp(input, params) {
     const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
     const parts = extractAddrAndPrefix(utf16UnitArray);
     if (!parts)
         return (false);
-    if (((!(params === null || params === void 0 ? void 0 : params.CIDR) || (params === null || params === void 0 ? void 0 : params.CIDR) === "D") && parts.prefix)
-        || ((params === null || params === void 0 ? void 0 : params.CIDR) === "R" && !parts.prefix))
+    if ((!(params === null || params === void 0 ? void 0 : params.prefix) && parts.prefix) || ((params === null || params === void 0 ? void 0 : params.prefix) && !parts.prefix))
         return (false);
     // CHECK IPV4 ADDRESS
-    if ((params === null || params === void 0 ? void 0 : params.allowIpV6) !== false && isIpV4Address(parts.addr)) {
+    if ((params === null || params === void 0 ? void 0 : params.allowIpV4) !== false && isIpV4Address(parts.addr)) {
         if (parts.prefix) {
             // CHECK IPV4 PREFIX
             if (!isIpV4Prefix(parts.prefix))

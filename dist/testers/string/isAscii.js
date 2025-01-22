@@ -3,8 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isAscii = isAscii;
 const tools_1 = require("../../tools");
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
+ * @param input Can be either a `string` or a `Uint16Array`
+ * containing the decimal values ​​of the string.
+ *
  * @returns Check if all characters of the string are in the ascii table (%d0-%d127).
  */
 function isAscii(input, params) {

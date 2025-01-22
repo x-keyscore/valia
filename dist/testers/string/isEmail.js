@@ -112,7 +112,7 @@ function isDcontentChar(codePoint) {
 function skipQuotedString(utf16UnitArray, startIndex) {
     const arrayLength = utf16UnitArray.length;
     let i = startIndex;
-    if (utf16UnitArray[i] !== 92)
+    if (utf16UnitArray[i] !== 34)
         return (i); // "\""
     i++;
     while (i < arrayLength) {
@@ -178,7 +178,7 @@ function isValidLocalPart(utf16UnitArray, allowQuotedString) {
     /** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.1 */
     if ((0, tools_1.getUTF8ByteLengthByUTF16UnitArray)(utf16UnitArray) > 64)
         return (false);
-    if (allowQuotedString && utf16UnitArray[i] === 92) { // "\""
+    if (allowQuotedString && utf16UnitArray[i] === 34) { // "\""
         i = skipQuotedString(utf16UnitArray, i);
         if (i === -1)
             return (false);
@@ -245,7 +245,7 @@ function isAddressLiteral(utf16UnitArray) {
         return (false); // "["
     if (utf16UnitArray[arrayLength - 1] !== 93)
         return (-1); // "]"
-    const address = utf16UnitArray.slice(1, arrayLength - 2);
+    const address = utf16UnitArray.slice(1, arrayLength - 1);
     if ((0, isIp_1.isIp)(address))
         return (true);
     else if (isGeneralAddressLiteral(address))
@@ -342,12 +342,8 @@ function extractLocalAndDomain(utf16UnitArray) {
     };
 }
 /**
- * @param input Can be either a `string` or a `Uint16Array` containing
- * the decimal values ​​of the string in code point Unicode format.
- *
- * **Implementation version :** 1.1.0-beta
- *
- * ==============================
+ * @param input Can be either a `string` or a `Uint16Array`
+ * containing the decimal values ​​of the string.
  *
  * **Standard :** RFC 5321
  *
@@ -355,6 +351,8 @@ function extractLocalAndDomain(utf16UnitArray) {
  *
  * **Follows :**
  * `Mailbox`
+ *
+ * @version 1.1.0-beta
  */
 function isEmail(input, params) {
     const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
