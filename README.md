@@ -300,7 +300,7 @@ const schema = new Schema({
 #### • `isEmail(str:string, params: IsEmailParams) => boolean;`
 <table>
    <tr>
-    <th style="width: 50%;">Parameter</th>
+    <th width="25%">Parameter</th>
     <th>Description</th>
   </tr>
   <tr>
