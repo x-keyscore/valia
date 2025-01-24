@@ -1,4 +1,6 @@
-# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
+# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts) &middot; ![](https://img.shields.io/badge/ECMAScript-2018+-f7df1e)
+
+
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
 ## Table of Contents
