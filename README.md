@@ -2,25 +2,6 @@
 
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
-<table style="border-collapse: collapse;">
-  <colgroup>
-    <col style="min-width: fit-content;">
-    <col>
-  </colgroup>
-   <tr>
-    <th>Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>allowQuotedString?: boolean</code></td>
-    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
-  </tr>
-  <tr>
-    <td><code>allowAddressLiteral?: boolean</code></td>
-    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
-  </tr>
-</table>
-
 ## Table of Contents
 - [Getting started](#getting-started)
 - [Schema](#schema)
@@ -318,8 +299,8 @@ const schema = new Schema({
 #### • `isDomain(str:string) => boolean;`
 #### • `isEmail(str:string, params: IsEmailParams) => boolean;`
 <table>
-  <tr>
-    <th>Parameter</th>
+   <tr>
+    <th style="width: 35%;">Parameter</th>
     <th>Description</th>
   </tr>
   <tr>
@@ -327,15 +308,11 @@ const schema = new Schema({
     <td>Allows a string enclosed in quotes in the first part of the email address.</td>
   </tr>
   <tr>
-    <td width="auto"><code>allowAddressLiteral?: boolean</code></td>
+    <td><code>allowAddressLiteral?: boolean</code></td>
     <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
   </tr>
 </table>
 
-|Parameter|Description|
-|--|--|
-|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
-|`allowAddressLiteral?: boolean`|Allows an IPv4 or IPv6 address in place of the domain name.|
 #### • `isIp[V4|V6](str:string, params: IsIpParams) => boolean;`
 |Parameter|Description|
 |--|--|
