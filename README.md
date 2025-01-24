@@ -2,6 +2,25 @@
 
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
+<table style="border-collapse: collapse;">
+  <colgroup>
+    <col style="white-space: nowrap;">
+    <col>
+  </colgroup>
+   <tr>
+    <th>Parameter</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>allowQuotedString?: boolean</code></td>
+    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
+  </tr>
+  <tr>
+    <td><code>allowAddressLiteral?: boolean</code></td>
+    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
+  </tr>
+</table>
+
 ## Table of Contents
 - [Getting started](#getting-started)
 - [Schema](#schema)
