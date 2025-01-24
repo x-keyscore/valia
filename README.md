@@ -10,6 +10,7 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
   - [Schema definition](#schema-definition)
 - [Testers](#testers)
   - [String](#string-1)
+  - [Object](#object)
 
 ## Getting started
 ```
@@ -283,14 +284,15 @@ const schema = new Schema({
 
 |Function|Description|
 |--|--|
-|`isAlpha` |Check if all characters of the string are between A and Z or a and z.|
-|`isDigit` |Check if all characters of the string are between 0 and 9.|
-|`isAscii` |Check if all characters of the string are in the ascii table.|
-|`isDomain`|**Standard :** RFC 1035<br/>**Implementation version :** 1.0.0-beta|
-|`isEmail` |**Standard :** RFC 5321<br/>**Implementation version :** 1.1.0-beta|
-|`isIp`    |See `isIpV4` and `isIpV6`|
-|`isIpV4`  |**Standard:** No standard<br/>**Implementation version :** 1.0.0|
-|`isIpV6`  |**Standard:** No standard<br/>**Implementation version :** 1.0.0|
+|`isAlpha`  |Check if all characters of the string are between A and Z or a and z.|
+|`isDigit`  |Check if all characters of the string are between 0 and 9.|
+|`isAscii`  |Check if all characters of the string are in the ascii table.|
+|`isIp`     |See `isIpV4` and `isIpV6`|
+|`isIpV4`   |**Standard:** No standard|
+|`isIpV6`   |**Standard:** No standard|
+|`isEmail`  |**Standard :** RFC 5321|
+|`isDomain` |**Standard :** RFC 1035|
+|`isDataURL`|**Standard:** RFC 2397|
 
 #### • `isAlpha(str:string) => boolean;`
 #### • `isDigit(str:string) => boolean;`
@@ -313,13 +315,16 @@ const schema = new Schema({
 
 ### Object
 
-#### `isObject(x: unknown): x is object`
+|Function|Description|
+|--|--|
+|`isObject`                |Checks if it is an object.|
+|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
+|`isArray`                 |Checks if it is an array.|
+|`isFunction`              |Checks if it is an function.|
+|`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
+|`isAsyncFunction`         |Checks if it is an async function.|
+|`isGeneratorFunction`     |Checks if it is an generator function.|
+|`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
 
-#### `isPlainObject(x: unknown): x is PlainObject`
-```ts
-type PlainObject = Record<string | symbol, unknown>;
-```
-
-#### `isArray(x: unknown): x is unknown[]`
 
 
