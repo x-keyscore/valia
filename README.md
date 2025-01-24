@@ -1,6 +1,5 @@
 # VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
 
-
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
 ## Table of Contents
@@ -299,6 +298,21 @@ const schema = new Schema({
 #### • `isAscii(str:string) => boolean;`
 #### • `isDomain(str:string) => boolean;`
 #### • `isEmail(str:string, params: IsEmailParams) => boolean;`
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>allowQuotedString?: boolean</code></td>
+    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
+  </tr>
+  <tr>
+    <td stryle="width: 100px;"><code>allowAddressLiteral?: boolean</code></td>
+    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
+  </tr>
+</table>
+
 |Parameter|Description|
 |--|--|
 |`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
