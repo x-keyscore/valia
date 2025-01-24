@@ -4,7 +4,7 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
 
 <table style="border-collapse: collapse;">
   <colgroup>
-    <col style="white-space: nowrap;">
+    <col style="min-width: fit-content;">
     <col>
   </colgroup>
    <tr>
