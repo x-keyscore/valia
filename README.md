@@ -308,7 +308,7 @@ const schema = new Schema({
     <td>Allows a string enclosed in quotes in the first part of the email address.</td>
   </tr>
   <tr>
-    <td stryle="width: 100px;"><code>allowAddressLiteral?: boolean</code></td>
+    <td width="max-content"><code>allowAddressLiteral?: boolean</code></td>
     <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
   </tr>
 </table>
