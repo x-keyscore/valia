@@ -4,4 +4,4 @@ export { isEmail } from "./isEmail";
 export { isAscii } from "./isAscii";
 export { isAlpha } from "./isAlpha";
 export { isDigit } from "./isDigit";
-export { isIp } from "./isIp";
+export { isIp, isIpV4, isIpV6 } from "./isIp";

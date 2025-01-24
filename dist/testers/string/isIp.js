@@ -1,405 +1,84 @@
 "use strict";
+/**
+ * IPV4
+ *
+ * Composition :
+ * * "DIGIT = %x30-39" 0-9.
+ * * "dec-octet = 1*3DIGIT" Representing a decimal integer value in the range 0 through 255.
+ * * "prefix = 1*2DIGIT" Representing a decimal integer value in the range 0 through 32.
+ * * "IPv4 = dec-octet 3("." dec-octet) ["/" prefix]"
+ *
+ * IPV6
+ *
+ * Composition :
+ * * "DIGIT = %x30-39" 0-9.
+ * * "HEXDIG = DIGIT / A-F / a-f"
+ * * "IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)"
+ * * "IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]"
+ * * "IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4"
+ * * "IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4"
+ * * "prefix = 1*3DIGIT" Representing a decimal integer value in the range 0 through 128.
+ * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.IPv6Pattern = exports.ipV4Pattern = void 0;
 exports.isIp = isIp;
-const tools_1 = require("../../tools");
+exports.isIpV4 = isIpV4;
+exports.isIpV6 = isIpV6;
+const utils_1 = require("../utils");
+const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
+exports.ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
+const ipV4PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV4SimpleRegex = new RegExp(`^${exports.ipV4Pattern}$`);
+const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
+exports.IPv6Pattern = "(?:" +
+    `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){6}(?:${exports.ipV4Pattern}|:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){5}(?::${exports.ipV4Pattern}|(?::${ipV6Seg}){1,2}|:)|` +
+    `(?:${ipV6Seg}:){4}(?:(?::${ipV6Seg}){0,1}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,3}|:)|` +
+    `(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
+    `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
+    `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
+    `(?::(?:(?::${ipV6Seg}){0,5}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,7}|:))` + ")(?:%[0-9a-zA-Z-.:]{1,})?";
+const ipV6PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+const ipV6SimpleRegex = new RegExp(`^${exports.IPv6Pattern}$`);
 /**
- * **Checked character :**
- * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / A-F / a-f`
- */
-function isHexadecimal(codePoint) {
-    // A-F / a-f
-    if ((codePoint | 32) >= 97 && (codePoint | 32) <= 102)
-        return (true);
-    // DIGIT
-    if (codePoint >= 48 && codePoint <= 57)
-        return (true);
-    return (false);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * * `DIGIT =  %x30-39` 0-9.
- * * `dec-octet = 1*3DIGIT` Representing a decimal integer value in the range 0 through 255.
- * * `dec-octet 3("."  dec-octet)`
- */
-function isIpV4Address(utf16UnitArray) {
-    let arrayLength = utf16UnitArray.length;
-    let dotCount = 0;
-    let digCount = 0;
-    let decByte = 0;
-    let isNull = 0;
-    let i = 0;
-    if (arrayLength < 7 || arrayLength > 15)
-        return (false);
-    while (i < arrayLength) {
-        digCount = 0;
-        decByte = 0;
-        isNull = 0;
-        while (i < arrayLength) {
-            const code = utf16UnitArray[i];
-            if (digCount > 3)
-                return (false);
-            if (code === 46) { // "."
-                if (digCount === 0 || decByte > 255)
-                    return (false);
-                dotCount++;
-                break;
-            }
-            else if (code >= 49 && code <= 57 && !isNull) { // "1"-"9"
-                decByte = decByte * 10 + (code - 48);
-                digCount++;
-            }
-            else if (code === 48 && !isNull) { // "0"
-                if (!decByte)
-                    isNull = 1;
-                decByte = decByte * 10;
-                digCount++;
-            }
-            else {
-                return (false);
-            }
-            i++;
-        }
-        i++;
-    }
-    if (digCount === 0 || decByte > 255 || dotCount !== 3)
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `1*2DIGIT` Representing a decimal integer value in the range 0 through 32.
- */
-function isIpV4Prefix(utf16UnitArray) {
-    let arrayLength = utf16UnitArray.length;
-    let decPrefix = 0;
-    let digCount = 0;
-    let isNull = 0;
-    let i = 0;
-    if (arrayLength < 1 || arrayLength > 2)
-        return (false);
-    while (i < arrayLength) {
-        const code = utf16UnitArray[i];
-        if (digCount > 2)
-            return (false);
-        if (code >= 49 && code <= 57 && !isNull) { // "1"-"9"
-            decPrefix = decPrefix * 10 + (code - 48);
-            digCount++;
-        }
-        else if (code === 48 && !isNull) { // "0"
-            if (!decPrefix)
-                isNull = 1;
-            decPrefix = decPrefix * 10;
-            digCount++;
-        }
-        else {
-            return (false);
-        }
-        i++;
-    }
-    if (decPrefix > 32)
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `1*4HEXDIG 7(":" 1*4HEXDIG)`
- */
-function isIPv6Full(utf16UnitArray) {
-    let i = utf16UnitArray.length - 1;
-    let hexCount = 0;
-    let colonCount = 0;
-    while (i >= 0) {
-        const code = utf16UnitArray[i];
-        if (code === 58) { // ":"
-            if (hexCount < 1 || hexCount > 4)
-                return (false);
-            hexCount = 0;
-            colonCount++;
-        }
-        else if (isHexadecimal(code)) {
-            hexCount++;
-        }
-        else {
-            return (false);
-        }
-        i--;
-    }
-    if (hexCount < 1 || hexCount > 4 || colonCount !== 7)
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `[1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]`
- */
-function isIPv6Comp(utf16UnitArray) {
-    let i = utf16UnitArray.length - 1;
-    let hexCount = 0;
-    let colonCount = 0;
-    let doubleColon = 0;
-    while (i >= 0) {
-        const code = utf16UnitArray[i];
-        if (code === 58) { // ":"
-            if (hexCount > 4)
-                return (false);
-            if (utf16UnitArray[i - 1] === 58) { // ":"
-                if (doubleColon || colonCount > 5)
-                    return (false);
-                colonCount = 0;
-                doubleColon++;
-                i--;
-            }
-            else {
-                if (hexCount < 1 || colonCount > 5)
-                    return (false);
-                colonCount++;
-            }
-            hexCount = 0;
-        }
-        else if (isHexadecimal(code)) {
-            hexCount++;
-        }
-        else {
-            return (false);
-        }
-        i--;
-    }
-    if (!doubleColon || (colonCount && (colonCount > 5 || hexCount < 1 || hexCount > 4)))
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4-address-literal`
- */
-function isIPv6v4Full(utf16UnitArray) {
-    let i = utf16UnitArray.length - 1;
-    let hexCount = 0;
-    let colonCount = 0;
-    while (i >= 0 && utf16UnitArray[i] !== 58) { // ":"
-        i--;
-    }
-    const v4Address = utf16UnitArray.slice(i + 1);
-    if (!isIpV4Address(v4Address))
-        return (false);
-    i--;
-    while (i >= 0) {
-        const code = utf16UnitArray[i];
-        if (code === 58) { // ":"
-            if (hexCount < 1 || hexCount > 4)
-                return (false);
-            hexCount = 0;
-            colonCount++;
-        }
-        else if (isHexadecimal(code)) {
-            hexCount++;
-        }
-        else {
-            return (false);
-        }
-        i--;
-    }
-    if (hexCount < 1 || hexCount > 4 || colonCount !== 5)
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `[1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4-address-literal`
- */
-function isIPv6v4Comp(utf16UnitArray) {
-    let i = utf16UnitArray.length - 1;
-    let hexCount = 0;
-    let colonCount = 0;
-    let doubleColon = 0;
-    while (i >= 0 && utf16UnitArray[i] !== 58) { // ":"
-        i--;
-    }
-    const v4Address = utf16UnitArray.slice(i + 1);
-    if (!isIpV4Address(v4Address))
-        return (false);
-    if (utf16UnitArray[i] === 58 && utf16UnitArray[i - 1] !== 58)
-        i--;
-    while (i >= 0) {
-        const code = utf16UnitArray[i];
-        if (code === 58) { // ":"
-            if (hexCount > 4)
-                return (false);
-            if (utf16UnitArray[i - 1] === 58) { // ":"
-                if (doubleColon || colonCount > 5)
-                    return (false);
-                colonCount = 0;
-                doubleColon++;
-                i--;
-            }
-            else {
-                if (hexCount < 1 || colonCount > 5)
-                    return (false);
-                colonCount++;
-            }
-            hexCount = 0;
-        }
-        else if (isHexadecimal(code)) {
-            hexCount++;
-        }
-        else {
-            return (false);
-        }
-        i--;
-    }
-    if (!doubleColon || (colonCount && (colonCount > 5 || hexCount < 1 || hexCount > 4)))
-        return (false);
-    return (true);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `"IPv6:" (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp)`
- */
-function isIpV6Address(addr) {
-    if (isIPv6Full(addr))
-        return (true);
-    else if (isIPv6Comp(addr))
-        return (true);
-    else if (isIPv6v4Full(addr))
-        return (true);
-    else if (isIPv6v4Comp(addr))
-        return (true);
-    return (false);
-}
-/**
- * **No standard**
- *
- * **Checked composition :**
- * `1*3DIGIT` Representing a decimal integer value in the range 0 through 128.
- */
-function isIpV6Prefix(utf16UnitArray) {
-    let arrayLength = utf16UnitArray.length;
-    let decPrefix = 0;
-    let digCount = 0;
-    let isNull = 0;
-    let i = 0;
-    if (arrayLength < 1 || arrayLength > 3)
-        return (false);
-    while (i < arrayLength) {
-        const code = utf16UnitArray[i];
-        if (digCount > 3)
-            return (false);
-        if (code >= 49 && code <= 57 && !isNull) { // "1"-"9"
-            decPrefix = decPrefix * 10 + (code - 48);
-            digCount++;
-        }
-        else if (code === 48 && !isNull) { // "0"
-            if (!decPrefix)
-                isNull = 1;
-            decPrefix = decPrefix * 10;
-            digCount++;
-        }
-        else {
-            return (false);
-        }
-        i++;
-    }
-    if (decPrefix > 128)
-        return (false);
-    return (true);
-}
-/**
- * **Not standardized**
- */
-function extractAddrAndPrefix(utf16UnitArray) {
-    const arrayLength = utf16UnitArray.length;
-    // FIND SLASH INDEX
-    let i = 0;
-    while (i < arrayLength && utf16UnitArray[i] !== 47) { // "/"
-        i++;
-    }
-    // CHECK SLASH INDEX
-    if (i === arrayLength) {
-        return ({
-            addr: utf16UnitArray,
-            prefix: null
-        });
-    }
-    // CHECK PREFIX LENGHT
-    if (i === arrayLength - 1)
-        return (null);
-    const slashIndex = i;
-    return {
-        addr: utf16UnitArray.slice(0, slashIndex),
-        prefix: utf16UnitArray.slice(slashIndex + 1, arrayLength),
-    };
-}
-/**
- * @param input Can be either a `string` or a `Uint16Array`
- * containing the decimal values ​​of the string.
- *
- * **IPv4**
- *
  * **Standard:** No standard
  *
- * **Checked composition :**
- * * `DIGIT = %x30-39` 0-9.
- * * `dec-octet = 1*3DIGIT` Representing a decimal integer value in the range 0 through 255.
- * * `prefix = 1*2DIGIT` Representing a decimal integer value in the range 0 through 32.
- * * `IPv4 = dec-octet 3("." dec-octet) ["/" prefix]`
- *
- * **Implementation version :** 1.0.0
- *
- * **IPv6**
- *
- * **Standard :** No standard
- *
- * **Checked composition :**
- * * `DIGIT = %x30-39` 0-9.
- * * `HEXDIG = DIGIT / A-F / a-f`
- * * `IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)`
- * * `IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]`
- * * `IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4`
- * * `IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4`
- * * `prefix = 1*3DIGIT` Representing a decimal integer value in the range 0 through 128.
- * * `IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]`
- *
- * @version 1.1.0-beta
+ * @version 1.0.0
  */
-function isIp(input, params) {
-    const utf16UnitArray = typeof input === "string" ? (0, tools_1.stringToUTF16UnitArray)(input) : input;
-    const parts = extractAddrAndPrefix(utf16UnitArray);
-    if (!parts)
-        return (false);
-    if ((!(params === null || params === void 0 ? void 0 : params.prefix) && parts.prefix) || ((params === null || params === void 0 ? void 0 : params.prefix) && !parts.prefix))
-        return (false);
-    // CHECK IPV4 ADDRESS
-    if ((params === null || params === void 0 ? void 0 : params.allowIpV4) !== false && isIpV4Address(parts.addr)) {
-        if (parts.prefix) {
-            // CHECK IPV4 PREFIX
-            if (!isIpV4Prefix(parts.prefix))
-                return (false);
-        }
+function isIp(str, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.prefix) && ipV4SimpleRegex.test(str))
         return (true);
-    }
-    // CHECK IPV6 ADDRESS
-    if ((params === null || params === void 0 ? void 0 : params.allowIpV6) !== false && isIpV6Address(parts.addr)) {
-        if (parts.prefix) {
-            // CHECK IPV6 PREFIX
-            if (!isIpV6Prefix(parts.prefix))
-                return (false);
-        }
+    else if ((params === null || params === void 0 ? void 0 : params.prefix) && ipV4PrefixRegex().test(str))
         return (true);
-    }
+    if (!(params === null || params === void 0 ? void 0 : params.prefix) && ipV6SimpleRegex.test(str))
+        return (true);
+    else if ((params === null || params === void 0 ? void 0 : params.prefix) && ipV6PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV4(str, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.prefix) && ipV4SimpleRegex.test(str))
+        return (true);
+    else if ((params === null || params === void 0 ? void 0 : params.prefix) && ipV4PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV6(str, params) {
+    if (!(params === null || params === void 0 ? void 0 : params.prefix) && ipV4SimpleRegex.test(str))
+        return (true);
+    else if ((params === null || params === void 0 ? void 0 : params.prefix) && ipV4PrefixRegex().test(str))
+        return (true);
     return (false);
 }

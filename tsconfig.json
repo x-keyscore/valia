@@ -3,6 +3,7 @@
 		"strict": true,
 		"outDir": "./dist",
 		"target": "ES2018",
+		"lib": ["ES2021.WeakRef"],
 		"module": "NodeNext",
 		"skipLibCheck": true,
 		"esModuleInterop": true,

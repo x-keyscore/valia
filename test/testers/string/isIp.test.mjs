@@ -36,16 +36,6 @@ describe("Testers string 'isIp' function", () => {
 		assert.strictEqual(isIp("::0.0.0.0"), true);
 		assert.strictEqual(isIp("::"), true);
 	});
-	it("'allowIpV4' parameter", () => {
-		assert.strictEqual(isIp("0.0.0.0", { allowIpV4: false }), false);
-
-		assert.strictEqual(isIp("::", { allowIpV4: false }), true);
-	});
-	it("'allowIpV6' parameter", () => {
-		assert.strictEqual(isIp("::", { allowIpV6: false }), false);
-
-		assert.strictEqual(isIp("0.0.0.0", { allowIpV6: false }), true);
-	});
 	it("'prefix' parameter", () => {
 		assert.strictEqual(isIp("::/129", { prefix: true }), false);
 		assert.strictEqual(isIp("0.0.0.0/33", { prefix: true }), false);

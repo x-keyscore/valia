@@ -42,6 +42,6 @@ export function isAsyncGenerator(x: unknown): x is AsyncGenerator {
 }
 
 // OTHER
-export function isRegex(x: unknown): x is RegExp {
+export function isRegExp(x: unknown): x is RegExp {
 	return hasTag(x, "RegExp");
 }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isIp = exports.isDigit = exports.isAlpha = exports.isAscii = exports.isEmail = exports.isDomain = exports.isDataURL = void 0;
+exports.isIpV6 = exports.isIpV4 = exports.isIp = exports.isDigit = exports.isAlpha = exports.isAscii = exports.isEmail = exports.isDomain = exports.isDataURL = void 0;
 var isDataURL_1 = require("./isDataURL");
 Object.defineProperty(exports, "isDataURL", { enumerable: true, get: function () { return isDataURL_1.isDataURL; } });
 var isDomain_1 = require("./isDomain");
@@ -15,3 +15,5 @@ var isDigit_1 = require("./isDigit");
 Object.defineProperty(exports, "isDigit", { enumerable: true, get: function () { return isDigit_1.isDigit; } });
 var isIp_1 = require("./isIp");
 Object.defineProperty(exports, "isIp", { enumerable: true, get: function () { return isIp_1.isIp; } });
+Object.defineProperty(exports, "isIpV4", { enumerable: true, get: function () { return isIp_1.isIpV4; } });
+Object.defineProperty(exports, "isIpV6", { enumerable: true, get: function () { return isIp_1.isIpV6; } });

@@ -16,6 +16,7 @@ describe("Testers string 'isDomain' function", () => {
 
 		assert.strictEqual(isDomain("foo"), true);
 		assert.strictEqual(isDomain("foo.bar.foo.bar"), true);
+		assert.strictEqual(isDomain("a--1"), true);
 		assert.strictEqual(isDomain("a-1"), true);
 		assert.strictEqual(isDomain("f-b"), true);
 		assert.strictEqual(isDomain("a.b"), true);
