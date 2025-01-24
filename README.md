@@ -1,4 +1,4 @@
-# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts) &middot; ![](https://img.shields.io/badge/ECMAScript-2018+-f7df1e)
+# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
 
 
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
@@ -281,18 +281,45 @@ const schema = new Schema({
 
 ### String
 
-|Function|Type|Description|
-|--|--|--|
-|`isAlpha` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between A and Z or a and z (%d65-%d90 / %d97-%d122)|
-|`isDigit` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between 0 and 9 (%d48-%d57)|
-|`isAscii` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are in the ascii table (%d0-%d127)|
-|`isDomain`|`(input: string \| Uint16Array) => boolean`|**Standard :** RFC 1035<br/>**Implementation version :** 1.0.0-beta|
-|`isEmail` |`(input: string \| Uint16Array, params?: IsEmailParams) => boolean`|**Standard :** RFC 5321<br/>**Implementation version :** 1.1.0-beta|
-|`isIp`    |`(input: string \| Uint16Array, params?: IsIpParams) => boolean`|**IPv4:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0<br/>**IPv6:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0|
+|Function|Description|
+|--|--|
+|`isAlpha` |Check if all characters of the string are between A and Z or a and z.|
+|`isDigit` |Check if all characters of the string are between 0 and 9.|
+|`isAscii` |Check if all characters of the string are in the ascii table.|
+|`isDomain`|**Standard :** RFC 1035<br/>**Implementation version :** 1.0.0-beta|
+|`isEmail` |**Standard :** RFC 5321<br/>**Implementation version :** 1.1.0-beta|
+|`isIp`    |See `isIpV4` and `isIpV6`|
+|`isIpV4`  |**Standard:** No standard<br/>**Implementation version :** 1.0.0|
+|`isIpV6`  |**Standard:** No standard<br/>**Implementation version :** 1.0.0|
 
+#### • `isAlpha(str:string) => boolean;`
+#### • `isDigit(str:string) => boolean;`
+#### • `isAscii(str:string) => boolean;`
+#### • `isDomain(str:string) => boolean;`
+#### • `isEmail(str:string, params: IsEmailParams) => boolean;`
+|Parameter|Description|
+|--|--|
+|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
+|`allowAddressLiteral?: boolean`|Allows an IPv4 or IPv6 address in place of the domain name.|
+#### • `isIp[V4|V6](str:string, params: IsIpParams) => boolean;`
+|Parameter|Description|
+|--|--|
+|`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
+#### • `isDataURL(str:string, params: IsDataUrlParams) => boolean;`
+|Parameter|Description|
+|--|--|
+|`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
+|`subtype?: string[]`|Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
 
+### Object
 
+#### `isObject(x: unknown): x is object`
 
+#### `isPlainObject(x: unknown): x is PlainObject`
+```ts
+type PlainObject = Record<string | symbol, unknown>;
+```
 
+#### `isArray(x: unknown): x is unknown[]`
 
 
