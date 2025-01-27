@@ -257,7 +257,7 @@ const schema = new Schema({
 ```ts
 const schema = new Schema({
   type: "array",
-  union: { type: "union", union: [{ type: "string"}, { type: "number" }]
+  item: { type: "union", union: [{ type: "string"}, { type: "number" }]
 });
 ```
 
