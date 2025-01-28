@@ -36,11 +36,11 @@ if (mySchema.guard(myData)) {
 # Schema
 
 ## Schema instance
-|Property|Type|Description|
-|--|--|--|
-|`criteria`|`MountedCriteria<VariantCriteria>`        |Property you need if you wish to use this schema in another one.|
-|`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
+|Property / Method|Description|
+|--|--|
+|`criteria`                               |Property you need if you wish to use this schema in another one.|
+|`guard(value) => boolean`                |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`check(value) => SchemaReject \| null`   |Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
 
 ```ts
 const nameFormat = new Schema({
