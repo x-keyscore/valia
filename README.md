@@ -223,7 +223,7 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`  |`"tuple"`                  |       |Type name|
-|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of tuple|
+|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of the tuple items|
 
 ```ts
 const schema = new Schema({
