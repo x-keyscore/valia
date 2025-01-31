@@ -145,16 +145,16 @@ const schema = new Schema({
 
 ### String
 
-|Property|Type|Default|Description|
+|Property|Type\|Default|Default|Description|
 |--|--|--|--|
-|`type`   |`"string"`                        |      |Type name|
-|`empty?` |`boolean`                         |`true`|If the string can be empty|
-|`min?`   |`number`                          |      |Minimum length accepted|
-|`max?`   |`number`                          |      |Maximum length accepted|
-|`enum?`  |`string[]\|Record<string, string>`|      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`regex?` |`RegExp`                          |      |A native regex|
-|`tester?`|`{ name: string, params: object}` |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
-|`custom?`|`(x: string) => boolean`          |      |Customized test function|
+|`type`   |`"string"`                        |Type name|
+|`empty?` |`boolean`\|`true`                 |If the string can be empty|
+|`min?`   |`number`                          |Minimum length accepted|
+|`max?`   |`number`                          |Maximum length accepted|
+|`enum?`  |`string[]\|Record<string, string>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`regex?` |`RegExp`                          |A native regex|
+|`tester?`|`{ name: string, params: object}` |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
+|`custom?`|`(x: string) => boolean`          |Customized test function|
 
 ```ts
 const schema = new Schema({
