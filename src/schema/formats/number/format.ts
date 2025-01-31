@@ -1,5 +1,6 @@
 import type { NumberVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
+import { isArray, isPlainObject } from "../../../testers";
 
 export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
 	defaultCriteria: {},
@@ -12,6 +13,13 @@ export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
 		}
 		else if (criteria.max !== undefined && value > criteria.max) {
 			return ("VALUE_SUPERIOR_MAX");
+		}
+		else if (criteria.enum !== undefined) {
+			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
+				return ("VALUE_NOT_IN_ENUM");
+			} else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
+				return ("VALUE_NOT_IN_ENUM");
+			}
 		}
 		else if (criteria.custom && !criteria.custom(value)) {
 			return ("TEST_CUSTOM_FAILED");

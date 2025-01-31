@@ -1,7 +1,6 @@
 import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria, VariantCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
 type RecordVariantCriteriaKeys = VariantCriteriaMap["string" | "symbol"];
 export interface RecordVariantCriteria extends VariantCriteriaTemplate<"record"> {
-    /** @default false */
     empty?: boolean;
     min?: number;
     max?: number;

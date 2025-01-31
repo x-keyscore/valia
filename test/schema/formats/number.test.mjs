@@ -26,6 +26,15 @@ describe("Schema format: 'number'", () => {
 		assert.strictEqual(schema.guard(3), true);
 		assert.strictEqual(schema.guard(2), true);
 	});
+	it("'enum' parameter", () => {
+		const schema_enum_array = new Schema({ type: "number", enum: [1, 2, 3]});
+		const schema_enum_object = new Schema({ type: "number", enum: { Red: 1, Green: 2, Blue: 3 }});
+
+		assert.strictEqual(schema_enum_array.guard(4), false);
+		assert.strictEqual(schema_enum_array.guard(3), true);
+		assert.strictEqual(schema_enum_object.guard(4), false);
+		assert.strictEqual(schema_enum_object.guard(3), true);
+	});
 	it("'custom' parameter", () => {
 		const schema = new Schema({ 
 			type: "number",

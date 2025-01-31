@@ -21,6 +21,14 @@ exports.StringFormat = {
         else if (criteria.max !== undefined && valueLength > criteria.max) {
             return ("VALUE_SUPERIOR_MAX");
         }
+        else if (criteria.enum !== undefined) {
+            if ((0, testers_1.isPlainObject)(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
+                return ("VALUE_NOT_IN_ENUM");
+            }
+            else if ((0, testers_1.isArray)(criteria.enum) && !criteria.enum.includes(value)) {
+                return ("VALUE_NOT_IN_ENUM");
+            }
+        }
         else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
             return ("VALUE_REGEX_FAILED");
         }

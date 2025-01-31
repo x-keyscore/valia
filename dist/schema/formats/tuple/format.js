@@ -32,10 +32,7 @@ exports.TupleFormat = {
             return ("TYPE_NOT_ARRAY");
         }
         const valueLength = value.length;
-        if (!valueLength) {
-            return (criteria.empty ? null : "VALUE_EMPTY");
-        }
-        else if (valueLength < criteria.tuple.length) {
+        if (valueLength < criteria.tuple.length) {
             return ("VALUE_INFERIOR_TUPLE");
         }
         else if (valueLength > criteria.tuple.length) {

@@ -4,8 +4,7 @@ import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTempla
 type RecordVariantCriteriaKeys = VariantCriteriaMap["string" | "symbol"];
 
 export interface RecordVariantCriteria extends VariantCriteriaTemplate<"record"> {
-	/** @default false */
-	empty?: boolean;
+	empty?: boolean
 	min?: number;
 	max?: number;
 	key: RecordVariantCriteriaKeys;

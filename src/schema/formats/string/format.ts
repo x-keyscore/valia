@@ -1,6 +1,7 @@
 import type { StringVariantCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { testers } from "../../../testers";
+import { isArray, isPlainFunction, isPlainObject, testers } from "../../../testers";
+import { Err } from "../../../utils";
 
 export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 	defaultCriteria: {
@@ -21,6 +22,13 @@ export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 		}
 		else if (criteria.max !== undefined && valueLength > criteria.max) {
 			return ("VALUE_SUPERIOR_MAX");
+		}
+		else if (criteria.enum !== undefined) {
+			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
+				return ("VALUE_NOT_IN_ENUM");
+			} else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
+				return ("VALUE_NOT_IN_ENUM");
+			}
 		}
 		else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
 			return ("VALUE_REGEX_FAILED");

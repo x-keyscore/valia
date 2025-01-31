@@ -13,6 +13,7 @@ export interface StringVariantCriteria extends VariantCriteriaTemplate<"string">
     max?: number;
     /** @default true */
     empty?: boolean;
+    enum?: string[] | Record<string, string>;
     regex?: RegExp;
     tester?: Testers;
     custom?: (value: string) => boolean;
@@ -22,7 +23,11 @@ export interface StringDefaultCriteria {
 }
 export interface StringConcreteTypes extends ConcreteTypesTemplate<StringVariantCriteria, StringDefaultCriteria, {}> {
 }
-type StringGuard<T extends VariantCriteria> = T extends StringVariantCriteria ? string : never;
+type StringGuard<T extends VariantCriteria> = T extends StringVariantCriteria ? T['enum'] extends string[] ? T['empty'] extends true ? T['enum'][number] | "" : T['enum'][number] : T['enum'] extends Record<string, string> ? T['empty'] extends true ? {
+    [K in keyof T['enum']]: T['enum'][K];
+}[keyof T['enum']] | "" : {
+    [K in keyof T['enum']]: T['enum'][K];
+}[keyof T['enum']] : string : never;
 export interface StringGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<StringVariantCriteria, StringGuard<T>> {
 }
 export {};

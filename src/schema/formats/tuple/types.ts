@@ -8,13 +8,7 @@ import {
 } from "../types";
 
 export interface TupleVariantCriteria extends VariantCriteriaTemplate<"tuple"> {
-	/** @default false */
-	empty?: boolean;
 	tuple: [VariantCriteria, ...VariantCriteria[]];
-}
-
-export interface TupleDefaultCriteria {
-	empty: boolean;
 }
 
 export interface TupleMountedCriteria {
@@ -23,7 +17,7 @@ export interface TupleMountedCriteria {
 
 export interface TupleConcreteTypes extends ConcreteTypesTemplate<
 	TupleVariantCriteria,
-	TupleDefaultCriteria,
+	{},
 	TupleMountedCriteria
 > {}
 

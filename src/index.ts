@@ -1,3 +1,5 @@
+import { Schema } from './schema';
+
 export {
 	Schema,
 	SchemaReject,

@@ -5,39 +5,24 @@ import { Schema } from "../../../dist/index.js";
 
 describe("Schema format: 'tuple'", () => {
 	it("basic", () => {
-		const schema = new Schema({
+		const schema_tuple_empty = new Schema({
 			type: "tuple",
-			empty: true,
-			tuple: [{ type: "string" }]
+			tuple: []
 		});
-
-		assert.strictEqual(schema.guard({}), false);
-		assert.strictEqual(schema.guard(new Uint16Array()), false);
-		assert.strictEqual(schema.guard([]), true);
-	});
-	it("'empty' parameter", () => {
-		const schema_1 = new Schema({
-			type: "tuple",
-			empty: false,
-			tuple: [{ type: "string" }]
-		});
-		const schema_2 = new Schema({
-			type: "tuple",
-			empty: true,
-			tuple: [{ type: "string" }]
-		});
-
-		assert.strictEqual(schema_1.guard([]), false);
-		assert.strictEqual(schema_2.guard([]), true);
-	});
-	it("'tuple' parameter", () => {
-		const schema = new Schema({
+		const schema_tuple_used = new Schema({
 			type: "tuple",
 			tuple: [{ type: "string" }, { type: "number" }]
 		});
 
-		assert.strictEqual(schema.guard(["foo"]), false);
-		assert.strictEqual(schema.guard(["foo", 667, "bar"]), false);
-		assert.strictEqual(schema.guard(["foo", 667]), true);
+		assert.strictEqual(schema_tuple_empty.guard({}), false);
+		assert.strictEqual(schema_tuple_empty.guard("foo"), false);
+		assert.strictEqual(schema_tuple_empty.guard(new Date()), false);
+		assert.strictEqual(schema_tuple_empty.guard(new Uint16Array()), false);
+		assert.strictEqual(schema_tuple_empty.guard([]), true);
+
+		assert.strictEqual(schema_tuple_used.guard([]), false);
+		assert.strictEqual(schema_tuple_used.guard(["foo"]), false);
+		assert.strictEqual(schema_tuple_used.guard(["foo", 667, "bar"]), false);
+		assert.strictEqual(schema_tuple_used.guard(["foo", 667]), true);
 	});
 });

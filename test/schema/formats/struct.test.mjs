@@ -5,15 +5,9 @@ import { Schema } from "../../../dist/index.js";
 
 describe("Schema format: 'struct'", () => {
 	it("basic", () => {
-		const schema = new Schema({ type: "struct", struct: {} });
-
-		assert.strictEqual(schema.guard("foo"), false);
-		assert.strictEqual(schema.guard(new Date()), false);
-		assert.strictEqual(schema.guard({}), true);
-	});
-	it("'struct' parameter", () => {
+		const schema_struct_empty = new Schema({ type: "struct", struct: {} });
 		const sym = Symbol("foo");
-		const schema = new Schema({
+		const schema_struct_used = new Schema({
 			type: "struct",
 			struct: {
 				[sym]: { type: "string" },
@@ -22,8 +16,14 @@ describe("Schema format: 'struct'", () => {
 			}
 		});
 
-		assert.strictEqual(schema.guard({ foo: "a" }), false);
-		assert.strictEqual(schema.guard({ foo: "a", bar: "b", [sym]: "c" }), true);
+		assert.strictEqual(schema_struct_empty.guard([]), false);
+		assert.strictEqual(schema_struct_empty.guard("foo"), false);
+		assert.strictEqual(schema_struct_empty.guard(new Date()), false);
+		assert.strictEqual(schema_struct_empty.guard({}), true);
+		
+		assert.strictEqual(schema_struct_used.guard({}), false);
+		assert.strictEqual(schema_struct_used.guard({ foo: "a" }), false);
+		assert.strictEqual(schema_struct_used.guard({ foo: "a", bar: "b", [sym]: "c" }), true);
 	});
 	it("'free' parameter", () => {
 		const sym = Symbol("foo");

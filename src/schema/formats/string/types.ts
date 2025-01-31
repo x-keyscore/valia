@@ -1,5 +1,6 @@
 import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
 import { testers } from "../../..";
+import { LooseAutocomplete } from "../../../types";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
   T extends (input: any, params: infer U) => any ? U : never;
@@ -18,6 +19,7 @@ export interface StringVariantCriteria extends VariantCriteriaTemplate<"string">
 	max?: number;
 	/** @default true */
 	empty?: boolean;
+	enum?: string[] | Record<string, string>;
 	regex?: RegExp;
 	tester?: Testers;
 	custom?: (value: string) => boolean;
@@ -34,7 +36,18 @@ export interface StringConcreteTypes extends ConcreteTypesTemplate<
 	{}
 > {}
 
-type StringGuard<T extends VariantCriteria> = T extends StringVariantCriteria ? string : never;
+type StringGuard<T extends VariantCriteria> =
+	T extends StringVariantCriteria 
+	? T['enum'] extends string[]
+		? T['empty'] extends true
+			? T['enum'][number] | ""
+			: T['enum'][number]
+		: T['enum'] extends Record<string, string>
+			? T['empty'] extends true
+			? { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']] | ""
+			: { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']]
+			: string
+	: never;
 
 export interface StringGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
 	StringVariantCriteria,
