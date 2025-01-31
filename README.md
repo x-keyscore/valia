@@ -145,8 +145,8 @@ const schema = new Schema({
 
 ### String
 
-|Property|Type\|Default|Default|Description|
-|--|--|--|--|
+|Property|Type\|Default|Description|
+|--|--|--|
 |`type`   |`"string"`                        |Type name|
 |`empty?` |`boolean`\|`true`                 |If the string can be empty|
 |`min?`   |`number`                          |Minimum length accepted|
