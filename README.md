@@ -5,11 +5,13 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
 ## Table of Contents
 - [Getting started](#getting-started)
 - [Schema](#schema)
-  - [Schema instance](#schema-instance)
-  - [Schema definition](#schema-definition)
+  - [Instance](#schema-instance)
+  - [Definition](#schema-definition)
 - [Testers](#testers)
   - [String](#string-1)
   - [Object](#object)
+- [Tools](#tools)
+  - [String](#string-2)
 
 ## Getting started
 ```
@@ -317,6 +319,7 @@ const schema = new Schema({
 |Parameter|Description|
 |--|--|
 |`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
+
 #### • `isDataURL(str:string, params: IsDataUrlParams) => boolean;`
 |Parameter|Description|
 |--|--|
@@ -335,6 +338,25 @@ const schema = new Schema({
 |`isAsyncFunction`         |Checks if it is an async function.|
 |`isGeneratorFunction`     |Checks if it is an generator function.|
 |`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
+
+# Tools
+
+### String
+
+|Function|Description|
+|--|--|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+
+#### • `base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true) => string`
+
+#### • `base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true) => string`
+
+#### • `base64ToBase16(input: string, from: "B64" | "B64URL" = "B64") => string`
+
+#### • `base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string`
 
 
 
