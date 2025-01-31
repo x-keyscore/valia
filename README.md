@@ -103,7 +103,7 @@ interface SchemaReject {
 [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
 
 > [!NOTE]
-> The order of property definitions is the same as during the execution of tests by the checker.
+> The order of property definitions in the arrays is the same as when executing the tests by the checker.
 
 ### Global
 
@@ -111,8 +111,8 @@ interface SchemaReject {
 |--|--|--|--|
 |`optional?`|`boolean`|`false`|Allows `undefined`|
 |`nullable?`|`boolean`|`false`|Allows `null`|
-|`label?`   |`string` |       |String that will be returned in the error. Ideal for adding your own error codes, for example.|
-|`message?` |`string` |       |String that will be returned in the error.|
+|`label?`   |`string` |       |String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
+|`message?` |`string` |       |String that will be returned in the reject object.|
 
 ```ts
 const schema = new Schema({
@@ -126,10 +126,11 @@ const schema = new Schema({
 
 |Property|Type|Default|Description|
 |--|--|--|--|
-|`type`   |`"number"`              ||Type name|
-|`min?`   |`number`                ||Minimum value accepted|
-|`max?`   |`number`                ||Maximum value accepted|
-|`custom?`|`(x: number) => boolean`||Customized test function|
+|`type`   |`"number"`                        ||Type name|
+|`min?`   |`number`                          ||Minimum value accepted|
+|`max?`   |`number`                          ||Maximum value accepted|
+|`enum?`  |`number[]\|Record<string, number>`||Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`|`(x: number) => boolean`          ||Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -146,12 +147,14 @@ const schema = new Schema({
 
 |Property|Type|Default|Description|
 |--|--|--|--|
-|`type`   |`"string"`              |      |Type name|
-|`min?`   |`number`                |      |Minimum length accepted|
-|`max?`   |`number`                |      |Maximum length accepted|
-|`empty?` |`boolean`               |`true`|If the string can be empty|
-|`regex?` |`RegExp`                |      |A native regex|
-|`custom?`|`(x: string) => boolean`|      |Customized test function|
+|`type`   |`"string"`                        |      |Type name|
+|`empty?` |`boolean`                         |`true`|If the string can be empty|
+|`min?`   |`number`                          |      |Minimum length accepted|
+|`max?`   |`number`                          |      |Maximum length accepted|
+|`enum?`  |`string[]\|Record<string, string>`|      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`regex?` |`RegExp`                          |      |A native regex|
+|`tester?`|`{ name: string, params: object}` |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
+|`custom?`|`(x: string) => boolean`          |      |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -200,9 +203,9 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`  |`"record"`                  |       |Type name|
+|`empty?`|`boolean`                   |`false`|If the object can be empty|
 |`min?`  |`number`                    |       |Minimum properties accepted|
 |`max?`  |`number`                    |       |Maximum properties accepted|
-|`empty?`|`boolean`                   |`false`|If the object can be empty|
 |`key`   |`Criteria<string \| symbol>`|       |Criteria of key|
 |`value` |`Criteria`                  |       |Criteria of value|
 
@@ -220,13 +223,11 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`  |`"tuple"`                  |       |Type name|
-|`empty?`|`boolean`                  |`false`|If the array can be empty|
-|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of tuple|
+|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of the tuple items|
 
 ```ts
 const schema = new Schema({
   type: "tuple",
-  empty: true,
   tuple: [{ type: "string" }, { type: "number" }
 });
 ```
@@ -236,9 +237,9 @@ const schema = new Schema({
 |Property|Type|Default|Description|
 |--|--|--|--|
 |`type`  |`"array"` |       |Type name|
+|`empty?`|`boolean` |`false`|If the array can be empty|
 |`min?`  |`number`  |       |Minimum items accepted|
 |`max?`  |`number`  |       |Maximum items accepted|
-|`empty?`|`boolean` |`false`|If the array can be empty|
 |`item`  |`Criteria`|       |Criteria of the array items|
 
 ```ts
