@@ -285,9 +285,8 @@ const schema = new Schema({
 
 |Function|Description|
 |--|--|
-|`isAlpha`  |Check if all characters of the string are between A and Z or a and z.|
-|`isDigit`  |Check if all characters of the string are between 0 and 9.|
-|`isAscii`  |Check if all characters of the string are in the ascii table.|
+|`isAscii`  |Check if all characters of the string are in the ASCII table.|
+|`isBase`   |**Standard:** RFC 2397|
 |`isIp`     |See `isIpV4` and `isIpV6`|
 |`isIpV4`   |**Standard:** No standard|
 |`isIpV6`   |**Standard:** No standard|
@@ -295,32 +294,30 @@ const schema = new Schema({
 |`isDomain` |**Standard :** RFC 1035|
 |`isDataURL`|**Standard:** RFC 2397|
 
-#### • `isAlpha(str:string) => boolean;`
-#### • `isDigit(str:string) => boolean;`
-#### • `isAscii(str:string) => boolean;`
-#### • `isDomain(str:string) => boolean;`
-#### • `isEmail(str:string, params: IsEmailParams) => boolean;`
-<table>
-   <tr>
-    <th width="35%">Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>allowQuotedString?: boolean</code></td>
-    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
-  </tr>
-  <tr>
-    <td><code>allowAddressLiteral?: boolean</code></td>
-    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
-  </tr>
-</table>
+```ts
+isAscii(str:string) => boolean;
 
-#### • `isIp[V4|V6](str:string, params: IsIpParams) => boolean;`
+isDomain(str:string) => boolean;
+
+isBase[64|64Url|32|32Hex|16](str: string, params?: undefined): boolean;
+
+isIp[V4|V6](str:string, params: IsIpParams) => boolean;
+```
 |Parameter|Description|
 |--|--|
 |`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
 
-#### • `isDataURL(str:string, params: IsDataUrlParams) => boolean;`
+```ts
+isEmail(str:string, params: IsEmailParams) => boolean;
+```
+|Parameter|Description|
+|--|--|
+|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
+|`allowAddressLiteral?: boolean`|Allows an IPv4 or IPv6 address in place of the domain name.|
+
+```ts
+isDataURL(str:string, params: IsDataUrlParams) => boolean;
+```
 |Parameter|Description|
 |--|--|
 |`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
@@ -350,13 +347,14 @@ const schema = new Schema({
 |`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
 |`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
 
-#### • `base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true) => string`
+```ts
+base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true) => string;
 
-#### • `base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true) => string`
+base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true) => string;
 
-#### • `base64ToBase16(input: string, from: "B64" | "B64URL" = "B64") => string`
+base64ToBase16(input: string, from: "B64" | "B64URL" = "B64") => string;
 
-#### • `base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string`
-
+base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
+```
 
 
