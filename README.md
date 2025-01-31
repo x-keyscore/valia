@@ -3,13 +3,14 @@
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
 ## Table of Contents
-- [Getting started](#getting-started)
 - [Schema](#schema)
-  - [Schema instance](#schema-instance)
-  - [Schema definition](#schema-definition)
+  - [Instance](#instance)
+  - [Definition](#definition)
 - [Testers](#testers)
   - [String](#string-1)
   - [Object](#object)
+- [Tools](#tools)
+  - [String](#string-2)
 
 ## Getting started
 ```
@@ -33,9 +34,10 @@ if (mySchema.guard(myData)) {
 }
 ```
 
+<br/><br/>
 # Schema
 
-## Schema instance
+## Instance
 |Property / Method|Description|
 |--|--|
 |`criteria`                               |Property you need if you wish to use this schema in another one.|
@@ -95,7 +97,7 @@ interface SchemaReject {
 };
 ```
 
-## Schema definition
+## Definition
 
 [Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) •
 [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
@@ -277,51 +279,66 @@ const schema = new Schema({
 });
 ```
 
+<br/><br/>
 # Testers
 
 ### String
 
 |Function|Description|
 |--|--|
-|`isAlpha`  |Check if all characters of the string are between A and Z or a and z.|
-|`isDigit`  |Check if all characters of the string are between 0 and 9.|
-|`isAscii`  |Check if all characters of the string are in the ascii table.|
-|`isIp`     |See `isIpV4` and `isIpV6`|
-|`isIpV4`   |**Standard:** No standard|
-|`isIpV6`   |**Standard:** No standard|
-|`isEmail`  |**Standard :** RFC 5321|
-|`isDomain` |**Standard :** RFC 1035|
-|`isDataURL`|**Standard:** RFC 2397|
+|`isAscii`    |Check if all characters of the string are in the ASCII table.|
+|`isIp`       |See **isIpV4** and **isIpV6**|
+|`isIpV4`     |**Standard:** No standard|
+|`isIpV6`     |**Standard:** No standard|
+|`isEmail`    |**Standard:** RFC 5321|
+|`isDomain`   |**Standard:** RFC 1035|
+|`isDataURL`  |**Standard:** RFC 2397|
+|`isUuid`     |**Standard:** RFC 9562|
+|`isBase16`   |**Standard:** RFC 4648|
+|`isBase32`   |**Standard:** RFC 4648|
+|`isBase32Hex`|**Standard:** RFC 4648|
+|`isBase64`   |**Standard:** RFC 4648|
+|`isBase64Url`|**Standard:** RFC 4648|
 
-#### • `isAlpha(str:string) => boolean;`
-#### • `isDigit(str:string) => boolean;`
-#### • `isAscii(str:string) => boolean;`
-#### • `isDomain(str:string) => boolean;`
-#### • `isEmail(str:string, params: IsEmailParams) => boolean;`
-<table>
-   <tr>
-    <th width="35%">Parameter</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>allowQuotedString?: boolean</code></td>
-    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
-  </tr>
-  <tr>
-    <td><code>allowAddressLiteral?: boolean</code></td>
-    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
-  </tr>
-</table>
+<br/>
 
-#### • `isIp[V4|V6](str:string, params: IsIpParams) => boolean;`
+```ts
+isIp(str:string, params: IsIpParams): boolean;
+```
 |Parameter|Description|
 |--|--|
 |`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
-#### • `isDataURL(str:string, params: IsDataUrlParams) => boolean;`
+
+<br/>
+
+```ts
+isEmail(str:string, params: IsEmailParams): boolean;
+```
+|Parameter|Description|
+|--|--|
+|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
+|`allowAddressLiteral?: boolean`|Allows an IPv4 or IPv6 address in place of the domain name.|
+
+<br/>
+
+```ts
+isDataURL(str:string, params: IsDataUrlParams): boolean;
+```
 |Parameter|Description|
 |--|--|
 |`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
 |`subtype?: string[]`|Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
+
+<br/>
+
+```ts
+isUuid(str: string, params?: IsUuidParams): boolean;
+```
+|Parameter|Description|
+|--|--|
+|`version?: 1\|2\|3\|4\|5\|6\|7`|The version you wish to validate. By default, all versions are validated.|
+
+<br/>
 
 ### Object
 
@@ -336,5 +353,26 @@ const schema = new Schema({
 |`isGeneratorFunction`     |Checks if it is an generator function.|
 |`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
 
+<br/><br/>
+# Tools
+
+### String
+
+|Function|Description|
+|--|--|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+
+```ts
+base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
+
+base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true): string;
+
+base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
+
+base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
+```
 
 
