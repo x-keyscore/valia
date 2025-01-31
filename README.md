@@ -124,13 +124,13 @@ const schema = new Schema({
 
 ### Number
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`   |`"number"`                        ||Type name|
-|`min?`   |`number`                          ||Minimum value accepted|
-|`max?`   |`number`                          ||Maximum value accepted|
-|`enum?`  |`number[]\|Record<string, number>`||Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`|`(x: number) => boolean`          ||Customized test function|
+|Property|Type|Description|
+|--|--|--|
+|`type`   |`"number"`                        |Type name|
+|`min?`   |`number`                          |Minimum value accepted|
+|`max?`   |`number`                          |Maximum value accepted|
+|`enum?`  |`number[]\|Record<string, number>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`|`(x: number) => boolean`          |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -180,11 +180,11 @@ const schema = new Schema({
 
 ### Struct
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`         |`"struct"`                          |       |Type name|
-|`free?`        |`Array<string \| symbol>`           |       |Array of optional keys|
-|`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
+|Property|Type|Description|
+|--|--|--|
+|`type`         |`"struct"`                          |Type name|
+|`free?`        |`Array<string \| symbol>`           |Array of optional keys|
+|`struct`       |`Record<string \| symbol, Criteria>`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
 
 ```ts
 const schema = new Schema({
@@ -220,10 +220,10 @@ const schema = new Schema({
 
 ### Tuple
 
-|Property|Type|Default|Description|
+|Property|Type|Description|
 |--|--|--|--|
-|`type`  |`"tuple"`                  |       |Type name|
-|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of the tuple items|
+|`type`  |`"tuple"`                  |Type name|
+|`tuple` |`[Criteria, ...Criteria[]]`|Criteria of the tuple items|
 
 ```ts
 const schema = new Schema({
@@ -252,10 +252,10 @@ const schema = new Schema({
 
 ### Union
 
-|Property|Type|Default|Description|
+|Property|Type|Description|
 |--|--|--|--|
-|`type`  |`"union"`                  ||Type name|
-|`union` |`[Criteria, ...Criteria[]]`||Array in which the possible criteria are listed|
+|`type`  |`"union"`                  |Type name|
+|`union` |`[Criteria, ...Criteria[]]`|Array in which the possible criteria are listed|
 
 ```ts
 const schema = new Schema({
@@ -266,10 +266,10 @@ const schema = new Schema({
 
 ### Symbol
 
-|Property|Type|Default|Description|
+|Property|Type|Description|
 |--|--|--|--|
-|`type`   |`"symbol"`||Type name|
-|`symbol?`|`symbol`  ||Symbol to check|
+|`type`   |`"symbol"`|Type name|
+|`symbol?`|`symbol`  |Symbol to check|
 
 ```ts
 const mySymbol = Symbol("enjoy");
