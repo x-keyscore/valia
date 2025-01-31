@@ -111,8 +111,8 @@ interface SchemaReject {
 |--|--|--|--|
 |`optional?`|`boolean`|`false`|Allows `undefined`|
 |`nullable?`|`boolean`|`false`|Allows `null`|
-|`label?`   |`string` |       |String that will be returned in the error. Ideal for adding your own error codes, for example.|
-|`message?` |`string` |       |String that will be returned in the error.|
+|`label?`   |`string` |       |String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
+|`message?` |`string` |       |String that will be returned in the reject object.|
 
 ```ts
 const schema = new Schema({
