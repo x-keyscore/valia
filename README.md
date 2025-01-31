@@ -1,5 +1,4 @@
-# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts) &middot; ![](https://img.shields.io/badge/ECMAScript-2018+-f7df1e)
-
+# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
 
 A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
 
@@ -10,6 +9,7 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
   - [Schema definition](#schema-definition)
 - [Testers](#testers)
   - [String](#string-1)
+  - [Object](#object)
 
 ## Getting started
 ```
@@ -36,11 +36,11 @@ if (mySchema.guard(myData)) {
 # Schema
 
 ## Schema instance
-|Property|Type|Description|
-|--|--|--|
-|`criteria`|`MountedCriteria<VariantCriteria>`        |Property you need if you wish to use this schema in another one.|
-|`guard`   |`(value: unknown) => boolean`             |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`check`   |`(value: unknown) => SchemaReject \| null`|Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
+|Property / Method|Description|
+|--|--|
+|`criteria`                               |Property you need if you wish to use this schema in another one.|
+|`guard(value) => boolean`                |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`check(value) => SchemaReject \| null`   |Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
 
 ```ts
 const nameFormat = new Schema({
@@ -257,7 +257,7 @@ const schema = new Schema({
 ```ts
 const schema = new Schema({
   type: "array",
-  union: { type: "union", union: [{ type: "string"}, { type: "number" }]
+  item: { type: "union", union: [{ type: "string"}, { type: "number" }]
 });
 ```
 
@@ -281,18 +281,60 @@ const schema = new Schema({
 
 ### String
 
-|Function|Type|Description|
-|--|--|--|
-|`isAlpha` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between A and Z or a and z (%d65-%d90 / %d97-%d122)|
-|`isDigit` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are between 0 and 9 (%d48-%d57)|
-|`isAscii` |`(input: string \| Uint16Array) => boolean`|Check if all characters of the string are in the ascii table (%d0-%d127)|
-|`isDomain`|`(input: string \| Uint16Array) => boolean`|**Standard :** RFC 1035<br/>**Implementation version :** 1.0.0-beta|
-|`isEmail` |`(input: string \| Uint16Array, params?: IsEmailParams) => boolean`|**Standard :** RFC 5321<br/>**Implementation version :** 1.1.0-beta|
-|`isIp`    |`(input: string \| Uint16Array, params?: IsIpParams) => boolean`|**IPv4:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0<br/>**IPv6:**<br/>**Standard:** No standard<br/>**Implementation version :** 1.0.0|
+|Function|Description|
+|--|--|
+|`isAlpha`  |Check if all characters of the string are between A and Z or a and z.|
+|`isDigit`  |Check if all characters of the string are between 0 and 9.|
+|`isAscii`  |Check if all characters of the string are in the ascii table.|
+|`isIp`     |See `isIpV4` and `isIpV6`|
+|`isIpV4`   |**Standard:** No standard|
+|`isIpV6`   |**Standard:** No standard|
+|`isEmail`  |**Standard :** RFC 5321|
+|`isDomain` |**Standard :** RFC 1035|
+|`isDataURL`|**Standard:** RFC 2397|
 
+#### • `isAlpha(str:string) => boolean;`
+#### • `isDigit(str:string) => boolean;`
+#### • `isAscii(str:string) => boolean;`
+#### • `isDomain(str:string) => boolean;`
+#### • `isEmail(str:string, params: IsEmailParams) => boolean;`
+<table>
+   <tr>
+    <th width="35%">Parameter</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>allowQuotedString?: boolean</code></td>
+    <td>Allows a string enclosed in quotes in the first part of the email address.</td>
+  </tr>
+  <tr>
+    <td><code>allowAddressLiteral?: boolean</code></td>
+    <td>Allows an IPv4 or IPv6 address in place of the domain name.</td>
+  </tr>
+</table>
 
+#### • `isIp[V4|V6](str:string, params: IsIpParams) => boolean;`
+|Parameter|Description|
+|--|--|
+|`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
+#### • `isDataURL(str:string, params: IsDataUrlParams) => boolean;`
+|Parameter|Description|
+|--|--|
+|`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
+|`subtype?: string[]`|Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
 
+### Object
 
+|Function|Description|
+|--|--|
+|`isObject`                |Checks if it is an object.|
+|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
+|`isArray`                 |Checks if it is an array.|
+|`isFunction`              |Checks if it is an function.|
+|`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
+|`isAsyncFunction`         |Checks if it is an async function.|
+|`isGeneratorFunction`     |Checks if it is an generator function.|
+|`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
 
 
 
