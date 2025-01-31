@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { isIp } from "../../../dist/index.js";
+import { isIp } from "../../dist/index.js";
 
 describe("Testers string 'isIp' function", () => {
 	it("basic", () => {

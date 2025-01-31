@@ -1,5 +1,5 @@
 import type { MountedCriteria, VariantCriteria } from "./formats";
-import { LibraryError } from "../utils";
+import { Err } from "../utils";
 
 type StorageKey = MountedCriteria<VariantCriteria>;
 
@@ -47,8 +47,8 @@ export class Registry {
 	 */
 	getPath(criteria: StorageKey, separator: string) {
 		let prev = this.storage.get(criteria);
-		if (!prev) throw new LibraryError(
-			"Registry getPath",
+		if (!prev) throw new Err(
+			"Registry",
 			"The criteria reference was not found in the register"
 		);
 

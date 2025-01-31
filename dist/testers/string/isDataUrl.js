@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isDataURL = isDataURL;
+exports.isDataUrl = isDataUrl;
 const utils_1 = require("../utils");
 /** @see https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
 const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
-const discreteTypePattern = "(?:text|image|audio|video|application|message|multipart)";
-const parameterPattern = "(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+=(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+|\"(?:[^\\\"\\x13]|\\\\[\\x00-\\x7F])+\"))";
-const mediatypePattern = `(?:${discreteTypePattern}\\/${ianaTokenPattern}(?:;${parameterPattern})*)`;
-const urlcharPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
-const dataUrlRegex = (0, utils_1.lazy)(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${urlcharPattern}$`));
+const discreteTypePattern = "(?:text|image|application|audio|video|message|multipart)";
+const parameterPattern = "[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+=(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+|\"(?:[^\\\"\\x13]|\\\\[\\x00-\\x7F])+\")";
+const mediatypePattern = `${discreteTypePattern}\\/${ianaTokenPattern}(?:;${parameterPattern})*`;
+const contentPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
+const dataUrlRegex = (0, utils_1.lazy)(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${contentPattern}$`));
 /**
  * **Standard :** RFC 2397
  *
@@ -19,7 +19,7 @@ const dataUrlRegex = (0, utils_1.lazy)(() => new RegExp(`^data:(?:${mediatypePat
  *
  * @version 1.0.0-beta
  */
-function isDataURL(str, params) {
+function isDataUrl(str, params) {
     if (!dataUrlRegex().test(str))
         return (false);
     if ((params === null || params === void 0 ? void 0 : params.type) || (params === null || params === void 0 ? void 0 : params.subtype)) {

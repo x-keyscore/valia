@@ -1,12 +1,7 @@
 import type { SchemaMountingTask } from "./types";
 import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "./formats";
 import { Registry, registrySymbol } from "./Registry";
-import { LibraryError } from "../utils";
-
-
-function checkCriteria(format: typeof formats, definedCriteria: VariantCriteria) {
-
-}
+import { Err } from "../utils";
 
 export function mounter<T extends VariantCriteria>(
 	definedCriteria: T
@@ -17,13 +12,13 @@ export function mounter<T extends VariantCriteria>(
 
 	registry.add(null, mountedCriteria, {
 		pathParts: ["root"]
-	})
+	});
 
 	while (queue.length > 0) {
 		const { definedCriteria, mountedCriteria } = queue.pop()!;
 
 		const format = formats[definedCriteria.type];
-		if (!format) throw new LibraryError(
+		if (!format) throw new Err(
 			"Criteria mounting",
 			"Format type '" + String(definedCriteria.type) + "' is unknown"
 		);

@@ -18,13 +18,13 @@ interface IsDataUrlParams {
 
 /** @see https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
 const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
-const discreteTypePattern = "(?:text|image|audio|video|application|message|multipart)";
-const parameterPattern = "(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+=(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+|\"(?:[^\\\"\\x13]|\\\\[\\x00-\\x7F])+\"))";
-const mediatypePattern = `(?:${discreteTypePattern}\\/${ianaTokenPattern}(?:;${parameterPattern})*)`;
+const discreteTypePattern = "(?:text|image|application|audio|video|message|multipart)";
+const parameterPattern = "[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+=(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+|\"(?:[^\\\"\\x13]|\\\\[\\x00-\\x7F])+\")";
+const mediatypePattern = `${discreteTypePattern}\\/${ianaTokenPattern}(?:;${parameterPattern})*`;
 
-const urlcharPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
+const contentPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
 
-const dataUrlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${urlcharPattern}$`));
+const dataUrlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${contentPattern}$`));
 
 /**
  * **Standard :** RFC 2397
@@ -36,7 +36,7 @@ const dataUrlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;ba
  * 
  * @version 1.0.0-beta
  */
-export function isDataURL(str: string, params?: IsDataUrlParams): boolean {
+export function isDataUrl(str: string, params?: IsDataUrlParams): boolean {
 	if (!dataUrlRegex().test(str)) return (false);
 
 	if (params?.type || params?.subtype) {

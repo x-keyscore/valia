@@ -14,15 +14,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.stringToUTF16UnitArray = exports.Schema = void 0;
+exports.base32ToBase16 = exports.base64ToBase16 = exports.base16ToBase32 = exports.base16ToBase64 = exports.Schema = void 0;
 var schema_1 = require("./schema");
 Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return schema_1.Schema; } });
 var tools_1 = require("./tools");
-Object.defineProperty(exports, "stringToUTF16UnitArray", { enumerable: true, get: function () { return tools_1.stringToUTF16UnitArray; } });
+Object.defineProperty(exports, "base16ToBase64", { enumerable: true, get: function () { return tools_1.base16ToBase64; } });
+Object.defineProperty(exports, "base16ToBase32", { enumerable: true, get: function () { return tools_1.base16ToBase32; } });
+Object.defineProperty(exports, "base64ToBase16", { enumerable: true, get: function () { return tools_1.base64ToBase16; } });
+Object.defineProperty(exports, "base32ToBase16", { enumerable: true, get: function () { return tools_1.base32ToBase16; } });
 __exportStar(require("./testers"), exports);
-/*
-const start = performance.now();
-const end = performance.now();
-const timeTaken = end - start;
-console.log(`Execution Time: ${timeTaken.toFixed(2)} ms`);
-*/ 

@@ -5,9 +5,14 @@ import { Schema } from "../../dist/index.js";
 
 describe("Schema instance", () => {
 	it("'check()' method", () => {
-		const stringSchema = new Schema({ type: "string" });
+		const stringSchema = new Schema({
+			type: "string",
+			label: "test_label",
+			message: "test_message"
+		});
 		const structSchema = new Schema({
 			type: "struct",
+			
 			struct: {
 				bar: stringSchema.criteria
 			}
@@ -18,13 +23,13 @@ describe("Schema instance", () => {
 				foo: structSchema.criteria
 			}
 		});
-		
+
 		assert.deepStrictEqual(rootschema.check({ foo: { bar: 1 } }), {
 			code: "REJECT_TYPE_NOT_STRING",
 			type: "string",
 			path: "root.struct.foo.struct.bar",
-			label: undefined,
-			message: undefined
+			label: "test_label",
+			message: "test_message"
 		});
 	});
 	it("'guard()' method", () => {

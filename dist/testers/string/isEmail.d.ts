@@ -1,9 +1,5 @@
 interface IsEmailParams {
-    /**
-     * **Warning:** Enabling this parameter allows xss attacks
-     *
-     * **Default:** `false`
-     */
+    /** **Default:** `false` */
     allowQuotedString?: boolean;
     /** **Default:** `false` */
     allowAddressLiteral?: boolean;

@@ -3,11 +3,7 @@ import { isDomain } from "./isDomain";
 import { ipV4Pattern, IPv6Pattern } from "./isIp";
 
 interface IsEmailParams {
-	/**
-	 * **Warning:** Enabling this parameter allows xss attacks
-	 * 
-	 * **Default:** `false`
-	 */
+	/** **Default:** `false` */
 	allowQuotedString?: boolean;
 	/** **Default:** `false` */
 	allowAddressLiteral?: boolean;
@@ -26,9 +22,10 @@ function splitEmail(str: string) {
 	const arrayLength = str.length;
 
 	// FIND SYMBOL INDEX
-	let i = 0;
-	while (i < arrayLength && str[i] !== "@") {
-		i++;
+	// /!\ Starts from the end because the local part allows "@" in quoted strings.
+	let i = arrayLength - 1;
+	while (i >= 0 && str[i] !== "@") {
+		i--;
 	}
 
 	// CHECK SYMBOL CHAR

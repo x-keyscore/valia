@@ -39,7 +39,7 @@ exports.IPv6Pattern = "(?:" +
     `(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
     `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
     `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
-    `(?::(?:(?::${ipV6Seg}){0,5}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,7}|:))` + ")(?:%[0-9a-zA-Z-.:]{1,})?";
+    `(?::(?:(?::${ipV6Seg}){0,5}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
 const ipV6PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
 const ipV6SimpleRegex = new RegExp(`^${exports.IPv6Pattern}$`);
 /**

@@ -13,9 +13,10 @@ const domainPartAddressRegex = (0, utils_1.lazy)(() => new RegExp(`^\\[(?:IPv6:$
 function splitEmail(str) {
     const arrayLength = str.length;
     // FIND SYMBOL INDEX
-    let i = 0;
-    while (i < arrayLength && str[i] !== "@") {
-        i++;
+    // /!\ Starts from the end because the local part allows "@" in quoted strings.
+    let i = arrayLength - 1;
+    while (i >= 0 && str[i] !== "@") {
+        i--;
     }
     // CHECK SYMBOL CHAR
     if (str[i] !== "@")

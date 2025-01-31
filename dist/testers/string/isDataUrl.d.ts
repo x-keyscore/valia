@@ -23,5 +23,5 @@ interface IsDataUrlParams {
  *
  * @version 1.0.0-beta
  */
-export declare function isDataURL(str: string, params?: IsDataUrlParams): boolean;
+export declare function isDataUrl(str: string, params?: IsDataUrlParams): boolean;
 export {};

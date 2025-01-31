@@ -1,8 +1,7 @@
-/**
- * @param str string
- * @returns Returns a `Uint16Array` containing the unicode values ​​of each character in the string `str`,
- * if a character exceeds the 16-bit unit then it is encoded on two units.
- */
-export declare function stringToUTF16UnitArray(str: string): Uint16Array<ArrayBuffer>;
-export declare function getUTF8ByteLengthByCodePoint(codePoint: number): number;
-export declare function getUTF8ByteLengthByUTF16UnitArray(utf16UnitArray: Uint16Array): number;
+export declare function base16ToBase64(input: string, padding?: boolean): string;
+export declare function base16ToBase64Url(input: string, padding?: boolean): string;
+export declare function base16ToBase32(input: string, padding?: boolean): string;
+export declare function base16ToBase32Hex(input: string, padding?: boolean): string;
+export declare function convertBase64ToBase16(input: string, base64: string): string;
+export declare function convertBase32ToBase16(input: string, base32: string): string;
+export declare function base64ToBase16(input: string): string;

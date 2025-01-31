@@ -1,4 +1,4 @@
-export class LibraryError extends Error {
+export class Err extends Error {
 	printError(context: string) {
 		const timestamp = new Date().toISOString();
 

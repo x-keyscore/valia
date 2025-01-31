@@ -5,8 +5,6 @@ exports.isMountedCriteria = isMountedCriteria;
 const formats_1 = require("./formats");
 const Registry_1 = require("./Registry");
 const utils_1 = require("../utils");
-function checkCriteria(format, definedCriteria) {
-}
 function mounter(definedCriteria) {
     const registry = new Registry_1.Registry();
     let mountedCriteria = {};
@@ -18,7 +16,7 @@ function mounter(definedCriteria) {
         const { definedCriteria, mountedCriteria } = queue.pop();
         const format = formats_1.formats[definedCriteria.type];
         if (!format)
-            throw new utils_1.LibraryError("Criteria mounting", "Format type '" + String(definedCriteria.type) + "' is unknown");
+            throw new utils_1.Err("Criteria mounting", "Format type '" + String(definedCriteria.type) + "' is unknown");
         Object.assign(mountedCriteria, formats_1.defaultVariantCriteria, format.defaultCriteria, definedCriteria);
         if (format.mounting)
             format.mounting(queue, registry, definedCriteria, mountedCriteria);

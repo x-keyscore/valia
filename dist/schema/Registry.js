@@ -35,7 +35,7 @@ class Registry {
     getPath(criteria, separator) {
         let prev = this.storage.get(criteria);
         if (!prev)
-            throw new utils_1.LibraryError("Registry getPath", "The criteria reference was not found in the register");
+            throw new utils_1.Err("Registry", "The criteria reference was not found in the register");
         let fullPath = prev.data.pathParts.join(separator);
         while (prev.prev) {
             prev = this.storage.get(prev.prev);

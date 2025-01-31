@@ -1,5 +1,3 @@
-import { stringToUTF16UnitArray } from "../../tools";
-
 /**
  * @returns Check if all characters of the string are in the ascii table (%d0-%d127).
  * Empty returns false.

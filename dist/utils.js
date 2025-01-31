@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LibraryError = void 0;
-class LibraryError extends Error {
+exports.Err = void 0;
+class Err extends Error {
     printError(context) {
         const timestamp = new Date().toISOString();
         const red = '\x1b[31m';
@@ -18,4 +18,4 @@ class LibraryError extends Error {
         this.printError(context);
     }
 }
-exports.LibraryError = LibraryError;
+exports.Err = Err;

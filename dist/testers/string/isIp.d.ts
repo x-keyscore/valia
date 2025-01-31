@@ -21,11 +21,10 @@
  */
 interface IsIpParams {
     /**
-     * Indicates whether the input is in CIDR* notation (e.g., `192.168.0.1/22`).
+     * Must have a prefix at the end of the IP address indicating the subnet mask
+     * (e.g., `192.168.0.1/22`).
      *
      * **Default:** `false`
-     *
-     * *Classless Inter-Domain Routing
      */
     prefix?: boolean;
 }

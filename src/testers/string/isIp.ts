@@ -24,11 +24,10 @@ import { lazy } from "../utils";
 
 interface IsIpParams {
 	/**
-	 * Indicates whether the input is in CIDR* notation (e.g., `192.168.0.1/22`).
+	 * Must have a prefix at the end of the IP address indicating the subnet mask
+	 * (e.g., `192.168.0.1/22`).
 	 * 
 	 * **Default:** `false`
-	 * 
-	 * *Classless Inter-Domain Routing
 	 */
 	prefix?: boolean;
 }
@@ -48,7 +47,7 @@ export const IPv6Pattern = "(?:" +
 	`(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
 	`(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
 	`(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
-	`(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:))` + ")(?:%[0-9a-zA-Z-.:]{1,})?";
+	`(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
 
 const ipV6PrefixRegex = lazy(() =>new RegExp(`^${IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
 const ipV6SimpleRegex = new RegExp(`^${IPv6Pattern}$`);

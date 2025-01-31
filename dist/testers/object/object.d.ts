@@ -2,6 +2,7 @@ import type { PlainObject, PlainFunction, AsyncFunction } from "../types";
 export declare function isObject(x: unknown): x is object;
 export declare function isPlainObject(x: unknown): x is PlainObject;
 export declare function isArray(x: unknown): x is unknown[];
+export declare function isFunction(x: unknown): x is Function;
 export declare function isPlainFunction(x: unknown): x is PlainFunction;
 export declare function isAsyncFunction(x: unknown): x is AsyncFunction;
 export declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;

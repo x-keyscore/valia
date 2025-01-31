@@ -46,11 +46,11 @@ export function checker(
 
 		if (value === null) {
 			if (criteria.nullable) continue;
-			reject(registry, criteria, "TYPE_NULL");
+			return (reject(registry, criteria, "TYPE_NULL"));
 		}
 		else if (value === undefined) {
 			if (criteria.optional) continue;
-			reject(registry, criteria, "TYPE_UNDEFINED");
+			return (reject(registry, criteria, "TYPE_UNDEFINED"));
 		}
 
 		const format = formats[criteria.type];

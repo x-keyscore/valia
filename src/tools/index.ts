@@ -1,5 +1,6 @@
 export {
-	stringToUTF16UnitArray,
-	getUTF8ByteLengthByCodePoint,
-	getUTF8ByteLengthByUTF16UnitArray
-} from './strings'
+	base16ToBase64,
+	base16ToBase32,
+	base64ToBase16,
+	base32ToBase16
+} from './string'
