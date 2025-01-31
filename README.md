@@ -286,18 +286,18 @@ const schema = new Schema({
 
 |Function|Description|
 |--|--|
-|isAscii  |Check if all characters of the string are in the ASCII table.|
-|isIp     |See **isIpV4** and **isIpV6**|
-|isIpV4   |**Standard:** No standard|
-|isIpV6   |**Standard:** No standard|
-|isEmail  |**Standard:** RFC 5321|
-|isDomain |**Standard:** RFC 1035|
-|isDataURL|**Standard:** RFC 2397|
-|isBase16   |**Standard:** RFC 4648|
-|isBase32   |**Standard:** RFC 4648|
-|isBase32Hex|**Standard:** RFC 4648|
-|isBase64   |**Standard:** RFC 4648|
-|isBase64Url|**Standard:** RFC 4648|
+|`isAscii`    |Check if all characters of the string are in the ASCII table.|
+|`isIp`       |See **isIpV4** and **isIpV6**|
+|`isIpV4`     |**Standard:** No standard|
+|`isIpV6`     |**Standard:** No standard|
+|`isEmail`    |**Standard:** RFC 5321|
+|`isDomain`   |**Standard:** RFC 1035|
+|`isDataURL`  |**Standard:** RFC 2397|
+|`isBase16`   |**Standard:** RFC 4648|
+|`isBase32`   |**Standard:** RFC 4648|
+|`isBase32Hex`|**Standard:** RFC 4648|
+|`isBase64`   |**Standard:** RFC 4648|
+|`isBase64Url`|**Standard:** RFC 4648|
 
 <br/>
 
@@ -334,14 +334,14 @@ isDataURL(str:string, params: IsDataUrlParams) => boolean;
 
 |Function|Description|
 |--|--|
-|isObject                |Checks if it is an object.|
-|isPlainObject           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
-|isArray                 |Checks if it is an array.|
-|isFunction              |Checks if it is an function.|
-|isPlainFunction         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
-|isAsyncFunction         |Checks if it is an async function.|
-|isGeneratorFunction     |Checks if it is an generator function.|
-|isAsyncGeneratorFunction|Checks if it is an async generator function.|
+|`isObject`                |Checks if it is an object.|
+|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
+|`isArray`                 |Checks if it is an array.|
+|`isFunction`              |Checks if it is an function.|
+|`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
+|`isAsyncFunction`         |Checks if it is an async function.|
+|`isGeneratorFunction`     |Checks if it is an generator function.|
+|`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
 
 <br/><br/>
 # Tools
@@ -350,10 +350,10 @@ isDataURL(str:string, params: IsDataUrlParams) => boolean;
 
 |Function|Description|
 |--|--|
-|base16ToBase64|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
-|base16ToBase32|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
-|base64ToBase16|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
-|base32ToBase16|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
 
 ```ts
 base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true) => string;
