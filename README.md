@@ -293,6 +293,7 @@ const schema = new Schema({
 |`isEmail`    |**Standard:** RFC 5321|
 |`isDomain`   |**Standard:** RFC 1035|
 |`isDataURL`  |**Standard:** RFC 2397|
+|`isUuid`     |**Standard:** RFC 9562|
 |`isBase16`   |**Standard:** RFC 4648|
 |`isBase32`   |**Standard:** RFC 4648|
 |`isBase32Hex`|**Standard:** RFC 4648|
@@ -302,7 +303,7 @@ const schema = new Schema({
 <br/>
 
 ```ts
-isIp(str:string, params: IsIpParams) => boolean;
+isIp(str:string, params: IsIpParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
@@ -311,7 +312,7 @@ isIp(str:string, params: IsIpParams) => boolean;
 <br/>
 
 ```ts
-isEmail(str:string, params: IsEmailParams) => boolean;
+isEmail(str:string, params: IsEmailParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
@@ -321,12 +322,21 @@ isEmail(str:string, params: IsEmailParams) => boolean;
 <br/>
 
 ```ts
-isDataURL(str:string, params: IsDataUrlParams) => boolean;
+isDataURL(str:string, params: IsDataUrlParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
 |`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
 |`subtype?: string[]`|Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
+
+<br/>
+
+```ts
+isUuid(str: string, params?: IsUuidParams): boolean;
+```
+|Parameter|Description|
+|--|--|
+|`version?: 1\|2\|3\|4\|5\|6\|7`|The version you wish to validate. By default, all versions are validated.|
 
 <br/>
 
@@ -356,11 +366,11 @@ isDataURL(str:string, params: IsDataUrlParams) => boolean;
 |`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
 
 ```ts
-base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true) => string;
+base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
 
-base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true) => string;
+base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true): string;
 
-base64ToBase16(input: string, from: "B64" | "B64URL" = "B64") => string;
+base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
 
 base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
 ```
