@@ -1,6 +1,13 @@
 # VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
 
-A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.
+Runtime data validator witten in TypeScript.
+
+⚡ **Powerful and Smart Validation** – Seamlessly integrates into **server** and **client** environments.
+
+🧠 **Advanced Type Inference** – With advanced type inference, you can retrieve a type that strictly adheres to your schema definition. Combined with **Type Guards**,
+this ensures that the validated data’s type is **precisely inferred**, allowing you to handle your data **safely and reliably** across your application.
+
+📦 **Built-in Validation** – Standard functions like `isEmail`, `isUuid`, and more to handle common validation needs effortlessly, while ensuring industry-standard compliance, saving you from writing tedious custom validators 🚀.
 
 ## Table of Contents
 - [Schema](#schema)
@@ -17,20 +24,32 @@ A powerful, flexible, and high-performance TypeScript validator for runtime data
 npm install vali.ts
 ```
 ```ts
-import { Schema } from 'vali.ts';
+import { Schema, SchemaInfer } from 'vali.ts';
 
-const mySchema = new Schema({ 
+const userSchema = new Schema({ 
   type: "struct",
   struct: {
     name: { type: "string" },
-    age: { type: "number", min: 13, max: 128 }
+    role: {
+        type: "string",
+        enum: ["ADMIN", "WORKER", "CUSTOMER"]
+    }
   }
 });
 
-let myData: unknown = { name: "Tintin", age: 63 };
+type UserSchema = SchemaInfer<typeof userSchema>;
 
-if (mySchema.guard(myData)) {
-  console.log(myData.name);// Type safe
+let data: unknown = { name: "Tintin", role: "ADMIN" };
+
+if (userSchema.guard(data, (reject) => console.log(reject))) {
+    /*
+    The data type is now:
+    data: {
+        name: string;
+        role: "ADMIN" | "WORKER" | "CUSTOMER";
+    }
+    */
+    console.log(data);
 }
 ```
 
@@ -40,10 +59,29 @@ if (mySchema.guard(myData)) {
 ## Instance
 |Property / Method|Description|
 |--|--|
-|`criteria`                               |Property you need if you wish to use this schema in another one.|
-|`guard(value) => boolean`                |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`check(value) => SchemaReject \| null`   |Method that returns [`SchemaReject`](#schemareject) if the value is rejected, otherwise `null`.|
+|`criteria`|Property you need if you wish to use this schema in another one.|
+|`guard()` |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`check()` |Method that returns `SchemaReject` if the value is rejected, otherwise `null`.|
 
+```ts
+guard(value, rejectCallback?: (reject: SchemaReject) => void) => boolean;
+check(value) => SchemaReject | null;
+```
+```ts
+interface SchemaReject {
+  /** `REJECT_<CATEGORY>_<DETAIL>` */
+  code: string;
+  type: string;
+  path: string;
+  label: string | undefined;
+  message: string | undefined;
+};
+```
+
+#### Exemple :
+> [!NOTE]
+> The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
+> This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.
 ```ts
 const nameFormat = new Schema({
   label: "NAME_FORMAT",
@@ -51,6 +89,7 @@ const nameFormat = new Schema({
   min: 3,
   max: 32
 });
+
 const ageFormat = new Schema({
   label: "AGE_FORMAT",
   type: "number",
@@ -66,15 +105,13 @@ const userSchema = new Schema({
   }
 });
 
-let myData: unknown = { name: "Waitron", age: 200 };
+let data: unknown = { name: "Waitron", age: 200 };
 
-const reject = userSchema.check(myData);
+const reject = userSchema.check(data);
 
 console.log(reject);
 ```
-> [!NOTE]
-> The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
-> This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.
+
 ```
 {
   code: 'REJECT_VALUE_SUPERIOR_MAX',
@@ -85,17 +122,7 @@ console.log(reject);
 }
 ```
 
-#### `SchemaReject`
-```ts
-interface SchemaReject {
-  /** `REJECT_<CATEGORY>_<DETAIL>` */
-  code: string;
-  type: string;
-  path: string;
-  label: string | undefined;
-  message: string | undefined;
-};
-```
+
 
 ## Definition
 
@@ -109,10 +136,10 @@ interface SchemaReject {
 
 |Property|Type|Default|Description|
 |--|--|--|--|
-|`optional?`|`boolean`|`false`|Allows `undefined`|
-|`nullable?`|`boolean`|`false`|Allows `null`|
-|`label?`   |`string` |       |String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
-|`message?` |`string` |       |String that will be returned in the reject object.|
+|`nullable?`   |`boolean`|`false`|Allows `null`|
+|`undefinable?`|`boolean`|`false`|Allows `undefined`|
+|`label?`      |`string` |       |String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
+|`message?`    |`string` |       |String that will be returned in the reject object.|
 
 ```ts
 const schema = new Schema({
@@ -124,13 +151,13 @@ const schema = new Schema({
 
 ### Number
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`   |`"number"`                        ||Type name|
-|`min?`   |`number`                          ||Minimum value accepted|
-|`max?`   |`number`                          ||Maximum value accepted|
-|`enum?`  |`number[]\|Record<string, number>`||Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`|`(x: number) => boolean`          ||Customized test function|
+|Property<br/><img width="auto"/>|Type<br/><img width="310"/>|Description<br/><img width="auto"/>|
+|--|--|--|
+|`type`   |`"number"`                        |Type name|
+|`min?`   |`number`                          |Minimum value accepted|
+|`max?`   |`number`          |Maximum value accepted|
+|`enum?`  |`number[]\|Record<string, number>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`|`(x: number) => boolean`          |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -145,7 +172,7 @@ const schema = new Schema({
 
 ### String
 
-|Property|Type|Default|Description|
+|Property<br/><img width="auto"/>|Type<img width="320"/>|Default<br/><img width="auto"/>|Description<br/><img width="auto"/>|
 |--|--|--|--|
 |`type`   |`"string"`                        |      |Type name|
 |`empty?` |`boolean`                         |`true`|If the string can be empty|
@@ -180,16 +207,16 @@ const schema = new Schema({
 
 ### Struct
 
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`         |`"struct"`                          |       |Type name|
-|`free?`        |`Array<string \| symbol>`           |       |Array of optional keys|
-|`struct`       |`Record<string \| symbol, Criteria>`|       |The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
+|Property|Type|Description|
+|--|--|--|
+|`type`         |`"struct"`                          |Type name|
+|`optional?`        |`Array<string \| symbol>`           |Array of optional keys|
+|`struct`       |`Record<string \| symbol, Criteria>`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
 
 ```ts
 const schema = new Schema({
   type: "struct",
-  free: ["description"],
+  optional: ["description"],
   struct: {
     fistname: { type: "string" },
     lastname: { type: "string" },
@@ -222,8 +249,8 @@ const schema = new Schema({
 
 |Property|Type|Default|Description|
 |--|--|--|--|
-|`type`  |`"tuple"`                  |       |Type name|
-|`tuple` |`[Criteria, ...Criteria[]]`|       |Criteria of the tuple items|
+|`type`  |`"tuple"`                  ||Type name|
+|`tuple` |`[Criteria, ...Criteria[]]`||Criteria of the tuple items|
 
 ```ts
 const schema = new Schema({
@@ -346,7 +373,7 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 |Function|Description|
 |--|--|
 |`isObject`                |Checks if it is an object.|
-|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
+|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a `RegExp` object.|
 |`isArray`                 |Checks if it is an array.|
 |`isFunction`              |Checks if it is an function.|
 |`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
@@ -361,10 +388,10 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 
 |Function|Description|
 |--|--|
-|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
 
 ```ts
 base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
