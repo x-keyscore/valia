@@ -8,7 +8,7 @@ import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
 import type { SchemaCheckingTask, SchemaMountingTask } from "../types";
-import { RegistryInstance,registrySymbol } from "../Registry";
+import { MapperInstance, mapperSymbol } from "../Mapper";
 import { formats } from "./formats";
 
 // VARIANT CRITERIA
@@ -23,9 +23,9 @@ export interface VariantCriteriaTemplate<T extends string> {
 	label?: string;
 	message?: string;
 	/** @default false */
-	optional?: boolean;
-	/** @default false */
 	nullable?: boolean;
+	/** @default false */
+	undefinable?: boolean;
 }
 
 // FORMATS CONCRET TYPES
@@ -103,12 +103,12 @@ export type FormatsGenericTypesMap<T extends VariantCriteria> = {
 // FORMATS CRITERIA
 
 export interface DefaultVariantCriteria {
-	optional: boolean;
 	nullable: boolean;
+	undefinable: boolean;
 }
 
 export interface DefaultMountedCriteria {
-	[registrySymbol]: RegistryInstance
+	[mapperSymbol]: MapperInstance
 }
 
 export type VariantCriteria = {
@@ -154,7 +154,7 @@ export type FormatTemplate<
 	defaultCriteria: DefaultCriteria<T>;
 	mounting?(
 		queue: SchemaMountingTask[],
-		registry: RegistryInstance,
+		mapper: MapperInstance,
 		definedCriteria: T,
         mountedCriteria: MountedCriteria<T>
 	): void;

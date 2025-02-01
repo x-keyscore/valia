@@ -25,11 +25,11 @@ describe("Schema format: 'struct'", () => {
 		assert.strictEqual(schema_struct_used.guard({ foo: "a" }), false);
 		assert.strictEqual(schema_struct_used.guard({ foo: "a", bar: "b", [sym]: "c" }), true);
 	});
-	it("'free' parameter", () => {
+	it("'optional' property", () => {
 		const sym = Symbol("foo");
 		const schema = new Schema({
 			type: "struct",
-			free: ["foo", sym],
+			optional: ["foo", sym],
 			struct: {
 				[sym]: { type: "number" },
 				foo: { type: "number" },

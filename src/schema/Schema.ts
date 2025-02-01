@@ -71,8 +71,9 @@ export class Schema<const T extends VariantCriteria> {
 	 * }
 	 * ```
 	 */
-	guard(value: unknown): value is FormatsGuard<T> {
+	guard(value: unknown, rejectCallback?: (reject: SchemaReject) => void): value is FormatsGuard<T> {
 		const reject = checker(this.criteria, value);
+		if (reject && rejectCallback) rejectCallback(reject);
 		return (!reject);
 	}
 

@@ -50,8 +50,10 @@ class Schema {
      * }
      * ```
      */
-    guard(value) {
+    guard(value, rejectCallback) {
         const reject = (0, checker_1.checker)(this.criteria, value);
+        if (reject && rejectCallback)
+            rejectCallback(reject);
         return (!reject);
     }
     /**

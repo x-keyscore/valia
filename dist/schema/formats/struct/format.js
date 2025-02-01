@@ -5,23 +5,23 @@ const mounter_1 = require("../../mounter");
 const testers_1 = require("../../../testers");
 exports.StructFormat = {
     defaultCriteria: {},
-    mounting(queue, register, definedCriteria, mountedCriteria) {
+    mounting(queue, mapper, definedCriteria, mountedCriteria) {
         const validKeys = Reflect.ownKeys(definedCriteria.struct);
-        const freeKeys = definedCriteria.free;
+        const optionalKeys = definedCriteria.optional;
         Object.assign(mountedCriteria, {
             validKeys: validKeys,
-            requiredKeys: freeKeys ? validKeys.filter(key => !freeKeys.includes(key)) : validKeys
+            requiredKeys: optionalKeys ? validKeys.filter(key => !optionalKeys.includes(key)) : validKeys
         });
         for (let i = 0; i < validKeys.length; i++) {
             const key = validKeys[i];
             if ((0, mounter_1.isMountedCriteria)(definedCriteria.struct[key])) {
-                register.merge(mountedCriteria, definedCriteria.struct[key], {
+                mapper.merge(mountedCriteria, definedCriteria.struct[key], {
                     pathParts: ["struct", key.toString()]
                 });
                 mountedCriteria.struct[key] = definedCriteria.struct[key];
             }
             else {
-                register.add(mountedCriteria, mountedCriteria.struct[key], {
+                mapper.add(mountedCriteria, mountedCriteria.struct[key], {
                     pathParts: ["struct", key.toString()]
                 });
                 queue.push({

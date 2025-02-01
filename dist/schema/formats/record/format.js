@@ -8,15 +8,15 @@ exports.RecordFormat = {
     defaultCriteria: {
         empty: false
     },
-    mounting(queue, register, definedCriteria, mountedCriteria) {
+    mounting(queue, mapper, definedCriteria, mountedCriteria) {
         if ((0, mounter_1.isMountedCriteria)(definedCriteria.key)) {
-            register.merge(mountedCriteria, definedCriteria.key, {
+            mapper.merge(mountedCriteria, definedCriteria.key, {
                 pathParts: ["key"]
             });
             mountedCriteria.key = definedCriteria.key;
         }
         else {
-            register.add(mountedCriteria, mountedCriteria.key, {
+            mapper.add(mountedCriteria, mountedCriteria.key, {
                 pathParts: ["key"]
             });
             queue.push({
@@ -25,12 +25,12 @@ exports.RecordFormat = {
             });
         }
         if ((0, mounter_1.isMountedCriteria)(definedCriteria.value)) {
-            register.merge(mountedCriteria, definedCriteria.value, {
+            mapper.merge(mountedCriteria, definedCriteria.value, {
                 pathParts: ["value"]
             });
         }
         else {
-            register.add(mountedCriteria, mountedCriteria.value, {
+            mapper.add(mountedCriteria, mountedCriteria.value, {
                 pathParts: ["value"]
             });
             queue.push({

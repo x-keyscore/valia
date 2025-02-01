@@ -7,17 +7,17 @@ export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
-	mounting(queue, register, definedCriteria, mountedCriteria) {
+	mounting(queue, mapper, definedCriteria, mountedCriteria) {
 		for (let i = 0; i < definedCriteria.union.length; i++) {
 			const definedCriteriaItem = definedCriteria.union[i];
 
 			if (isMountedCriteria(definedCriteriaItem)) {
-				register.merge(mountedCriteria, definedCriteriaItem, {
+				mapper.merge(mountedCriteria, definedCriteriaItem, {
 					pathParts: [`union[${i}]`]
 				});
 				mountedCriteria.union[i] = definedCriteriaItem;
 			} else {
-				register.add(mountedCriteria, mountedCriteria.union[i], {
+				mapper.add(mountedCriteria, mountedCriteria.union[i], {
 					pathParts: [`union[${i}]`]
 				});
 				queue.push({

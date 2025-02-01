@@ -61,7 +61,7 @@ export declare class Schema<const T extends VariantCriteria> {
      * }
      * ```
      */
-    guard(value: unknown): value is FormatsGuard<T>;
+    guard(value: unknown, rejectCallback?: (reject: SchemaReject) => void): value is FormatsGuard<T>;
     /**
      * @param value Data to be validated
      *

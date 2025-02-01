@@ -3,13 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mounter = mounter;
 exports.isMountedCriteria = isMountedCriteria;
 const formats_1 = require("./formats");
-const Registry_1 = require("./Registry");
+const Mapper_1 = require("./Mapper");
 const utils_1 = require("../utils");
 function mounter(definedCriteria) {
-    const registry = new Registry_1.Registry();
     let mountedCriteria = {};
     let queue = [{ definedCriteria, mountedCriteria }];
-    registry.add(null, mountedCriteria, {
+    const mapper = new Mapper_1.Mapper(mountedCriteria, {
         pathParts: ["root"]
     });
     while (queue.length > 0) {
@@ -19,14 +18,14 @@ function mounter(definedCriteria) {
             throw new utils_1.Err("Criteria mounting", "Format type '" + String(definedCriteria.type) + "' is unknown");
         Object.assign(mountedCriteria, formats_1.defaultVariantCriteria, format.defaultCriteria, definedCriteria);
         if (format.mounting)
-            format.mounting(queue, registry, definedCriteria, mountedCriteria);
+            format.mounting(queue, mapper, definedCriteria, mountedCriteria);
+        Object.assign(mountedCriteria, {
+            [Mapper_1.mapperSymbol]: mapper
+        });
     }
-    Object.assign(mountedCriteria, {
-        [Registry_1.registrySymbol]: registry
-    });
     return (mountedCriteria);
 }
 ;
 function isMountedCriteria(criteria) {
-    return (Reflect.has(criteria, Registry_1.registrySymbol));
+    return (Reflect.has(criteria, Mapper_1.mapperSymbol));
 }

@@ -1,17 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Registry = exports.registrySymbol = void 0;
+exports.Mapper = exports.mapperSymbol = void 0;
 const utils_1 = require("../utils");
-exports.registrySymbol = Symbol('registry');
-class Registry {
-    constructor() {
-        this.storage = new Map();
+exports.mapperSymbol = Symbol('mapper');
+class Mapper {
+    constructor(rootCriteria, data) {
+        this.references = new Map();
+        this.references.set(rootCriteria, {
+            prev: null,
+            data
+        });
     }
     /**
-     * Add a new criteria node to the registry.
+     * Add a new criteria node to the mapper.
      */
     add(prevCriteria, currCriteria, data) {
-        this.storage.set(currCriteria, {
+        this.references.set(currCriteria, {
             prev: prevCriteria,
             data
         });
@@ -20,9 +24,9 @@ class Registry {
      * Merging an unmounted criteria node with a mounted criteria node.
      */
     merge(prevCriteria, currCriteria, data) {
-        const sourceRegisterStorage = currCriteria[exports.registrySymbol].storage;
-        this.storage = new Map([...this.storage, ...sourceRegisterStorage]);
-        this.storage.set(currCriteria, {
+        const sourceReferences = currCriteria[exports.mapperSymbol].references;
+        this.references = new Map([...this.references, ...sourceReferences]);
+        this.references.set(currCriteria, {
             prev: prevCriteria,
             data
         });
@@ -33,12 +37,12 @@ class Registry {
      * @returns The path
      */
     getPath(criteria, separator) {
-        let prev = this.storage.get(criteria);
+        let prev = this.references.get(criteria);
         if (!prev)
-            throw new utils_1.Err("Registry", "The criteria reference was not found in the register");
+            throw new utils_1.Err("Registry", "The criteria reference was not found in the mapper.");
         let fullPath = prev.data.pathParts.join(separator);
         while (prev.prev) {
-            prev = this.storage.get(prev.prev);
+            prev = this.references.get(prev.prev);
             if (!prev)
                 break;
             fullPath = prev.data.pathParts.join(separator) + separator + fullPath;
@@ -46,4 +50,4 @@ class Registry {
         return (fullPath);
     }
 }
-exports.Registry = Registry;
+exports.Mapper = Mapper;

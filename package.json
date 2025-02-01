@@ -1,7 +1,7 @@
 {
   "name": "vali.ts",
   "version": "2.1.0",
-  "description": "A powerful, flexible, and high-performance TypeScript validator for runtime data validation and type safety.",
+  "description": "A runtime data validator in TypeScript with advanced type inference, built-in validation functions, and seamless integration for server and client environments.",
   "homepage": "https://github.com/x-keyscore/VALI.TS#readme",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -33,6 +33,6 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   }
 }

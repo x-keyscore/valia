@@ -10,8 +10,8 @@ import { BooleanFormat } from "./boolean/format";
 import { UnionFormat } from "./union/format";
 
 export const defaultVariantCriteria: DefaultVariantCriteria = {
-	optional: false,
-	nullable: false
+	nullable: false,
+	undefinable: false
 }
 
 export const formats: Record<string, FormatTemplate<VariantCriteria>> = {

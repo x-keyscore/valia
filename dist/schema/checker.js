@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
 const formats_1 = require("./formats");
-const Registry_1 = require("./Registry");
+const Mapper_1 = require("./Mapper");
 function manageTaskLink(link, isReject) {
     if (link) {
         if (!isReject) {
@@ -16,17 +16,17 @@ function manageTaskLink(link, isReject) {
     }
     return (false);
 }
-function reject(registry, criteria, rejectState) {
+function reject(mapper, criteria, rejectState) {
     return ({
         code: "REJECT_" + rejectState,
-        path: registry.getPath(criteria, "."),
+        path: mapper.getPath(criteria, "."),
         type: criteria.type,
         label: criteria.label,
         message: criteria.message
     });
 }
 function checker(criteria, value) {
-    const registry = criteria[Registry_1.registrySymbol];
+    const mapper = criteria[Mapper_1.mapperSymbol];
     let queue = [{ criteria, value }];
     while (queue.length > 0) {
         const { criteria, value, link } = queue.pop();
@@ -35,18 +35,18 @@ function checker(criteria, value) {
         if (value === null) {
             if (criteria.nullable)
                 continue;
-            return (reject(registry, criteria, "TYPE_NULL"));
+            return (reject(mapper, criteria, "TYPE_NULL"));
         }
         else if (value === undefined) {
-            if (criteria.optional)
+            if (criteria.undefinable)
                 continue;
-            return (reject(registry, criteria, "TYPE_UNDEFINED"));
+            return (reject(mapper, criteria, "TYPE_UNDEFINED"));
         }
         const format = formats_1.formats[criteria.type];
         const rejectState = format.checking(queue, criteria, value);
         const rejectBypass = manageTaskLink(link, !!rejectState);
         if (!rejectBypass && rejectState) {
-            return (reject(registry, criteria, rejectState));
+            return (reject(mapper, criteria, rejectState));
         }
     }
     return (null);

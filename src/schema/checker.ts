@@ -1,6 +1,6 @@
 import type { SchemaCheckingTask, SchemaReject } from "./types";
 import { VariantCriteria, MountedCriteria, formats} from "./formats";
-import { RegistryInstance, registrySymbol } from './Registry'
+import { MapperInstance, mapperSymbol } from './Mapper'
 
 function manageTaskLink(
 	link: SchemaCheckingTask['link'],
@@ -19,13 +19,13 @@ function manageTaskLink(
 }
 
 function reject(
-	registry: RegistryInstance,
+	mapper: MapperInstance,
 	criteria: SchemaCheckingTask['criteria'],
 	rejectState: string
 ): SchemaReject {
 	return ({
 		code: "REJECT_" + rejectState,
-		path: registry.getPath(criteria, "."),
+		path: mapper.getPath(criteria, "."),
 		type: criteria.type,
 		label: criteria.label,
 		message: criteria.message
@@ -36,7 +36,7 @@ export function checker(
 	criteria: MountedCriteria<VariantCriteria>,
 	value: unknown
 ): SchemaReject | null {
-	const registry = criteria[registrySymbol];
+	const mapper = criteria[mapperSymbol];
 	let queue: SchemaCheckingTask[] = [{ criteria, value }];
 
 	while (queue.length > 0) {
@@ -46,11 +46,11 @@ export function checker(
 
 		if (value === null) {
 			if (criteria.nullable) continue;
-			return (reject(registry, criteria, "TYPE_NULL"));
+			return (reject(mapper, criteria, "TYPE_NULL"));
 		}
 		else if (value === undefined) {
-			if (criteria.optional) continue;
-			return (reject(registry, criteria, "TYPE_UNDEFINED"));
+			if (criteria.undefinable) continue;
+			return (reject(mapper, criteria, "TYPE_UNDEFINED"));
 		}
 
 		const format = formats[criteria.type];
@@ -58,7 +58,7 @@ export function checker(
 		const rejectBypass = manageTaskLink(link, !!rejectState);
 
 		if (!rejectBypass && rejectState) {
-			return (reject(registry, criteria, rejectState));
+			return (reject(mapper, criteria, rejectState));
 		}
 	}
 

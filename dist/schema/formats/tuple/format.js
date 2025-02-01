@@ -7,17 +7,17 @@ exports.TupleFormat = {
     defaultCriteria: {
         empty: false
     },
-    mounting(queue, register, definedCriteria, mountedCriteria) {
+    mounting(queue, mapper, definedCriteria, mountedCriteria) {
         for (let i = 0; i < definedCriteria.tuple.length; i++) {
             const definedCriteriaItem = definedCriteria.tuple[i];
             if ((0, mounter_1.isMountedCriteria)(definedCriteriaItem)) {
-                register.merge(mountedCriteria, definedCriteriaItem, {
+                mapper.merge(mountedCriteria, definedCriteriaItem, {
                     pathParts: [`tuple[${i}]`]
                 });
                 mountedCriteria.tuple[i] = definedCriteriaItem;
             }
             else {
-                register.add(mountedCriteria, mountedCriteria.tuple[i], {
+                mapper.add(mountedCriteria, mountedCriteria.tuple[i], {
                     pathParts: [`tuple[${i}]`]
                 });
                 queue.push({

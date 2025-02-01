@@ -50,33 +50,42 @@ describe("Schema instance", () => {
 		};
 		const structSchema = new Schema(structCriteria);
 
-		const rootSchema = new Schema({
+		const schema = new Schema({
 			type: "struct",
 			struct: {
 				foo: structSchema.criteria
 			}
 		});
 
-		assert.strictEqual(rootSchema.criteria.struct.foo.struct.bar, stringSchema.criteria);
-		assert.strictEqual(rootSchema.criteria.struct.foo, structSchema.criteria);
-		assert.notStrictEqual(rootSchema.criteria.struct.foo, structCriteria);
-		assert.notStrictEqual(rootSchema.criteria.struct.foo.struct, structCriteria.struct);
+		assert.strictEqual(schema.check({ foo: { bar: "one"}}), null);
+		assert.strictEqual(schema.check({ foo: { bar: 1}})?.path, "root.struct.foo.struct.bar");
+		assert.strictEqual(schema.criteria.struct.foo.struct.bar, stringSchema.criteria);
+		assert.strictEqual(schema.criteria.struct.foo, structSchema.criteria);
+		assert.notStrictEqual(schema.criteria.struct.foo, structCriteria);
+		assert.notStrictEqual(schema.criteria.struct.foo.struct, structCriteria.struct);
+	});
+	it("'criteria' sub-property", () => {
+		const subSchema = new Schema({
+			type: "struct",
+			struct: {
+				foo: { type: "string", enum: ["foo"] },
+				bar: { type: "string", enum: ["bar"] }
+			}
+		})
+		const schema = new Schema({
+			type: "struct",
+			struct: subSchema.criteria.struct
+		});
+
+		assert.strictEqual(schema.check({ foo: "foo", bar: "bar"}), null);
+		assert.strictEqual(schema.check({ foo: "bar", bar: "bar"})?.path, "root.struct.foo");
+		assert.strictEqual(schema.criteria.struct.bar, subSchema.criteria.struct.bar);
+		assert.notStrictEqual(schema.criteria.struct, subSchema.criteria.struct);
 	});
 });
 
-describe("Schema global parameter", () => {
-	it("'optional' parameter", () => {
-		const schema = new Schema({
-			type: "string",
-			optional: true
-		});
-
-		assert.strictEqual(schema.guard(NaN), false);
-		assert.strictEqual(schema.guard(0), false);
-		assert.strictEqual(schema.guard(null), false);
-		assert.strictEqual(schema.guard(undefined), true);
-	});
-	it("'nullable' parameter", () => {
+describe("Schema global criteria", () => {
+	it("'nullable' property", () => {
 		const schema = new Schema({
 			type: "string",
 			nullable: true
@@ -85,6 +94,19 @@ describe("Schema global parameter", () => {
 		assert.strictEqual(schema.guard(NaN), false);
 		assert.strictEqual(schema.guard(0), false);
 		assert.strictEqual(schema.guard(undefined), false);
+
 		assert.strictEqual(schema.guard(null), true);
+	});
+	it("'undefinable' property", () => {
+		const schema = new Schema({
+			type: "string",
+			undefinable: true
+		});
+
+		assert.strictEqual(schema.guard(NaN), false);
+		assert.strictEqual(schema.guard(0), false);
+		assert.strictEqual(schema.guard(null), false);
+
+		assert.strictEqual(schema.guard(undefined), true);
 	});
 });

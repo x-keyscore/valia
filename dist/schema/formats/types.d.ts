@@ -8,7 +8,7 @@ import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
 import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
 import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
 import type { SchemaCheckingTask, SchemaMountingTask } from "../types";
-import { RegistryInstance, registrySymbol } from "../Registry";
+import { MapperInstance, mapperSymbol } from "../Mapper";
 import { formats } from "./formats";
 /**
  * Defines the criteria users must or can specify.
@@ -20,9 +20,9 @@ export interface VariantCriteriaTemplate<T extends string> {
     label?: string;
     message?: string;
     /** @default false */
-    optional?: boolean;
-    /** @default false */
     nullable?: boolean;
+    /** @default false */
+    undefinable?: boolean;
 }
 /**
  * @template T Extended interface of `VariantCriteriaTemplate` that
@@ -66,11 +66,11 @@ export type FormatsGenericTypesMap<T extends VariantCriteria> = {
     }>;
 };
 export interface DefaultVariantCriteria {
-    optional: boolean;
     nullable: boolean;
+    undefinable: boolean;
 }
 export interface DefaultMountedCriteria {
-    [registrySymbol]: RegistryInstance;
+    [mapperSymbol]: MapperInstance;
 }
 export type VariantCriteria = {
     [U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, {
@@ -99,7 +99,7 @@ export type FormatTemplate<T extends VariantCriteria, U extends Record<string, a
         [K in keyof Omit<T, 'type'>]: (x: unknown) => boolean;
     };
     defaultCriteria: DefaultCriteria<T>;
-    mounting?(queue: SchemaMountingTask[], registry: RegistryInstance, definedCriteria: T, mountedCriteria: MountedCriteria<T>): void;
+    mounting?(queue: SchemaMountingTask[], mapper: MapperInstance, definedCriteria: T, mountedCriteria: MountedCriteria<T>): void;
     checking(queue: SchemaCheckingTask[], criteria: MountedCriteria<T>, value: unknown): null | string;
 } & U;
 export type CheckValueResult = null | string;

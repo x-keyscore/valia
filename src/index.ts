@@ -1,9 +1,7 @@
-import { Schema } from './schema';
-
 export {
 	Schema,
 	SchemaReject,
-	SchemaGuard
+	SchemaInfer
 } from './schema';
 
 export {

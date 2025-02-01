@@ -7,15 +7,15 @@ exports.ArrayFormat = {
     defaultCriteria: {
         empty: true
     },
-    mounting(queue, register, definedCriteria, mountedCriteria) {
+    mounting(queue, mapper, definedCriteria, mountedCriteria) {
         if ((0, mounter_1.isMountedCriteria)(definedCriteria.item)) {
-            register.merge(mountedCriteria, definedCriteria.item, {
+            mapper.merge(mountedCriteria, definedCriteria.item, {
                 pathParts: ["item"]
             });
             mountedCriteria.item = definedCriteria.item;
         }
         else {
-            register.add(mountedCriteria, mountedCriteria.item, {
+            mapper.add(mountedCriteria, mountedCriteria.item, {
                 pathParts: ["item"]
             });
             queue.push({

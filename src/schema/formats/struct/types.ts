@@ -2,7 +2,7 @@ import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTempla
 
 export interface StructVariantCriteria extends VariantCriteriaTemplate<"struct"> {
 	/** Array of optional keys */
-	free?: (string | symbol)[];
+	optional?: (string | symbol)[];
 	struct: Record<string | symbol, VariantCriteria>;
 }
 

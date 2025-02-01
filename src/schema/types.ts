@@ -27,5 +27,7 @@ export interface SchemaReject {
 	message: string | undefined;
 };
 
-export type SchemaGuard<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;
+export type SchemaInfer<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;
+
+export type CriteriaInfer<T> = T extends VariantCriteria ? FormatsGuard<T> : never;
 	

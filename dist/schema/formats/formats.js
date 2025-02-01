@@ -11,8 +11,8 @@ const format_7 = require("./symbol/format");
 const format_8 = require("./boolean/format");
 const format_9 = require("./union/format");
 exports.defaultVariantCriteria = {
-    optional: false,
-    nullable: false
+    nullable: false,
+    undefinable: false
 };
 exports.formats = {
     array: format_1.ArrayFormat,

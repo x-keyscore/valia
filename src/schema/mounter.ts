@@ -1,16 +1,14 @@
 import type { SchemaMountingTask } from "./types";
 import { VariantCriteria, MountedCriteria, defaultVariantCriteria, formats } from "./formats";
-import { Registry, registrySymbol } from "./Registry";
+import { Mapper, mapperSymbol } from "./Mapper";
 import { Err } from "../utils";
 
 export function mounter<T extends VariantCriteria>(
 	definedCriteria: T
 ): MountedCriteria<T> {
-	const registry = new Registry();
 	let mountedCriteria: MountedCriteria<T> = {} as any;
 	let queue: SchemaMountingTask[] = [{ definedCriteria, mountedCriteria }];
-
-	registry.add(null, mountedCriteria, {
+	const mapper = new Mapper(mountedCriteria, {
 		pathParts: ["root"]
 	});
 
@@ -25,12 +23,12 @@ export function mounter<T extends VariantCriteria>(
 
 		Object.assign(mountedCriteria, defaultVariantCriteria, format.defaultCriteria, definedCriteria);
 
-		if (format.mounting) format.mounting(queue, registry, definedCriteria, mountedCriteria);
-	}
+		if (format.mounting) format.mounting(queue, mapper, definedCriteria, mountedCriteria);
 
-	Object.assign(mountedCriteria, {
-		[registrySymbol]: registry
-	});
+		Object.assign(mountedCriteria, {
+			[mapperSymbol]: mapper
+		});
+	}
 
 	return (mountedCriteria);
 };
@@ -38,5 +36,5 @@ export function mounter<T extends VariantCriteria>(
 export function isMountedCriteria(
 	criteria: object
 ): criteria is MountedCriteria<VariantCriteria> {
-	return (Reflect.has(criteria, registrySymbol));
+	return (Reflect.has(criteria, mapperSymbol));
 }
