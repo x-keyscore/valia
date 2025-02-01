@@ -373,7 +373,7 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 |Function|Description|
 |--|--|
 |`isObject`                |Checks if it is an object.|
-|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a RegExp object.|
+|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a `RegExp` object.|
 |`isArray`                 |Checks if it is an array.|
 |`isFunction`              |Checks if it is an function.|
 |`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
@@ -388,10 +388,10 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 
 |Function|Description|
 |--|--|
-|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base64' or 'base64Url'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from 'base16' to a string in 'base32' or 'base32Hex'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base64' or 'base64Url' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
-|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from 'base32' or 'base32Hex' to a string in 'base16'.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
 
 ```ts
 base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
