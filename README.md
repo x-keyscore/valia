@@ -41,7 +41,7 @@ type UserSchema = SchemaInfer<typeof userSchema>;
 
 let data: unknown = { name: "Tintin", role: "ADMIN" };
 
-if (userSchema.guard(data, (reject) => console.log(reject))) {
+if (userSchema.validate(data) {
     /*
     The data type is now:
     data: {
