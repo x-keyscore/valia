@@ -59,17 +59,17 @@ if (userSchema.guard(data, (reject) => console.log(reject))) {
 ## Instance
 |Property / Method|Description|
 |--|--|
-|`criteria`|Property you need if you wish to use this schema in another one.|
-|`guard()` |Type guard method that returns a `boolean`.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`check()` |Method that returns `SchemaReject` if the value is rejected, otherwise `null`.|
+|`criteria`  |Property representing the mounted validation criteria.|
+|`validate()`|Validates the provided data against the schema. A boolean is returned. This function is a type guard, so if it returns true, the value passed as a parameter will be of the type defined by your schema.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
+|`validout()`|Validates the provided data against the schema. An object is returned with the value passed as a parameter and the rejection status. If the reject status is null, then the returned value will have the type defined by your schema.|
 
 ```ts
-guard(value, rejectCallback?: (reject: SchemaReject) => void) => boolean;
-check(value) => SchemaReject | null;
+criteria: MountedCriteria<T>;
+validate(value: unknown, onReject?: (reject: SchemaReject) => void): value is GuardedCriteria<T>;
+validout(value: unknown): { reject: SchemaReject, value: null } | { reject: null, value: GuardedCriteria<T> };
 ```
 ```ts
 interface SchemaReject {
-  /** `REJECT_<CATEGORY>_<DETAIL>` */
   code: string;
   type: string;
   path: string;
@@ -107,7 +107,7 @@ const userSchema = new Schema({
 
 let data: unknown = { name: "Waitron", age: 200 };
 
-const reject = userSchema.check(data);
+const { reject } = userSchema.validout(data);
 
 console.log(reject);
 ```
