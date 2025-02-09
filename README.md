@@ -66,7 +66,7 @@ if (userSchema.validate(data) {
 ```ts
 criteria: MountedCriteria<T>;
 validate(value: unknown, onReject?: (reject: SchemaReject) => void): value is GuardedCriteria<T>;
-validout(value: unknown): { reject: SchemaReject, value: null } | { reject: null, value: GuardedCriteria<T> };
+evaluate(value: unknown): { reject: SchemaReject, value: null } | { reject: null, value: GuardedCriteria<T> };
 ```
 ```ts
 interface SchemaReject {
@@ -107,7 +107,7 @@ const userSchema = new Schema({
 
 let data: unknown = { name: "Waitron", age: 200 };
 
-const { reject } = userSchema.validout(data);
+const { reject } = userSchema.evaluate(data);
 
 console.log(reject);
 ```
