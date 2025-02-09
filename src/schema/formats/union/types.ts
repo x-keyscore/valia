@@ -1,4 +1,4 @@
-import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
 	TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
 export interface UnionTunableCriteria extends TunableCriteriaTemplate<"union"> {

@@ -1,18 +1,19 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"outDir": "./dist",
-		"paths": {
-			"vali/devkit": ["./src/devkit"]
-		},
 		"target": "ES2018",
 		"lib": ["ES2018", "ES2021.WeakRef"],
 		"module": "NodeNext",
+		"declaration": true,
 		"skipLibCheck": true,
 		"esModuleInterop": true,
 		"noErrorTruncation": true,
 		"forceConsistentCasingInFileNames": true,
-		"declaration": true
+		"paths": {
+			"valie/devkit": ["./src/devkit"]
+		},
+		"outDir": "./dist",
+		"declarationDir": "dist/types"
 	},
 	"include": ["src"],
     "exclude": ["**/node_modules", "**/.*/"]

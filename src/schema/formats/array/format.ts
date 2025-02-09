@@ -1,5 +1,5 @@
 import type { ArrayTunableCriteria } from "./types";
-import type { FormatTemplate  } from "../types";
+import type { FormatTemplate } from "../types";
 import { isMountedCriteria } from "../../services/mounter";
 import { isArray } from "../../../testers";
 

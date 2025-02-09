@@ -1,4 +1,4 @@
-import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
 import { testers } from "../../..";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 

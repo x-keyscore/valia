@@ -1,4 +1,4 @@
-import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
 export interface ArrayTunableCriteria extends TunableCriteriaTemplate<"array"> {
 	/** @default true */

@@ -1,26 +1,26 @@
 {
-	"name": "vali.ts",
-	"version": "2.2.0",
+	"name": "valie",
+	"version": "1.0.0",
 	"description": "A runtime data validator in TypeScript with advanced type inference, built-in validation functions, and seamless integration for server and client environments.",
-	"homepage": "https://github.com/x-keyscore/VALI.TS#readme",
+	"homepage": "https://github.com/x-keyscore/valie#readme",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		"devkit": {
 			"import": "./dist/devkit.js",
-			"types": "./dist/devkit.d.ts"
+			"types": "./dist/types/devkit.d.ts"
 		}
 	},
 	"scripts": {
 		"start": "tsc && node dist",
-		"build": "tsc",
-		"build:pack": "tsc && npm pack && mv -f ./*.tgz pack/",
-		"test": "tsc && node --test"
+		"clean": "rm -rf ./dist",
+		"build": "npm run clean && tsc",
+		"build:pack": "npm run build && npm pack && mv -f ./*.tgz pack/",
+		"test": "npm run build && node --test"
 	},
 	"keywords": [
-		"vali",
-		"vali.ts",
+		"valie",
 		"validator",
 		"validation",
 		"data-validation",

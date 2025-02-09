@@ -1,4 +1,4 @@
-import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
 
 export interface BooleanTunableCriteria extends TunableCriteriaTemplate<"boolean"> {}
 

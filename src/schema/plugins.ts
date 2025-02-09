@@ -17,7 +17,7 @@ export abstract class SchemaPluginAbstract<const T extends TunableCriteria> exte
     }
 }
 
-export function mixinProperties(
+function mixinProperties(
 	source: Constructor,
 	target: Constructor,
 	transformKey?: (key: string) => string | undefined

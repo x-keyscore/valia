@@ -1,5 +1,4 @@
 import type { TunableCriteria } from "./formats";
-import type { Constructor } from "../types";
 import type { SchemaType } from "./types";
 import { Schema } from "./Schema";
 export declare abstract class SchemaPluginAbstract<const T extends TunableCriteria> extends Schema<T> {
@@ -11,5 +10,4 @@ export declare abstract class SchemaPluginAbstract<const T extends TunableCriter
     protected abstract init(...args: ConstructorParameters<SchemaType<T>>): void;
     constructor(...args: ConstructorParameters<SchemaType<T>>);
 }
-export declare function mixinProperties(source: Constructor, target: Constructor, transformKey?: (key: string) => string | undefined): void;
 export declare function schemaPlugins<T, U, V, W, X, Y>(plugin_1: new (...args: T[]) => U, plugin_2?: new (...args: V[]) => W, plugin_3?: new (...args: X[]) => Y): new (...args: T[] & V[] & X[]) => U & W & Y;

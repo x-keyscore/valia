@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchemaPluginAbstract = void 0;
-exports.mixinProperties = mixinProperties;
 exports.schemaPlugins = schemaPlugins;
 const Schema_1 = require("./Schema");
 const utils_1 = require("../utils");

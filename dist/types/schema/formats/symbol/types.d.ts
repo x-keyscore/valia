@@ -1,4 +1,4 @@
-import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
 export interface SymbolTunableCriteria extends TunableCriteriaTemplate<"symbol"> {
     symbol?: symbol;
 }
