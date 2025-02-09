@@ -1,5 +1,5 @@
-import type { MountedCriteria, VariantCriteria } from "./formats";
-type ReferenceKey = MountedCriteria<VariantCriteria>;
+import type { MountedCriteria, TunableCriteria } from "./formats";
+type ReferenceKey = MountedCriteria<TunableCriteria>;
 interface ReferenceValue {
     prev: ReferenceKey | null;
     data: {
@@ -9,7 +9,7 @@ interface ReferenceValue {
 export declare const mapperSymbol: unique symbol;
 export declare class Mapper {
     references: Map<ReferenceKey, ReferenceValue>;
-    constructor(rootCriteria: ReferenceKey, data: ReferenceValue['data']);
+    constructor();
     /**
      * Add a new criteria node to the mapper.
      */

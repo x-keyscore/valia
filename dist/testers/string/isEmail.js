@@ -6,10 +6,10 @@ const isDomain_1 = require("./isDomain");
 const isIp_1 = require("./isIp");
 const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
 const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
-const localPartQuotedRegex = (0, utils_1.lazy)(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
 const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
-//const generalAddrLiteralPattern = "(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)";
-const domainPartAddressRegex = (0, utils_1.lazy)(() => new RegExp(`^\\[(?:IPv6:${isIp_1.IPv6Pattern}|${isIp_1.ipV4Pattern})\\]$`));
+const localPartQuotedRegex = (0, utils_1.lazy)(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const domainPartAddrLiteralRegex = (0, utils_1.lazy)(() => new RegExp(`^\\[(?:IPv6:${isIp_1.IPv6Pattern}|${isIp_1.ipV4Pattern})\\]$`));
+const domainPartGeneralAddrLiteralRegex = (0, utils_1.lazy)(() => new RegExp(`[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 function splitEmail(str) {
     const arrayLength = str.length;
     // FIND SYMBOL INDEX
@@ -45,12 +45,14 @@ function isValidLocalPart(str, params) {
     return (false);
 }
 function isValidDomainPart(str, params) {
-    if ((0, isDomain_1.isDomain)(str)) {
+    if ((0, isDomain_1.isDomain)(str))
         return (true);
-    }
-    else if ((params === null || params === void 0 ? void 0 : params.allowAddressLiteral) && domainPartAddressRegex().test(str)) {
+    if ((params === null || params === void 0 ? void 0 : params.allowAddressLiteral)
+        && domainPartAddrLiteralRegex().test(str))
         return (true);
-    }
+    if ((params === null || params === void 0 ? void 0 : params.allowGeneralAddressLiteral)
+        && domainPartGeneralAddrLiteralRegex().test(str))
+        return (true);
     return (false);
 }
 /**
@@ -61,7 +63,7 @@ function isValidDomainPart(str, params) {
  * **Follows :**
  * `Mailbox`
  *
- * @version 1.0.0-beta
+ * @version 1.1.0-beta
  */
 function isEmail(str, params) {
     const parts = splitEmail(str);

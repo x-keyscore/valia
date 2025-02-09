@@ -1,33 +1,13 @@
-import type { VariantCriteria, MountedCriteria, FormatsGuard } from "./formats";
+import type { TunableCriteria, GuardedCriteria } from "./formats";
+import type { CheckerReject } from "./services/types";
 import { Schema } from "./Schema";
 
-export interface SchemaMountingTask {
-	definedCriteria: VariantCriteria;
-	mountedCriteria: MountedCriteria<VariantCriteria>;
-}
+// ALIASES FOR BETTER DX
 
-export interface CheckingTaskLink {
-	finished: boolean;
-	totalLinks: number;
-	totalRejected: number;
-}
+export type SchemaReject = CheckerReject;
 
-export interface SchemaCheckingTask {
-	criteria: MountedCriteria<VariantCriteria>;
-	value: unknown;
-	link?: CheckingTaskLink;
-}
+export type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<U> : never;
 
-export interface SchemaReject {
-	/** `REJECT_<CATEGORY>_<DETAIL>` */
-	code: string;
-	type: string;
-	path: string;
-	label: string | undefined;
-	message: string | undefined;
-};
+export type CriteriaInfer<T> = T extends TunableCriteria ? GuardedCriteria<T> : never;
 
-export type SchemaInfer<T> = T extends Schema<infer U> ? FormatsGuard<U> : never;
-
-export type CriteriaInfer<T> = T extends VariantCriteria ? FormatsGuard<T> : never;
-	
+export type SchemaType<T extends TunableCriteria = TunableCriteria> = typeof Schema<T>;

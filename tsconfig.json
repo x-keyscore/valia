@@ -2,6 +2,9 @@
 	"compilerOptions": {
 		"strict": true,
 		"outDir": "./dist",
+		"paths": {
+			"vali/devkit": ["./src/devkit"]
+		},
 		"target": "ES2018",
 		"lib": ["ES2018", "ES2021.WeakRef"],
 		"module": "NodeNext",

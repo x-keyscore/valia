@@ -1,8 +1,8 @@
-import type { NumberVariantCriteria } from "./types";
+import type { NumberTunalbleCriteria } from "./types";
 import type { FormatTemplate } from "../types";
 import { isArray, isPlainObject } from "../../../testers";
 
-export const NumberFormat: FormatTemplate<NumberVariantCriteria> = {
+export const NumberFormat: FormatTemplate<NumberTunalbleCriteria> = {
 	defaultCriteria: {},
 	checking(queue, criteria, value) {
 		if (typeof value !== "number") {

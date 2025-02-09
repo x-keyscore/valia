@@ -11,9 +11,9 @@ describe("Schema format: 'array'", () => {
 			item: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard({}), false);
-		assert.strictEqual(schema.guard(new Uint16Array()), false);
-		assert.strictEqual(schema.guard([]), true);
+		assert.strictEqual(schema.validate({}), false);
+		assert.strictEqual(schema.validate(new Uint16Array()), false);
+		assert.strictEqual(schema.validate([]), true);
 	});
 	it("'min' parameter", () => {
 		const schema = new Schema({
@@ -22,8 +22,8 @@ describe("Schema format: 'array'", () => {
 			item: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard([1, 2]), false);
-		assert.strictEqual(schema.guard([1, 2, 3]), true);
+		assert.strictEqual(schema.validate([1, 2]), false);
+		assert.strictEqual(schema.validate([1, 2, 3]), true);
 	});
 	it("'max' parameter", () => {
 		const schema = new Schema({
@@ -32,8 +32,8 @@ describe("Schema format: 'array'", () => {
 			item: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard([1, 2, 3, 4]), false);
-		assert.strictEqual(schema.guard([1, 2, 3]), true);
+		assert.strictEqual(schema.validate([1, 2, 3, 4]), false);
+		assert.strictEqual(schema.validate([1, 2, 3]), true);
 	});
 	it("'empty' parameter", () => {
 		const schema_1 = new Schema({
@@ -47,8 +47,8 @@ describe("Schema format: 'array'", () => {
 			item: { type: "number" }
 		});
 
-		assert.strictEqual(schema_1.guard([]), false);
-		assert.strictEqual(schema_2.guard([]), true);
+		assert.strictEqual(schema_1.validate([]), false);
+		assert.strictEqual(schema_2.validate([]), true);
 	});
 	it("'array' parameter", () => {
 		const schema = new Schema({
@@ -56,7 +56,7 @@ describe("Schema format: 'array'", () => {
 			item: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard(["foo", "bar"]), false);
-		assert.strictEqual(schema.guard([667, 667]), true);
+		assert.strictEqual(schema.validate(["foo", "bar"]), false);
+		assert.strictEqual(schema.validate([667, 667]), true);
 	});
 });

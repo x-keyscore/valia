@@ -1,16 +1,16 @@
-import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
+import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
 
-export interface BooleanVariantCriteria extends VariantCriteriaTemplate<"boolean"> {}
+export interface BooleanTunableCriteria extends TunableCriteriaTemplate<"boolean"> {}
 
 export interface BooleanConcreteTypes extends ConcreteTypesTemplate<
-	BooleanVariantCriteria,
-	{},
+	BooleanTunableCriteria,
 	{}
 > {}
 
-type BooleanGuard<T extends VariantCriteria> = T extends BooleanVariantCriteria ? boolean : never;
+type BooleanGuardedCriteria = boolean;
 
-export interface BooleanGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
-	BooleanVariantCriteria,
-	BooleanGuard<T>
+export interface BooleanGenericTypes<T extends BooleanTunableCriteria> extends GenericTypesTemplate<
+	BooleanTunableCriteria,
+	{},
+	BooleanGuardedCriteria
 > {}

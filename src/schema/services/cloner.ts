@@ -1,5 +1,5 @@
-import { isArray, isPlainObject } from "../testers";
-import { VariantCriteria } from "./formats";
+import type { TunableCriteria } from "../formats";
+import { isArray, isPlainObject } from "../../testers";
 import { isMountedCriteria } from "./mounter";
 
 interface SchemaCloningTask {
@@ -83,7 +83,7 @@ function processTask(
  * @param src Source object of the clone
  * @returns Clone of the source object
  */
-export function cloner<T extends VariantCriteria>(
+export function cloner<T extends TunableCriteria>(
 	src: T
 ): T {
 	let cpy = {};

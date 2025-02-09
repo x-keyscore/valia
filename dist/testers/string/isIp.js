@@ -28,8 +28,8 @@ exports.isIpV6 = isIpV6;
 const utils_1 = require("../utils");
 const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
 exports.ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
-const ipV4PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
 const ipV4SimpleRegex = new RegExp(`^${exports.ipV4Pattern}$`);
+const ipV4PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
 const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
 exports.IPv6Pattern = "(?:" +
     `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
@@ -40,8 +40,8 @@ exports.IPv6Pattern = "(?:" +
     `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
     `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
     `(?::(?:(?::${ipV6Seg}){0,5}:${exports.ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
-const ipV6PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
 const ipV6SimpleRegex = new RegExp(`^${exports.IPv6Pattern}$`);
+const ipV6PrefixRegex = (0, utils_1.lazy)(() => new RegExp(`^${exports.IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
 /**
  * **Standard:** No standard
  *

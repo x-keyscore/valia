@@ -12,9 +12,9 @@ describe("Schema format: 'record'", () => {
 			value: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard(0), false);
-		assert.strictEqual(schema.guard(new Date()), false);
-		assert.strictEqual(schema.guard({}), true);
+		assert.strictEqual(schema.validate(0), false);
+		assert.strictEqual(schema.validate(new Date()), false);
+		assert.strictEqual(schema.validate({}), true);
 	});
 	it("'min' parameter", () => {
 		const schema = new Schema({
@@ -24,8 +24,8 @@ describe("Schema format: 'record'", () => {
 			value: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard({ "a": 1, "b": 1 }), false);
-		assert.strictEqual(schema.guard({ "a": 1, "b": 1, "c": 1 }), true);
+		assert.strictEqual(schema.validate({ "a": 1, "b": 1 }), false);
+		assert.strictEqual(schema.validate({ "a": 1, "b": 1, "c": 1 }), true);
 	});
 	it("'max' parameter", () => {
 		const schema = new Schema({
@@ -35,8 +35,8 @@ describe("Schema format: 'record'", () => {
 			value: { type: "number" }
 		});
 
-		assert.strictEqual(schema.guard({ "a": 1, "b": 1, "c": 1, "d": 1}), false);
-		assert.strictEqual(schema.guard({ "a": 1, "b": 1, "c": 1 }), true);
+		assert.strictEqual(schema.validate({ "a": 1, "b": 1, "c": 1, "d": 1}), false);
+		assert.strictEqual(schema.validate({ "a": 1, "b": 1, "c": 1 }), true);
 	});
 	it("'empty' parameter", () => {
 		const schema_1 = new Schema({
@@ -52,8 +52,8 @@ describe("Schema format: 'record'", () => {
 			value: { type: "number" }
 		});
 
-		assert.strictEqual(schema_1.guard({}), false);
-		assert.strictEqual(schema_2.guard({}), true);
+		assert.strictEqual(schema_1.validate({}), false);
+		assert.strictEqual(schema_2.validate({}), true);
 	});
 });
 

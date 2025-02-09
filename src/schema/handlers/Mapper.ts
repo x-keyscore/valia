@@ -1,7 +1,7 @@
-import type { MountedCriteria, VariantCriteria } from "./formats";
-import { Err } from "../utils";
+import type { MountedCriteria, TunableCriteria } from "../formats";
+import { Err } from "../../utils";
 
-type ReferenceKey = MountedCriteria<VariantCriteria>;
+type ReferenceKey = MountedCriteria<TunableCriteria>;
 
 interface ReferenceValue {
 	prev: ReferenceKey | null;
@@ -15,12 +15,7 @@ export const mapperSymbol = Symbol('mapper');
 export class Mapper {
 	public references: Map<ReferenceKey, ReferenceValue> = new Map();
 
-	constructor (rootCriteria: ReferenceKey, data: ReferenceValue['data']) {
-		this.references.set(rootCriteria, {
-			prev: null,
-			data
-		});
-	}
+	constructor () {}
 
 	/**
 	 * Add a new criteria node to the mapper.
@@ -54,7 +49,7 @@ export class Mapper {
 	getPath(criteria: ReferenceKey, separator: string) {
 		let prev = this.references.get(criteria);
 		if (!prev) throw new Err(
-			"Registry",
+			"Mapper",
 			"The criteria reference was not found in the mapper."
 		);
 

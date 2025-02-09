@@ -7,7 +7,7 @@ describe("Schema format: 'boolean'", () => {
 	it("basic", () => {
 		const schema = new Schema({ type: "boolean" });
 
-		assert.strictEqual(schema.guard("foo"), false);
-		assert.strictEqual(schema.guard(false), true);
+		assert.strictEqual(schema.validate("foo"), false);
+		assert.strictEqual(schema.validate(false), true);
 	});
 });

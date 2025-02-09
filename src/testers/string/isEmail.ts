@@ -7,16 +7,18 @@ interface IsEmailParams {
 	allowQuotedString?: boolean;
 	/** **Default:** `false` */
 	allowAddressLiteral?: boolean;
+	/** **Default:** `false` */
+	allowGeneralAddressLiteral?: boolean;
 }
 
 const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
 const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
 
-const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
 const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
+const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
 
-//const generalAddrLiteralPattern = "(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)";
-const domainPartAddressRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
+const domainPartAddrLiteralRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
+const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 
 function splitEmail(str: string) {
 	const arrayLength = str.length;
@@ -59,12 +61,12 @@ function isValidLocalPart(str: string, params?: IsEmailParams): boolean {
 }
 
 function isValidDomainPart(str: string, params?: IsEmailParams): boolean {
-	if (isDomain(str)) {
-		return (true);
-	}
-	else if (params?.allowAddressLiteral && domainPartAddressRegex().test(str)){
-		return (true);
-	}
+	if (isDomain(str)) return (true);
+
+	if (params?.allowAddressLiteral
+		&& domainPartAddrLiteralRegex().test(str)) return (true);
+	if (params?.allowGeneralAddressLiteral
+		&& domainPartGeneralAddrLiteralRegex().test(str)) return (true);
 
 	return (false);
 }
@@ -77,7 +79,7 @@ function isValidDomainPart(str: string, params?: IsEmailParams): boolean {
  * **Follows :**
  * `Mailbox`
  * 
- * @version 1.0.0-beta
+ * @version 1.1.0-beta
  */
 export function isEmail(str: string, params?: IsEmailParams): boolean {
 	const parts = splitEmail(str);

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RecordFormat = void 0;
-const mounter_1 = require("../../mounter");
+const mounter_1 = require("../../services/mounter");
 const testers_1 = require("../../../testers");
 const formats_1 = require("../formats");
 exports.RecordFormat = {

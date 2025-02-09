@@ -1,89 +1,50 @@
-import type { VariantCriteria, FormatsGuard, MountedCriteria } from "./formats";
+import type { TunableCriteria, MountedCriteria, GuardedCriteria } from "./formats";
 import type { SchemaReject } from "./types";
+import { Mapper } from "./handlers";
 /**
- * Represents the validation criteria structure and its associated functions.
+ * Represents a schema for data validation, including the validation criteria structure.
  */
-export declare class Schema<const T extends VariantCriteria> {
+export declare class Schema<const T extends TunableCriteria> {
+    protected mapper: Mapper;
     /**
-     * Property used for schema reuse, see the example below.
+     * Property representing the mounted validation criteria.
      *
-     * **Warning :** This property is not the same version
-     * as the one passed as a constructor parameter.
-     *
-     * @example
-     * ```ts
-     * const userNameType = new Schema({ type: "string" });
-     *
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: userNameType.criteria
-     *     }
-     * });
-     * ```
+     * **Warning:** This property does not reflect the original criteria passed
+     * during instantiation. It is the version that has been processed and mounted.
      */
     readonly criteria: MountedCriteria<T>;
     /**
-     * @param criteria Definition of validation criteria.
-     * Once the class has been instantiated, modifying
-     * these `criteria` will have no effect.
+     * Initializes a new schema with the provided validation criteria.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     * ```
+     * @param criteria - The definition of validation criteria.
+     * Once the class is instantiated, modifying these criteria will have no effect.
      */
     constructor(criteria: T);
     /**
-     * @param value Data to be validated
+     * Validates the provided data against the schema.
      *
-     * @returns `true` if value is compliant, otherwise `false`. This function
-     * is a guard type that predicts validated data, see example below.
+     * @param value - The data to be validated.
+     * @param onReject - (Optional) A callback function triggered if validation fails.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     *
-     * let user = { name: "Tintin" };
-     *
-     * if (userSchema.guard(user)) {
-     *     // The “user” type is : { name: string; }
-     * }
-     * ```
+     * @returns `true` if the value is **valid**, otherwise `false`.
+     * This function acts as a **type guard**, ensuring that the validated data conforms
+     * to `GuardedCriteria<T>`. See the example below for usage.
      */
-    guard(value: unknown, rejectCallback?: (reject: SchemaReject) => void): value is FormatsGuard<T>;
+    validate(value: unknown): value is GuardedCriteria<T>;
     /**
-     * @param value Data to be validated
+     * Validates the provided data against the schema.
      *
-     * @returns `null` if value is compliant, otherwise `SchemaCheckReject`.
+     * @param value - The data to be validated.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     *
-     * let user = { name: 667 };
-     *
-     * const reject = userSchema.check(user);
-     *
-     * if (reject) {
-     *     console.log("The '" + reject.type + "' type was rejected with the following code : " + reject.code);
-     * }
-     * ```
+     * @returns An object containing:
+     * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
+     * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
-    check(value: unknown): SchemaReject | null;
+    evaluate(value: unknown): {
+        reject: SchemaReject;
+        value: null;
+    } | {
+        reject: null;
+        value: GuardedCriteria<T>;
+    };
 }

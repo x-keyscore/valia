@@ -1,30 +1,20 @@
-import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, FormatsGuard, MountedCriteria, VariantCriteria } from "../types";
-export interface ArrayVariantCriteria extends VariantCriteriaTemplate<"array"> {
+import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+export interface ArrayTunableCriteria extends TunableCriteriaTemplate<"array"> {
     /** @default true */
     empty?: boolean;
     min?: number;
     max?: number;
-    item: VariantCriteria;
+    item: TunableCriteria;
 }
 export interface ArrayDefaultCriteria {
     empty: boolean;
 }
+export interface ArrayConcreteTypes extends ConcreteTypesTemplate<ArrayTunableCriteria, ArrayDefaultCriteria> {
+}
 export interface ArrayMountedCriteria {
-    item: MountedCriteria<VariantCriteria>;
+    item: MountedCriteria<TunableCriteria>;
 }
-export interface ArrayConcreteTypes extends ConcreteTypesTemplate<ArrayVariantCriteria, ArrayDefaultCriteria, ArrayMountedCriteria> {
-}
-/**
- * The `ArrayGuard` type must represent the format type once it has been validated,
- * and must also tell us whether the current criteria type represented by `T` is the
- * one it should be. In this context `T` must be of type `ArrayVariantCriteria`.
- *
- * `ArrayVariantCriteria` is always only called by the type `FormatGuard`,
- * which represents the root of the recursive loop of types.
- *
- * @template T - The current criteria type of the recursive loop.
- */
-type ArrayGuard<T extends VariantCriteria> = T extends ArrayVariantCriteria ? FormatsGuard<T['item']>[] : never;
-export interface ArrayGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<ArrayVariantCriteria, ArrayGuard<T>> {
+type ArrayGuardedCriteria<T extends ArrayTunableCriteria> = GuardedCriteria<T['item']>[];
+export interface ArrayGenericTypes<T extends ArrayTunableCriteria> extends GenericTypesTemplate<ArrayTunableCriteria, ArrayMountedCriteria, ArrayGuardedCriteria<T>> {
 }
 export {};

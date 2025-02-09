@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TupleFormat = void 0;
-const mounter_1 = require("../../mounter");
+const mounter_1 = require("../../services/mounter");
 const testers_1 = require("../../../testers");
 exports.TupleFormat = {
     defaultCriteria: {

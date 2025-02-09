@@ -10,8 +10,8 @@ describe("Schema format: 'union'", () => {
 			union: [{ type: "string"}, { type: "number" }]
 		});
 
-		assert.strictEqual(schema.guard({}), false);
-		assert.strictEqual(schema.guard("a"), true);
-		assert.strictEqual(schema.guard(1), true);
+		assert.strictEqual(schema.validate({}), false);
+		assert.strictEqual(schema.validate("a"), true);
+		assert.strictEqual(schema.validate(1), true);
 	});
 });

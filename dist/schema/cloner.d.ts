@@ -1,4 +1,4 @@
-import { VariantCriteria } from "./formats";
+import type { TunableCriteria } from "./formats";
 /**
  * Clones the object starting from the root and stops traversing a branch
  * when the `mountedMarker` symbol is encountered. In such cases, the object
@@ -7,4 +7,4 @@ import { VariantCriteria } from "./formats";
  * @param src Source object of the clone
  * @returns Clone of the source object
  */
-export declare function cloner<T extends VariantCriteria>(src: T): T;
+export declare function cloner<T extends TunableCriteria>(src: T): T;

@@ -5,7 +5,6 @@
  * * "label = letter [*(digit / letter / "-") digit / letter]"
  * * "domain = label *("." label)"
  */
-
 const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
 
 /**

@@ -1,9 +1,9 @@
-import type { ArrayVariantCriteria } from "./types";
+import type { ArrayTunableCriteria } from "./types";
 import type { FormatTemplate  } from "../types";
-import { isMountedCriteria } from "../../mounter";
+import { isMountedCriteria } from "../../services/mounter";
 import { isArray } from "../../../testers";
 
-export const ArrayFormat: FormatTemplate<ArrayVariantCriteria> = {
+export const ArrayFormat: FormatTemplate<ArrayTunableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},

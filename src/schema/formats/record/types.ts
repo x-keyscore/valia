@@ -1,14 +1,14 @@
-import type { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
-	VariantCriteria, VariantCriteriaMap, FormatsGuard, MountedCriteria } from "../types";
+import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+	TunableCriteria, TunableCriteriaMap, MountedCriteria, GuardedCriteria } from "../types";
 
-type RecordVariantCriteriaKeys = VariantCriteriaMap["string" | "symbol"];
+type KeyCriteria = TunableCriteriaMap["string" | "symbol"];
 
-export interface RecordVariantCriteria extends VariantCriteriaTemplate<"record"> {
+export interface RecordTunableCriteria extends TunableCriteriaTemplate<"record"> {
 	empty?: boolean
 	min?: number;
 	max?: number;
-	key: RecordVariantCriteriaKeys;
-	value: VariantCriteria;
+	key: KeyCriteria;
+	value: TunableCriteria
 }
 
 export interface RecordDefaultCriteria {
@@ -16,26 +16,24 @@ export interface RecordDefaultCriteria {
 }
 
 export interface RecordMountedCriteria {
-	key: MountedCriteria<RecordVariantCriteriaKeys>;
-	value: MountedCriteria<VariantCriteria>;
+	key: MountedCriteria<KeyCriteria>;
+	value: MountedCriteria<TunableCriteria>;
 }
 
 export interface RecordConcreteTypes extends ConcreteTypesTemplate<
-	RecordVariantCriteria,
-	RecordDefaultCriteria,
-	RecordMountedCriteria
+	RecordTunableCriteria,
+	RecordDefaultCriteria
 > {}
 
-type RecordGuard<T extends VariantCriteria> =
-	T extends RecordVariantCriteria
-		? FormatsGuard<T['key']> extends infer U
-			? U extends PropertyKey
-				? { [P in U]?: FormatsGuard<T['value']> }
-				: never
+type RecordGuardedCriteria<T extends RecordTunableCriteria> =
+	GuardedCriteria<T['key']> extends infer U
+		? U extends PropertyKey
+			? { [P in U]?: GuardedCriteria<T['value']> }
 			: never
 		: never;
 
-export interface RecordGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
-	RecordVariantCriteria,
-	RecordGuard<T>
+export interface RecordGenericTypes<T extends RecordTunableCriteria> extends GenericTypesTemplate<
+	RecordTunableCriteria,
+	RecordMountedCriteria,
+	RecordGuardedCriteria<T>
 > {}

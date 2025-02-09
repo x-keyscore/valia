@@ -22,21 +22,21 @@ exports.StringFormat = {
             return ("VALUE_SUPERIOR_MAX");
         }
         else if (criteria.enum !== undefined) {
-            if ((0, testers_1.isPlainObject)(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
+            if ((0, testers_1.isArray)(criteria.enum) && !criteria.enum.includes(value)) {
                 return ("VALUE_NOT_IN_ENUM");
             }
-            else if ((0, testers_1.isArray)(criteria.enum) && !criteria.enum.includes(value)) {
+            else if ((0, testers_1.isPlainObject)(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
                 return ("VALUE_NOT_IN_ENUM");
             }
         }
         else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
-            return ("VALUE_REGEX_FAILED");
+            return ("TEST_REGEX_FAILED");
         }
         else if (criteria.tester && !testers_1.testers.string[criteria.tester.name](value, (_a = criteria.tester) === null || _a === void 0 ? void 0 : _a.params)) {
-            return ("VALUE_TESTER_FAILED");
+            return ("TEST_TESTER_FAILED");
         }
         else if (criteria.custom && !criteria.custom(value)) {
-            return ("VALUE_CUSTOM_FAILED");
+            return ("TEST_CUSTOM_FAILED");
         }
         return (null);
     }

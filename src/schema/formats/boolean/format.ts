@@ -1,7 +1,7 @@
-import type { BooleanVariantCriteria } from "./types";
+import type { BooleanTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
 
-export const BooleanFormat: FormatTemplate<BooleanVariantCriteria> = {
+export const BooleanFormat: FormatTemplate<BooleanTunableCriteria> = {
 	defaultCriteria: {},
 	checking(queue, criteria, value) {
 		if (typeof value !== "boolean") {

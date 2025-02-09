@@ -1,38 +1,30 @@
-import {
-	VariantCriteriaTemplate,
-	ConcreteTypesTemplate,
-	GenericTypesTemplate,
-	VariantCriteria,
-	FormatsGuard,
-	MountedCriteria
-} from "../types";
+import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+	TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
-export interface TupleVariantCriteria extends VariantCriteriaTemplate<"tuple"> {
-	tuple: [VariantCriteria, ...VariantCriteria[]];
-}
-
-export interface TupleMountedCriteria {
-	tuple: [MountedCriteria<VariantCriteria>, ...MountedCriteria<VariantCriteria>[]];
+export interface TupleTunableCriteria extends TunableCriteriaTemplate<"tuple"> {
+	tuple: [TunableCriteria, ...TunableCriteria[]];
 }
 
 export interface TupleConcreteTypes extends ConcreteTypesTemplate<
-	TupleVariantCriteria,
-	{},
-	TupleMountedCriteria
+	TupleTunableCriteria,
+	{}
 > {}
 
-type TupleGuard<T extends VariantCriteria> =
-	T extends TupleVariantCriteria
-		? T['tuple'] extends infer U
-			? {
-				[I in keyof U]: U[I] extends VariantCriteria
-					? FormatsGuard<U[I]>
-					: never;
-			}
-			: never
+export interface TupleMountedCriteria {
+	tuple: [MountedCriteria<TunableCriteria>, ...MountedCriteria<TunableCriteria>[]];
+}
+
+type TupleGuardedCriteria<T extends TupleTunableCriteria> =
+	T['tuple'] extends infer U
+		? {
+			[I in keyof U]: U[I] extends TunableCriteria
+				? GuardedCriteria<U[I]>
+				: never;
+		}
 		: never;
 
-export type TupleGenericTypes<T extends VariantCriteria> = GenericTypesTemplate<
-	TupleVariantCriteria,
-	TupleGuard<T>
->
+export interface TupleGenericTypes<T extends TupleTunableCriteria> extends GenericTypesTemplate<
+	TupleTunableCriteria,
+	TupleMountedCriteria,
+	TupleGuardedCriteria<T>
+> {}

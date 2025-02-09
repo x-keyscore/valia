@@ -1,39 +1,59 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
-import type { StructVariantCriteria } from "./types";
-import { isMountedCriteria } from "../../mounter";
+import type { StructCriteria, StructTunableCriteria } from "./types";
+import { isMountedCriteria } from "../../services/mounter";
 import { isPlainObject } from "../../../testers";
 
 interface CustomProperties {
 	hasRequiredKeys(
-		mountedCriteria: MountedCriteria<StructVariantCriteria>,
+		mountedCriteria: MountedCriteria<StructTunableCriteria>,
 		value: (string | symbol)[]
 	): boolean;
-	hasValidKeys(
-		mountedCriteria: MountedCriteria<StructVariantCriteria>,
+	hasAcceptedKeys(
+		mountedCriteria: MountedCriteria<StructTunableCriteria>,
 		value: (string | symbol)[]
 	): boolean;
 }
 
-export const StructFormat: FormatTemplate<StructVariantCriteria, CustomProperties> = {
+function isStructCriteria(obj: object): obj is StructCriteria {
+	return (isPlainObject(obj) && typeof obj?.type !== "string");
+}
+
+export const StructFormat: FormatTemplate<StructTunableCriteria, CustomProperties> = {
 	defaultCriteria: {},
 	mounting(queue, mapper, definedCriteria, mountedCriteria) {
-		const validKeys = Reflect.ownKeys(definedCriteria.struct);
-		const optionalKeys = definedCriteria.optional;
+		const acceptedKeys = Reflect.ownKeys(definedCriteria.struct);
+		const optionalKeys = acceptedKeys.filter(key => !definedCriteria?.optional?.includes(key));
 
 		Object.assign(mountedCriteria, {
-			validKeys: validKeys,
-			requiredKeys: optionalKeys ? validKeys.filter(key => !optionalKeys.includes(key)) : validKeys
+			acceptedKeys: acceptedKeys,
+			requiredKeys: optionalKeys
 		});
 
-		for (let i = 0; i < validKeys.length; i++) {
-			const key = validKeys[i];
+		for (let i = 0; i < acceptedKeys.length; i++) {
+			const key = acceptedKeys[i];
 
 			if (isMountedCriteria(definedCriteria.struct[key])) {
 				mapper.merge(mountedCriteria, definedCriteria.struct[key], {
 					pathParts: ["struct", key.toString()]
 				});
 				mountedCriteria.struct[key] = definedCriteria.struct[key];
-			} else {
+			}
+			else if (isStructCriteria(definedCriteria.struct[key]))
+			{
+				definedCriteria.struct[key] = {
+					type: "struct",
+					struct: definedCriteria.struct[key]
+				}
+				mapper.add(mountedCriteria, mountedCriteria.struct[key], {
+					pathParts: ["struct", key.toString()]
+				});
+				queue.push({
+					definedCriteria: definedCriteria.struct[key] ,
+					mountedCriteria: mountedCriteria.struct[key]
+				});
+			}
+			else
+			{
 				mapper.add(mountedCriteria, mountedCriteria.struct[key], {
 					pathParts: ["struct", key.toString()]
 				});
@@ -48,8 +68,8 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomPropertie
 		const requiredKeys = mountedCriteria.requiredKeys;
 		return (requiredKeys.length <= inputKeys.length && requiredKeys.every((key) => inputKeys.includes(key)));
 	},
-	hasValidKeys(mountedCriteria, inputKeys) {
-		const definedKeys = mountedCriteria.validKeys;
+	hasAcceptedKeys(mountedCriteria, inputKeys) {
+		const definedKeys = mountedCriteria.acceptedKeys;
 		return (inputKeys.length <= definedKeys.length && inputKeys.every((key) => definedKeys.includes(key)));
 	},
 	checking(queue, criteria, value) {
@@ -58,7 +78,7 @@ export const StructFormat: FormatTemplate<StructVariantCriteria, CustomPropertie
 		}
 
 		const keys = Reflect.ownKeys(value);
-		if (!this.hasValidKeys(criteria, keys)) {
+		if (!this.hasAcceptedKeys(criteria, keys)) {
 			return ("VALUE_INVALID_KEY");
 		}
 		else if (!this.hasRequiredKeys(criteria, keys)) {

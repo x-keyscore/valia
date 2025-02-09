@@ -9,7 +9,7 @@ const utils_1 = require("../../utils");
 const utils_2 = require("../utils");
 const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
 const base32Regex = new RegExp("^(?:[A-Z2-7]{8})*(?:[A-Z2-7]{2}[=]{6}|[A-Z2-7]{4}[=]{4}|[A-Z2-7]{5}[=]{3}|[A-Z2-7]{6}[=]{2}|[A-Z2-7]{7}[=]{1})?$");
-const base32HexRegex = (0, utils_2.lazy)(() => new RegExp("^(?:[0-9A-V]{8})+(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
+const base32HexRegex = (0, utils_2.lazy)(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
 const base64Regex = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}[=]{2}|[A-Za-z0-9+/]{3}[=]{1})?$");
 const base64UrlRegex = (0, utils_2.lazy)(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
 /**
@@ -34,7 +34,7 @@ function isBase64(str, params) {
 function isBase64Url(str, params) {
     if (typeof str !== "string")
         new utils_1.Err("Parameters", "'str' must be of type string.");
-    return (str.length % 6 === 0 && base64UrlRegex().test(str));
+    return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }
 /**
  * **Standard :** RFC 4648
@@ -70,5 +70,5 @@ function isBase32Hex(str, params) {
 function isBase16(str, params) {
     if (typeof str !== "string")
         new utils_1.Err("Parameters", "'str' must be of type string.");
-    return (base16Regex.test(str));
+    return (str.length % 2 === 0 && base16Regex.test(str));
 }

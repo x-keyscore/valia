@@ -3,6 +3,8 @@ interface IsEmailParams {
     allowQuotedString?: boolean;
     /** **Default:** `false` */
     allowAddressLiteral?: boolean;
+    /** **Default:** `false` */
+    allowGeneralAddressLiteral?: boolean;
 }
 /**
  * **Standard :** RFC 5321
@@ -12,7 +14,7 @@ interface IsEmailParams {
  * **Follows :**
  * `Mailbox`
  *
- * @version 1.0.0-beta
+ * @version 1.1.0-beta
  */
 export declare function isEmail(str: string, params?: IsEmailParams): boolean;
 export {};

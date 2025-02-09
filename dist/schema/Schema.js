@@ -1,87 +1,52 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Schema = void 0;
-const mounter_1 = require("./mounter");
-const checker_1 = require("./checker");
-const cloner_1 = require("./cloner");
+const services_1 = require("./services");
+const handlers_1 = require("./handlers");
 /**
- * Represents the validation criteria structure and its associated functions.
+ * Represents a schema for data validation, including the validation criteria structure.
  */
 class Schema {
     /**
-     * @param criteria Definition of validation criteria.
-     * Once the class has been instantiated, modifying
-     * these `criteria` will have no effect.
+     * Initializes a new schema with the provided validation criteria.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     * ```
+     * @param criteria - The definition of validation criteria.
+     * Once the class is instantiated, modifying these criteria will have no effect.
      */
     constructor(criteria) {
-        const clonedCriteria = (0, cloner_1.cloner)(criteria);
-        const mountedCriteria = (0, mounter_1.mounter)(clonedCriteria);
+        this.mapper = new handlers_1.Mapper();
+        const clonedCriteria = (0, services_1.cloner)(criteria);
+        const mountedCriteria = (0, services_1.mounter)(this.mapper, clonedCriteria);
         this.criteria = mountedCriteria;
     }
     /**
-     * @param value Data to be validated
+     * Validates the provided data against the schema.
      *
-     * @returns `true` if value is compliant, otherwise `false`. This function
-     * is a guard type that predicts validated data, see example below.
+     * @param value - The data to be validated.
+     * @param onReject - (Optional) A callback function triggered if validation fails.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     *
-     * let user = { name: "Tintin" };
-     *
-     * if (userSchema.guard(user)) {
-     *     // The “user” type is : { name: string; }
-     * }
-     * ```
+     * @returns `true` if the value is **valid**, otherwise `false`.
+     * This function acts as a **type guard**, ensuring that the validated data conforms
+     * to `GuardedCriteria<T>`. See the example below for usage.
      */
-    guard(value, rejectCallback) {
-        const reject = (0, checker_1.checker)(this.criteria, value);
-        if (reject && rejectCallback)
-            rejectCallback(reject);
+    validate(value) {
+        const reject = (0, services_1.checker)(this.criteria, value);
         return (!reject);
     }
     /**
-     * @param value Data to be validated
+     * Validates the provided data against the schema.
      *
-     * @returns `null` if value is compliant, otherwise `SchemaCheckReject`.
+     * @param value - The data to be validated.
      *
-     * @example
-     * ```ts
-     * const userSchema = new Schema({
-     *     type: "struct",
-     *     struct: {
-     *         name: { type: "string" }
-     *     }
-     * });
-     *
-     * let user = { name: 667 };
-     *
-     * const reject = userSchema.check(user);
-     *
-     * if (reject) {
-     *     console.log("The '" + reject.type + "' type was rejected with the following code : " + reject.code);
-     * }
-     * ```
+     * @returns An object containing:
+     * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
+     * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
-    check(value) {
-        const reject = (0, checker_1.checker)(this.criteria, value);
-        return (reject);
+    evaluate(value) {
+        const reject = (0, services_1.checker)(this.criteria, value);
+        if (reject)
+            return ({ reject, value: null });
+        return { reject: null, value };
     }
 }
 exports.Schema = Schema;

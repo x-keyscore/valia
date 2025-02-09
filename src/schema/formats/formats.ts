@@ -1,4 +1,4 @@
-import type { FormatTemplate, VariantCriteria, DefaultVariantCriteria } from "./types";
+import type { FormatTemplate, TunableCriteria, StaticTunableCriteria } from "./types";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { RecordFormat } from "./record/format";
@@ -9,19 +9,19 @@ import { SymbolFormat } from "./symbol/format";
 import { BooleanFormat } from "./boolean/format";
 import { UnionFormat } from "./union/format";
 
-export const defaultVariantCriteria: DefaultVariantCriteria = {
+export const staticTunableCriteria: StaticTunableCriteria = {
 	nullable: false,
 	undefinable: false
 }
 
-export const formats: Record<string, FormatTemplate<VariantCriteria>> = {
+export const formats: Record<string, FormatTemplate<TunableCriteria>> = {
 	array: ArrayFormat,
-	tuple: TupleFormat,
-	record: RecordFormat,
-	struct: StructFormat,
-	number: NumberFormat,
-	string: StringFormat,
-	symbol: SymbolFormat,
 	boolean: BooleanFormat,
+	number: NumberFormat,
+	record: RecordFormat,
+	string: StringFormat,
+	struct: StructFormat,
+	symbol: SymbolFormat,
+	tuple: TupleFormat,
 	union: UnionFormat
 };

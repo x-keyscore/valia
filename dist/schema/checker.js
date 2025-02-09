@@ -16,9 +16,9 @@ function manageTaskLink(link, isReject) {
     }
     return (false);
 }
-function reject(mapper, criteria, rejectState) {
+function reject(mapper, criteria, rejectCode) {
     return ({
-        code: "REJECT_" + rejectState,
+        code: rejectCode,
         path: mapper.getPath(criteria, "."),
         type: criteria.type,
         label: criteria.label,
@@ -43,10 +43,10 @@ function checker(criteria, value) {
             return (reject(mapper, criteria, "TYPE_UNDEFINED"));
         }
         const format = formats_1.formats[criteria.type];
-        const rejectState = format.checking(queue, criteria, value);
-        const rejectBypass = manageTaskLink(link, !!rejectState);
-        if (!rejectBypass && rejectState) {
-            return (reject(mapper, criteria, rejectState));
+        const rejectCode = format.checking(queue, criteria, value);
+        const rejectBypass = manageTaskLink(link, !!rejectCode);
+        if (!rejectBypass && rejectCode) {
+            return (reject(mapper, criteria, rejectCode));
         }
     }
     return (null);

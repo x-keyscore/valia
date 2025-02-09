@@ -1,14 +1,15 @@
-import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, FormatsGuard, VariantCriteria, MountedCriteria } from "../types";
-export interface UnionVariantCriteria extends VariantCriteriaTemplate<"union"> {
-    union: [VariantCriteria, ...VariantCriteria[]];
+import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+export interface UnionTunableCriteria extends TunableCriteriaTemplate<"union"> {
+    union: [TunableCriteria, ...TunableCriteria[]];
 }
 export interface UnionMountedCriteria {
-    union: [MountedCriteria<VariantCriteria>, ...MountedCriteria<VariantCriteria>[]];
+    union: [MountedCriteria<TunableCriteria>, ...MountedCriteria<TunableCriteria>[]];
 }
-export interface UnionConcreteTypes extends ConcreteTypesTemplate<UnionVariantCriteria, {}, UnionMountedCriteria> {
+export interface UnionConcreteTypes extends ConcreteTypesTemplate<UnionTunableCriteria, {}> {
 }
-type UnionGuard<T extends VariantCriteria> = T extends UnionVariantCriteria ? {
-    [I in keyof T['union']]: T['union'][I] extends VariantCriteria ? FormatsGuard<T['union'][I]> : never;
-}[keyof T['union']] : never;
-export type UnionGenericTypes<T extends VariantCriteria> = GenericTypesTemplate<UnionVariantCriteria, UnionGuard<T>>;
+type UnionGuardedCriteria<T extends UnionTunableCriteria> = {
+    [I in keyof T['union']]: T['union'][I] extends TunableCriteria ? GuardedCriteria<T['union'][I]> : never;
+}[keyof T['union']];
+export interface UnionGenericTypes<T extends UnionTunableCriteria> extends GenericTypesTemplate<UnionTunableCriteria, UnionMountedCriteria, UnionGuardedCriteria<T>> {
+}
 export {};

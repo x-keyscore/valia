@@ -1,18 +1,18 @@
-import { VariantCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, VariantCriteria } from "../types";
+import { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
 
-export interface SymbolVariantCriteria extends VariantCriteriaTemplate<"symbol"> {
+export interface SymbolTunableCriteria extends TunableCriteriaTemplate<"symbol"> {
 	symbol?: symbol;
 }
 
 export interface SymbolConcreteTypes extends ConcreteTypesTemplate<
-	SymbolVariantCriteria,
-	{},
+	SymbolTunableCriteria,
 	{}
 > {}
 
-type SymbolGuard<T extends VariantCriteria> = T extends SymbolVariantCriteria ? symbol : never;
+type SymbolGuardedCriteria = symbol;
 
-export interface SymbolGenericTypes<T extends VariantCriteria> extends GenericTypesTemplate<
-	SymbolVariantCriteria,
-	SymbolGuard<T>
+export interface SymbolGenericTypes<T extends SymbolTunableCriteria> extends GenericTypesTemplate<
+	SymbolTunableCriteria,
+	{},
+	SymbolGuardedCriteria
 > {}

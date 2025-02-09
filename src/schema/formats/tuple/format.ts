@@ -1,9 +1,9 @@
-import type { TupleVariantCriteria } from "./types";
+import type { TupleTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../mounter";
+import { isMountedCriteria } from "../../services/mounter";
 import { isArray } from "../../../testers";
 
-export const TupleFormat: FormatTemplate<TupleVariantCriteria> = {
+export const TupleFormat: FormatTemplate<TupleTunableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},

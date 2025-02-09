@@ -4,12 +4,8 @@ exports.Mapper = exports.mapperSymbol = void 0;
 const utils_1 = require("../utils");
 exports.mapperSymbol = Symbol('mapper');
 class Mapper {
-    constructor(rootCriteria, data) {
+    constructor() {
         this.references = new Map();
-        this.references.set(rootCriteria, {
-            prev: null,
-            data
-        });
     }
     /**
      * Add a new criteria node to the mapper.

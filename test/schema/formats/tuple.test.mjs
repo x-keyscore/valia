@@ -14,15 +14,15 @@ describe("Schema format: 'tuple'", () => {
 			tuple: [{ type: "string" }, { type: "number" }]
 		});
 
-		assert.strictEqual(schema_tuple_empty.guard({}), false);
-		assert.strictEqual(schema_tuple_empty.guard("foo"), false);
-		assert.strictEqual(schema_tuple_empty.guard(new Date()), false);
-		assert.strictEqual(schema_tuple_empty.guard(new Uint16Array()), false);
-		assert.strictEqual(schema_tuple_empty.guard([]), true);
+		assert.strictEqual(schema_tuple_empty.validate({}), false);
+		assert.strictEqual(schema_tuple_empty.validate("foo"), false);
+		assert.strictEqual(schema_tuple_empty.validate(new Date()), false);
+		assert.strictEqual(schema_tuple_empty.validate(new Uint16Array()), false);
+		assert.strictEqual(schema_tuple_empty.validate([]), true);
 
-		assert.strictEqual(schema_tuple_used.guard([]), false);
-		assert.strictEqual(schema_tuple_used.guard(["foo"]), false);
-		assert.strictEqual(schema_tuple_used.guard(["foo", 667, "bar"]), false);
-		assert.strictEqual(schema_tuple_used.guard(["foo", 667]), true);
+		assert.strictEqual(schema_tuple_used.validate([]), false);
+		assert.strictEqual(schema_tuple_used.validate(["foo"]), false);
+		assert.strictEqual(schema_tuple_used.validate(["foo", 667, "bar"]), false);
+		assert.strictEqual(schema_tuple_used.validate(["foo", 667]), true);
 	});
 });

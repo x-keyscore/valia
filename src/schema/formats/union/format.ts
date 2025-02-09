@@ -1,9 +1,9 @@
-import type { SchemaCheckingTask } from "../../types";
-import type { UnionVariantCriteria } from "./types";
+import type { CheckingTask } from "../../services/types";
+import type { UnionTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../mounter";
+import { isMountedCriteria } from "../../services/mounter";
 
-export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
+export const UnionFormat: FormatTemplate<UnionTunableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
@@ -30,10 +30,10 @@ export const UnionFormat: FormatTemplate<UnionVariantCriteria> = {
 	checking(queue, criteria, value) {
 		const unionLength = criteria.union.length;
 
-		const link: NonNullable<SchemaCheckingTask['link']> = {
+		const link: NonNullable<CheckingTask['link']> = {
 			finished: false,
 			totalLinks: unionLength,
-			totalRejected: 0,
+			totalRejected: 0
 		}
 
 		for (let i = 0; i < unionLength; i++) {

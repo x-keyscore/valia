@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnionFormat = void 0;
-const mounter_1 = require("../../mounter");
+const mounter_1 = require("../../services/mounter");
 exports.UnionFormat = {
     defaultCriteria: {
         empty: false
@@ -31,7 +31,7 @@ exports.UnionFormat = {
         const link = {
             finished: false,
             totalLinks: unionLength,
-            totalRejected: 0,
+            totalRejected: 0
         };
         for (let i = 0; i < unionLength; i++) {
             queue.push({

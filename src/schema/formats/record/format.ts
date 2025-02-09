@@ -1,10 +1,10 @@
-import type { RecordVariantCriteria } from "./types";
+import type { RecordTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../mounter";
+import { isMountedCriteria } from "../../services/mounter";
 import { isPlainObject } from "../../../testers";
 import { formats } from "../formats";
 
-export const RecordFormat: FormatTemplate<RecordVariantCriteria> = {
+export const RecordFormat: FormatTemplate<RecordTunableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},

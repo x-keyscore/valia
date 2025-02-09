@@ -1,3 +1,3 @@
-import type { SymbolVariantCriteria } from "./types";
+import type { SymbolTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-export declare const SymbolFormat: FormatTemplate<SymbolVariantCriteria>;
+export declare const SymbolFormat: FormatTemplate<SymbolTunableCriteria>;

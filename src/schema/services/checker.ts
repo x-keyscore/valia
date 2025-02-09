@@ -1,9 +1,10 @@
-import type { SchemaCheckingTask, SchemaReject } from "./types";
-import { VariantCriteria, MountedCriteria, formats} from "./formats";
-import { MapperInstance, mapperSymbol } from './Mapper'
+import type { CheckingTask, CheckerReject } from "./types";
+import type { TunableCriteria, MountedCriteria } from "../formats";
+import { MapperInstance, mapperSymbol } from '../handlers'
+import { formats } from "../formats";
 
 function manageTaskLink(
-	link: SchemaCheckingTask['link'],
+	link: CheckingTask['link'],
 	isReject: boolean
 ) {
 	if (link) {
@@ -20,11 +21,11 @@ function manageTaskLink(
 
 function reject(
 	mapper: MapperInstance,
-	criteria: SchemaCheckingTask['criteria'],
-	rejectState: string
-): SchemaReject {
+	criteria: CheckingTask['criteria'],
+	rejectCode: string
+): CheckerReject {
 	return ({
-		code: "REJECT_" + rejectState,
+		code: rejectCode,
 		path: mapper.getPath(criteria, "."),
 		type: criteria.type,
 		label: criteria.label,
@@ -33,11 +34,11 @@ function reject(
 }
 
 export function checker(
-	criteria: MountedCriteria<VariantCriteria>,
+	criteria: MountedCriteria<TunableCriteria>,
 	value: unknown
-): SchemaReject | null {
+): CheckerReject | null {
 	const mapper = criteria[mapperSymbol];
-	let queue: SchemaCheckingTask[] = [{ criteria, value }];
+	let queue: CheckingTask[] = [{ criteria, value }];
 
 	while (queue.length > 0) {
 		const { criteria, value, link } = queue.pop()!;
@@ -54,11 +55,11 @@ export function checker(
 		}
 
 		const format = formats[criteria.type];
-		const rejectState = format.checking(queue, criteria, value);
-		const rejectBypass = manageTaskLink(link, !!rejectState);
+		const rejectCode = format.checking(queue, criteria, value);
+		const rejectBypass = manageTaskLink(link, !!rejectCode);
 
-		if (!rejectBypass && rejectState) {
-			return (reject(mapper, criteria, rejectState));
+		if (!rejectBypass && rejectCode) {
+			return (reject(mapper, criteria, rejectCode));
 		}
 	}
 

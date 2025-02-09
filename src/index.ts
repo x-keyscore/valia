@@ -1,7 +1,8 @@
 export {
 	Schema,
 	SchemaReject,
-	SchemaInfer
+	SchemaInfer,
+	schemaPlugins
 } from './schema';
 
 export {

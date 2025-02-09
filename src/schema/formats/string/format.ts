@@ -1,9 +1,8 @@
-import type { StringVariantCriteria } from "./types";
+import type { StringTunableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isArray, isPlainFunction, isPlainObject, testers } from "../../../testers";
-import { Err } from "../../../utils";
+import { isArray, isPlainObject, testers } from "../../../testers";
 
-export const StringFormat: FormatTemplate<StringVariantCriteria> = {
+export const StringFormat: FormatTemplate<StringTunableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
@@ -24,18 +23,18 @@ export const StringFormat: FormatTemplate<StringVariantCriteria> = {
 			return ("VALUE_SUPERIOR_MAX");
 		}
 		else if (criteria.enum !== undefined) {
-			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
+			if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
 				return ("VALUE_NOT_IN_ENUM");
-			} else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
+			} else if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
 				return ("VALUE_NOT_IN_ENUM");
 			}
 		}
 		else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
-			return ("VALUE_REGEX_FAILED");
+			return ("TEST_REGEX_FAILED");
 		} else if (criteria.tester && !testers.string[criteria.tester.name](value, criteria.tester?.params as any)) {
-			return ("VALUE_TESTER_FAILED");
+			return ("TEST_TESTER_FAILED");
 		} else if (criteria.custom && !criteria.custom(value)) {
-			return ("VALUE_CUSTOM_FAILED");
+			return ("TEST_CUSTOM_FAILED");
 		}
 
 		return (null);
