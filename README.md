@@ -61,7 +61,7 @@ if (userSchema.validate(data) {
 |--|--|
 |`criteria`  |Property representing the mounted validation criteria.|
 |`validate()`|Validates the provided data against the schema. A boolean is returned. This function is a type guard, so if it returns true, the value passed as a parameter will be of the type defined by your schema.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`validout()`|Validates the provided data against the schema. An object is returned with the value passed as a parameter and the rejection status. If the reject status is null, then the returned value will have the type defined by your schema.|
+|`evaluate()`|Validates the provided data against the schema. An object is returned with the value passed as a parameter and the rejection status. If the reject status is null, then the returned value will have the type defined by your schema.|
 
 ```ts
 criteria: MountedCriteria<T>;
