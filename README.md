@@ -65,7 +65,7 @@ if (userSchema.validate(data) {
 
 ```ts
 criteria: MountedCriteria<T>;
-validate(value: unknown, onReject?: (reject: SchemaReject) => void): value is GuardedCriteria<T>;
+validate(value: unknown): value is GuardedCriteria<T>;
 evaluate(value: unknown): { reject: SchemaReject, value: null } | { reject: null, value: GuardedCriteria<T> };
 ```
 ```ts
