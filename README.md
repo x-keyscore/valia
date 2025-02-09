@@ -1,4 +1,4 @@
-# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/vali.ts)
+# VALI.TS &middot; [![npm version](https://img.shields.io/npm/v/vali.ts.svg?style=flat)](https://www.npmjs.com/package/valie)
 
 Runtime data validator witten in TypeScript.
 
