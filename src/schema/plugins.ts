@@ -5,16 +5,16 @@ import { Schema } from "./Schema";
 import { Err } from "../utils";
 
 export abstract class SchemaPluginAbstract<const T extends TunableCriteria> extends Schema<T> {
-    /**
-     * This method is required because if the user mixes multiple plugins, the constructors cannot be used.
-     * 
-     * Therefore, this method will be called when the main class is instantiated.
-     */
-    protected abstract init(...args: ConstructorParameters<SchemaType<T>>): void;
+	/**
+	 * This method is required because if the user mixes multiple plugins, the constructors cannot be used.
+	 * 
+	 * Therefore, this method will be called when the main class is instantiated.
+	 */
+	protected abstract init(...args: ConstructorParameters<SchemaType<T>>): void;
 
-    constructor(...args: ConstructorParameters<SchemaType<T>>) {
-        super(...args);
-    }
+	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+		super(...args);
+	}
 }
 
 function mixinProperties(
@@ -49,40 +49,40 @@ function mixinProperties(
 }
 
 export function schemaPlugins<T, U, V, W, X, Y>(
-    plugin_1: new (...args: T[]) => U,
-    plugin_2?: new (...args: V[]) => W,
-    plugin_3?: new (...args: X[]) => Y
+	plugin_1: new (...args: T[]) => U,
+	plugin_2?: new (...args: V[]) => W,
+	plugin_3?: new (...args: X[]) => Y
 ) {
-    try {
-        let plugins = [plugin_1, plugin_2, plugin_3];
-        let initMethodKeys: string[] = [];
+	try {
+		let plugins = [plugin_1, plugin_2, plugin_3];
+		let initMethodKeys: string[] = [];
 
-        const transformKey = (key: string) => {
-            if (key === "init") {
-                const newKey = "init_" + initMethodKeys.length;
-                initMethodKeys.push(newKey);
-                return (newKey);
-            }
-        }
+		const pluggedSchema = class PluggedSchema<T extends TunableCriteria> extends Schema<T> {
+			constructor(...args: ConstructorParameters<typeof Schema<T>>) {
+				super(...args);
 
-        const extendedSchema = class ExtendedSchema<T extends TunableCriteria> extends Schema<T> {
-            constructor(...args: ConstructorParameters<typeof Schema<T>>) {
-                super(...args);
+				for (const key of initMethodKeys) {
+					(this[key as keyof typeof this] as (...args: any[]) => any)(...args);
+				}
+			}
+		}
 
-                for (const key of initMethodKeys) {
-                    (this[key as keyof typeof this] as (...args: any[]) => any)(...args);
-                }
-            }
-        }
+		const transformKey = (key: string) => {
+			if (key === "init") {
+				const newKey = "init_" + initMethodKeys.length;
+				initMethodKeys.push(newKey);
+				return (newKey);
+			}
+		}
 
-        for (const plugin of plugins) {
-            if (!plugin) break;
-            mixinProperties(plugin, extendedSchema, transformKey);
-        }
+		for (const plugin of plugins) {
+			if (!plugin) break;
+			mixinProperties(plugin, pluggedSchema, transformKey);
+		}
 
-        return extendedSchema as new (...args: T[] & V[] & X[]) => U & W & Y;
-    } catch (err) {
-        if (err instanceof Error) throw new Err("Schema plugining", err.message);
-        throw err;
-    }
+		return pluggedSchema as new (...args: T[] & V[] & X[]) => U & W & Y;
+	} catch (err) {
+		if (err instanceof Error) throw new Err("Schema extending", err.message);
+		throw err;
+	}
 }
