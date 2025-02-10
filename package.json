@@ -1,6 +1,6 @@
 {
 	"name": "valie",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "A runtime data validator in TypeScript with advanced type inference, built-in validation functions, and seamless integration for server and client environments.",
 	"homepage": "https://github.com/x-keyscore/valie#readme",
 	"main": "dist/index.js",
