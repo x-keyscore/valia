@@ -22,8 +22,8 @@
 		"start": "tsc && node dist",
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && tsc",
-		"build:pack": "npm run build && npm pack && mv -f ./*.tgz pack/",
-		"test": "npm run build && node --test"
+		"test": "npm run build && node --test",
+		"publish": "npm run test && node --test && npm publish"
 	},
 	"keywords": [
 		"valie",

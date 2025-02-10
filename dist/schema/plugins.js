@@ -36,14 +36,7 @@ function schemaPlugins(plugin_1, plugin_2, plugin_3) {
     try {
         let plugins = [plugin_1, plugin_2, plugin_3];
         let initMethodKeys = [];
-        const transformKey = (key) => {
-            if (key === "init") {
-                const newKey = "init_" + initMethodKeys.length;
-                initMethodKeys.push(newKey);
-                return (newKey);
-            }
-        };
-        const extendedSchema = class ExtendedSchema extends Schema_1.Schema {
+        const pluggedSchema = class PluggedSchema extends Schema_1.Schema {
             constructor(...args) {
                 super(...args);
                 for (const key of initMethodKeys) {
@@ -51,16 +44,23 @@ function schemaPlugins(plugin_1, plugin_2, plugin_3) {
                 }
             }
         };
+        const transformKey = (key) => {
+            if (key === "init") {
+                const newKey = "init_" + initMethodKeys.length;
+                initMethodKeys.push(newKey);
+                return (newKey);
+            }
+        };
         for (const plugin of plugins) {
             if (!plugin)
                 break;
-            mixinProperties(plugin, extendedSchema, transformKey);
+            mixinProperties(plugin, pluggedSchema, transformKey);
         }
-        return extendedSchema;
+        return pluggedSchema;
     }
     catch (err) {
         if (err instanceof Error)
-            throw new utils_1.Err("Schema plugining", err.message);
+            throw new utils_1.Err("Schema extending", err.message);
         throw err;
     }
 }
