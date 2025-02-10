@@ -7,8 +7,14 @@
 	"module": "dist/index.js",
 	"types": "dist/types/index.d.ts",
 	"exports": {
-		"devkit": {
+		".": {
+    		"import": "./dist/index.js",
+    		"require": "./dist/index.js",
+    		"types": "./dist/types/index.d.ts"
+  		},
+		"./devkit": {
 			"import": "./dist/devkit.js",
+			"require": "./dist/devkit.js",
 			"types": "./dist/types/devkit.d.ts"
 		}
 	},
