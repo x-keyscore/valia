@@ -8,18 +8,20 @@ const utils_1 = require("../utils");
  * Represents a schema for data validation, including the validation criteria structure.
  */
 class Schema {
-    mountCriteria(definedCriteria) {
+    initiate(definedCriteria) {
         const clonedCriteria = (0, services_1.cloner)(definedCriteria);
-        this.mountedCriteria = (0, services_1.mounter)(this.registryManager, this.eventsManager, clonedCriteria);
+        this.mountedCriteria = (0, services_1.mounter)(this.managers.registry, this.managers.events, clonedCriteria);
     }
     constructor(criteria) {
-        this.registryManager = managers_1.registryManager.call(this);
-        this.eventsManager = managers_1.eventsManager.call(this);
-        // Deferred preparation of criteria if not called directly,
+        this.managers = {
+            registry: managers_1.registryManager.call(this),
+            events: managers_1.eventsManager.call(this)
+        };
+        // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
         // rules and actions for the preparation of the criteria.
-        if (new.target.name === "Schema") {
-            this.mountCriteria(criteria);
+        if (new.target.name === this.constructor.name) {
+            this.initiate(criteria);
         }
     }
     /**
@@ -28,7 +30,7 @@ class Schema {
      */
     get criteria() {
         if (!this.mountedCriteria) {
-            throw new utils_1.Issue("Schema", "The criteria have not been mounted.");
+            throw new utils_1.Issue("Schema", "The criteria have not been initialized.");
         }
         return (this.mountedCriteria);
     }
@@ -42,7 +44,7 @@ class Schema {
      * the validated data conforms to `GuardedCriteria<T>`.
      */
     validate(value) {
-        const reject = (0, services_1.checker)(this.registryManager, this.criteria, value);
+        const reject = (0, services_1.checker)(this.managers.registry, this.criteria, value);
         return (!reject);
     }
     /**
@@ -55,7 +57,7 @@ class Schema {
      * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
     evaluate(value) {
-        const reject = (0, services_1.checker)(this.registryManager, this.criteria, value);
+        const reject = (0, services_1.checker)(this.managers.registry, this.criteria, value);
         if (reject) {
             return ({ reject, value: null });
         }

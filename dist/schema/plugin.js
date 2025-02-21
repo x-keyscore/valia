@@ -35,20 +35,31 @@ function assignProperties(source, target, transformKey) {
 function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
     try {
         let plugins = [plugin_1, plugin_2, plugin_3];
-        let methodInitKeys = [];
+        let beforeInitKeys = [];
+        let afterInitKeys = [];
         const pluggedSchema = class PluggedSchema extends schema_1.Schema {
-            constructor(...args) {
-                super(...args);
-                for (const key of methodInitKeys) {
-                    this[key](...args);
+            constructor(criteria) {
+                super(criteria);
+                // METHODE CALL BEFORE INITIATION
+                for (const key of beforeInitKeys) {
+                    this[key]();
                 }
-                this.mountCriteria(args[0]);
+                this.initiate(criteria);
+                // METHODE CALL AFTER INITIATION
+                for (const key of afterInitKeys) {
+                    this[key]();
+                }
             }
         };
         const transformKey = (key) => {
-            if (key === "init") {
-                const newKey = "init_" + methodInitKeys.length;
-                methodInitKeys.push(newKey);
+            if (key === "beforeInitate") {
+                const newKey = "beforeInitate_" + beforeInitKeys.length;
+                beforeInitKeys.push(newKey);
+                return (newKey);
+            }
+            if (key === "afterInitate") {
+                const newKey = "afterInitate_" + afterInitKeys.length;
+                afterInitKeys.push(newKey);
                 return (newKey);
             }
         };
@@ -61,7 +72,7 @@ function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
     }
     catch (err) {
         if (err instanceof Error)
-            throw new utils_1.Issue("Schema factory", err.message);
+            throw new utils_1.Issue("Schema plugins", err.message);
         throw err;
     }
 }

@@ -3,21 +3,23 @@ import type { SetableCriteria, MountedCriteria, GuardedCriteria } from "./format
  * Represents a schema for data validation, including the validation criteria structure.
  */
 export declare class Schema<const T extends SetableCriteria> {
-    protected mountedCriteria: MountedCriteria<T> | undefined;
-    protected registryManager: {
-        registry: Map<import("./managers/types").RegistryKey, import("./managers/types").RegistryValue>;
-        set(prevCriteria: import("./managers/types").RegistryKey | null, currCriteria: import("./managers/types").RegistryKey, pathSegments: import("./managers/types").RegistryValue["pathSegments"]): void;
-        junction(targetCriteria: MountedCriteria): void;
-        getNextCriteria(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
-        getPathSegments(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
+    private mountedCriteria;
+    protected managers: {
+        registry: {
+            registry: Map<import("./managers/types").RegistryKey, import("./managers/types").RegistryValue>;
+            set(prevCriteria: import("./managers/types").RegistryKey | null, currCriteria: import("./managers/types").RegistryKey, pathSegments: import("./managers/types").RegistryValue["pathSegments"]): void;
+            junction(targetCriteria: MountedCriteria): void;
+            getNextCriteria(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
+            getPathSegments(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
+        };
+        events: {
+            listeners: Map<keyof import("./managers/types").Events, ((...args: any[]) => any)[]>;
+            on<K extends keyof import("./managers/types").Events>(event: K, callback: import("./managers/types").Events[K]): void;
+            emit<K extends keyof import("./managers/types").Events>(event: K, ...args: Parameters<import("./managers/types").Events[K]>): void;
+            off<K extends keyof import("./managers/types").Events>(event: K, callback: import("./managers/types").Events[K]): void;
+        };
     };
-    protected eventsManager: {
-        listeners: Map<keyof import("./managers/types").Events, ((...args: any[]) => any)[]>;
-        on<K extends keyof import("./managers/types").Events>(event: K, callback: import("./managers/types").Events[K]): void;
-        emit<K extends keyof import("./managers/types").Events>(event: K, ...args: Parameters<import("./managers/types").Events[K]>): void;
-        off<K extends keyof import("./managers/types").Events>(event: K, callback: import("./managers/types").Events[K]): void;
-    };
-    protected mountCriteria(definedCriteria: T): void;
+    protected initiate(definedCriteria: T): void;
     constructor(criteria: T);
     /**
      * Properties representing the root of the mounted criteria,
