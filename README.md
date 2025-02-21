@@ -1,4 +1,4 @@
-# Valie &middot; [![npm version](https://img.shields.io/npm/v/valie.svg?style=flat)](https://www.npmjs.com/package/valie)
+# Valia &middot; [![npm version](https://img.shields.io/npm/v/valie.svg?style=flat)](https://www.npmjs.com/package/valie)
 
 Runtime data validator witten in TypeScript.
 
@@ -72,7 +72,10 @@ evaluate(value: unknown): { reject: SchemaReject, value: null } | { reject: null
 interface SchemaReject {
   code: string;
   type: string;
-  path: string;
+  path: {
+    explicit: [],
+    implicit: []
+  };
   label: string | undefined;
   message: string | undefined;
 };
@@ -373,10 +376,11 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 |Function|Description|
 |--|--|
 |`isObject`                |Checks if it is an object.|
-|`isPlainObject`           |Checks if it is an object but does not inherit from a native prototype. For instance, it will return false for a `RegExp` object.|
+|`isBasicObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`.|
+|`isPlainObject`           |Checks if it is an object, if it has a prototype of `Object.prototype` or `null`, and if it contains only keys of type `string` or `symbol`.|
 |`isArray`                 |Checks if it is an array.|
 |`isFunction`              |Checks if it is an function.|
-|`isPlainFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
+|`isBasicFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
 |`isAsyncFunction`         |Checks if it is an async function.|
 |`isGeneratorFunction`     |Checks if it is an generator function.|
 |`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
