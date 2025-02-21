@@ -21,7 +21,7 @@ this ensures that the validated data’s type is **precisely inferred**, allowin
 
 ## Getting started
 ```
-npm install vali.ts
+npm install valia
 ```
 ```ts
 import { Schema, SchemaInfer } from 'vali.ts';
