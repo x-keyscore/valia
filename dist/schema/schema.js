@@ -15,9 +15,6 @@ class Schema {
     constructor(criteria) {
         this.registryManager = managers_1.registryManager.call(this);
         this.eventsManager = managers_1.eventsManager.call(this);
-        this.eventsManager.on("CRITERIA_NODE_MOUNTED", (criteria, path) => {
-            //console.log(path.explicit);
-        });
         // Deferred preparation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
         // rules and actions for the preparation of the criteria.
