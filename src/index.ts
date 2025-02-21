@@ -48,3 +48,7 @@ export {
 	base64ToBase16,
 	base32ToBase16
 } from './tools';
+
+export {
+	Issue
+} from './utils';

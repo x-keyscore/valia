@@ -6,11 +6,17 @@ import { Issue } from "../utils";
 
 export abstract class AbstractPlugin<const T extends SetableCriteria> extends Schema<T> {
 	/**
-	 * This method is required because if the user mixes multiple plugins, the constructors cannot be used.
+	 * This method is automatically called before the schema initialization.
 	 * 
-	 * Therefore, this method will be called when the main class is instantiated.
+	 * This allows, for example, to subscribe to events that will occur
+	 * during the initialization.
 	 */
-	protected abstract init(...args: ConstructorParameters<SchemaType<T>>): void;
+	protected abstract beforeInitate(): void;
+
+	/**
+	 * This method is automatically called after the schema initialization.
+	 */
+	protected abstract afterInitate(): void;
 
 	constructor(...args: ConstructorParameters<SchemaType<T>>) {
 		super(...args);
@@ -55,24 +61,36 @@ export function SchemaPlugins<T, U, V, W, X, Y>(
 ) {
 	try {
 		let plugins = [plugin_1, plugin_2, plugin_3];
-		let methodInitKeys: string[] = [];
+		let beforeInitKeys: string[] = [];
+		let afterInitKeys: string[] = [];
 
 		const pluggedSchema = class PluggedSchema<T extends SetableCriteria> extends Schema<T> {
-			constructor(...args: ConstructorParameters<typeof Schema<T>>) {
-				super(...args);
+			constructor(criteria: T) {
+				super(criteria);
 
-				for (const key of methodInitKeys) {
-					(this[key as keyof typeof this] as (...args: any[]) => any)(...args);
+				// METHODE CALL BEFORE INITIATION
+				for (const key of beforeInitKeys) {
+					(this[key as keyof typeof this] as () => any)();
 				}
 
-				this.mountCriteria(args[0]);
+				this.initiate(criteria);
+
+				// METHODE CALL AFTER INITIATION
+				for (const key of afterInitKeys) {
+					(this[key as keyof typeof this] as () => any)();
+				}
 			}
 		}
 
 		const transformKey = (key: string) => {
-			if (key === "init") {
-				const newKey = "init_" + methodInitKeys.length;
-				methodInitKeys.push(newKey);
+			if (key === "beforeInitate") {
+				const newKey = "beforeInitate_" + beforeInitKeys.length;
+				beforeInitKeys.push(newKey);
+				return (newKey);
+			}
+			if (key === "afterInitate") {
+				const newKey = "afterInitate_" + afterInitKeys.length;
+				afterInitKeys.push(newKey);
 				return (newKey);
 			}
 		}
@@ -84,7 +102,7 @@ export function SchemaPlugins<T, U, V, W, X, Y>(
 
 		return (pluggedSchema) as new (...args: T[] & V[] & X[]) => U & W & Y;
 	} catch (err) {
-		if (err instanceof Error) throw new Issue("Schema factory", err.message);
+		if (err instanceof Error) throw new Issue("Schema plugins", err.message);
 		throw err;
 	}
 }

@@ -7,26 +7,28 @@ import { Issue } from "../utils";
  * Represents a schema for data validation, including the validation criteria structure.
  */
 export class Schema<const T extends SetableCriteria> {
-	protected mountedCriteria: MountedCriteria<T> | undefined;
-	protected registryManager = registryManager.call(this);
-	protected eventsManager = eventsManager.call(this);
+	private mountedCriteria: MountedCriteria<T> | undefined;
+	protected managers = {
+		registry: registryManager.call(this),
+		events: eventsManager.call(this)
+	}
 
-	protected mountCriteria(definedCriteria: T) {
+	protected initiate(definedCriteria: T) {
 		const clonedCriteria = cloner(definedCriteria);
 
 		this.mountedCriteria = mounter(
-			this.registryManager,
-			this.eventsManager,
+			this.managers.registry,
+			this.managers.events,
 			clonedCriteria
 		);
 	}
 
 	constructor(criteria: T) {
-		// Deferred preparation of criteria if not called directly,
+		// Deferred initiation of criteria if not called directly,
 		// as plugins (or custom extensions) may set up specific
 		// rules and actions for the preparation of the criteria.
-		if (new.target.name === "Schema") {
-			this.mountCriteria(criteria);
+		if (new.target.name === this.constructor.name) {
+			this.initiate(criteria);
 		}
 	}
 
@@ -36,10 +38,7 @@ export class Schema<const T extends SetableCriteria> {
 	 */
 	get criteria(): MountedCriteria<T> {
 		if (!this.mountedCriteria) {
-			throw new Issue(
-				"Schema",
-				"The criteria have not been mounted."
-			);
+			throw new Issue("Schema", "The criteria have not been initialized.");
 		}
 		return (this.mountedCriteria);
 	}
@@ -54,7 +53,7 @@ export class Schema<const T extends SetableCriteria> {
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
 	validate(value: unknown): value is GuardedCriteria<T> {
-		const reject = checker(this.registryManager, this.criteria, value);
+		const reject = checker(this.managers.registry, this.criteria, value);
 		return (!reject);
 	}
 
@@ -68,7 +67,7 @@ export class Schema<const T extends SetableCriteria> {
 	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
 	 */
 	evaluate(value: unknown) {
-		const reject = checker(this.registryManager, this.criteria, value);
+		const reject = checker(this.managers.registry, this.criteria, value);
 		if (reject) {
 			return ({ reject, value: null });
 		}
