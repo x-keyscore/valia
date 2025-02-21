@@ -1,4 +1,4 @@
-# Valia &middot; [![npm version](https://img.shields.io/npm/v/valie.svg?style=flat)](https://www.npmjs.com/package/valie)
+# Valia &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
 
 Runtime data validator witten in TypeScript.
 
