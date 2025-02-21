@@ -10,8 +10,7 @@
 		"start": "tsc && node dist",
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && tsc",
-		"test": "npm run build && node --test",
-		"publish": "npm run test && npm publish"
+		"test": "npm run build && node --test"
 	},
 	"keywords": [
 		"valia",
