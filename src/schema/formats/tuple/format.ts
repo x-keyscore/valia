@@ -1,32 +1,25 @@
-import type { TupleTunableCriteria } from "./types";
+import type { TupleSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../services/mounter";
 import { isArray } from "../../../testers";
 
-export const TupleFormat: FormatTemplate<TupleTunableCriteria> = {
+export const TupleFormat: FormatTemplate<TupleSetableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
-	mounting(queue, mapper, definedCriteria, mountedCriteria) {
-		for (let i = 0; i < definedCriteria.tuple.length; i++) {
-			const definedCriteriaItem = definedCriteria.tuple[i];
-			if (isMountedCriteria(definedCriteriaItem)) {
-				mapper.merge(mountedCriteria, definedCriteriaItem, {
-					pathParts: [`tuple[${i}]`]
-				});
-				mountedCriteria.tuple[i] = definedCriteriaItem;
-			} else {
-				mapper.add(mountedCriteria, mountedCriteria.tuple[i], {
-					pathParts: [`tuple[${i}]`]
-				});
-				queue.push({
-					definedCriteria: definedCriteriaItem,
-					mountedCriteria: mountedCriteria.tuple[i]
-				});
-			}
+	mounting(queue, path, criteria) {
+		for (let i = 0; i < criteria.tuple.length; i++) {
+			queue.push({
+				prevCriteria: criteria,
+				prevPath: path,
+				criteria: criteria.tuple[i],
+				pathSegments: {
+					explicit: ["tuple", i],
+					implicit: ["&", i]
+				}
+			});
 		}
 	},
-	checking(queue, criteria, value) {
+	checking(queue, path, criteria, value) {
 		if (!isArray(value)) {
 			return ("TYPE_NOT_ARRAY");
 		}
@@ -42,6 +35,7 @@ export const TupleFormat: FormatTemplate<TupleTunableCriteria> = {
 
 		for (let i = 0; i < value.length; i++) {
 			queue.push({
+				prevPath: path,
 				criteria: criteria.tuple[i],
 				value: value[i]
 			});

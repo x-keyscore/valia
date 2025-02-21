@@ -1,14 +1,14 @@
-import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
-	TunableCriteria, TunableCriteriaMap, MountedCriteria, GuardedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+	SetableCriteria, SetableCriteriaMap, MountedCriteria, GuardedCriteria } from "../types";
 
-type KeyCriteria = TunableCriteriaMap["string" | "symbol"];
+type KeyCriteria = SetableCriteriaMap["string" | "symbol"];
 
-export interface RecordTunableCriteria extends TunableCriteriaTemplate<"record"> {
+export interface RecordSetableCriteria extends SetableCriteriaTemplate<"record"> {
 	empty?: boolean
 	min?: number;
 	max?: number;
 	key: KeyCriteria;
-	value: TunableCriteria
+	value: SetableCriteria
 }
 
 export interface RecordDefaultCriteria {
@@ -17,23 +17,23 @@ export interface RecordDefaultCriteria {
 
 export interface RecordMountedCriteria {
 	key: MountedCriteria<KeyCriteria>;
-	value: MountedCriteria<TunableCriteria>;
+	value: MountedCriteria<SetableCriteria>;
 }
 
 export interface RecordConcreteTypes extends ConcreteTypesTemplate<
-	RecordTunableCriteria,
+	RecordSetableCriteria,
 	RecordDefaultCriteria
 > {}
 
-type RecordGuardedCriteria<T extends RecordTunableCriteria> =
+type RecordGuardedCriteria<T extends RecordSetableCriteria> =
 	GuardedCriteria<T['key']> extends infer U
 		? U extends PropertyKey
 			? { [P in U]?: GuardedCriteria<T['value']> }
 			: never
 		: never;
 
-export interface RecordGenericTypes<T extends RecordTunableCriteria> extends GenericTypesTemplate<
-	RecordTunableCriteria,
+export interface RecordGenericTypes<T extends RecordSetableCriteria> extends GenericTypesTemplate<
+	RecordSetableCriteria,
 	RecordMountedCriteria,
 	RecordGuardedCriteria<T>
 > {}

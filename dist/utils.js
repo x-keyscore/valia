@@ -1,14 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Err = void 0;
-class Err extends Error {
+exports.Issue = void 0;
+class Issue extends Error {
     print(context, plugin) {
+        const red = '\x1b[31m', cyan = '\x1b[36m', gray = '\x1b[90m', reset = '\x1b[0m';
+        const concerned = `valia${plugin ? ":" + plugin : ""}`;
         const timestamp = new Date().toISOString();
-        const red = '\x1b[31m';
-        const gray = '\x1b[90m';
-        const cyan = '\x1b[36m';
-        const reset = '\x1b[0m';
-        console.log(`${red}[ERROR]${reset} ${cyan}[valie${plugin ? `:${plugin}` : ""}]${reset} ${gray}${timestamp}${reset}` +
+        console.log(`${red}[ERROR]${reset} ${cyan}[${concerned}]${reset} ${gray}${timestamp}${reset}` +
             `\nContext: ${context}` +
             `\nMessage: ${this.message}`);
     }
@@ -17,4 +15,4 @@ class Err extends Error {
         this.print(context, plugin);
     }
 }
-exports.Err = Err;
+exports.Issue = Issue;

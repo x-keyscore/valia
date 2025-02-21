@@ -4,7 +4,7 @@ exports.NumberFormat = void 0;
 const testers_1 = require("../../../testers");
 exports.NumberFormat = {
     defaultCriteria: {},
-    checking(queue, criteria, value) {
+    checking(queue, path, criteria, value) {
         if (typeof value !== "number") {
             return ("TYPE_NOT_NUMBER");
         }

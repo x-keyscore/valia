@@ -1,19 +1,49 @@
-import type { TunableCriteria, MountedCriteria } from "../formats";
+import type { SetableCriteria, MountedCriteria } from "../formats";
+import { RegistryPathSegments } from "../managers";
 export interface MountingTask {
-    definedCriteria: TunableCriteria;
-    mountedCriteria: MountedCriteria<TunableCriteria>;
+    prevCriteria: SetableCriteria | MountedCriteria | null;
+    prevPath: RegistryPathSegments;
+    criteria: SetableCriteria | MountedCriteria;
+    pathSegments: RegistryPathSegments;
 }
-interface CheckingTaskLink {
-    finished: boolean;
-    totalLinks: number;
-    totalRejected: number;
-}
-export interface CheckingTask {
-    criteria: MountedCriteria<TunableCriteria>;
+/**
+ * @template U Custom members you want to add to the object.
+ */
+export type CheckingTaskHooks<U extends Record<string, any> = {
+    [key: string]: any;
+}> = {
+    /**
+     * Criteria responsible for managing the hooks.
+     * This information will be included in the rejection reasons
+     * if a hook returns a rejection code.
+     */
+    owner: {
+        criteria: MountedCriteria;
+        path: RegistryPathSegments;
+    };
+    /**
+     * Hook executed just before the verification process.
+     * - Returns `true`: Proceeds with the verification.
+     * - Returns `false`: Cancels the verification.
+     * - Returns a rejection code: Terminates the entire verification process.
+     */
+    beforeCheck(criteria: MountedCriteria): boolean | string;
+    /**
+     * Hook executed immediately after the verification process.
+     * - Returns `true`: Proceed to the other verification.
+     * - Returns `false`: Bypasses the rejection.
+     * - Returns a rejection code: Terminates the entire verification process.
+     */
+    afterCheck(criteria: MountedCriteria, reject: string | null): boolean | string;
+} & U;
+export type CheckingTask = {
+    prevPath: RegistryPathSegments;
+    criteria: MountedCriteria<SetableCriteria>;
     value: unknown;
-    link?: CheckingTaskLink;
-}
+    hooks?: CheckingTaskHooks;
+};
 export interface CheckerReject {
+    path: RegistryPathSegments;
     /**
      * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
      *
@@ -25,8 +55,6 @@ export interface CheckerReject {
      */
     code: string;
     type: string;
-    path: string;
     label: string | undefined;
     message: string | undefined;
 }
-export {};

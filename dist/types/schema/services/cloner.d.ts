@@ -1,10 +1,11 @@
-import type { TunableCriteria } from "../formats";
+import type { SetableCriteria } from "../formats";
 /**
  * Clones the object starting from the root and stops traversing a branch
- * when the `mountedMarker` symbol is encountered. In such cases, the object
- * containing the symbol is directly assigned to the corresponding node.
+ * when a mounted criteria node is encountered. In such cases, the mounted
+ * object encountered see its internal properties copied to a new reference
+ * so that the junction is a unique reference in the tree.
  *
  * @param src Source object of the clone
  * @returns Clone of the source object
  */
-export declare function cloner<T extends TunableCriteria>(src: T): T;
+export declare function cloner<T extends SetableCriteria>(src: T): T;

@@ -1,1 +1,1 @@
-export { isObject, isPlainObject, isArray, isPlainFunction, isAsyncFunction, isAsyncGenerator, isGeneratorFunction, isAsyncGeneratorFunction, isGenerator, isRegExp } from './object';
+export { isObject, isBasicObject, isPlainObject, isArray, isFunction, isBasicFunction, isAsyncFunction, isGeneratorFunction, isAsyncGeneratorFunction, } from './object';

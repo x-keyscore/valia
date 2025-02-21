@@ -1,3 +1,3 @@
-import type { BooleanTunableCriteria } from "./types";
+import type { BooleanSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-export declare const BooleanFormat: FormatTemplate<BooleanTunableCriteria>;
+export declare const BooleanFormat: FormatTemplate<BooleanSetableCriteria>;

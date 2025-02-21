@@ -6,7 +6,7 @@ exports.StringFormat = {
     defaultCriteria: {
         empty: true
     },
-    checking(queue, criteria, value) {
+    checking(queue, path, criteria, value) {
         var _a;
         if (typeof value !== "string") {
             return ("TYPE_NOT_STRING");

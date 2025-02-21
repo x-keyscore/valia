@@ -21,7 +21,7 @@ const base64UrlRegex = (0, utils_2.lazy)(() => new RegExp("^(?:[A-Za-z0-9_-]{4})
  */
 function isBase64(str, params) {
     if (typeof str !== "string")
-        new utils_1.Err("Parameters", "'str' must be of type string.");
+        new utils_1.Issue("Parameters", "'str' must be of type string.");
     return (str.length % 4 == 0 && base64Regex.test(str));
 }
 /**
@@ -33,7 +33,7 @@ function isBase64(str, params) {
  */
 function isBase64Url(str, params) {
     if (typeof str !== "string")
-        new utils_1.Err("Parameters", "'str' must be of type string.");
+        new utils_1.Issue("Parameters", "'str' must be of type string.");
     return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }
 /**
@@ -45,7 +45,7 @@ function isBase64Url(str, params) {
  */
 function isBase32(str, params) {
     if (typeof str !== "string")
-        new utils_1.Err("Parameters", "'str' must be of type string.");
+        new utils_1.Issue("Parameters", "'str' must be of type string.");
     return (str.length % 8 === 0 && base32Regex.test(str));
 }
 /**
@@ -57,7 +57,7 @@ function isBase32(str, params) {
  */
 function isBase32Hex(str, params) {
     if (typeof str !== "string")
-        new utils_1.Err("Parameters", "'str' must be of type string.");
+        new utils_1.Issue("Parameters", "'str' must be of type string.");
     return (str.length % 8 === 0 && base32HexRegex().test(str));
 }
 /**
@@ -69,6 +69,6 @@ function isBase32Hex(str, params) {
  */
 function isBase16(str, params) {
     if (typeof str !== "string")
-        new utils_1.Err("Parameters", "'str' must be of type string.");
+        new utils_1.Issue("Parameters", "'str' must be of type string.");
     return (str.length % 2 === 0 && base16Regex.test(str));
 }

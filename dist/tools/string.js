@@ -187,7 +187,7 @@ function base16ToBase64(input, to = "B64", padding = true) {
         return (convertBase16ToBase64(input, base64Url, padding));
     }
     else {
-        throw new utils_1.Err("Parameters", "The base64 type of the parameter 'to' is unknown.");
+        throw new utils_1.Issue("Parameters", "The base64 type of the parameter 'to' is unknown.");
     }
 }
 function base16ToBase32(input, to = "B16", padding = true) {
@@ -200,7 +200,7 @@ function base16ToBase32(input, to = "B16", padding = true) {
         return (convertBase16ToBase32(input, base32Hex, padding));
     }
     else {
-        throw new utils_1.Err("Parameters", "The base32 type of the parameter 'to' is unknown.");
+        throw new utils_1.Issue("Parameters", "The base32 type of the parameter 'to' is unknown.");
     }
 }
 function base64ToBase16(input, from = "B64") {
@@ -213,7 +213,7 @@ function base64ToBase16(input, from = "B64") {
         return (convertBase64ToBase16(input, base64Url));
     }
     else {
-        throw new utils_1.Err("Parameters", "The base64 type of the parameter 'from' is unknown.");
+        throw new utils_1.Issue("Parameters", "The base64 type of the parameter 'from' is unknown.");
     }
 }
 function base32ToBase16(input, from = "B16") {
@@ -226,6 +226,6 @@ function base32ToBase16(input, from = "B16") {
         return (convertBase32ToBase16(input, base32Hex));
     }
     else {
-        throw new utils_1.Err("Parameters", "The base32 type of the parameter 'from' is unknown.");
+        throw new utils_1.Issue("Parameters", "The base32 type of the parameter 'from' is unknown.");
     }
 }

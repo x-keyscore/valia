@@ -1,32 +1,17 @@
+import type { RegistryManager, RegistryPathSegments } from "../managers";
+import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { CheckingTask, CheckerReject } from "./types";
-import type { TunableCriteria, MountedCriteria } from "../formats";
-import { MapperInstance, mapperSymbol } from '../handlers'
 import { formats } from "../formats";
-
-function manageTaskLink(
-	link: CheckingTask['link'],
-	isReject: boolean
-) {
-	if (link) {
-		if (!isReject) {
-			link.finished = true;
-		} else {
-			link.totalRejected++;
-			if (link.totalLinks !== link.totalRejected) return (true);
-		}
-	}
-
-	return (false);
-}
+import { Issue } from "../../utils";
 
 function reject(
-	mapper: MapperInstance,
+	rejectCode: string,
 	criteria: CheckingTask['criteria'],
-	rejectCode: string
+	path: RegistryPathSegments
 ): CheckerReject {
 	return ({
+		path,
 		code: rejectCode,
-		path: mapper.getPath(criteria, "."),
 		type: criteria.type,
 		label: criteria.label,
 		message: criteria.message
@@ -34,32 +19,60 @@ function reject(
 }
 
 export function checker(
-	criteria: MountedCriteria<TunableCriteria>,
+	registryManager: RegistryManager,
+	criteria: MountedCriteria<SetableCriteria>,
 	value: unknown
 ): CheckerReject | null {
-	const mapper = criteria[mapperSymbol];
-	let queue: CheckingTask[] = [{ criteria, value }];
+	let queue: CheckingTask[] = [{
+		prevPath: { explicit: [], implicit: [] },
+		criteria,
+		value
+	}];
 
 	while (queue.length > 0) {
-		const { criteria, value, link } = queue.pop()!;
+		const { prevPath, criteria, value, hooks } = queue.pop()!;
 
-		if (link?.finished) continue;
+		const segsPath = registryManager.getPathSegments(criteria);
+		const path = {
+			explicit: [...prevPath.explicit, ...segsPath.explicit],
+			implicit: [...prevPath.implicit, ...segsPath.implicit],
+		}
 
+		if (hooks) {
+			const hookResponse = hooks.beforeCheck(criteria);
+			if (hookResponse === false) continue;
+			if (typeof hookResponse === "string") {
+				return(reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+			}
+		}
+
+		let rejectCode = null;
 		if (value === null) {
-			if (criteria.nullable) continue;
-			return (reject(mapper, criteria, "TYPE_NULL"));
-		}
-		else if (value === undefined) {
-			if (criteria.undefinable) continue;
-			return (reject(mapper, criteria, "TYPE_UNDEFINED"));
+			if (criteria.nullable) rejectCode = null;
+			else rejectCode = "TYPE_NULL";
+		} else if (value === undefined) {
+			if (criteria.undefinable) rejectCode = null;
+			else rejectCode = "TYPE_UNDEFINED";
+		} else {
+			const format = formats[criteria.type];
+			if (!format) throw new Issue(
+				"Checking",
+				"Type '" + criteria.type + "' is unknown."
+			);
+
+			rejectCode = format.checking(queue, path, criteria, value);
 		}
 
-		const format = formats[criteria.type];
-		const rejectCode = format.checking(queue, criteria, value);
-		const rejectBypass = manageTaskLink(link, !!rejectCode);
+		if (hooks) {
+			const hookResponse = hooks.afterCheck(criteria, rejectCode);
+			if (hookResponse === false) continue;
+			if (typeof hookResponse === "string") {
+				return(reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+			}
+		}
 
-		if (!rejectBypass && rejectCode) {
-			return (reject(mapper, criteria, rejectCode));
+		if (rejectCode) {
+			return (reject(rejectCode, criteria, path));
 		}
 	}
 

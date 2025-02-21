@@ -1,4 +1,4 @@
-import { Err } from "../../utils";
+import { Issue } from "../../utils";
 import { lazy } from "../utils";
 
 const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
@@ -17,7 +17,7 @@ const base64UrlRegex = lazy(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-
  * @version 1.0.0
  */
 export function isBase64(str: string, params?: undefined): boolean {
-	if (typeof str !== "string") new Err("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 4 == 0 && base64Regex.test(str));
 }
 
@@ -29,7 +29,7 @@ export function isBase64(str: string, params?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase64Url(str: string, params?: undefined): boolean {
-	if (typeof str !== "string") new Err("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }
 
@@ -41,7 +41,7 @@ export function isBase64Url(str: string, params?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase32(str: string, params?: undefined): boolean {
-	if (typeof str !== "string") new Err("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 8 === 0 && base32Regex.test(str));
 }
 
@@ -53,7 +53,7 @@ export function isBase32(str: string, params?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase32Hex(str: string, params?: undefined): boolean {
-	if (typeof str !== "string") new Err("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 8 === 0 && base32HexRegex().test(str));
 }
 
@@ -65,6 +65,6 @@ export function isBase32Hex(str: string, params?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase16(str: string, params?: undefined): boolean {
-	if (typeof str !== "string") new Err("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 2 === 0 && base16Regex.test(str));
 }

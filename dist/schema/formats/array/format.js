@@ -1,30 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArrayFormat = void 0;
-const mounter_1 = require("../../services/mounter");
 const testers_1 = require("../../../testers");
 exports.ArrayFormat = {
     defaultCriteria: {
         empty: true
     },
-    mounting(queue, mapper, definedCriteria, mountedCriteria) {
-        if ((0, mounter_1.isMountedCriteria)(definedCriteria.item)) {
-            mapper.merge(mountedCriteria, definedCriteria.item, {
-                pathParts: ["item"]
-            });
-            mountedCriteria.item = definedCriteria.item;
-        }
-        else {
-            mapper.add(mountedCriteria, mountedCriteria.item, {
-                pathParts: ["item"]
-            });
-            queue.push({
-                definedCriteria: definedCriteria.item,
-                mountedCriteria: mountedCriteria.item
-            });
-        }
+    mounting(queue, path, criteria) {
+        queue.push({
+            prevCriteria: criteria,
+            prevPath: path,
+            criteria: criteria.item,
+            pathSegments: {
+                explicit: ["item"],
+                implicit: ["%", "number"],
+            }
+        });
     },
-    checking(queue, criteria, value) {
+    checking(queue, path, criteria, value) {
         if (!(0, testers_1.isArray)(value)) {
             return ("TYPE_NOT_ARRAY");
         }
@@ -39,6 +32,7 @@ exports.ArrayFormat = {
         }
         for (let i = 0; i < value.length; i++) {
             queue.push({
+                prevPath: path,
                 criteria: criteria.item,
                 value: value[i]
             });

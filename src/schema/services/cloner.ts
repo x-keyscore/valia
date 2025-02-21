@@ -1,28 +1,28 @@
-import type { TunableCriteria } from "../formats";
-import { isArray, isPlainObject } from "../../testers";
+import type { SetableCriteria } from "../formats";
+import { isArray, isBasicObject } from "../../testers";
 import { isMountedCriteria } from "./mounter";
 
-interface SchemaCloningTask {
+interface CloningTask {
 	src: unknown;
 	cpy: any;
 }
 
 function processTask(
-	queue: SchemaCloningTask[],
-	{ src, cpy }: SchemaCloningTask
+	queue: CloningTask[],
+	{ src, cpy }: CloningTask
 ) {
-	if (isPlainObject(src)) {
+	if (isBasicObject(src)) {
 		if (isMountedCriteria(src)) {
-			cpy = src;
+			cpy = {...src};
 		}
 		else {
 			const keys = Reflect.ownKeys(src);
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
-				
-				if (isPlainObject(src[key])) {
+
+				if (isBasicObject(src[key])) {
 					if (isMountedCriteria(src[key])) {
-						cpy[key] = src[key];
+						cpy[key] = {...src[key]};
 					} else {
 						cpy[key] = {};
 
@@ -46,27 +46,28 @@ function processTask(
 	}
 	else if (isArray(src)) {
 		for (let i = 0; i < src.length; i++) {
-			
-			if (isPlainObject(src[i])) {
-				if (isMountedCriteria(src[i] as object)) {
-					cpy[i] = src[i];
+			const index = i;
+
+			if (isBasicObject(src[index])) {
+				if (isMountedCriteria(src[index])) {
+					cpy[i] = {...src[index]};
 				} else {
 					cpy[i] = {};
 
 					queue.push({
-						src: src[i],
-						cpy: cpy[i]
+						src: src[index],
+						cpy: cpy[index]
 					});
 				}
-			} else if (isArray(src[i])) {
-				cpy[i] = [];
+			} else if (isArray(src[index])) {
+				cpy[index] = [];
 
 				queue.push({
-					src: src[i],
-					cpy: cpy[i]
+					src: src[index],
+					cpy: cpy[index]
 				});
 			} else {
-				cpy[i] = src[i];
+				cpy[index] = src[index];
 			}
 		}
 	}
@@ -77,17 +78,18 @@ function processTask(
 
 /**
  * Clones the object starting from the root and stops traversing a branch
- * when the `mountedMarker` symbol is encountered. In such cases, the object
- * containing the symbol is directly assigned to the corresponding node.
+ * when a mounted criteria node is encountered. In such cases, the mounted
+ * object encountered see its internal properties copied to a new reference
+ * so that the junction is a unique reference in the tree.
  * 
  * @param src Source object of the clone
  * @returns Clone of the source object
  */
-export function cloner<T extends TunableCriteria>(
+export function cloner<T extends SetableCriteria>(
 	src: T
 ): T {
 	let cpy = {};
-	let queue: SchemaCloningTask[] = [{ src, cpy }];
+	let queue: CloningTask[] = [{ src, cpy }];
 
 	while (queue.length > 0) {
 		const currentTask = queue.pop()!;

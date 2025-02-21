@@ -1,3 +1,3 @@
-import type { RecordTunableCriteria } from "./types";
+import type { RecordSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-export declare const RecordFormat: FormatTemplate<RecordTunableCriteria>;
+export declare const RecordFormat: FormatTemplate<RecordSetableCriteria>;

@@ -1,78 +1,60 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
-import type { StructCriteria, StructTunableCriteria } from "./types";
-import { isMountedCriteria } from "../../services/mounter";
+import type { StructSetableCriteria, SetableStruct } from "./types";
 import { isPlainObject } from "../../../testers";
 
 interface CustomProperties {
 	hasRequiredKeys(
-		mountedCriteria: MountedCriteria<StructTunableCriteria>,
+		mountedCriteria: MountedCriteria<StructSetableCriteria>,
 		value: (string | symbol)[]
 	): boolean;
 	hasAcceptedKeys(
-		mountedCriteria: MountedCriteria<StructTunableCriteria>,
+		mountedCriteria: MountedCriteria<StructSetableCriteria>,
 		value: (string | symbol)[]
 	): boolean;
 }
 
-function isStructCriteria(obj: object): obj is StructCriteria {
+function isSubStruct(obj: object): obj is SetableStruct {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 
-export const StructFormat: FormatTemplate<StructTunableCriteria, CustomProperties> = {
+export const StructFormat: FormatTemplate<StructSetableCriteria, CustomProperties> = {
 	defaultCriteria: {},
-	mounting(queue, mapper, definedCriteria, mountedCriteria) {
-		const acceptedKeys = Reflect.ownKeys(definedCriteria.struct);
-		const optionalKeys = acceptedKeys.filter(key => !definedCriteria?.optional?.includes(key));
+	mounting(queue, path, criteria) {
+		const acceptedKeys = Reflect.ownKeys(criteria.struct);
+		const requiredKeys = acceptedKeys.filter(key => !criteria?.optional?.includes(key));
 
-		Object.assign(mountedCriteria, {
-			acceptedKeys: acceptedKeys,
-			requiredKeys: optionalKeys
-		});
+		Object.assign(criteria, { acceptedKeys, requiredKeys });
 
 		for (let i = 0; i < acceptedKeys.length; i++) {
 			const key = acceptedKeys[i];
 
-			if (isMountedCriteria(definedCriteria.struct[key])) {
-				mapper.merge(mountedCriteria, definedCriteria.struct[key], {
-					pathParts: ["struct", key.toString()]
-				});
-				mountedCriteria.struct[key] = definedCriteria.struct[key];
-			}
-			else if (isStructCriteria(definedCriteria.struct[key]))
-			{
-				definedCriteria.struct[key] = {
+			if (isSubStruct(criteria.struct[key])) {
+				criteria.struct[key] = {
 					type: "struct",
-					struct: definedCriteria.struct[key]
+					struct: criteria.struct[key]
 				}
-				mapper.add(mountedCriteria, mountedCriteria.struct[key], {
-					pathParts: ["struct", key.toString()]
-				});
-				queue.push({
-					definedCriteria: definedCriteria.struct[key] ,
-					mountedCriteria: mountedCriteria.struct[key]
-				});
 			}
-			else
-			{
-				mapper.add(mountedCriteria, mountedCriteria.struct[key], {
-					pathParts: ["struct", key.toString()]
-				});
-				queue.push({
-					definedCriteria: definedCriteria.struct[key],
-					mountedCriteria: mountedCriteria.struct[key]
-				});
-			}
+
+			queue.push({
+				prevCriteria: criteria,
+				prevPath: path,
+				criteria: criteria.struct[key],
+				pathSegments: {
+					explicit: ["struct", key],
+					implicit: ["&", key]
+				}
+			});
 		}
 	},
-	hasRequiredKeys(mountedCriteria, inputKeys) {
-		const requiredKeys = mountedCriteria.requiredKeys;
-		return (requiredKeys.length <= inputKeys.length && requiredKeys.every((key) => inputKeys.includes(key)));
+	hasRequiredKeys(criteria, keys) {
+		const requiredKeys = criteria.requiredKeys;
+		return (requiredKeys.length <= keys.length && requiredKeys.every((key) => keys.includes(key)));
 	},
-	hasAcceptedKeys(mountedCriteria, inputKeys) {
-		const definedKeys = mountedCriteria.acceptedKeys;
-		return (inputKeys.length <= definedKeys.length && inputKeys.every((key) => definedKeys.includes(key)));
+	hasAcceptedKeys(criteria, keys) {
+		const acceptedKeys = criteria.acceptedKeys;
+		return (keys.length <= acceptedKeys.length && keys.every((key) => acceptedKeys.includes(key)));
 	},
-	checking(queue, criteria, value) {
+	checking(queue, path, criteria, value) {
 		if (!isPlainObject(value)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
@@ -88,8 +70,9 @@ export const StructFormat: FormatTemplate<StructTunableCriteria, CustomPropertie
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 			queue.push({
+				prevPath: path,
 				criteria: criteria.struct[key],
-				value: value[key]
+				value: value[key],
 			});
 		}
 

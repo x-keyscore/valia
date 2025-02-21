@@ -1,4 +1,4 @@
-export type { MountingTask, CheckingTask } from './types';
-export { cloner } from "./cloner";
-export { mounter } from "./mounter";
+export type { MountingTask, CheckingTask, CheckingTaskHooks, CheckerReject } from './types';
+export { mounter, metadataSymbol } from "./mounter";
 export { checker } from "./checker";
+export { cloner } from "./cloner";

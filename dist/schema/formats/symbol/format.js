@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SymbolFormat = void 0;
 exports.SymbolFormat = {
     defaultCriteria: {},
-    checking(queue, criteria, value) {
+    checking(queue, path, criteria, value) {
         if (typeof value !== "symbol") {
             return "TYPE_NOT_SYMBOL";
         }

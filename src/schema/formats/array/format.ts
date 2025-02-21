@@ -1,29 +1,23 @@
-import type { ArrayTunableCriteria } from "./types";
+import type { ArraySetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-import { isMountedCriteria } from "../../services/mounter";
 import { isArray } from "../../../testers";
 
-export const ArrayFormat: FormatTemplate<ArrayTunableCriteria> = {
+export const ArrayFormat: FormatTemplate<ArraySetableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
-	mounting(queue, mapper, definedCriteria, mountedCriteria) {
-		if (isMountedCriteria(definedCriteria.item)) {
-			mapper.merge(mountedCriteria, definedCriteria.item, {
-				pathParts: ["item"]
-			});
-			mountedCriteria.item = definedCriteria.item;
-		} else {
-			mapper.add(mountedCriteria, mountedCriteria.item, {
-				pathParts: ["item"]
-			});
-			queue.push({
-				definedCriteria: definedCriteria.item,
-				mountedCriteria: mountedCriteria.item
-			});
-		}
+	mounting(queue, path, criteria) {
+		queue.push({
+			prevCriteria: criteria,
+			prevPath: path,
+			criteria: criteria.item,
+			pathSegments: {
+				explicit: ["item"],
+				implicit: ["%", "number"],
+			}
+		});
 	},
-	checking(queue, criteria, value) {
+	checking(queue, path, criteria, value) {
 		if (!isArray(value)) {
 			return ("TYPE_NOT_ARRAY");
 		}
@@ -39,6 +33,7 @@ export const ArrayFormat: FormatTemplate<ArrayTunableCriteria> = {
 
 		for (let i = 0; i < value.length; i++) {
 			queue.push({
+				prevPath: path,
 				criteria: criteria.item,
 				value: value[i]
 			});

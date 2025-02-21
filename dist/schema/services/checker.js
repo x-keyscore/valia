@@ -1,52 +1,67 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
-const handlers_1 = require("../handlers");
 const formats_1 = require("../formats");
-function manageTaskLink(link, isReject) {
-    if (link) {
-        if (!isReject) {
-            link.finished = true;
-        }
-        else {
-            link.totalRejected++;
-            if (link.totalLinks !== link.totalRejected)
-                return (true);
-        }
-    }
-    return (false);
-}
-function reject(mapper, criteria, rejectCode) {
+const utils_1 = require("../../utils");
+function reject(rejectCode, criteria, path) {
     return ({
+        path,
         code: rejectCode,
-        path: mapper.getPath(criteria, "."),
         type: criteria.type,
         label: criteria.label,
         message: criteria.message
     });
 }
-function checker(criteria, value) {
-    const mapper = criteria[handlers_1.mapperSymbol];
-    let queue = [{ criteria, value }];
+function checker(registryManager, criteria, value) {
+    let queue = [{
+            prevPath: { explicit: [], implicit: [] },
+            criteria,
+            value
+        }];
     while (queue.length > 0) {
-        const { criteria, value, link } = queue.pop();
-        if (link === null || link === void 0 ? void 0 : link.finished)
-            continue;
+        const { prevPath, criteria, value, hooks } = queue.pop();
+        const segsPath = registryManager.getPathSegments(criteria);
+        const path = {
+            explicit: [...prevPath.explicit, ...segsPath.explicit],
+            implicit: [...prevPath.implicit, ...segsPath.implicit],
+        };
+        if (hooks) {
+            const hookResponse = hooks.beforeCheck(criteria);
+            if (hookResponse === false)
+                continue;
+            if (typeof hookResponse === "string") {
+                return (reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+            }
+        }
+        let rejectCode = null;
         if (value === null) {
             if (criteria.nullable)
-                continue;
-            return (reject(mapper, criteria, "TYPE_NULL"));
+                rejectCode = null;
+            else
+                rejectCode = "TYPE_NULL";
         }
         else if (value === undefined) {
             if (criteria.undefinable)
-                continue;
-            return (reject(mapper, criteria, "TYPE_UNDEFINED"));
+                rejectCode = null;
+            else
+                rejectCode = "TYPE_UNDEFINED";
         }
-        const format = formats_1.formats[criteria.type];
-        const rejectCode = format.checking(queue, criteria, value);
-        const rejectBypass = manageTaskLink(link, !!rejectCode);
-        if (!rejectBypass && rejectCode) {
-            return (reject(mapper, criteria, rejectCode));
+        else {
+            const format = formats_1.formats[criteria.type];
+            if (!format)
+                throw new utils_1.Issue("Checking", "Type '" + criteria.type + "' is unknown.");
+            rejectCode = format.checking(queue, path, criteria, value);
+        }
+        if (hooks) {
+            const hookResponse = hooks.afterCheck(criteria, rejectCode);
+            if (hookResponse === false)
+                continue;
+            if (typeof hookResponse === "string") {
+                return (reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+            }
+        }
+        if (rejectCode) {
+            return (reject(rejectCode, criteria, path));
         }
     }
     return (null);

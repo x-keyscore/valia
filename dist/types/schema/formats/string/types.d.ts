@@ -1,14 +1,14 @@
-import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
-import { testers } from "../../..";
+import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import { testers } from "../../../testers";
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
-type TestersString = typeof testers.string;
+type StringTesters = typeof testers.string;
 type Testers = {
-    [K in keyof TestersString]: {
+    [K in keyof StringTesters]: {
         name: K;
-        params?: ExtractParams<TestersString[K]>;
+        params?: ExtractParams<StringTesters[K]>;
     };
-}[keyof TestersString];
-export interface StringTunableCriteria extends TunableCriteriaTemplate<"string"> {
+}[keyof StringTesters];
+export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
     min?: number;
     max?: number;
     /** @default true */
@@ -21,13 +21,13 @@ export interface StringTunableCriteria extends TunableCriteriaTemplate<"string">
 export interface StringDefaultCriteria {
     empty: boolean;
 }
-export interface StringConcreteTypes extends ConcreteTypesTemplate<StringTunableCriteria, StringDefaultCriteria> {
+export interface StringConcreteTypes extends ConcreteTypesTemplate<StringSetableCriteria, StringDefaultCriteria> {
 }
-type StringGuardedCriteria<T extends StringTunableCriteria> = T['enum'] extends string[] ? T['empty'] extends true ? T['enum'][number] | "" : T['enum'][number] : T['enum'] extends Record<string | number, string> ? T['empty'] extends true ? {
+type StringGuardedCriteria<T extends StringSetableCriteria> = T['enum'] extends string[] ? T['empty'] extends true ? T['enum'][number] | "" : T['enum'][number] : T['enum'] extends Record<string | number, string> ? T['empty'] extends true ? {
     [K in keyof T['enum']]: T['enum'][K];
 }[keyof T['enum']] | "" : {
     [K in keyof T['enum']]: T['enum'][K];
 }[keyof T['enum']] : string;
-export interface StringGenericTypes<T extends StringTunableCriteria> extends GenericTypesTemplate<StringTunableCriteria, {}, StringGuardedCriteria<T>> {
+export interface StringGenericTypes<T extends StringSetableCriteria> extends GenericTypesTemplate<StringSetableCriteria, {}, StringGuardedCriteria<T>> {
 }
 export {};

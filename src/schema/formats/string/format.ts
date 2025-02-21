@@ -1,12 +1,12 @@
-import type { StringTunableCriteria } from "./types";
+import type { StringSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
 import { isArray, isPlainObject, testers } from "../../../testers";
 
-export const StringFormat: FormatTemplate<StringTunableCriteria> = {
+export const StringFormat: FormatTemplate<StringSetableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
-	checking(queue, criteria, value) {
+	checking(queue, path, criteria, value) {
 		if (typeof value !== "string") {
 			return ("TYPE_NOT_STRING");
 		}

@@ -1,32 +1,20 @@
 {
-	"name": "valie",
+	"name": "valia",
 	"version": "1.0.6",
 	"description": "A runtime data validator in TypeScript with advanced type inference, built-in validation functions, and seamless integration for server and client environments.",
-	"homepage": "https://github.com/x-keyscore/valie#readme",
-	"main": "dist/index.js",
-	"module": "dist/index.js",
-	"types": "dist/types/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/index.js",
-			"types": "./dist/types/index.d.ts"
-		},
-		"./devkit": {
-			"import": "./dist/devkit.js",
-			"require": "./dist/devkit.js",
-			"types": "./dist/types/devkit.d.ts"
-		}
-	},
+	"homepage": "https://github.com/x-keyscore/valia#readme",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/types/index.d.ts",
 	"scripts": {
 		"start": "tsc && node dist",
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && tsc",
 		"test": "npm run build && node --test",
-		"publish": "npm run test && node --test && npm publish"
+		"publish": "npm run test && npm publish"
 	},
 	"keywords": [
-		"valie",
+		"valia",
 		"validator",
 		"validation",
 		"data-validation",

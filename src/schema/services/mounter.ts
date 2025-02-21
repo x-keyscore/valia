@@ -1,42 +1,68 @@
-import type { TunableCriteria, MountedCriteria } from "../formats";
+import type { SetableCriteria, MountedCriteria } from "../formats";
+import type { EventsManager, RegistryManager } from "../managers";
 import type { MountingTask } from "./types";
-import { formats, staticTunableCriteria } from "../formats";
-import { MapperInstance, mapperSymbol } from "../handlers";
-import { isPlainObject } from "../../testers";
-import { Err } from "../../utils";
+import { staticDefaultCriteria, formats } from "../formats";
+import { Issue } from "../../utils";
 
-export function mounter<T extends TunableCriteria>(
-	mapper: MapperInstance,
-	definedCriteria: T
+export const metadataSymbol = Symbol('matadata');
+
+export function isMountedCriteria(obj: object): obj is MountedCriteria {
+	return (typeof obj === "object" && Reflect.has(obj, metadataSymbol));
+}
+
+export function mounter<T extends SetableCriteria>(
+	registryManager: RegistryManager,
+	eventsManager: EventsManager,
+	clonedCriteria: SetableCriteria & T
 ): MountedCriteria<T> {
-	let mountedCriteria: MountedCriteria<T> = {} as any;
-	let queue: MountingTask[] = [{ definedCriteria, mountedCriteria }];
-
-	mapper.add(null, mountedCriteria, {
-		pathParts: ["root"]
-	});
+	let queue: MountingTask[] = [{
+		prevCriteria: null,
+		prevPath: { explicit: [], implicit: [] },
+		criteria: clonedCriteria,
+		pathSegments: { explicit: [], implicit: [] }
+	}];
 
 	while (queue.length > 0) {
-		const { definedCriteria, mountedCriteria } = queue.pop()!;
+		const { prevCriteria, prevPath, criteria, pathSegments } = queue.pop()!;
 
-		const format = formats[definedCriteria.type];
-		if (!format) throw new Err(
-			"Criteria mounting",
-			"Type '" + String(definedCriteria.type) + "' is unknown."
-		);
+		const path = {
+			explicit: [...prevPath.explicit, ...pathSegments.explicit],
+			implicit:  [...prevPath.implicit, ...pathSegments.implicit],
+		}
 
-		Object.assign(mountedCriteria, staticTunableCriteria, format.defaultCriteria, definedCriteria);
+		registryManager.set(prevCriteria, criteria, pathSegments);
 
-		if (format.mounting) format.mounting(queue, mapper, definedCriteria, mountedCriteria);
+		if (isMountedCriteria(criteria)) {
+			registryManager.junction(criteria);
+		} else {
+			const format = formats[criteria.type];
+			if (!format) throw new Issue(
+				"Mounting",
+				"Type '" + criteria.type + "' is unknown."
+			);
 
-		Object.assign(mountedCriteria, {
-			[mapperSymbol]: mapper
+			format.mounting?.(queue, path, criteria);
+
+			Object.assign(criteria, {
+				...staticDefaultCriteria,
+				...format.defaultCriteria,
+				...criteria
+			});
+		}
+
+		Object.assign(criteria, {
+			[metadataSymbol]: {
+				registryKey: criteria,
+				registry: registryManager.registry
+			}
 		});
+
+		eventsManager.emit(
+			"CRITERIA_NODE_MOUNTED",
+			criteria as MountedCriteria,
+			path
+		);
 	}
 
-	return (mountedCriteria);
+	return (clonedCriteria as MountedCriteria<T>);
 };
-
-export function isMountedCriteria(obj: object): obj is MountedCriteria<TunableCriteria> {
-	return (isPlainObject(obj) && Reflect.has(obj, mapperSymbol));
-}

@@ -1,9 +1,9 @@
-import type { SymbolTunableCriteria } from "./types";
+import type { SymbolSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
 
-export const SymbolFormat: FormatTemplate<SymbolTunableCriteria> = {
+export const SymbolFormat: FormatTemplate<SymbolSetableCriteria> = {
 	defaultCriteria: {},
-	checking(queue, criteria, value) {
+	checking(queue, path, criteria, value) {
 		if (typeof value !== "symbol") {
 			return "TYPE_NOT_SYMBOL";
 		}

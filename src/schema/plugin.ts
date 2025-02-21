@@ -1,10 +1,10 @@
-import type { TunableCriteria } from "./formats";
+import type { SetableCriteria } from "./formats";
 import type { Constructor } from "../types";
 import type { SchemaType } from "./types";
-import { Schema } from "./Schema";
-import { Err } from "../utils";
+import { Schema } from "./schema";
+import { Issue } from "../utils";
 
-export abstract class SchemaPluginAbstract<const T extends TunableCriteria> extends Schema<T> {
+export abstract class AbstractPlugin<const T extends SetableCriteria> extends Schema<T> {
 	/**
 	 * This method is required because if the user mixes multiple plugins, the constructors cannot be used.
 	 * 
@@ -17,7 +17,7 @@ export abstract class SchemaPluginAbstract<const T extends TunableCriteria> exte
 	}
 }
 
-function mixinProperties(
+function assignProperties(
 	source: Constructor,
 	target: Constructor,
 	transformKey?: (key: string) => string | undefined
@@ -30,7 +30,7 @@ function mixinProperties(
 
 		let newKey = transformKey?.(key) || key;
 		if (newKey in target.prototype) {
-			throw new Error(`Property key conflict in prototype properties.\nConflicting key: '${key}'`);
+			throw new Error(`Property key conflict in prototype properties.\nConflictual key: '${key}'`);
 		}
 
 		Object.defineProperty(target.prototype, newKey, srcPrototypeDescriptors[key]);
@@ -41,48 +41,50 @@ function mixinProperties(
 
 		let newKey = transformKey?.(key) || key;
 		if (newKey in target) {
-			throw Error(`Property key conflict in static properties.\nConflicting key: '${key}'`);
+			throw Error(`Property key conflict in static properties.\nConflictual key: '${key}'`);
 		}
 
 		Object.defineProperty(target, newKey, srcPrototypeDescriptors[key]);
 	}
 }
 
-export function schemaPlugins<T, U, V, W, X, Y>(
+export function SchemaPlugins<T, U, V, W, X, Y>(
 	plugin_1: new (...args: T[]) => U,
 	plugin_2?: new (...args: V[]) => W,
 	plugin_3?: new (...args: X[]) => Y
 ) {
 	try {
 		let plugins = [plugin_1, plugin_2, plugin_3];
-		let initMethodKeys: string[] = [];
+		let methodInitKeys: string[] = [];
 
-		const pluggedSchema = class PluggedSchema<T extends TunableCriteria> extends Schema<T> {
+		const pluggedSchema = class PluggedSchema<T extends SetableCriteria> extends Schema<T> {
 			constructor(...args: ConstructorParameters<typeof Schema<T>>) {
 				super(...args);
 
-				for (const key of initMethodKeys) {
+				for (const key of methodInitKeys) {
 					(this[key as keyof typeof this] as (...args: any[]) => any)(...args);
 				}
+
+				this.mountCriteria(args[0]);
 			}
 		}
 
 		const transformKey = (key: string) => {
 			if (key === "init") {
-				const newKey = "init_" + initMethodKeys.length;
-				initMethodKeys.push(newKey);
+				const newKey = "init_" + methodInitKeys.length;
+				methodInitKeys.push(newKey);
 				return (newKey);
 			}
 		}
 
 		for (const plugin of plugins) {
 			if (!plugin) break;
-			mixinProperties(plugin, pluggedSchema, transformKey);
+			assignProperties(plugin, pluggedSchema, transformKey);
 		}
 
-		return pluggedSchema as new (...args: T[] & V[] & X[]) => U & W & Y;
+		return (pluggedSchema) as new (...args: T[] & V[] & X[]) => U & W & Y;
 	} catch (err) {
-		if (err instanceof Error) throw new Err("Schema extending", err.message);
+		if (err instanceof Error) throw new Issue("Schema factory", err.message);
 		throw err;
 	}
 }

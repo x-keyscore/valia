@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BooleanFormat = void 0;
 exports.BooleanFormat = {
     defaultCriteria: {},
-    checking(queue, criteria, value) {
+    checking(queue, path, criteria, value) {
         if (typeof value !== "boolean") {
             return ("TYPE_NOT_BOOLEAN");
         }

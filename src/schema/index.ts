@@ -1,3 +1,15 @@
-export type { SchemaReject, SchemaInfer, CriteriaInfer } from "./types";
-export { SchemaPluginAbstract, schemaPlugins } from "./plugins";
-export { Schema } from "./Schema";
+export type {
+    SchemaInfer,
+    SchemaReject
+} from "./types";
+
+export {
+    Schema
+} from "./schema";
+
+export {
+    SchemaPlugins,
+    AbstractPlugin
+} from "./plugin";
+
+

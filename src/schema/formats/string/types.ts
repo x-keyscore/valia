@@ -1,19 +1,19 @@
-import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, TunableCriteria } from "../types";
-import { testers } from "../../..";
+import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import { testers } from "../../../testers";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
 	T extends (input: any, params: infer U) => any ? U : never;
 
-type TestersString = typeof testers.string;
+type StringTesters = typeof testers.string;
 
 type Testers = {
-	[K in keyof TestersString]: {
+	[K in keyof StringTesters]: {
 		name: K;
-		params?: ExtractParams<TestersString[K]>;
+		params?: ExtractParams<StringTesters[K]>;
 	};
-}[keyof TestersString];
+}[keyof StringTesters];
 
-export interface StringTunableCriteria extends TunableCriteriaTemplate<"string"> {
+export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 	min?: number;
 	max?: number;
 	/** @default true */
@@ -29,11 +29,11 @@ export interface StringDefaultCriteria {
 }
 
 export interface StringConcreteTypes extends ConcreteTypesTemplate<
-	StringTunableCriteria,
+	StringSetableCriteria,
 	StringDefaultCriteria
 > {}
 
-type StringGuardedCriteria<T extends StringTunableCriteria> =
+type StringGuardedCriteria<T extends StringSetableCriteria> =
 	T['enum'] extends string[]
 		? T['empty'] extends true
 			? T['enum'][number] | ""
@@ -44,8 +44,8 @@ type StringGuardedCriteria<T extends StringTunableCriteria> =
 				: { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']]
 			: string;
 
-export interface StringGenericTypes<T extends StringTunableCriteria> extends GenericTypesTemplate<
-	StringTunableCriteria,
+export interface StringGenericTypes<T extends StringSetableCriteria> extends GenericTypesTemplate<
+	StringSetableCriteria,
 	{},
 	StringGuardedCriteria<T>
 > {}

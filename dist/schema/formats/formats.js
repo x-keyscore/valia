@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formats = exports.staticTunableCriteria = void 0;
+exports.formats = exports.staticDefaultCriteria = void 0;
 const format_1 = require("./array/format");
 const format_2 = require("./tuple/format");
 const format_3 = require("./record/format");
@@ -10,7 +10,7 @@ const format_6 = require("./string/format");
 const format_7 = require("./symbol/format");
 const format_8 = require("./boolean/format");
 const format_9 = require("./union/format");
-exports.staticTunableCriteria = {
+exports.staticDefaultCriteria = {
     nullable: false,
     undefinable: false
 };

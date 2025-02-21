@@ -1,30 +1,30 @@
-import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
-	TunableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+	SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
-export interface TupleTunableCriteria extends TunableCriteriaTemplate<"tuple"> {
-	tuple: [TunableCriteria, ...TunableCriteria[]];
+export interface TupleSetableCriteria extends SetableCriteriaTemplate<"tuple"> {
+	tuple: [SetableCriteria, ...SetableCriteria[]];
 }
 
 export interface TupleConcreteTypes extends ConcreteTypesTemplate<
-	TupleTunableCriteria,
+	TupleSetableCriteria,
 	{}
 > {}
 
 export interface TupleMountedCriteria {
-	tuple: [MountedCriteria<TunableCriteria>, ...MountedCriteria<TunableCriteria>[]];
+	tuple: [MountedCriteria<SetableCriteria>, ...MountedCriteria<SetableCriteria>[]];
 }
 
-type TupleGuardedCriteria<T extends TupleTunableCriteria> =
+type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 	T['tuple'] extends infer U
 		? {
-			[I in keyof U]: U[I] extends TunableCriteria
+			[I in keyof U]: U[I] extends SetableCriteria
 				? GuardedCriteria<U[I]>
 				: never;
 		}
 		: never;
 
-export interface TupleGenericTypes<T extends TupleTunableCriteria> extends GenericTypesTemplate<
-	TupleTunableCriteria,
+export interface TupleGenericTypes<T extends TupleSetableCriteria> extends GenericTypesTemplate<
+	TupleSetableCriteria,
 	TupleMountedCriteria,
 	TupleGuardedCriteria<T>
 > {}

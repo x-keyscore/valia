@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchemaPluginAbstract = void 0;
-exports.schemaPlugins = schemaPlugins;
-const Schema_1 = require("./Schema");
+exports.AbstractPlugin = void 0;
+exports.SchemaPlugins = SchemaPlugins;
+const schema_1 = require("./schema");
 const utils_1 = require("../utils");
-class SchemaPluginAbstract extends Schema_1.Schema {
+class AbstractPlugin extends schema_1.Schema {
     constructor(...args) {
         super(...args);
     }
 }
-exports.SchemaPluginAbstract = SchemaPluginAbstract;
-function mixinProperties(source, target, transformKey) {
+exports.AbstractPlugin = AbstractPlugin;
+function assignProperties(source, target, transformKey) {
     const srcPrototypeDescriptors = Object.getOwnPropertyDescriptors(source.prototype);
     const srcDescriptors = Object.getOwnPropertyDescriptors(source);
     for (const key in srcPrototypeDescriptors) {
@@ -18,7 +18,7 @@ function mixinProperties(source, target, transformKey) {
             continue;
         let newKey = (transformKey === null || transformKey === void 0 ? void 0 : transformKey(key)) || key;
         if (newKey in target.prototype) {
-            throw new Error(`Property key conflict in prototype properties.\nConflicting key: '${key}'`);
+            throw new Error(`Property key conflict in prototype properties.\nConflictual key: '${key}'`);
         }
         Object.defineProperty(target.prototype, newKey, srcPrototypeDescriptors[key]);
     }
@@ -27,40 +27,41 @@ function mixinProperties(source, target, transformKey) {
             continue;
         let newKey = (transformKey === null || transformKey === void 0 ? void 0 : transformKey(key)) || key;
         if (newKey in target) {
-            throw Error(`Property key conflict in static properties.\nConflicting key: '${key}'`);
+            throw Error(`Property key conflict in static properties.\nConflictual key: '${key}'`);
         }
         Object.defineProperty(target, newKey, srcPrototypeDescriptors[key]);
     }
 }
-function schemaPlugins(plugin_1, plugin_2, plugin_3) {
+function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
     try {
         let plugins = [plugin_1, plugin_2, plugin_3];
-        let initMethodKeys = [];
-        const pluggedSchema = class PluggedSchema extends Schema_1.Schema {
+        let methodInitKeys = [];
+        const pluggedSchema = class PluggedSchema extends schema_1.Schema {
             constructor(...args) {
                 super(...args);
-                for (const key of initMethodKeys) {
+                for (const key of methodInitKeys) {
                     this[key](...args);
                 }
+                this.mountCriteria(args[0]);
             }
         };
         const transformKey = (key) => {
             if (key === "init") {
-                const newKey = "init_" + initMethodKeys.length;
-                initMethodKeys.push(newKey);
+                const newKey = "init_" + methodInitKeys.length;
+                methodInitKeys.push(newKey);
                 return (newKey);
             }
         };
         for (const plugin of plugins) {
             if (!plugin)
                 break;
-            mixinProperties(plugin, pluggedSchema, transformKey);
+            assignProperties(plugin, pluggedSchema, transformKey);
         }
-        return pluggedSchema;
+        return (pluggedSchema);
     }
     catch (err) {
         if (err instanceof Error)
-            throw new utils_1.Err("Schema extending", err.message);
+            throw new utils_1.Issue("Schema factory", err.message);
         throw err;
     }
 }

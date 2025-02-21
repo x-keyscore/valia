@@ -1,26 +1,36 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base32ToBase16 = exports.base64ToBase16 = exports.base16ToBase32 = exports.base16ToBase64 = exports.schemaPlugins = exports.Schema = void 0;
+exports.base32ToBase16 = exports.base64ToBase16 = exports.base16ToBase32 = exports.base16ToBase64 = exports.isBase64Url = exports.isBase64 = exports.isBase32Hex = exports.isBase32 = exports.isBase16 = exports.isUuid = exports.isDataUrl = exports.isDomain = exports.isEmail = exports.isIpV6 = exports.isIpV4 = exports.isIp = exports.isAscii = exports.isAsyncGeneratorFunction = exports.isGeneratorFunction = exports.isAsyncFunction = exports.isBasicFunction = exports.isFunction = exports.isArray = exports.isPlainObject = exports.isBasicObject = exports.isObject = exports.AbstractPlugin = exports.SchemaPlugins = exports.Schema = void 0;
 var schema_1 = require("./schema");
 Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return schema_1.Schema; } });
-Object.defineProperty(exports, "schemaPlugins", { enumerable: true, get: function () { return schema_1.schemaPlugins; } });
+Object.defineProperty(exports, "SchemaPlugins", { enumerable: true, get: function () { return schema_1.SchemaPlugins; } });
+Object.defineProperty(exports, "AbstractPlugin", { enumerable: true, get: function () { return schema_1.AbstractPlugin; } });
+var object_1 = require("./testers/object");
+Object.defineProperty(exports, "isObject", { enumerable: true, get: function () { return object_1.isObject; } });
+Object.defineProperty(exports, "isBasicObject", { enumerable: true, get: function () { return object_1.isBasicObject; } });
+Object.defineProperty(exports, "isPlainObject", { enumerable: true, get: function () { return object_1.isPlainObject; } });
+Object.defineProperty(exports, "isArray", { enumerable: true, get: function () { return object_1.isArray; } });
+Object.defineProperty(exports, "isFunction", { enumerable: true, get: function () { return object_1.isFunction; } });
+Object.defineProperty(exports, "isBasicFunction", { enumerable: true, get: function () { return object_1.isBasicFunction; } });
+Object.defineProperty(exports, "isAsyncFunction", { enumerable: true, get: function () { return object_1.isAsyncFunction; } });
+Object.defineProperty(exports, "isGeneratorFunction", { enumerable: true, get: function () { return object_1.isGeneratorFunction; } });
+Object.defineProperty(exports, "isAsyncGeneratorFunction", { enumerable: true, get: function () { return object_1.isAsyncGeneratorFunction; } });
+var string_1 = require("./testers/string");
+Object.defineProperty(exports, "isAscii", { enumerable: true, get: function () { return string_1.isAscii; } });
+Object.defineProperty(exports, "isIp", { enumerable: true, get: function () { return string_1.isIp; } });
+Object.defineProperty(exports, "isIpV4", { enumerable: true, get: function () { return string_1.isIpV4; } });
+Object.defineProperty(exports, "isIpV6", { enumerable: true, get: function () { return string_1.isIpV6; } });
+Object.defineProperty(exports, "isEmail", { enumerable: true, get: function () { return string_1.isEmail; } });
+Object.defineProperty(exports, "isDomain", { enumerable: true, get: function () { return string_1.isDomain; } });
+Object.defineProperty(exports, "isDataUrl", { enumerable: true, get: function () { return string_1.isDataUrl; } });
+Object.defineProperty(exports, "isUuid", { enumerable: true, get: function () { return string_1.isUuid; } });
+Object.defineProperty(exports, "isBase16", { enumerable: true, get: function () { return string_1.isBase16; } });
+Object.defineProperty(exports, "isBase32", { enumerable: true, get: function () { return string_1.isBase32; } });
+Object.defineProperty(exports, "isBase32Hex", { enumerable: true, get: function () { return string_1.isBase32Hex; } });
+Object.defineProperty(exports, "isBase64", { enumerable: true, get: function () { return string_1.isBase64; } });
+Object.defineProperty(exports, "isBase64Url", { enumerable: true, get: function () { return string_1.isBase64Url; } });
 var tools_1 = require("./tools");
 Object.defineProperty(exports, "base16ToBase64", { enumerable: true, get: function () { return tools_1.base16ToBase64; } });
 Object.defineProperty(exports, "base16ToBase32", { enumerable: true, get: function () { return tools_1.base16ToBase32; } });
 Object.defineProperty(exports, "base64ToBase16", { enumerable: true, get: function () { return tools_1.base64ToBase16; } });
 Object.defineProperty(exports, "base32ToBase16", { enumerable: true, get: function () { return tools_1.base32ToBase16; } });
-__exportStar(require("./testers"), exports);

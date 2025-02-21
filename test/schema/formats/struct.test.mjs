@@ -49,7 +49,10 @@ describe("Schema format: 'struct'", () => {
 			reject: {
 				code: "TYPE_NOT_STRING",
 				type: "string",
-				path: "root.struct.foobar.struct.foo",
+				path: {
+					explicit: ['struct', 'foobar', 'struct', 'foo'],
+					implicit: ['&', 'foobar', '&', 'foo']
+				},
 				label: undefined,
 				message: undefined
 			},

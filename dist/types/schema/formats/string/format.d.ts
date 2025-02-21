@@ -1,3 +1,3 @@
-import type { StringTunableCriteria } from "./types";
+import type { StringSetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
-export declare const StringFormat: FormatTemplate<StringTunableCriteria>;
+export declare const StringFormat: FormatTemplate<StringSetableCriteria>;

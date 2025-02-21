@@ -1,4 +1,4 @@
-import { Err } from "../utils";
+import { Issue } from "../utils";
 
 function convertBase16ToBase64(input: string, base64: string, padding: boolean) {
 	const totalChunksLength = Math.floor(input.length / 6) * 6;
@@ -203,7 +203,7 @@ export function base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padd
 		const base64Url = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 		return (convertBase16ToBase64(input, base64Url, padding));
 	} else {
-		throw new Err("Parameters", "The base64 type of the parameter 'to' is unknown.");
+		throw new Issue("Parameters", "The base64 type of the parameter 'to' is unknown.");
 	}
 }
 
@@ -215,7 +215,7 @@ export function base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padd
 		const base32Hex = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 		return (convertBase16ToBase32(input, base32Hex, padding));
 	} else {
-		throw new Err("Parameters", "The base32 type of the parameter 'to' is unknown.");
+		throw new Issue("Parameters", "The base32 type of the parameter 'to' is unknown.");
 	}
 }
 
@@ -227,7 +227,7 @@ export function base64ToBase16(input: string, from: "B64" | "B64URL" = "B64") {
 		const base64Url = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 		return (convertBase64ToBase16(input, base64Url));
 	} else {
-		throw new Err("Parameters", "The base64 type of the parameter 'from' is unknown.");
+		throw new Issue("Parameters", "The base64 type of the parameter 'from' is unknown.");
 	}
 }
 
@@ -239,6 +239,6 @@ export function base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") {
 		const base32Hex = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 		return (convertBase32ToBase16(input, base32Hex));
 	} else {
-		throw new Err("Parameters", "The base32 type of the parameter 'from' is unknown.");
+		throw new Issue("Parameters", "The base32 type of the parameter 'from' is unknown.");
 	}
 }

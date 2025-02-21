@@ -1,6 +1,6 @@
-import type { TunableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
 
-export interface NumberTunalbleCriteria extends TunableCriteriaTemplate<"number"> {
+export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
 	min?: number;
 	max?: number;
 	enum?: number[] | Record<string | number, number>;
@@ -8,19 +8,19 @@ export interface NumberTunalbleCriteria extends TunableCriteriaTemplate<"number"
 }
 
 export interface NumberConcreteTypes extends ConcreteTypesTemplate<
-	NumberTunalbleCriteria,
+	NumberSetableCriteria,
 	{}
 > {}
 
-type NumberGuardedCriteria<T extends NumberTunalbleCriteria> = 
+type NumberGuardedCriteria<T extends NumberSetableCriteria> = 
 	T['enum'] extends number[]
 		? T['enum'][number]
 		: T['enum'] extends Record<string | number, number>
 			? { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']]
 			: number;
 
-export interface NumberGenericTypes<T extends NumberTunalbleCriteria> extends GenericTypesTemplate<
-	NumberTunalbleCriteria,
+export interface NumberGenericTypes<T extends NumberSetableCriteria> extends GenericTypesTemplate<
+	NumberSetableCriteria,
 	{},
 	NumberGuardedCriteria<T>
 > {}
