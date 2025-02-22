@@ -24,7 +24,7 @@ this ensures that the validated data’s type is **precisely inferred**, allowin
 npm install valia
 ```
 ```ts
-import { Schema, SchemaInfer } from 'vali.ts';
+import { Schema, SchemaInfer } from 'valia';
 
 const userSchema = new Schema({ 
   type: "struct",
