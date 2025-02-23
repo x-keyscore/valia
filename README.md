@@ -227,7 +227,7 @@ const schema = new Schema({
     name: { type: "string", max: 20 },
     price: { type: "number", min: 0.1 },
     description: {
-      brand: { type: "string", max: 40 }
+      brand: { type: "string", max: 40 },
       color: { type: "string", enum: ["BLACK", "WHITE"] }
     }
   }
