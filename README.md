@@ -217,7 +217,7 @@ const schema = new Schema({
 |--|--|--|
 |`type`         |`"struct"`                          |Type name|
 |`optional?`    |`Array<string \| symbol>`           |Array of optional keys|
-|`struct`       |` { [key: string \| symbol]: SetableCriteria  \| SetableStruct; }`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
+|`struct`       |`{`<br/>`    [key: string \| symbol]:`<br/>`        SetableCriteria \| SetableStruct;`<br/>`}`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
 
 ```ts
 const schema = new Schema({
