@@ -117,8 +117,11 @@ console.log(reject);
 
 ```
 {
-  code: 'REJECT_VALUE_SUPERIOR_MAX',
-  path: 'root.struct.age',
+  path: {
+    explicit: [ 'struct', 'age' ],
+    implicit: [ '&', 'age' ]
+  },
+  code: 'VALUE_SUPERIOR_MAX',
   type: 'number',
   label: 'AGE_FORMAT',
   message: undefined
