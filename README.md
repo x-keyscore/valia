@@ -108,7 +108,7 @@ const userSchema = new Schema({
   }
 });
 
-let data: unknown = { name: "Waitron", age: 200 };
+let data = { name: "Waitron", age: 200 };
 
 const { reject } = userSchema.evaluate(data);
 
