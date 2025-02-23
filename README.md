@@ -118,8 +118,8 @@ console.log(reject);
 ```
 {
   path: {
-    explicit: [ 'struct', 'age' ],
-    implicit: [ '&', 'age' ]
+    explicit: ['struct', 'age'],
+    implicit: ['&', 'age']
   },
   code: 'VALUE_SUPERIOR_MAX',
   type: 'number',
