@@ -1,4 +1,4 @@
-import type { FormatTemplate, StaticDefaultCriteria, SetableCriteria } from "./types";
+import type { FormatTemplate, SetableCriteria, StaticDefaultCriteria, } from "./types";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { RecordFormat } from "./record/format";

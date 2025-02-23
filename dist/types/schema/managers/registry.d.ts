@@ -1,7 +1,6 @@
 import type { RegistryKey, RegistryValue } from "./types";
 import type { MountedCriteria } from "../formats";
-import type { SchemaInstance } from "../types";
-export declare function registryManager(this: SchemaInstance): {
+export declare const registryManager: {
     registry: Map<RegistryKey, RegistryValue>;
     /**
      * Add the criteria node in the registry.
@@ -10,14 +9,12 @@ export declare function registryManager(this: SchemaInstance): {
      * @param currCriteria Current criteria added to the registry.
      * @param pathSegments Path segments of the `currCriteria` node.
      */
-    set(prevCriteria: RegistryKey | null, currCriteria: RegistryKey, pathSegments: RegistryValue["pathSegments"]): void;
-    /**
-     * Junction of criteria mounted to unmounted.
-     *
-     * @param targetCriteria Target criteria of the junction.
-     */
-    junction(targetCriteria: MountedCriteria): void;
-    getNextCriteria(criteria: RegistryKey): import("./types").RegistryPathSegments;
+    set(prevNode: RegistryKey | null, currNode: RegistryKey, partPaths: RegistryValue["partPaths"]): void;
+    junction(targetNode: MountedCriteria): void;
+    getNextNodes(criteria: RegistryKey): {
+        explicit: (string | number | symbol)[];
+        implicit: (number | symbol | import("../../types").LooseAutocomplete<"string" | "number" | "symbol" | "@" | "&" | "%">)[];
+    };
     /**
      * Composition of explicit path :
      * ```py
@@ -44,5 +41,8 @@ export declare function registryManager(this: SchemaInstance): {
      * my-path is products[0].price or products[1].price and continue
      * ```
      */
-    getPathSegments(criteria: RegistryKey): import("./types").RegistryPathSegments;
+    getPartPaths(criteria: RegistryKey): {
+        explicit: (string | number | symbol)[];
+        implicit: (number | symbol | import("../../types").LooseAutocomplete<"string" | "number" | "symbol" | "@" | "&" | "%">)[];
+    };
 };

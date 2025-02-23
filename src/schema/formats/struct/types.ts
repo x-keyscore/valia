@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
 
 export type SetableStruct = {
     [key: string | symbol]: SetableCriteria | SetableStruct;
@@ -9,7 +9,7 @@ export interface StructSetableCriteria extends SetableCriteriaTemplate<"struct">
 	struct: SetableStruct;
 }
 
-export interface StructConcreteTypes extends ConcreteTypesTemplate<
+export interface StructClassicTypes extends ClassicTypesTemplate<
 	StructSetableCriteria,
 	{}
 > {}
@@ -50,7 +50,6 @@ type StructGuardedCriteria<T extends StructSetableCriteria> = {
 };
 
 export interface StructGenericTypes<T extends StructSetableCriteria > extends GenericTypesTemplate<
-	StructSetableCriteria,
 	StructMountedCriteria<T>,
 	StructGuardedCriteria<T>
 > {}

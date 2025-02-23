@@ -10,12 +10,12 @@ const utils_1 = require("../utils");
 class Schema {
     initiate(definedCriteria) {
         const clonedCriteria = (0, services_1.cloner)(definedCriteria);
-        this.mountedCriteria = (0, services_1.mounter)(this.managers.registry, this.managers.events, clonedCriteria);
+        this.mountedCriteria = (0, services_1.mounter)(this.managers, clonedCriteria);
     }
     constructor(criteria) {
         this.managers = {
-            registry: managers_1.registryManager.call(this),
-            events: managers_1.eventsManager.call(this)
+            registry: managers_1.registryManager,
+            events: managers_1.eventsManager
         };
         // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
@@ -30,7 +30,7 @@ class Schema {
      */
     get criteria() {
         if (!this.mountedCriteria) {
-            throw new utils_1.Issue("Schema", "The criteria have not been initialized.");
+            throw new utils_1.Issue("Schema", "Criteria are not initialized.");
         }
         return (this.mountedCriteria);
     }
@@ -44,7 +44,7 @@ class Schema {
      * the validated data conforms to `GuardedCriteria<T>`.
      */
     validate(value) {
-        const reject = (0, services_1.checker)(this.managers.registry, this.criteria, value);
+        const reject = (0, services_1.checker)(this.managers, this.criteria, value);
         return (!reject);
     }
     /**
@@ -57,7 +57,7 @@ class Schema {
      * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
     evaluate(value) {
-        const reject = (0, services_1.checker)(this.managers.registry, this.criteria, value);
+        const reject = (0, services_1.checker)(this.managers, this.criteria, value);
         if (reject) {
             return ({ reject, value: null });
         }

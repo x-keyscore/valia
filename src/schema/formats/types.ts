@@ -1,15 +1,14 @@
-import type { ArrayConcreteTypes, ArrayGenericTypes } from "./array/types";
-import type { BooleanConcreteTypes, BooleanGenericTypes } from "./boolean/types";
-import type { NumberConcreteTypes, NumberGenericTypes } from "./number/types";
-import type { RecordConcreteTypes, RecordGenericTypes } from "./record/types";
-import type { StringConcreteTypes, StringGenericTypes } from "./string/types";
-import type { StructConcreteTypes, StructGenericTypes } from "./struct/types";
-import type { SymbolConcreteTypes, SymbolGenericTypes } from "./symbol/types";
-import type { TupleConcreteTypes, TupleGenericTypes } from "./tuple/types";
-import type { UnionConcreteTypes, UnionGenericTypes } from "./union/types";
-import type { CheckingTask, MountingTask, CheckerReject, metadataSymbol } from "../services";
-import { RegistryManager, RegistryPathSegments } from "../managers";
-import { formats } from "./formats";
+import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
+import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
+import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
+import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
+import type { StringClassicTypes, StringGenericTypes, StringSetableCriteria } from "./string/types";
+import type { StructClassicTypes, StructGenericTypes, StructSetableCriteria } from "./struct/types";
+import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } from "./symbol/types";
+import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
+import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
+import type { CheckingTask, MountingTask, Reject, metadataSymbol } from "../services";
+import { RegistryManager, RegistryValue } from "../managers";
 
 // TUNABLE CRITERIA TEMPLATE
 
@@ -31,6 +30,11 @@ export interface SetableCriteriaTemplate<T extends string> extends SetableCriter
 	type: T;
 }
 
+export type SetableCriteriaNative = 
+	| "array" | "boolean" | "number"
+	| "record" | "string" | "struct"
+	| "symbol" | "tuple" | "union";
+
 // FORMATS CONCRET TYPES
 
 /**
@@ -40,73 +44,65 @@ export interface SetableCriteriaTemplate<T extends string> extends SetableCriter
  * @template U Default properties for those defined in `T` that must
  * be specified in the superclass reference within the format class.
  */
-export interface ConcreteTypesTemplate<
-	T extends SetableCriteriaTemplate<string>,
-	U extends Partial<T>
+export interface ClassicTypesTemplate<
+	Setable extends SetableCriteriaTemplate<string>,
+	Default extends Partial<Setable>
 > {
-	type: T['type'];
-	setableCriteria: T;
-	defaultCriteria: U;
+	setableCriteria: Setable;
+	defaultCriteria: Default;
 }
 
-export type FormatsConcreteTypes =
-	| ArrayConcreteTypes
-	| BooleanConcreteTypes
-	| NumberConcreteTypes
-	| RecordConcreteTypes
-	| StringConcreteTypes
-	| StructConcreteTypes
-	| SymbolConcreteTypes
-	| TupleConcreteTypes
-	| UnionConcreteTypes;
-
-export type FormatsConcreteTypesMap = {
-	[U in FormatsConcreteTypes['type']]: Extract<FormatsConcreteTypes, { type: U }>
-};
+export interface FormatClassicTypes {
+	array: ArrayClassicTypes;
+	boolean: BooleanClassicTypes;
+	number: NumberClassicTypes;
+	record: RecordClassicTypes;
+	string: StringClassicTypes;
+	struct: StructClassicTypes;
+	symbol: SymbolClassicTypes;
+	tuple: TupleClassicTypes;
+	union: UnionClassicTypes;
+}
 
 // FORMATS GENERIC TYPES
 
 /**
- * @template T Extended interface of `SetableCriteriaTemplate` that
- * defines the format criteria users must or can specify.
  * 
- * @template U A type that takes a generic parameter extending
+ * @template Mounted A type that takes a generic parameter extending
  * 'SetableCriteria'. It is used to determine the type validated
  * by the format it represents, based on the criteria defined
  * by the user.
  * 
- * @template V Properties that will be added to or override
+ * @template Guarded Properties that will be added to or override
  * the format criteria after the mounting process.
  */
 export interface GenericTypesTemplate<
-	T extends SetableCriteriaTemplate<string>,
-	U,
-	V
+	Mounted,
+	Guarded
 > {
-	type: T['type'];
-	mountedCriteria: U;
-	guardedCriteria: V;
+	mountedCriteria: Mounted;
+	guardedCriteria: Guarded;
 }
 
-export type FormatsGenericTypes<T extends SetableCriteria> =
-	T extends SetableCriteriaMap['array'] ? ArrayGenericTypes<T>
-	: T extends SetableCriteriaMap['boolean'] ? BooleanGenericTypes<T>
-	: T extends SetableCriteriaMap['number'] ? NumberGenericTypes<T>
-	: T extends SetableCriteriaMap['record'] ? RecordGenericTypes<T>
-	: T extends SetableCriteriaMap['string'] ? StringGenericTypes<T>
-	: T extends SetableCriteriaMap['struct'] ? StructGenericTypes<T>
-	: T extends SetableCriteriaMap['symbol'] ? SymbolGenericTypes<T>
-	: T extends SetableCriteriaMap['tuple'] ? TupleGenericTypes<T>
-	: T extends SetableCriteriaMap['union'] ? UnionGenericTypes<T>
-	: never;
+export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria> {
+	array: T extends ArraySetableCriteria ? ArrayGenericTypes<T> : never;
+	boolean: T extends BooleanSetableCriteria ? BooleanGenericTypes<T> : never
+	number: T extends NumberSetableCriteria ? NumberGenericTypes<T> : never
+	record: T extends RecordSetableCriteria ? RecordGenericTypes<T> : never
+	string: T extends StringSetableCriteria ? StringGenericTypes<T> : never;
+	struct: T extends StructSetableCriteria ? StructGenericTypes<T> : never;
+	symbol: T extends SymbolSetableCriteria ? SymbolGenericTypes<T> : never;
+	tuple: T extends TupleSetableCriteria ? TupleGenericTypes<T> : never;
+	union: T extends UnionSetableCriteria ? UnionGenericTypes<T> : never;
+	
+}
 
-// TUNABLE CRITERIA
+// SETABLE CRITERIA
 
-export type SetableCriteria = FormatsConcreteTypes['setableCriteria'];
+export type SetableCriteria = FormatClassicTypes[keyof FormatClassicTypes]['setableCriteria'];
 
-export type SetableCriteriaMap = {
-	[U in SetableCriteria['type']]: Extract<SetableCriteria, { type: U }>
-};
+export type SetableCriteriaMap =
+	{ [K in keyof FormatClassicTypes]: FormatClassicTypes[K]['setableCriteria']; }
 
 export type SetableCriteriaOmit<T extends keyof SetableCriteriaMap> = 
     Omit<SetableCriteriaMap, T> extends infer U ? U[keyof U] : never;
@@ -118,31 +114,30 @@ export interface StaticDefaultCriteria {
 	undefinable: boolean;
 }
 
-export type DefaultCriteria<T extends SetableCriteria = SetableCriteria> = {
-	[U in T['type']]: FormatsConcreteTypesMap[U]['defaultCriteria'];
-}[T['type']];
+export type DefaultCriteria = FormatClassicTypes[keyof FormatClassicTypes]['defaultCriteria']
 
 // MOUNTED CRITERIA
 
 export interface StaticMountedCriteria {
 	[metadataSymbol]: {
-		registryKey: MountedCriteria
-		registry: RegistryManager['registry'],
+		registry: RegistryManager['registry'];
+		saveNode: MountedCriteria;
 	};
 }
 
 export type MountedCriteria<T extends SetableCriteria = SetableCriteria> = 
 	T extends any ?
 		& StaticDefaultCriteria
-		& FormatsConcreteTypesMap[T['type']]['defaultCriteria']
-		& Omit<T, keyof FormatsGenericTypes<T>['mountedCriteria']>
-		& FormatsGenericTypes<T>['mountedCriteria']
+		& FormatClassicTypes[T['type']]['defaultCriteria']
+		& Omit<T, keyof FormatGenericTypes<T>[T['type']]['mountedCriteria']>
+		& FormatGenericTypes<T>[T['type']]['mountedCriteria']
 		& StaticMountedCriteria
 	: never;
 
 // GUARDED CRITERIA
 
-export type GuardedCriteria<T extends SetableCriteria> = FormatsGenericTypes<T>['guardedCriteria'];
+export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = 
+	FormatGenericTypes<T>[keyof FormatGenericTypes]['guardedCriteria'];
 
 // FORMAT TEMPLATE
 
@@ -153,22 +148,18 @@ export type GuardedCriteria<T extends SetableCriteria> = FormatsGenericTypes<T>[
  */
 export type FormatTemplate<
 	T extends SetableCriteria,
-	U extends Record<string, any> = {}
+	U extends Record<string, any> = {},
 > = {
-	defaultCriteria: DefaultCriteria<T>;
+	defaultCriteria: FormatClassicTypes[T['type']]['defaultCriteria'];
 	mounting?(
 		queue: MountingTask[],
-		path: RegistryPathSegments,
+		path: RegistryValue['partPaths'],
 		criteria: T
 	): void;
     checking(
 		queue: CheckingTask[],
-		path: RegistryPathSegments,
+		path: RegistryValue['partPaths'],
         criteria: MountedCriteria<T>,
         value: unknown,
-    ): null | CheckerReject['code'];
+    ): null | Reject['code'];
 } & U;
-
-// FORMATS
-
-export type Formats = typeof formats[keyof typeof formats];

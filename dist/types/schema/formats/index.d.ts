@@ -1,2 +1,2 @@
-export type { SetableCriteriaTemplate, SetableCriteriaBase, SetableCriteria, SetableCriteriaMap, SetableCriteriaOmit, GuardedCriteria, MountedCriteria } from './types';
+export type { ClassicTypesTemplate, GenericTypesTemplate, SetableCriteriaTemplate, SetableCriteriaBase, SetableCriteria, SetableCriteriaMap, SetableCriteriaOmit, SetableCriteriaNative, MountedCriteria, GuardedCriteria, FormatClassicTypes, FormatGenericTypes, FormatTemplate } from './types';
 export { staticDefaultCriteria, formats } from './formats';

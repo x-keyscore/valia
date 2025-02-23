@@ -7,13 +7,24 @@ export {
 } from './schema';
 
 export {
+	ClassicTypesTemplate,
+	GenericTypesTemplate,
 	SetableCriteriaTemplate,
     SetableCriteria,
     SetableCriteriaMap,
     SetableCriteriaOmit,
     MountedCriteria,
-    GuardedCriteria
+    GuardedCriteria,
+	FormatClassicTypes,
+	FormatGenericTypes
 } from './schema/formats';
+
+export {
+	EventsManager,
+	RegistryManager,
+	RegistryKey,
+	RegistryValue
+} from './schema/managers';
 
 export {
 	isObject,
@@ -42,6 +53,7 @@ export {
 	isBase64,
 	isBase64Url
 } from './testers/string';
+
 export {
 	base16ToBase64,
 	base16ToBase32,

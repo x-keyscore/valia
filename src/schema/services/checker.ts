@@ -1,79 +1,99 @@
-import type { RegistryManager, RegistryPathSegments } from "../managers";
-import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { CheckingTask, CheckerReject } from "./types";
+import type { EventsManager, RegistryValue } from "../managers";
+import type { CheckingTask, Reject } from "./types";
+import type { MountedCriteria } from "../formats";
+import type { SchemaInstance } from "../types";
 import { formats } from "../formats";
 import { Issue } from "../../utils";
 
 function reject(
-	rejectCode: string,
-	criteria: CheckingTask['criteria'],
-	path: RegistryPathSegments
-): CheckerReject {
-	return ({
+	eventsManager: EventsManager,
+	code: string,
+	node: MountedCriteria,
+	path: RegistryValue['partPaths']
+): Reject {
+	const obj = {
 		path,
-		code: rejectCode,
-		type: criteria.type,
-		label: criteria.label,
-		message: criteria.message
-	});
+		code: code,
+		type: node.type,
+		label: node.label,
+		message: node.message
+	}
+
+	eventsManager.emit('NODE_CHECKED', node, path, obj);
+
+	return (obj);
 }
 
 export function checker(
-	registryManager: RegistryManager,
-	criteria: MountedCriteria<SetableCriteria>,
+	managers: SchemaInstance['managers'],
+	criteria: MountedCriteria,
 	value: unknown
-): CheckerReject | null {
+): Reject | null {
+	const registryManager = managers.registry;
+	const eventsManager = managers.events;
 	let queue: CheckingTask[] = [{
 		prevPath: { explicit: [], implicit: [] },
-		criteria,
+		currNode: criteria,
 		value
 	}];
 
 	while (queue.length > 0) {
-		const { prevPath, criteria, value, hooks } = queue.pop()!;
+		const { prevPath, currNode, value, hooks } = queue.pop()!;
 
-		const segsPath = registryManager.getPathSegments(criteria);
+		const partPath = registryManager.getPartPaths(currNode);
 		const path = {
-			explicit: [...prevPath.explicit, ...segsPath.explicit],
-			implicit: [...prevPath.implicit, ...segsPath.implicit],
+			explicit: [...prevPath.explicit, ...partPath.explicit],
+			implicit: [...prevPath.implicit, ...partPath.implicit],
 		}
 
 		if (hooks) {
-			const hookResponse = hooks.beforeCheck(criteria);
-			if (hookResponse === false) continue;
-			if (typeof hookResponse === "string") {
-				return(reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+			const response = hooks.beforeCheck(currNode);
+			if (response === false) continue;
+			if (typeof response === "string") {
+				return(reject(
+					eventsManager,
+					response,
+					hooks.owner.node,
+					hooks.owner.path
+				));
 			}
 		}
 
-		let rejectCode = null;
+		let state = null;
 		if (value === null) {
-			if (criteria.nullable) rejectCode = null;
-			else rejectCode = "TYPE_NULL";
+			if (currNode.nullable) state = null;
+			else state = "TYPE_NULL";
 		} else if (value === undefined) {
-			if (criteria.undefinable) rejectCode = null;
-			else rejectCode = "TYPE_UNDEFINED";
+			if (currNode.undefinable) state = null;
+			else state = "TYPE_UNDEFINED";
 		} else {
-			const format = formats[criteria.type];
+			const format = formats[currNode.type];
 			if (!format) throw new Issue(
 				"Checking",
-				"Type '" + criteria.type + "' is unknown."
+				"Type '" + currNode.type + "' is unknown."
 			);
 
-			rejectCode = format.checking(queue, path, criteria, value);
+			state = format.checking(queue, path, currNode, value);
 		}
 
 		if (hooks) {
-			const hookResponse = hooks.afterCheck(criteria, rejectCode);
-			if (hookResponse === false) continue;
-			if (typeof hookResponse === "string") {
-				return(reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+			const response = hooks.afterCheck(currNode, state);
+			if (response === false) continue;
+			if (typeof response === "string") {
+				return(reject(
+					eventsManager,
+					response,
+					hooks.owner.node,
+					hooks.owner.path
+				));
 			}
 		}
 
-		if (rejectCode) {
-			return (reject(rejectCode, criteria, path));
+		if (state) {
+			return (reject(eventsManager, state, currNode, path));
 		}
+
+		eventsManager.emit('NODE_CHECKED', currNode, path, null);
 	}
 
 	return (null);

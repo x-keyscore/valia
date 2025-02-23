@@ -8,18 +8,18 @@ exports.RecordFormat = {
     },
     mounting(queue, path, criteria) {
         queue.push({
-            prevCriteria: criteria,
+            prevNode: criteria,
             prevPath: path,
-            criteria: criteria.key,
-            pathSegments: {
+            currNode: criteria.key,
+            partPath: {
                 explicit: ["key"],
                 implicit: []
             }
         }, {
-            prevCriteria: criteria,
+            prevNode: criteria,
             prevPath: path,
-            criteria: criteria.value,
-            pathSegments: {
+            currNode: criteria.value,
+            partPath: {
                 explicit: ["value"],
                 implicit: ["%", "string", "symbol"]
             }
@@ -46,12 +46,12 @@ exports.RecordFormat = {
             const key = keys[i];
             queue.push({
                 prevPath: path,
-                criteria: criteriaKey,
+                currNode: criteriaKey,
                 value: key
             });
             queue.push({
                 prevPath: path,
-                criteria: criteriaValue,
+                currNode: criteriaValue,
                 value: value[key]
             });
         }

@@ -1,4 +1,4 @@
-import type { RegistryManager } from "../managers";
-import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { CheckerReject } from "./types";
-export declare function checker(registryManager: RegistryManager, criteria: MountedCriteria<SetableCriteria>, value: unknown): CheckerReject | null;
+import type { Reject } from "./types";
+import type { MountedCriteria } from "../formats";
+import type { SchemaInstance } from "../types";
+export declare function checker(managers: SchemaInstance['managers'], criteria: MountedCriteria, value: unknown): Reject | null;

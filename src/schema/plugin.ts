@@ -1,8 +1,9 @@
-import type { SetableCriteria } from "./formats";
+import type { FormatTemplate, SetableCriteria, SetableCriteriaMap, SetableCriteriaTemplate } from "./formats";
 import type { Constructor } from "../types";
 import type { SchemaType } from "./types";
 import { Schema } from "./schema";
 import { Issue } from "../utils";
+import { ClassicTypesTemplate, GenericTypesTemplate } from "./formats/types";
 
 export abstract class AbstractPlugin<const T extends SetableCriteria> extends Schema<T> {
 	/**
@@ -106,3 +107,77 @@ export function SchemaPlugins<T, U, V, W, X, Y>(
 		throw err;
 	}
 }
+
+/*
+interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
+	unique: boolean;
+}
+
+export interface ObjectIdClassicTypes extends ClassicTypesTemplate<
+	ObjectIdSetableCriteria,
+	{}
+> {}
+
+export interface ObjectIdGenericTypes<T extends SetableCriteria> extends GenericTypesTemplate<
+	ObjectIdSetableCriteria,
+	{},
+	{}
+> {}
+
+
+declare module './formats/types' {
+	interface FormatClassicTypes {
+		objectId:  ObjectIdClassicTypes;
+	}
+	interface FormatGenericTypes<T extends SetableCriteria> {
+		objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes<T> : never;
+	}
+}
+
+const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
+	defaultCriteria: {},
+	mounting(queue, path, criteria) {
+		
+	},
+	checking(queue, path, criteria, value) {
+		return (null);
+	}
+}
+
+class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends AbstractPlugin<T> {
+	protected beforeInitate(): void {
+		
+	}
+
+	protected afterInitate(): void {
+		
+	}
+
+	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+		super(...args)
+	}
+}
+
+class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "ObjectId">]> extends AbstractPlugin<T> {
+	protected beforeInitate(): void {
+		
+	}
+
+	protected afterInitate(): void {
+		
+	}
+
+	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+		super(...args)
+	}
+}
+
+const test = SchemaPlugins(Mongo, Maria)
+
+
+const eerer = new test({ type: "objectId", unique: true})
+
+eerer
+
+
+const lala = new Schema({ type: "string"})*/

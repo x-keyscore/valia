@@ -2,16 +2,16 @@ import type { ArraySetableCriteria } from "./types";
 import type { FormatTemplate } from "../types";
 import { isArray } from "../../../testers";
 
-export const ArrayFormat: FormatTemplate<ArraySetableCriteria> = {
+export const ArrayFormat: FormatTemplate< ArraySetableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
 	mounting(queue, path, criteria) {
 		queue.push({
-			prevCriteria: criteria,
+			prevNode: criteria,
 			prevPath: path,
-			criteria: criteria.item,
-			pathSegments: {
+			currNode: criteria.item,
+			partPath: {
 				explicit: ["item"],
 				implicit: ["%", "number"],
 			}
@@ -34,7 +34,7 @@ export const ArrayFormat: FormatTemplate<ArraySetableCriteria> = {
 		for (let i = 0; i < value.length; i++) {
 			queue.push({
 				prevPath: path,
-				criteria: criteria.item,
+				currNode: criteria.item,
 				value: value[i]
 			});
 		}

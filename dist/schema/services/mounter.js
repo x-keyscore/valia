@@ -9,43 +9,46 @@ exports.metadataSymbol = Symbol('matadata');
 function isMountedCriteria(obj) {
     return (typeof obj === "object" && Reflect.has(obj, exports.metadataSymbol));
 }
-function mounter(registryManager, eventsManager, clonedCriteria) {
+function mounter(managers, criteria) {
     var _a;
+    const registryManager = managers.registry;
+    const eventsManager = managers.events;
     let queue = [{
-            prevCriteria: null,
+            prevNode: null,
             prevPath: { explicit: [], implicit: [] },
-            criteria: clonedCriteria,
-            pathSegments: { explicit: [], implicit: [] }
+            currNode: criteria,
+            partPath: { explicit: [], implicit: [] },
         }];
     while (queue.length > 0) {
-        const { prevCriteria, prevPath, criteria, pathSegments } = queue.pop();
+        const { prevNode, prevPath, currNode, partPath } = queue.pop();
         const path = {
-            explicit: [...prevPath.explicit, ...pathSegments.explicit],
-            implicit: [...prevPath.implicit, ...pathSegments.implicit],
+            explicit: [...prevPath.explicit, ...partPath.explicit],
+            implicit: [...prevPath.implicit, ...partPath.implicit],
         };
-        registryManager.set(prevCriteria, criteria, pathSegments);
-        if (isMountedCriteria(criteria)) {
-            registryManager.junction(criteria);
+        registryManager.set(prevNode, currNode, partPath);
+        if (isMountedCriteria(currNode)) {
+            registryManager.junction(currNode);
         }
         else {
-            const format = formats_1.formats[criteria.type];
+            const format = formats_1.formats[currNode.type];
             if (!format)
-                throw new utils_1.Issue("Mounting", "Type '" + criteria.type + "' is unknown.");
-            (_a = format.mounting) === null || _a === void 0 ? void 0 : _a.call(format, queue, path, criteria);
-            Object.assign(criteria, {
+                throw new utils_1.Issue("Mounting", "Type '" + currNode.type + "' is unknown.");
+            (_a = format.mounting) === null || _a === void 0 ? void 0 : _a.call(format, queue, path, currNode);
+            Object.assign(currNode, {
                 ...formats_1.staticDefaultCriteria,
                 ...format.defaultCriteria,
-                ...criteria
+                ...currNode
             });
         }
-        Object.assign(criteria, {
+        Object.assign(currNode, {
             [exports.metadataSymbol]: {
-                registryKey: criteria,
-                registry: registryManager.registry
+                registry: registryManager.registry,
+                saveNode: currNode
             }
         });
-        eventsManager.emit("CRITERIA_NODE_MOUNTED", criteria, path);
+        eventsManager.emit("NODE_MOUNTED", currNode, path);
     }
-    return clonedCriteria;
+    eventsManager.emit("FULL_MOUNTED");
+    return criteria;
 }
 ;

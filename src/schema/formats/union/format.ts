@@ -16,10 +16,10 @@ export const UnionFormat: FormatTemplate<UnionSetableCriteria> = {
 		for (let i = 0; i < criteria.union.length; i++) {
 
 			queue.push({
-				prevCriteria: criteria,
+				prevNode: criteria,
 				prevPath: path,
-				criteria: criteria.union[i],
-				pathSegments: {
+				currNode: criteria.union[i],
+				partPath: {
 					explicit: ["union", i],
 					implicit: []
 				}
@@ -30,7 +30,7 @@ export const UnionFormat: FormatTemplate<UnionSetableCriteria> = {
 		const unionLength = criteria.union.length;
 
 		const hooks: CheckingTaskHooks<HooksCustomProperties> = {
-			owner: { criteria, path },
+			owner: { node: criteria, path },
 			totalRejected: 0,
 			totalHooked: unionLength,
 			isFinished: false,
@@ -55,7 +55,7 @@ export const UnionFormat: FormatTemplate<UnionSetableCriteria> = {
 		for (let i = 0; i < unionLength; i++) {
 			queue.push({
 				prevPath: path,
-				criteria: criteria.union[i],
+				currNode: criteria.union[i],
 				value,
 				hooks
 			});

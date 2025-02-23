@@ -20,10 +20,10 @@ exports.StructFormat = {
                 };
             }
             queue.push({
-                prevCriteria: criteria,
+                prevNode: criteria,
                 prevPath: path,
-                criteria: criteria.struct[key],
-                pathSegments: {
+                currNode: criteria.struct[key],
+                partPath: {
                     explicit: ["struct", key],
                     implicit: ["&", key]
                 }
@@ -53,7 +53,7 @@ exports.StructFormat = {
             const key = keys[i];
             queue.push({
                 prevPath: path,
-                criteria: criteria.struct[key],
+                currNode: criteria.struct[key],
                 value: value[key],
             });
         }

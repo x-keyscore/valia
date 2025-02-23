@@ -8,10 +8,10 @@ exports.ArrayFormat = {
     },
     mounting(queue, path, criteria) {
         queue.push({
-            prevCriteria: criteria,
+            prevNode: criteria,
             prevPath: path,
-            criteria: criteria.item,
-            pathSegments: {
+            currNode: criteria.item,
+            partPath: {
                 explicit: ["item"],
                 implicit: ["%", "number"],
             }
@@ -33,7 +33,7 @@ exports.ArrayFormat = {
         for (let i = 0; i < value.length; i++) {
             queue.push({
                 prevPath: path,
-                criteria: criteria.item,
+                currNode: criteria.item,
                 value: value[i]
             });
         }

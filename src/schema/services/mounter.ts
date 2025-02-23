@@ -1,5 +1,5 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { EventsManager, RegistryManager } from "../managers";
+import type { SchemaInstance } from "../types";
 import type { MountingTask } from "./types";
 import { staticDefaultCriteria, formats } from "../formats";
 import { Issue } from "../../utils";
@@ -11,58 +11,61 @@ export function isMountedCriteria(obj: object): obj is MountedCriteria {
 }
 
 export function mounter<T extends SetableCriteria>(
-	registryManager: RegistryManager,
-	eventsManager: EventsManager,
-	clonedCriteria: SetableCriteria & T
+	managers: SchemaInstance['managers'],
+	criteria: SetableCriteria & T
 ): MountedCriteria<T> {
+	const registryManager = managers.registry;
+	const eventsManager = managers.events;
 	let queue: MountingTask[] = [{
-		prevCriteria: null,
+		prevNode: null,
 		prevPath: { explicit: [], implicit: [] },
-		criteria: clonedCriteria,
-		pathSegments: { explicit: [], implicit: [] }
+		currNode: criteria,
+		partPath: { explicit: [], implicit: [] },
 	}];
 
 	while (queue.length > 0) {
-		const { prevCriteria, prevPath, criteria, pathSegments } = queue.pop()!;
+		const { prevNode, prevPath, currNode, partPath } = queue.pop()!;
 
 		const path = {
-			explicit: [...prevPath.explicit, ...pathSegments.explicit],
-			implicit:  [...prevPath.implicit, ...pathSegments.implicit],
+			explicit: [...prevPath.explicit, ...partPath.explicit],
+			implicit: [...prevPath.implicit, ...partPath.implicit],
 		}
 
-		registryManager.set(prevCriteria, criteria, pathSegments);
+		registryManager.set(prevNode, currNode, partPath);
 
-		if (isMountedCriteria(criteria)) {
-			registryManager.junction(criteria);
+		if (isMountedCriteria(currNode)) {
+			registryManager.junction(currNode);
 		} else {
-			const format = formats[criteria.type];
+			const format = formats[currNode.type];
 			if (!format) throw new Issue(
 				"Mounting",
-				"Type '" + criteria.type + "' is unknown."
+				"Type '" + currNode.type + "' is unknown."
 			);
 
-			format.mounting?.(queue, path, criteria);
+			format.mounting?.(queue, path, currNode);
 
-			Object.assign(criteria, {
+			Object.assign(currNode, {
 				...staticDefaultCriteria,
 				...format.defaultCriteria,
-				...criteria
+				...currNode
 			});
 		}
 
-		Object.assign(criteria, {
+		Object.assign(currNode, {
 			[metadataSymbol]: {
-				registryKey: criteria,
-				registry: registryManager.registry
+				registry: registryManager.registry,
+				saveNode: currNode
 			}
 		});
 
 		eventsManager.emit(
-			"CRITERIA_NODE_MOUNTED",
-			criteria as MountedCriteria,
+			"NODE_MOUNTED",
+			currNode as MountedCriteria,
 			path
 		);
 	}
 
-	return (clonedCriteria as MountedCriteria<T>);
+	eventsManager.emit("FULL_MOUNTED");
+
+	return (criteria as MountedCriteria<T>);
 };

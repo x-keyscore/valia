@@ -1,11 +1,11 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate,
 	SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
 export interface UnionSetableCriteria extends SetableCriteriaTemplate<"union"> {
 	union: [SetableCriteria, ...SetableCriteria[]];
 }
 
-export interface UnionConcreteTypes extends ConcreteTypesTemplate<
+export interface UnionClassicTypes extends ClassicTypesTemplate<
 	UnionSetableCriteria,
 	{}
 > {}
@@ -22,7 +22,6 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> = {
 }[keyof T['union']];
 
 export interface UnionGenericTypes<T extends UnionSetableCriteria> extends GenericTypesTemplate<
-	UnionSetableCriteria,
 	UnionMountedCriteria,
 	UnionGuardedCriteria<T>
 > {}

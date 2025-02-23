@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
 export type SetableStruct = {
     [key: string | symbol]: SetableCriteria | SetableStruct;
 };
@@ -6,7 +6,7 @@ export interface StructSetableCriteria extends SetableCriteriaTemplate<"struct">
     optional?: (string | symbol)[];
     struct: SetableStruct;
 }
-export interface StructConcreteTypes extends ConcreteTypesTemplate<StructSetableCriteria, {}> {
+export interface StructClassicTypes extends ClassicTypesTemplate<StructSetableCriteria, {}> {
 }
 type SimulateStruct<T> = StructSetableCriteria & {
     struct: T;
@@ -24,6 +24,6 @@ type OptionalizeKey<T, K extends (string | symbol)[] | undefined> = K extends Pr
 type StructGuardedCriteria<T extends StructSetableCriteria> = {
     -readonly [K in keyof OptionalizeKey<T['struct'], T['optional']> as OmitDynamicKey<K>]: T['struct'][K] extends SetableCriteria ? GuardedCriteria<T['struct'][K]> : T['struct'][K] extends SetableStruct ? GuardedCriteria<SimulateStruct<T['struct'][K]>> : never;
 };
-export interface StructGenericTypes<T extends StructSetableCriteria> extends GenericTypesTemplate<StructSetableCriteria, StructMountedCriteria<T>, StructGuardedCriteria<T>> {
+export interface StructGenericTypes<T extends StructSetableCriteria> extends GenericTypesTemplate<StructMountedCriteria<T>, StructGuardedCriteria<T>> {
 }
 export {};

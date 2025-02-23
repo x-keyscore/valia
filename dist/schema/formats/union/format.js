@@ -8,10 +8,10 @@ exports.UnionFormat = {
     mounting(queue, path, criteria) {
         for (let i = 0; i < criteria.union.length; i++) {
             queue.push({
-                prevCriteria: criteria,
+                prevNode: criteria,
                 prevPath: path,
-                criteria: criteria.union[i],
-                pathSegments: {
+                currNode: criteria.union[i],
+                partPath: {
                     explicit: ["union", i],
                     implicit: []
                 }
@@ -21,7 +21,7 @@ exports.UnionFormat = {
     checking(queue, path, criteria, value) {
         const unionLength = criteria.union.length;
         const hooks = {
-            owner: { criteria, path },
+            owner: { node: criteria, path },
             totalRejected: 0,
             totalHooked: unionLength,
             isFinished: false,
@@ -48,7 +48,7 @@ exports.UnionFormat = {
         for (let i = 0; i < unionLength; i++) {
             queue.push({
                 prevPath: path,
-                criteria: criteria.union[i],
+                currNode: criteria.union[i],
                 value,
                 hooks
             });

@@ -1,9 +1,9 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
 export interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {
 }
-export interface BooleanConcreteTypes extends ConcreteTypesTemplate<BooleanSetableCriteria, {}> {
+export interface BooleanClassicTypes extends ClassicTypesTemplate<BooleanSetableCriteria, {}> {
 }
 type BooleanGuardedCriteria = boolean;
-export interface BooleanGenericTypes<T extends BooleanSetableCriteria> extends GenericTypesTemplate<BooleanSetableCriteria, {}, BooleanGuardedCriteria> {
+export interface BooleanGenericTypes<T extends BooleanSetableCriteria> extends GenericTypesTemplate<{}, BooleanGuardedCriteria> {
 }
 export {};

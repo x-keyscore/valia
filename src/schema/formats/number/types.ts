@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
 
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
 	min?: number;
@@ -7,7 +7,7 @@ export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number">
 	custom?: (input: number) => boolean;
 }
 
-export interface NumberConcreteTypes extends ConcreteTypesTemplate<
+export interface NumberClassicTypes extends ClassicTypesTemplate<
 	NumberSetableCriteria,
 	{}
 > {}
@@ -20,7 +20,6 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> =
 			: number;
 
 export interface NumberGenericTypes<T extends NumberSetableCriteria> extends GenericTypesTemplate<
-	NumberSetableCriteria,
 	{},
 	NumberGuardedCriteria<T>
 > {}

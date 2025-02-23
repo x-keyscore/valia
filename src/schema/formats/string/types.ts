@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
 import { testers } from "../../../testers";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
@@ -28,7 +28,7 @@ export interface StringDefaultCriteria {
 	empty: boolean;
 }
 
-export interface StringConcreteTypes extends ConcreteTypesTemplate<
+export interface StringClassicTypes extends ClassicTypesTemplate<
 	StringSetableCriteria,
 	StringDefaultCriteria
 > {}
@@ -45,7 +45,6 @@ type StringGuardedCriteria<T extends StringSetableCriteria> =
 			: string;
 
 export interface StringGenericTypes<T extends StringSetableCriteria> extends GenericTypesTemplate<
-	StringSetableCriteria,
 	{},
 	StringGuardedCriteria<T>
 > {}

@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 export interface ArraySetableCriteria extends SetableCriteriaTemplate<"array"> {
     /** @default true */
     empty?: boolean;
@@ -9,12 +9,12 @@ export interface ArraySetableCriteria extends SetableCriteriaTemplate<"array"> {
 export interface ArrayDefaultCriteria {
     empty: boolean;
 }
-export interface ArrayConcreteTypes extends ConcreteTypesTemplate<ArraySetableCriteria, ArrayDefaultCriteria> {
+export interface ArrayClassicTypes extends ClassicTypesTemplate<ArraySetableCriteria, ArrayDefaultCriteria> {
 }
 export interface ArrayMountedCriteria {
-    item: MountedCriteria<SetableCriteria>;
+    item: MountedCriteria;
 }
 type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['item']>[];
-export interface ArrayGenericTypes<T extends ArraySetableCriteria> extends GenericTypesTemplate<ArraySetableCriteria, ArrayMountedCriteria, ArrayGuardedCriteria<T>> {
+export interface ArrayGenericTypes<T extends ArraySetableCriteria> extends GenericTypesTemplate<ArrayMountedCriteria, ArrayGuardedCriteria<T>> {
 }
 export {};

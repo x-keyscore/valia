@@ -1,11 +1,11 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import { RegistryPathSegments } from "../managers";
+import type { RegistryValue } from "../managers";
 
 export interface MountingTask {
-	prevCriteria: SetableCriteria | MountedCriteria | null;
-	prevPath: RegistryPathSegments;
-	criteria: SetableCriteria | MountedCriteria;
-	pathSegments: RegistryPathSegments;
+	prevNode: SetableCriteria | MountedCriteria | null;
+	prevPath: RegistryValue['partPaths'];
+	currNode: SetableCriteria | MountedCriteria;
+	partPath: RegistryValue['partPaths'];
 }
 
 /**
@@ -18,8 +18,8 @@ export type CheckingTaskHooks<U extends Record<string, any> = { [key: string]: a
 	 * if a hook returns a rejection code.
 	 */
 	owner: {
-		criteria: MountedCriteria;
-		path: RegistryPathSegments;
+		node: MountedCriteria;
+		path: RegistryValue['partPaths'];
 	}
 	/**
 	 * Hook executed just before the verification process.
@@ -38,14 +38,14 @@ export type CheckingTaskHooks<U extends Record<string, any> = { [key: string]: a
 } & U;
 
 export type CheckingTask = {
-	prevPath: RegistryPathSegments;
-	criteria: MountedCriteria<SetableCriteria>;
+	prevPath: RegistryValue['partPaths'];
+	currNode: MountedCriteria;
 	value: unknown;
 	hooks?: CheckingTaskHooks;
 }
 
-export interface CheckerReject {
-	path: RegistryPathSegments;
+export interface Reject {
+	path: RegistryValue['partPaths'];
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 

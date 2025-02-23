@@ -1,16 +1,22 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, SetableCriteriaMap, SetableCriteriaNative } from "./formats";
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export declare class Schema<const T extends SetableCriteria> {
+export declare class Schema<const T extends SetableCriteria = SetableCriteriaMap[SetableCriteriaNative]> {
     private mountedCriteria;
     protected managers: {
         registry: {
-            registry: Map<import("./managers/types").RegistryKey, import("./managers/types").RegistryValue>;
-            set(prevCriteria: import("./managers/types").RegistryKey | null, currCriteria: import("./managers/types").RegistryKey, pathSegments: import("./managers/types").RegistryValue["pathSegments"]): void;
-            junction(targetCriteria: MountedCriteria): void;
-            getNextCriteria(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
-            getPathSegments(criteria: import("./managers/types").RegistryKey): import("./managers").RegistryPathSegments;
+            registry: Map<import("./managers").RegistryKey, import("./managers").RegistryValue>;
+            set(prevNode: import("./managers").RegistryKey | null, currNode: import("./managers").RegistryKey, partPaths: import("./managers").RegistryValue["partPaths"]): void;
+            junction(targetNode: MountedCriteria): void;
+            getNextNodes(criteria: import("./managers").RegistryKey): {
+                explicit: (string | number | symbol)[];
+                implicit: (number | symbol | import("../types").LooseAutocomplete<"string" | "number" | "symbol" | "@" | "&" | "%">)[];
+            };
+            getPartPaths(criteria: import("./managers").RegistryKey): {
+                explicit: (string | number | symbol)[];
+                implicit: (number | symbol | import("../types").LooseAutocomplete<"string" | "number" | "symbol" | "@" | "&" | "%">)[];
+            };
         };
         events: {
             listeners: Map<keyof import("./managers/types").Events, ((...args: any[]) => any)[]>;
@@ -49,7 +55,7 @@ export declare class Schema<const T extends SetableCriteria> {
         reject: null;
         value: GuardedCriteria<T>;
     } | {
-        reject: import("./services").CheckerReject;
+        reject: import("./services").Reject;
         value: null;
     };
 }

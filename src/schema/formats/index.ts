@@ -1,11 +1,17 @@
 export type {
+    ClassicTypesTemplate,
+    GenericTypesTemplate,
     SetableCriteriaTemplate,
     SetableCriteriaBase,
     SetableCriteria,
     SetableCriteriaMap,
     SetableCriteriaOmit,
+    SetableCriteriaNative,
+    MountedCriteria,
     GuardedCriteria,
-    MountedCriteria
+    FormatClassicTypes,
+    FormatGenericTypes,
+    FormatTemplate
 } from './types';
 
 export {

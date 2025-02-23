@@ -1,11 +1,11 @@
-import type { SetableCriteriaTemplate, ConcreteTypesTemplate, GenericTypesTemplate,
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate,
 	SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
 export interface TupleSetableCriteria extends SetableCriteriaTemplate<"tuple"> {
 	tuple: [SetableCriteria, ...SetableCriteria[]];
 }
 
-export interface TupleConcreteTypes extends ConcreteTypesTemplate<
+export interface TupleClassicTypes extends ClassicTypesTemplate<
 	TupleSetableCriteria,
 	{}
 > {}
@@ -24,7 +24,6 @@ type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 		: never;
 
 export interface TupleGenericTypes<T extends TupleSetableCriteria> extends GenericTypesTemplate<
-	TupleSetableCriteria,
 	TupleMountedCriteria,
 	TupleGuardedCriteria<T>
 > {}

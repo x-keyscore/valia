@@ -1,4 +1,4 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, SetableCriteriaMap, SetableCriteriaNative } from "./formats";
 import { registryManager, eventsManager } from "./managers";
 import { mounter, checker, cloner } from "./services";
 import { Issue } from "../utils";
@@ -6,21 +6,17 @@ import { Issue } from "../utils";
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export class Schema<const T extends SetableCriteria> {
+export class Schema<const T extends SetableCriteria = SetableCriteriaMap[SetableCriteriaNative]> {
 	private mountedCriteria: MountedCriteria<T> | undefined;
 	protected managers = {
-		registry: registryManager.call(this),
-		events: eventsManager.call(this)
+		registry: registryManager,
+		events: eventsManager
 	}
 
 	protected initiate(definedCriteria: T) {
 		const clonedCriteria = cloner(definedCriteria);
 
-		this.mountedCriteria = mounter(
-			this.managers.registry,
-			this.managers.events,
-			clonedCriteria
-		);
+		this.mountedCriteria = mounter(this.managers, clonedCriteria);
 	}
 
 	constructor(criteria: T) {
@@ -38,7 +34,7 @@ export class Schema<const T extends SetableCriteria> {
 	 */
 	get criteria(): MountedCriteria<T> {
 		if (!this.mountedCriteria) {
-			throw new Issue("Schema", "The criteria have not been initialized.");
+			throw new Issue("Schema", "Criteria are not initialized.");
 		}
 		return (this.mountedCriteria);
 	}
@@ -53,7 +49,7 @@ export class Schema<const T extends SetableCriteria> {
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
 	validate(value: unknown): value is GuardedCriteria<T> {
-		const reject = checker(this.managers.registry, this.criteria, value);
+		const reject = checker(this.managers, this.criteria, value);
 		return (!reject);
 	}
 
@@ -67,7 +63,7 @@ export class Schema<const T extends SetableCriteria> {
 	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
 	 */
 	evaluate(value: unknown) {
-		const reject = checker(this.managers.registry, this.criteria, value);
+		const reject = checker(this.managers, this.criteria, value);
 		if (reject) {
 			return ({ reject, value: null });
 		}

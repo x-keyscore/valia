@@ -76,3 +76,76 @@ function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
         throw err;
     }
 }
+/*
+interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
+    unique: boolean;
+}
+
+export interface ObjectIdClassicTypes extends ClassicTypesTemplate<
+    ObjectIdSetableCriteria,
+    {}
+> {}
+
+export interface ObjectIdGenericTypes<T extends SetableCriteria> extends GenericTypesTemplate<
+    ObjectIdSetableCriteria,
+    {},
+    {}
+> {}
+
+
+declare module './formats/types' {
+    interface FormatClassicTypes {
+        objectId:  ObjectIdClassicTypes;
+    }
+    interface FormatGenericTypes<T extends SetableCriteria> {
+        objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes<T> : never;
+    }
+}
+
+const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
+    defaultCriteria: {},
+    mounting(queue, path, criteria) {
+        
+    },
+    checking(queue, path, criteria, value) {
+        return (null);
+    }
+}
+
+class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends AbstractPlugin<T> {
+    protected beforeInitate(): void {
+        
+    }
+
+    protected afterInitate(): void {
+        
+    }
+
+    constructor(...args: ConstructorParameters<SchemaType<T>>) {
+        super(...args)
+    }
+}
+
+class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "ObjectId">]> extends AbstractPlugin<T> {
+    protected beforeInitate(): void {
+        
+    }
+
+    protected afterInitate(): void {
+        
+    }
+
+    constructor(...args: ConstructorParameters<SchemaType<T>>) {
+        super(...args)
+    }
+}
+
+const test = SchemaPlugins(Mongo, Maria)
+
+
+const eerer = new test({ type: "objectId", unique: true})
+
+eerer
+
+
+const lala = new Schema({ type: "string"})*/ 

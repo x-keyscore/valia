@@ -3,66 +3,71 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
 const formats_1 = require("../formats");
 const utils_1 = require("../../utils");
-function reject(rejectCode, criteria, path) {
-    return ({
+function reject(eventsManager, code, node, path) {
+    const obj = {
         path,
-        code: rejectCode,
-        type: criteria.type,
-        label: criteria.label,
-        message: criteria.message
-    });
+        code: code,
+        type: node.type,
+        label: node.label,
+        message: node.message
+    };
+    eventsManager.emit('NODE_CHECKED', node, path, obj);
+    return (obj);
 }
-function checker(registryManager, criteria, value) {
+function checker(managers, criteria, value) {
+    const registryManager = managers.registry;
+    const eventsManager = managers.events;
     let queue = [{
             prevPath: { explicit: [], implicit: [] },
-            criteria,
+            currNode: criteria,
             value
         }];
     while (queue.length > 0) {
-        const { prevPath, criteria, value, hooks } = queue.pop();
-        const segsPath = registryManager.getPathSegments(criteria);
+        const { prevPath, currNode, value, hooks } = queue.pop();
+        const partPath = registryManager.getPartPaths(currNode);
         const path = {
-            explicit: [...prevPath.explicit, ...segsPath.explicit],
-            implicit: [...prevPath.implicit, ...segsPath.implicit],
+            explicit: [...prevPath.explicit, ...partPath.explicit],
+            implicit: [...prevPath.implicit, ...partPath.implicit],
         };
         if (hooks) {
-            const hookResponse = hooks.beforeCheck(criteria);
-            if (hookResponse === false)
+            const response = hooks.beforeCheck(currNode);
+            if (response === false)
                 continue;
-            if (typeof hookResponse === "string") {
-                return (reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+            if (typeof response === "string") {
+                return (reject(eventsManager, response, hooks.owner.node, hooks.owner.path));
             }
         }
-        let rejectCode = null;
+        let state = null;
         if (value === null) {
-            if (criteria.nullable)
-                rejectCode = null;
+            if (currNode.nullable)
+                state = null;
             else
-                rejectCode = "TYPE_NULL";
+                state = "TYPE_NULL";
         }
         else if (value === undefined) {
-            if (criteria.undefinable)
-                rejectCode = null;
+            if (currNode.undefinable)
+                state = null;
             else
-                rejectCode = "TYPE_UNDEFINED";
+                state = "TYPE_UNDEFINED";
         }
         else {
-            const format = formats_1.formats[criteria.type];
+            const format = formats_1.formats[currNode.type];
             if (!format)
-                throw new utils_1.Issue("Checking", "Type '" + criteria.type + "' is unknown.");
-            rejectCode = format.checking(queue, path, criteria, value);
+                throw new utils_1.Issue("Checking", "Type '" + currNode.type + "' is unknown.");
+            state = format.checking(queue, path, currNode, value);
         }
         if (hooks) {
-            const hookResponse = hooks.afterCheck(criteria, rejectCode);
-            if (hookResponse === false)
+            const response = hooks.afterCheck(currNode, state);
+            if (response === false)
                 continue;
-            if (typeof hookResponse === "string") {
-                return (reject(hookResponse, hooks.owner.criteria, hooks.owner.path));
+            if (typeof response === "string") {
+                return (reject(eventsManager, response, hooks.owner.node, hooks.owner.path));
             }
         }
-        if (rejectCode) {
-            return (reject(rejectCode, criteria, path));
+        if (state) {
+            return (reject(eventsManager, state, currNode, path));
         }
+        eventsManager.emit('NODE_CHECKED', currNode, path, null);
     }
     return (null);
 }

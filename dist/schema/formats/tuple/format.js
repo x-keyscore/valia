@@ -9,10 +9,10 @@ exports.TupleFormat = {
     mounting(queue, path, criteria) {
         for (let i = 0; i < criteria.tuple.length; i++) {
             queue.push({
-                prevCriteria: criteria,
+                prevNode: criteria,
                 prevPath: path,
-                criteria: criteria.tuple[i],
-                pathSegments: {
+                currNode: criteria.tuple[i],
+                partPath: {
                     explicit: ["tuple", i],
                     implicit: ["&", i]
                 }
@@ -33,7 +33,7 @@ exports.TupleFormat = {
         for (let i = 0; i < value.length; i++) {
             queue.push({
                 prevPath: path,
-                criteria: criteria.tuple[i],
+                currNode: criteria.tuple[i],
                 value: value[i]
             });
         }
