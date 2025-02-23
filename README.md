@@ -407,4 +407,4 @@ base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
 base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
 ```
 <br/><br/>
-Made in France with passion 🥖🇫🇷
+Developed in France with passion 🇫🇷 🥖
