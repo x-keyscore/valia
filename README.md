@@ -216,17 +216,20 @@ const schema = new Schema({
 |Property|Type|Description|
 |--|--|--|
 |`type`         |`"struct"`                          |Type name|
-|`optional?`        |`Array<string \| symbol>`           |Array of optional keys|
-|`struct`       |`Record<string \| symbol, Criteria>`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
+|`optional?`    |`Array<string \| symbol>`           |Array of optional keys|
+|`struct`       |` { [key: string \| symbol]: SetableCriteria  \| SetableStruct; }`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
 
 ```ts
 const schema = new Schema({
   type: "struct",
   optional: ["description"],
   struct: {
-    fistname: { type: "string" },
-    lastname: { type: "string" },
-    description: { type: "string" }
+    name: { type: "string", max: 20 },
+    price: { type: "number", min: 0.1 },
+    description: {
+      brand: { type: "string", max: 40 }
+      color: { type: "string", enum: ["BLACK", "WHITE"] }
+    }
   }
 });
 ```
