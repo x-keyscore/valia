@@ -70,12 +70,12 @@ evaluate(value: unknown): { reject: SchemaReject, value: null } | { reject: null
 ```
 ```ts
 interface SchemaReject {
-  code: string;
-  type: string;
   path: {
     explicit: [],
     implicit: []
   };
+  code: string;
+  type: string;
   label: string | undefined;
   message: string | undefined;
 };
