@@ -282,7 +282,7 @@ const schema = new Schema({
 const schema = new Schema({
   type: "array",
   empty: true,
-  tuple: [{ type: "string" }, { type: "number" }
+  tuple: [{ type: "string" }, { type: "number" }]
 });
 ```
 
