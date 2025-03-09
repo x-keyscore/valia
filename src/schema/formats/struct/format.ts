@@ -1,8 +1,8 @@
 import type { FormatTemplate, MountedCriteria } from "../types";
-import type { StructSetableCriteria, SetableStruct } from "./types";
+import type { StructSetableCriteria, StructCriteria } from "./types";
 import { isPlainObject } from "../../../testers";
 
-interface CustomProperties {
+export interface CustomProperties {
 	hasRequiredKeys(
 		mountedCriteria: MountedCriteria<StructSetableCriteria>,
 		value: (string | symbol)[]
@@ -13,7 +13,7 @@ interface CustomProperties {
 	): boolean;
 }
 
-function isSubStruct(obj: object): obj is SetableStruct {
+function isSubStruct(obj: object): obj is StructCriteria {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 

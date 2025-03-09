@@ -4,18 +4,16 @@ export type {
     SetableCriteriaTemplate,
     SetableCriteriaBase,
     SetableCriteria,
-    SetableCriteriaMap,
-    SetableCriteriaOmit,
-    SetableCriteriaNative,
     MountedCriteria,
     GuardedCriteria,
     FormatClassicTypes,
     FormatGenericTypes,
-    FormatTemplate
+    FormatTemplate,
+    NativeFormats
 } from './types';
 
 export {
     staticDefaultCriteria,
-    formats
+    nativeFormats
 } from './formats';
 

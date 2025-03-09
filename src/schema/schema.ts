@@ -1,21 +1,24 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, SetableCriteriaMap, SetableCriteriaNative } from "./formats";
-import { registryManager, eventsManager } from "./managers";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, NativeFormats } from "./formats";
+import { registryManager, eventsManager, formatsManager } from "./managers";
 import { mounter, checker, cloner } from "./services";
+import { nativeFormats } from "./formats";
 import { Issue } from "../utils";
 
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export class Schema<const T extends SetableCriteria = SetableCriteriaMap[SetableCriteriaNative]> {
+export class Schema<const T extends SetableCriteria = SetableCriteria<keyof NativeFormats>> {
 	private mountedCriteria: MountedCriteria<T> | undefined;
 	protected managers = {
-		registry: registryManager,
-		events: eventsManager
+		registry: registryManager(),
+		formats: formatsManager(),
+		events: eventsManager()
 	}
 
 	protected initiate(definedCriteria: T) {
-		const clonedCriteria = cloner(definedCriteria);
+		this.managers.formats.set(nativeFormats);
 
+		const clonedCriteria = cloner(definedCriteria);
 		this.mountedCriteria = mounter(this.managers, clonedCriteria);
 	}
 
@@ -23,7 +26,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteriaMap[Setable
 		// Deferred initiation of criteria if not called directly,
 		// as plugins (or custom extensions) may set up specific
 		// rules and actions for the preparation of the criteria.
-		if (new.target.name === this.constructor.name) {
+		if (new.target === Schema) {
 			this.initiate(criteria);
 		}
 	}

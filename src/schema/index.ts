@@ -1,6 +1,7 @@
 export type {
+    SchemaInstance,
     SchemaInfer,
-    SchemaReject
+    SchemaType
 } from "./types";
 
 export {

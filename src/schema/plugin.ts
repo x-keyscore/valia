@@ -1,4 +1,4 @@
-import type { SetableCriteria, FormatTemplate, SetableCriteriaMap, SetableCriteriaTemplate } from "./formats";
+import type { SetableCriteria, FormatTemplate, SetableCriteriaTemplate } from "./formats";
 import type { Constructor } from "../types";
 import type { SchemaType } from "./types";
 import { Schema } from "./schema";
@@ -21,6 +21,10 @@ export abstract class AbstractPlugin<const T extends SetableCriteria> extends Sc
 
 	constructor(...args: ConstructorParameters<SchemaType<T>>) {
 		super(...args);
+
+		this.beforeInitate();
+		this.initiate(args[0]);
+		this.afterInitate();
 	}
 }
 
@@ -61,9 +65,9 @@ export function SchemaPlugins<T, U, V, W, X, Y>(
 	plugin_3?: new (...args: X[]) => Y
 ) {
 	try {
-		let plugins = [plugin_1, plugin_2, plugin_3];
-		let beforeInitKeys: string[] = [];
-		let afterInitKeys: string[] = [];
+		const plugins = [plugin_1, plugin_2, plugin_3];
+		const beforeInitKeys: string[] = [];
+		const afterInitKeys: string[] = [];
 
 		const pluggedSchema = class PluggedSchema<T extends SetableCriteria> extends Schema<T> {
 			constructor(criteria: T) {
@@ -107,9 +111,8 @@ export function SchemaPlugins<T, U, V, W, X, Y>(
 		throw err;
 	}
 }
-
 /*
-interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
+export interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
 	unique: boolean;
 }
 
@@ -118,19 +121,17 @@ export interface ObjectIdClassicTypes extends ClassicTypesTemplate<
 	{}
 > {}
 
-export interface ObjectIdGenericTypes<T extends SetableCriteria> extends GenericTypesTemplate<
-	ObjectIdSetableCriteria,
+export interface ObjectIdGenericTypes extends GenericTypesTemplate<
 	{},
 	{}
 > {}
-
 
 declare module './formats/types' {
 	interface FormatClassicTypes {
 		objectId:  ObjectIdClassicTypes;
 	}
 	interface FormatGenericTypes<T extends SetableCriteria> {
-		objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes<T> : never;
+		objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes : never;
 	}
 }
 
@@ -144,13 +145,13 @@ const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
 	}
 }
 
-class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends AbstractPlugin<T> {
+class Mongo<T extends SetableCriteria> extends AbstractPlugin<T> {
 	protected beforeInitate(): void {
-		
+		this.managers.formats.set({ objectId: ObjectId });
 	}
 
 	protected afterInitate(): void {
-		
+
 	}
 
 	constructor(...args: ConstructorParameters<SchemaType<T>>) {
@@ -158,7 +159,7 @@ class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends Abst
 	}
 }
 
-class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "ObjectId">]> extends AbstractPlugin<T> {
+class Maria<T extends SetableCriteria> extends AbstractPlugin<T> {
 	protected beforeInitate(): void {
 		
 	}
@@ -174,10 +175,8 @@ class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "Obje
 
 const test = SchemaPlugins(Mongo, Maria)
 
+const eerer = new test({ type: "struct", struct: { test: { type: "objectId", unique: true }}})
 
-const eerer = new test({ type: "objectId", unique: true})
+console.log(eerer.evaluate({ test: "df"}))
 
-eerer
-
-
-const lala = new Schema({ type: "string"})*/
+//const lala = new Schema({ type: "struct", struct: { test: { type: 'boolean' }}})*/

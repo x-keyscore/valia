@@ -42,7 +42,7 @@ export type CheckingTask = {
     value: unknown;
     hooks?: CheckingTaskHooks;
 };
-export interface Reject {
+export interface Rejection {
     path: RegistryValue['partPaths'];
     /**
      * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:

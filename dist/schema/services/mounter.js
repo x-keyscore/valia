@@ -4,7 +4,6 @@ exports.metadataSymbol = void 0;
 exports.isMountedCriteria = isMountedCriteria;
 exports.mounter = mounter;
 const formats_1 = require("../formats");
-const utils_1 = require("../../utils");
 exports.metadataSymbol = Symbol('matadata');
 function isMountedCriteria(obj) {
     return (typeof obj === "object" && Reflect.has(obj, exports.metadataSymbol));
@@ -30,9 +29,7 @@ function mounter(managers, criteria) {
             registryManager.junction(currNode);
         }
         else {
-            const format = formats_1.formats[currNode.type];
-            if (!format)
-                throw new utils_1.Issue("Mounting", "Type '" + currNode.type + "' is unknown.");
+            const format = managers.formats.get(currNode.type);
             (_a = format.mounting) === null || _a === void 0 ? void 0 : _a.call(format, queue, path, currNode);
             Object.assign(currNode, {
                 ...formats_1.staticDefaultCriteria,
@@ -46,9 +43,9 @@ function mounter(managers, criteria) {
                 saveNode: currNode
             }
         });
-        eventsManager.emit("NODE_MOUNTED", currNode, path);
+        eventsManager.emit("ONE_NODE_MOUNTED", currNode, path);
     }
-    eventsManager.emit("FULL_MOUNTED");
+    eventsManager.emit("END_OF_MOUNTING", criteria);
     return criteria;
 }
 ;

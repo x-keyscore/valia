@@ -1,7 +1,7 @@
 export {
 	Schema,
 	SchemaInfer,
-	SchemaReject,
+	SchemaInstance,
 	SchemaPlugins,
 	AbstractPlugin
 } from './schema';
@@ -11,12 +11,12 @@ export {
 	GenericTypesTemplate,
 	SetableCriteriaTemplate,
     SetableCriteria,
-    SetableCriteriaMap,
-    SetableCriteriaOmit,
     MountedCriteria,
     GuardedCriteria,
 	FormatClassicTypes,
-	FormatGenericTypes
+	FormatGenericTypes,
+	FormatTemplate,
+	NativeFormats
 } from './schema/formats';
 
 export {

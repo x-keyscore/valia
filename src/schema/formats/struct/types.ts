@@ -1,33 +1,36 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, KeyofFormatClassicTypes,
+	SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
 
-export type SetableStruct = {
-    [key: string | symbol]: SetableCriteria | SetableStruct;
+export type StructCriteria<T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes> = {
+    [key: string | symbol]: SetableCriteria<T> | StructCriteria<T>;
 };
 
-export interface StructSetableCriteria extends SetableCriteriaTemplate<"struct"> {
+export interface StructSetableCriteria<
+	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+> extends SetableCriteriaTemplate<"struct"> {
 	optional?: (string | symbol)[];
-	struct: SetableStruct;
+	struct: StructCriteria<T>;
 }
 
-export interface StructClassicTypes extends ClassicTypesTemplate<
-	StructSetableCriteria,
+export interface StructClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+	StructSetableCriteria<T>,
 	{}
 > {}
 
 type SimulateStruct<T> = StructSetableCriteria & { struct: T; };
 
-type MountedStruct<T extends SetableStruct> = {
+type MountedStruct<T extends StructCriteria> = {
 	[K in keyof T]:
 		T[K] extends SetableCriteria
 			? MountedCriteria<T[K]>
-			: T[K] extends SetableStruct
+			: T[K] extends StructCriteria
 				? MountedCriteria<SimulateStruct<T[K]>>
-				: T[K] extends (SetableCriteria | SetableStruct)
+				: T[K] extends (SetableCriteria | StructCriteria)
 					? MountedCriteria<SetableCriteria>
 					: T[K];
 };
 
-interface StructMountedCriteria<T extends StructSetableCriteria> {
+export interface StructMountedCriteria<T extends StructSetableCriteria> {
 	struct: MountedStruct<T['struct']>;
 	acceptedKeys: (string | symbol)[];
 	requiredKeys: (string | symbol)[];
@@ -44,7 +47,7 @@ type StructGuardedCriteria<T extends StructSetableCriteria> = {
 	-readonly [K in keyof OptionalizeKey<T['struct'], T['optional']> as OmitDynamicKey<K>]:
 		T['struct'][K] extends SetableCriteria
 			? GuardedCriteria<T['struct'][K]>
-			: T['struct'][K] extends SetableStruct
+			: T['struct'][K] extends StructCriteria
 				? GuardedCriteria<SimulateStruct<T['struct'][K]>>
 				: never;
 };

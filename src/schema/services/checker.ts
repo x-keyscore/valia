@@ -1,17 +1,16 @@
 import type { EventsManager, RegistryValue } from "../managers";
-import type { CheckingTask, Reject } from "./types";
+import type { CheckingTask, Rejection } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
-import { formats } from "../formats";
 import { Issue } from "../../utils";
 
-function reject(
+function rejection(
 	eventsManager: EventsManager,
 	code: string,
 	node: MountedCriteria,
 	path: RegistryValue['partPaths']
-): Reject {
-	const obj = {
+): Rejection {
+	const result = {
 		path,
 		code: code,
 		type: node.type,
@@ -19,16 +18,16 @@ function reject(
 		message: node.message
 	}
 
-	eventsManager.emit('NODE_CHECKED', node, path, obj);
+	eventsManager.emit("END_OF_CHECKING", node, result);
 
-	return (obj);
+	return (result);
 }
 
 export function checker(
 	managers: SchemaInstance['managers'],
 	criteria: MountedCriteria,
 	value: unknown
-): Reject | null {
+): Rejection | null {
 	const registryManager = managers.registry;
 	const eventsManager = managers.events;
 	let queue: CheckingTask[] = [{
@@ -50,7 +49,7 @@ export function checker(
 			const response = hooks.beforeCheck(currNode);
 			if (response === false) continue;
 			if (typeof response === "string") {
-				return(reject(
+				return(rejection(
 					eventsManager,
 					response,
 					hooks.owner.node,
@@ -59,28 +58,24 @@ export function checker(
 			}
 		}
 
-		let state = null;
+		let reject = null;
 		if (value === null) {
-			if (currNode.nullable) state = null;
-			else state = "TYPE_NULL";
+			if (currNode.nullable) reject = null;
+			else reject = "TYPE_NULL";
 		} else if (value === undefined) {
-			if (currNode.undefinable) state = null;
-			else state = "TYPE_UNDEFINED";
+			if (currNode.undefinable) reject = null;
+			else reject = "TYPE_UNDEFINED";
 		} else {
-			const format = formats[currNode.type];
-			if (!format) throw new Issue(
-				"Checking",
-				"Type '" + currNode.type + "' is unknown."
-			);
+			const format = managers.formats.get(currNode.type);
 
-			state = format.checking(queue, path, currNode, value);
+			reject = format.checking(queue, path, currNode, value);
 		}
 
 		if (hooks) {
-			const response = hooks.afterCheck(currNode, state);
+			const response = hooks.afterCheck(currNode, reject);
 			if (response === false) continue;
 			if (typeof response === "string") {
-				return(reject(
+				return(rejection(
 					eventsManager,
 					response,
 					hooks.owner.node,
@@ -89,11 +84,11 @@ export function checker(
 			}
 		}
 
-		if (state) {
-			return (reject(eventsManager, state, currNode, path));
+		if (reject) {
+			return (rejection(eventsManager, reject, currNode, path));
 		}
 
-		eventsManager.emit('NODE_CHECKED', currNode, path, null);
+		eventsManager.emit('ONE_NODE_CHECKED', currNode, path);
 	}
 
 	return (null);

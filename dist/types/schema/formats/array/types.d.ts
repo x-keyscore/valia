@@ -1,15 +1,15 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
-export interface ArraySetableCriteria extends SetableCriteriaTemplate<"array"> {
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, MountedCriteria, GuardedCriteria, KeyofFormatClassicTypes } from "../types";
+export interface ArraySetableCriteria<T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes> extends SetableCriteriaTemplate<"array"> {
     /** @default true */
     empty?: boolean;
     min?: number;
     max?: number;
-    item: SetableCriteria;
+    item: SetableCriteria<T>;
 }
 export interface ArrayDefaultCriteria {
     empty: boolean;
 }
-export interface ArrayClassicTypes extends ClassicTypesTemplate<ArraySetableCriteria, ArrayDefaultCriteria> {
+export interface ArrayClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<ArraySetableCriteria<T>, ArrayDefaultCriteria> {
 }
 export interface ArrayMountedCriteria {
     item: MountedCriteria;

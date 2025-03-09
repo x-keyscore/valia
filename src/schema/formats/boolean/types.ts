@@ -7,9 +7,7 @@ export interface BooleanClassicTypes extends ClassicTypesTemplate<
 	{}
 > {}
 
-type BooleanGuardedCriteria = boolean;
-
-export interface BooleanGenericTypes<T extends BooleanSetableCriteria> extends GenericTypesTemplate<
+export interface BooleanGenericTypes extends GenericTypesTemplate<
 	{},
-	BooleanGuardedCriteria
+	boolean
 > {}

@@ -3,24 +3,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Schema = void 0;
 const managers_1 = require("./managers");
 const services_1 = require("./services");
+const formats_1 = require("./formats");
 const utils_1 = require("../utils");
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
 class Schema {
     initiate(definedCriteria) {
+        this.managers.formats.set(formats_1.nativeFormats);
         const clonedCriteria = (0, services_1.cloner)(definedCriteria);
         this.mountedCriteria = (0, services_1.mounter)(this.managers, clonedCriteria);
     }
     constructor(criteria) {
         this.managers = {
-            registry: managers_1.registryManager,
-            events: managers_1.eventsManager
+            registry: (0, managers_1.registryManager)(),
+            formats: (0, managers_1.formatsManager)(),
+            events: (0, managers_1.eventsManager)()
         };
         // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
         // rules and actions for the preparation of the criteria.
-        if (new.target.name === this.constructor.name) {
+        if (new.target === Schema) {
             this.initiate(criteria);
         }
     }

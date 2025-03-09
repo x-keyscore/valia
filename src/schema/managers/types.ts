@@ -1,7 +1,8 @@
 import type { MountedCriteria, SetableCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
-import type { Reject } from "../services";
+import type { Rejection } from "../services";
 import { registryManager } from "./registry";
+import { formatsManager } from "./formats";
 import { eventsManager } from "./events";
 
 // REGISTRY
@@ -22,21 +23,30 @@ export interface RegistryValue {
     };
 }
 
-export type RegistryManager = typeof registryManager;
+export type RegistryManager = ReturnType<typeof registryManager>;
+
+// FORMATS
+
+export type FormatsManager = ReturnType<typeof formatsManager>;
 
 // EVENTS
 
 export interface Events {
-    "NODE_MOUNTED": (
+    "ONE_NODE_MOUNTED": (
         criteria: MountedCriteria,
         path: RegistryValue['partPaths']
     ) => void;
-    "FULL_MOUNTED": () => void;
-    "NODE_CHECKED": (
+    "END_OF_MOUNTING": (
+        criteria: MountedCriteria
+    ) => void;
+    "ONE_NODE_CHECKED": (
         criteria: MountedCriteria,
-        path: RegistryValue['partPaths'],
-        reject: Reject | null
+        path: RegistryValue['partPaths']
+    ) => void;
+    "END_OF_CHECKING": (
+        criteria: MountedCriteria,
+        reject: Rejection | null
     ) => void;
 }
 
-export type EventsManager = typeof eventsManager;
+export type EventsManager = ReturnType<typeof eventsManager>;

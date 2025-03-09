@@ -1,7 +1,7 @@
 export class Issue extends Error {
 	print(context: string, message: string, plugin?: string) {
 		const red = "\x1b[31m", cyan = "\x1b[36m", gray = "\x1b[90m", reset = "\x1b[0m";
-		const emitter = "valia" + plugin ? ":" + plugin : "";
+		const emitter = "valia" + (plugin ? ":" + plugin : "");
 		const timestamp = new Date().toISOString();
 
 		console.log(

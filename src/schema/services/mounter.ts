@@ -1,8 +1,7 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import type { MountingTask } from "./types";
-import { staticDefaultCriteria, formats } from "../formats";
-import { Issue } from "../../utils";
+import { staticDefaultCriteria } from "../formats";
 
 export const metadataSymbol = Symbol('matadata');
 
@@ -36,11 +35,7 @@ export function mounter<T extends SetableCriteria>(
 		if (isMountedCriteria(currNode)) {
 			registryManager.junction(currNode);
 		} else {
-			const format = formats[currNode.type];
-			if (!format) throw new Issue(
-				"Mounting",
-				"Type '" + currNode.type + "' is unknown."
-			);
+			const format = managers.formats.get(currNode.type);
 
 			format.mounting?.(queue, path, currNode);
 
@@ -59,13 +54,16 @@ export function mounter<T extends SetableCriteria>(
 		});
 
 		eventsManager.emit(
-			"NODE_MOUNTED",
+			"ONE_NODE_MOUNTED",
 			currNode as MountedCriteria,
 			path
 		);
 	}
 
-	eventsManager.emit("FULL_MOUNTED");
+	eventsManager.emit(
+		"END_OF_MOUNTING",
+		criteria as MountedCriteria<T>
+	);
 
 	return (criteria as MountedCriteria<T>);
 };

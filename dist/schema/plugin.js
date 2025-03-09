@@ -7,6 +7,9 @@ const utils_1 = require("../utils");
 class AbstractPlugin extends schema_1.Schema {
     constructor(...args) {
         super(...args);
+        this.beforeInitate();
+        this.initiate(args[0]);
+        this.afterInitate();
     }
 }
 exports.AbstractPlugin = AbstractPlugin;
@@ -34,9 +37,9 @@ function assignProperties(source, target, transformKey) {
 }
 function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
     try {
-        let plugins = [plugin_1, plugin_2, plugin_3];
-        let beforeInitKeys = [];
-        let afterInitKeys = [];
+        const plugins = [plugin_1, plugin_2, plugin_3];
+        const beforeInitKeys = [];
+        const afterInitKeys = [];
         const pluggedSchema = class PluggedSchema extends schema_1.Schema {
             constructor(criteria) {
                 super(criteria);
@@ -77,7 +80,7 @@ function SchemaPlugins(plugin_1, plugin_2, plugin_3) {
     }
 }
 /*
-interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
+export interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
     unique: boolean;
 }
 
@@ -86,19 +89,17 @@ export interface ObjectIdClassicTypes extends ClassicTypesTemplate<
     {}
 > {}
 
-export interface ObjectIdGenericTypes<T extends SetableCriteria> extends GenericTypesTemplate<
-    ObjectIdSetableCriteria,
+export interface ObjectIdGenericTypes extends GenericTypesTemplate<
     {},
     {}
 > {}
-
 
 declare module './formats/types' {
     interface FormatClassicTypes {
         objectId:  ObjectIdClassicTypes;
     }
     interface FormatGenericTypes<T extends SetableCriteria> {
-        objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes<T> : never;
+        objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes : never;
     }
 }
 
@@ -112,13 +113,13 @@ const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
     }
 }
 
-class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends AbstractPlugin<T> {
+class Mongo<T extends SetableCriteria> extends AbstractPlugin<T> {
     protected beforeInitate(): void {
-        
+        this.managers.formats.set({ objectId: ObjectId });
     }
 
     protected afterInitate(): void {
-        
+
     }
 
     constructor(...args: ConstructorParameters<SchemaType<T>>) {
@@ -126,7 +127,7 @@ class Mongo<T extends SetableCriteriaMap[keyof SetableCriteriaMap]> extends Abst
     }
 }
 
-class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "ObjectId">]> extends AbstractPlugin<T> {
+class Maria<T extends SetableCriteria> extends AbstractPlugin<T> {
     protected beforeInitate(): void {
         
     }
@@ -142,10 +143,8 @@ class Maria<T extends SetableCriteriaMap[Exclude<keyof SetableCriteriaMap, "Obje
 
 const test = SchemaPlugins(Mongo, Maria)
 
+const eerer = new test({ type: "struct", struct: { test: { type: "objectId", unique: true }}})
 
-const eerer = new test({ type: "objectId", unique: true})
+console.log(eerer.evaluate({ test: "df"}))
 
-eerer
-
-
-const lala = new Schema({ type: "string"})*/ 
+//const lala = new Schema({ type: "struct", struct: { test: { type: 'boolean' }}})*/ 

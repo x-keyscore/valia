@@ -1,18 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checker = checker;
-const formats_1 = require("../formats");
-const utils_1 = require("../../utils");
-function reject(eventsManager, code, node, path) {
-    const obj = {
+function rejection(eventsManager, code, node, path) {
+    const result = {
         path,
         code: code,
         type: node.type,
         label: node.label,
         message: node.message
     };
-    eventsManager.emit('NODE_CHECKED', node, path, obj);
-    return (obj);
+    eventsManager.emit("END_OF_CHECKING", node, result);
+    return (result);
 }
 function checker(managers, criteria, value) {
     const registryManager = managers.registry;
@@ -34,40 +32,38 @@ function checker(managers, criteria, value) {
             if (response === false)
                 continue;
             if (typeof response === "string") {
-                return (reject(eventsManager, response, hooks.owner.node, hooks.owner.path));
+                return (rejection(eventsManager, response, hooks.owner.node, hooks.owner.path));
             }
         }
-        let state = null;
+        let reject = null;
         if (value === null) {
             if (currNode.nullable)
-                state = null;
+                reject = null;
             else
-                state = "TYPE_NULL";
+                reject = "TYPE_NULL";
         }
         else if (value === undefined) {
             if (currNode.undefinable)
-                state = null;
+                reject = null;
             else
-                state = "TYPE_UNDEFINED";
+                reject = "TYPE_UNDEFINED";
         }
         else {
-            const format = formats_1.formats[currNode.type];
-            if (!format)
-                throw new utils_1.Issue("Checking", "Type '" + currNode.type + "' is unknown.");
-            state = format.checking(queue, path, currNode, value);
+            const format = managers.formats.get(currNode.type);
+            reject = format.checking(queue, path, currNode, value);
         }
         if (hooks) {
-            const response = hooks.afterCheck(currNode, state);
+            const response = hooks.afterCheck(currNode, reject);
             if (response === false)
                 continue;
             if (typeof response === "string") {
-                return (reject(eventsManager, response, hooks.owner.node, hooks.owner.path));
+                return (rejection(eventsManager, response, hooks.owner.node, hooks.owner.path));
             }
         }
-        if (state) {
-            return (reject(eventsManager, state, currNode, path));
+        if (reject) {
+            return (rejection(eventsManager, reject, currNode, path));
         }
-        eventsManager.emit('NODE_CHECKED', currNode, path, null);
+        eventsManager.emit('ONE_NODE_CHECKED', currNode, path);
     }
     return (null);
 }

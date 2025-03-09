@@ -1,8 +1,8 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
-export interface UnionSetableCriteria extends SetableCriteriaTemplate<"union"> {
-    union: [SetableCriteria, ...SetableCriteria[]];
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, KeyofFormatClassicTypes, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+export interface UnionSetableCriteria<T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes> extends SetableCriteriaTemplate<"union"> {
+    union: [SetableCriteria<T>, ...SetableCriteria<T>[]];
 }
-export interface UnionClassicTypes extends ClassicTypesTemplate<UnionSetableCriteria, {}> {
+export interface UnionClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<UnionSetableCriteria<T>, {}> {
 }
 export interface UnionMountedCriteria {
     union: [MountedCriteria<SetableCriteria>, ...MountedCriteria<SetableCriteria>[]];

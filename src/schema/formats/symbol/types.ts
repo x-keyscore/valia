@@ -9,9 +9,7 @@ export interface SymbolClassicTypes extends ClassicTypesTemplate<
 	{}
 > {}
 
-type SymbolGuardedCriteria = symbol;
-
-export interface SymbolGenericTypes<T extends SymbolSetableCriteria> extends GenericTypesTemplate<
+export interface SymbolGenericTypes extends GenericTypesTemplate<
 	{},
-	SymbolGuardedCriteria
+	symbol
 > {}
