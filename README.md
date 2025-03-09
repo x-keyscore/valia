@@ -159,11 +159,11 @@ const schema = new Schema({
 
 |Property<br/><img width="auto"/>|Type<br/><img width="310"/>|Description<br/><img width="auto"/>|
 |--|--|--|
-|`type`   |`"number"`                        |Type name|
-|`min?`   |`number`                          |Minimum value accepted|
-|`max?`   |`number`          |Maximum value accepted|
-|`enum?`  |`number[]\|Record<string, number>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`|`(x: number) => boolean`          |Customized test function|
+|`type`   |`"number"`                                |Type name|
+|`min?`   |`number`                                  |Minimum value accepted|
+|`max?`   |`number`                                  |Maximum value accepted|
+|`enum?`  |`number[]\|Record<string\|number, number>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`|`(x: number) => boolean`                  |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -180,14 +180,14 @@ const schema = new Schema({
 
 |Property<br/><img width="auto"/>|Type<img width="320"/>|Default<br/><img width="auto"/>|Description<br/><img width="auto"/>|
 |--|--|--|--|
-|`type`   |`"string"`                        |      |Type name|
-|`empty?` |`boolean`                         |`true`|If the string can be empty|
-|`min?`   |`number`                          |      |Minimum length accepted|
-|`max?`   |`number`                          |      |Maximum length accepted|
-|`enum?`  |`string[]\|Record<string, string>`|      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`regex?` |`RegExp`                          |      |A native regex|
-|`tester?`|`{ name: string, params: object}` |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
-|`custom?`|`(x: string) => boolean`          |      |Customized test function|
+|`type`   |`"string"`                                |      |Type name|
+|`empty?` |`boolean`                                 |`true`|If the string can be empty|
+|`min?`   |`number`                                  |      |Minimum length accepted|
+|`max?`   |`number`                                  |      |Maximum length accepted|
+|`enum?`  |`string[]\|Record<string\|number, string>`|      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`regex?` |`RegExp`                                  |      |A native regex|
+|`tester?`|`{ name: string, params: object}`         |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
+|`custom?`|`(x: string) => boolean`                  |      |Customized test function|
 
 ```ts
 const schema = new Schema({
@@ -282,7 +282,7 @@ const schema = new Schema({
 const schema = new Schema({
   type: "array",
   empty: true,
-  tuple: [{ type: "string" }, { type: "number" }
+  tuple: [{ type: "string" }, { type: "number" }]
 });
 ```
 
