@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"strict": true,
 		"target": "ES2018",
-		"lib": ["ES2018", "ES2021.WeakRef"],
+		"lib": ["ES2018", "ES2021.WeakRef", "dom"],
 		"module": "NodeNext",
 		"declaration": true,
 		"skipLibCheck": true,
