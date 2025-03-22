@@ -8,12 +8,12 @@ export type {
     GuardedCriteria,
     FormatClassicTypes,
     FormatGenericTypes,
-    FormatTemplate,
-    NativeFormats
+    FormatNatives,
+    Format
 } from './types';
 
 export {
     staticDefaultCriteria,
-    nativeFormats
+    formatNatives
 } from './formats';
 

@@ -5,7 +5,7 @@ const testers_1 = require("../../testers");
 const mounter_1 = require("./mounter");
 function processTask(queue, { src, cpy }) {
     if ((0, testers_1.isBasicObject)(src)) {
-        if ((0, mounter_1.isMountedCriteria)(src)) {
+        if ((0, mounter_1.hasNodeSymbol)(src)) {
             cpy = { ...src };
         }
         else {
@@ -13,7 +13,7 @@ function processTask(queue, { src, cpy }) {
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
                 if ((0, testers_1.isBasicObject)(src[key])) {
-                    if ((0, mounter_1.isMountedCriteria)(src[key])) {
+                    if ((0, mounter_1.hasNodeSymbol)(src[key])) {
                         cpy[key] = { ...src[key] };
                     }
                     else {
@@ -41,7 +41,7 @@ function processTask(queue, { src, cpy }) {
         for (let i = 0; i < src.length; i++) {
             const index = i;
             if ((0, testers_1.isBasicObject)(src[index])) {
-                if ((0, mounter_1.isMountedCriteria)(src[index])) {
+                if ((0, mounter_1.hasNodeSymbol)(src[index])) {
                     cpy[i] = { ...src[index] };
                 }
                 else {

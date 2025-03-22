@@ -1,43 +1,40 @@
 import type { TupleSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 import { isArray } from "../../../testers";
 
-export const TupleFormat: FormatTemplate<TupleSetableCriteria> = {
+export const TupleFormat: Format<TupleSetableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
-	mounting(queue, path, criteria) {
+	mount(chunk, criteria) {
 		for (let i = 0; i < criteria.tuple.length; i++) {
-			queue.push({
-				prevNode: criteria,
-				prevPath: path,
-				currNode: criteria.tuple[i],
-				partPath: {
+			chunk.add({
+				node:  criteria.tuple[i],
+				partPaths: {
 					explicit: ["tuple", i],
 					implicit: ["&", i]
 				}
 			});
 		}
 	},
-	checking(queue, path, criteria, value) {
-		if (!isArray(value)) {
+	check(chunk, criteria, data) {
+		if (!isArray(data)) {
 			return ("TYPE_NOT_ARRAY");
 		}
 
-		const valueLength = value.length 
+		const dataLength = data.length;
 
-		if (valueLength < criteria.tuple.length) {
-			return ("VALUE_INFERIOR_TUPLE");
+		if (dataLength < criteria.tuple.length) {
+			return ("DATA_INFERIOR_TUPLE");
 		}
-		else if (valueLength > criteria.tuple.length) {
-			return ("VALUE_SUPERIOR_TUPLE");
+		else if (dataLength > criteria.tuple.length) {
+			return ("DATA_SUPERIOR_TUPLE");
 		}
 
-		for (let i = 0; i < value.length; i++) {
-			queue.push({
-				prevPath: path,
-				currNode: criteria.tuple[i],
-				value: value[i]
+		for (let i = 0; i < dataLength; i++) {
+			chunk.addTask({
+				data: data[i],
+				node: criteria.tuple[i]
 			});
 		}
 

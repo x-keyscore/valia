@@ -1,18 +1,18 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, KeyofFormatClassicTypes,
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, FormatClassicTypesKeys,
 	SetableCriteria, GuardedCriteria, MountedCriteria } from "../types";
 
-export type StructCriteria<T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes> = {
+export type StructCriteria<T extends FormatClassicTypesKeys = FormatClassicTypesKeys> = {
     [key: string | symbol]: SetableCriteria<T> | StructCriteria<T>;
 };
 
 export interface StructSetableCriteria<
-	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+	T extends FormatClassicTypesKeys = FormatClassicTypesKeys
 > extends SetableCriteriaTemplate<"struct"> {
 	optional?: (string | symbol)[];
 	struct: StructCriteria<T>;
 }
 
-export interface StructClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+export interface StructClassicTypes<T extends FormatClassicTypesKeys> extends ClassicTypesTemplate<
 	StructSetableCriteria<T>,
 	{}
 > {}

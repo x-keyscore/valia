@@ -1,69 +1,88 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
+import type { PathSegments, MountingTask } from "./types";
 import type { SchemaInstance } from "../types";
-import type { MountingTask } from "./types";
 import { staticDefaultCriteria } from "../formats";
 
-export const metadataSymbol = Symbol('matadata');
+export const nodeSymbol = Symbol('internal');
 
-export function isMountedCriteria(obj: object): obj is MountedCriteria {
-	return (typeof obj === "object" && Reflect.has(obj, metadataSymbol));
+export function hasNodeSymbol(obj: object): obj is MountedCriteria {
+	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
+}
+
+export class MountingChunk extends Array<MountingTask> {
+	constructor(public paths: PathSegments) {
+		super();
+	}
+
+	add(
+		task: {
+			node: SetableCriteria | MountedCriteria,
+			partPaths: PathSegments
+		}
+	) {
+		this.push({
+			node: task.node,
+			partPaths: task.partPaths,
+			fullPaths: {
+				explicit: [...this.paths.explicit, ...task.partPaths.explicit],
+				implicit: [...this.paths.implicit, ...task.partPaths.implicit]
+			}
+		});
+	}
 }
 
 export function mounter<T extends SetableCriteria>(
 	managers: SchemaInstance['managers'],
-	criteria: SetableCriteria & T
+	rootNode: SetableCriteria & T
 ): MountedCriteria<T> {
-	const registryManager = managers.registry;
-	const eventsManager = managers.events;
-	let queue: MountingTask[] = [{
-		prevNode: null,
-		prevPath: { explicit: [], implicit: [] },
-		currNode: criteria,
-		partPath: { explicit: [], implicit: [] },
+	const formats = managers.formats;
+	const events = managers.events;
+	const queue: MountingTask[] = [{
+		node: rootNode,
+		partPaths: { explicit: [], implicit: [] },
+		fullPaths: { explicit: [], implicit: [] }
 	}];
 
 	while (queue.length > 0) {
-		const { prevNode, prevPath, currNode, partPath } = queue.pop()!;
+		const { node, partPaths, fullPaths } = queue.pop()!;
 
-		const path = {
-			explicit: [...prevPath.explicit, ...partPath.explicit],
-			implicit: [...prevPath.implicit, ...partPath.implicit],
-		}
-
-		registryManager.set(prevNode, currNode, partPath);
-
-		if (isMountedCriteria(currNode)) {
-			registryManager.junction(currNode);
+		if (hasNodeSymbol(node)) {
+			node[nodeSymbol] = {
+				partPaths,
+				childNodes: node[nodeSymbol].childNodes,
+			}
 		} else {
-			const format = managers.formats.get(currNode.type);
+			const format = formats.get(node.type);
+			const chunk = new MountingChunk(fullPaths);
 
-			format.mounting?.(queue, path, currNode);
+			format.mount?.(chunk, node);
 
-			Object.assign(currNode, {
+			Object.assign(node, {
 				...staticDefaultCriteria,
 				...format.defaultCriteria,
-				...currNode
+				...node,
+				[nodeSymbol]: {
+					partPaths,
+					childNodes: new Set(chunk.map((task) => task.node)),
+				}
 			});
+
+			Object.freeze(node);
+
+			queue.push(...chunk);
+
+			events.emit(
+				"ONE_NODE_MOUNTED",
+				node as MountedCriteria,
+				fullPaths
+			);
 		}
-
-		Object.assign(currNode, {
-			[metadataSymbol]: {
-				registry: registryManager.registry,
-				saveNode: currNode
-			}
-		});
-
-		eventsManager.emit(
-			"ONE_NODE_MOUNTED",
-			currNode as MountedCriteria,
-			path
-		);
 	}
 
-	eventsManager.emit(
+	events.emit(
 		"END_OF_MOUNTING",
-		criteria as MountedCriteria<T>
+		rootNode as MountedCriteria<T>
 	);
 
-	return (criteria as MountedCriteria<T>);
+	return (rootNode as MountedCriteria<T>);
 };

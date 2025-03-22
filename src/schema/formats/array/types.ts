@@ -5,11 +5,11 @@ import type {
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	KeyofFormatClassicTypes
+	FormatClassicTypesKeys
 } from "../types";
 
 export interface ArraySetableCriteria<
-	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+	T extends FormatClassicTypesKeys = FormatClassicTypesKeys
 > extends SetableCriteriaTemplate<"array"> {
 	/** @default true */
 	empty?: boolean;
@@ -22,7 +22,7 @@ export interface ArrayDefaultCriteria {
 	empty: boolean;
 }
 
-export interface ArrayClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+export interface ArrayClassicTypes<T extends FormatClassicTypesKeys> extends ClassicTypesTemplate<
 	ArraySetableCriteria<T>,
 	ArrayDefaultCriteria
 > {}

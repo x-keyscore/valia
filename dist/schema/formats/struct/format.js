@@ -7,7 +7,15 @@ function isSubStruct(obj) {
 }
 exports.StructFormat = {
     defaultCriteria: {},
-    mounting(queue, path, criteria) {
+    hasRequiredKeys(criteria, keys) {
+        const requiredKeys = criteria.requiredKeys;
+        return (requiredKeys.length <= keys.length && requiredKeys.every((key) => keys.includes(key)));
+    },
+    hasAcceptedKeys(criteria, keys) {
+        const acceptedKeys = criteria.acceptedKeys;
+        return (keys.length <= acceptedKeys.length && keys.every((key) => acceptedKeys.includes(key)));
+    },
+    mount(chunk, criteria) {
         const acceptedKeys = Reflect.ownKeys(criteria.struct);
         const requiredKeys = acceptedKeys.filter(key => { var _a; return !((_a = criteria === null || criteria === void 0 ? void 0 : criteria.optional) === null || _a === void 0 ? void 0 : _a.includes(key)); });
         Object.assign(criteria, { acceptedKeys, requiredKeys });
@@ -19,42 +27,31 @@ exports.StructFormat = {
                     struct: criteria.struct[key]
                 };
             }
-            queue.push({
-                prevNode: criteria,
-                prevPath: path,
-                currNode: criteria.struct[key],
-                partPath: {
+            chunk.add({
+                node: criteria.struct[key],
+                partPaths: {
                     explicit: ["struct", key],
                     implicit: ["&", key]
                 }
             });
         }
     },
-    hasRequiredKeys(criteria, keys) {
-        const requiredKeys = criteria.requiredKeys;
-        return (requiredKeys.length <= keys.length && requiredKeys.every((key) => keys.includes(key)));
-    },
-    hasAcceptedKeys(criteria, keys) {
-        const acceptedKeys = criteria.acceptedKeys;
-        return (keys.length <= acceptedKeys.length && keys.every((key) => acceptedKeys.includes(key)));
-    },
-    checking(queue, path, criteria, value) {
-        if (!(0, testers_1.isPlainObject)(value)) {
+    check(chunk, criteria, data) {
+        if (!(0, testers_1.isPlainObject)(data)) {
             return ("TYPE_NOT_PLAIN_OBJECT");
         }
-        const keys = Reflect.ownKeys(value);
+        const keys = Reflect.ownKeys(data);
         if (!this.hasAcceptedKeys(criteria, keys)) {
-            return ("VALUE_INVALID_KEY");
+            return ("DATA_INVALID_KEY");
         }
         else if (!this.hasRequiredKeys(criteria, keys)) {
-            return ("VALUE_MISSING_KEY");
+            return ("DATA_MISSING_KEY");
         }
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            queue.push({
-                prevPath: path,
-                currNode: criteria.struct[key],
-                value: value[key],
+            chunk.addTask({
+                data: data[key],
+                node: criteria.struct[key],
             });
         }
         return (null);

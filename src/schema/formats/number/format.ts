@@ -1,27 +1,27 @@
 import type { NumberSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 import { isArray, isPlainObject } from "../../../testers";
 
-export const NumberFormat: FormatTemplate<NumberSetableCriteria> = {
+export const NumberFormat: Format<NumberSetableCriteria> = {
 	defaultCriteria: {},
-	checking(queue, path, criteria, value) {
-		if (typeof value !== "number") {
+	check(chunk, criteria, data) {
+		if (typeof data !== "number") {
 			return ("TYPE_NOT_NUMBER");
 		}
-		else if (criteria.min !== undefined && value < criteria.min) {
-			return ("VALUE_SUPERIOR_MIN");
+		else if (criteria.min !== undefined && data < criteria.min) {
+			return ("DATA_SUPERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && value > criteria.max) {
-			return ("VALUE_SUPERIOR_MAX");
+		else if (criteria.max !== undefined && data > criteria.max) {
+			return ("DATA_SUPERIOR_MAX");
 		}
 		else if (criteria.enum !== undefined) {
-			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
-				return ("VALUE_NOT_IN_ENUM");
-			} else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
-				return ("VALUE_NOT_IN_ENUM");
+			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(data)) {
+				return ("DATA_NOT_IN_ENUM");
+			} else if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
+				return ("DATA_NOT_IN_ENUM");
 			}
 		}
-		else if (criteria.custom && !criteria.custom(value)) {
+		else if (criteria.custom && !criteria.custom(data)) {
 			return ("TEST_CUSTOM_FAILED");
 		}
 

@@ -10,15 +10,14 @@ const utils_1 = require("../utils");
  */
 class Schema {
     initiate(definedCriteria) {
-        this.managers.formats.set(formats_1.nativeFormats);
+        this.managers.formats.set(formats_1.formatNatives);
         const clonedCriteria = (0, services_1.cloner)(definedCriteria);
         this.mountedCriteria = (0, services_1.mounter)(this.managers, clonedCriteria);
     }
     constructor(criteria) {
         this.managers = {
-            registry: (0, managers_1.registryManager)(),
-            formats: (0, managers_1.formatsManager)(),
-            events: (0, managers_1.eventsManager)()
+            formats: new managers_1.FormatsManager(),
+            events: new managers_1.EventsManager()
         };
         // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
@@ -40,31 +39,31 @@ class Schema {
     /**
      * Validates the provided data against the schema.
      *
-     * @param value - The data to be validated.
+     * @param data - The data to be validated.
      *
      * @returns `true` if the value is **valid**, otherwise `false`.
      * This function acts as a **type guard**, ensuring that
      * the validated data conforms to `GuardedCriteria<T>`.
      */
-    validate(value) {
-        const reject = (0, services_1.checker)(this.managers, this.criteria, value);
+    validate(data) {
+        const reject = (0, services_1.checker)(this.managers, this.criteria, data);
         return (!reject);
     }
     /**
      * Evaluates the provided data against the schema.
      *
-     * @param value - The data to be evaluated.
+     * @param data - The data to be evaluated.
      *
      * @returns An object containing:
      * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
      * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
-    evaluate(value) {
-        const reject = (0, services_1.checker)(this.managers, this.criteria, value);
+    evaluate(data) {
+        const reject = (0, services_1.checker)(this.managers, this.criteria, data);
         if (reject) {
-            return ({ reject, value: null });
+            return ({ reject, data: null });
         }
-        return ({ reject: null, value });
+        return ({ reject: null, data: data });
     }
 }
 exports.Schema = Schema;

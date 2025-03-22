@@ -1,10 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Issue = exports.base32ToBase16 = exports.base64ToBase16 = exports.base16ToBase32 = exports.base16ToBase64 = exports.isBase64Url = exports.isBase64 = exports.isBase32Hex = exports.isBase32 = exports.isBase16 = exports.isUuid = exports.isDataUrl = exports.isDomain = exports.isEmail = exports.isIpV6 = exports.isIpV4 = exports.isIp = exports.isAscii = exports.isAsyncGeneratorFunction = exports.isGeneratorFunction = exports.isAsyncFunction = exports.isBasicFunction = exports.isFunction = exports.isArray = exports.isPlainObject = exports.isBasicObject = exports.isObject = exports.AbstractPlugin = exports.SchemaPlugins = exports.Schema = void 0;
+exports.Issue = exports.base32ToBase16 = exports.base64ToBase16 = exports.base16ToBase32 = exports.base16ToBase64 = exports.isBase64Url = exports.isBase64 = exports.isBase32Hex = exports.isBase32 = exports.isBase16 = exports.isUuid = exports.isDataUrl = exports.isDomain = exports.isEmail = exports.isIpV6 = exports.isIpV4 = exports.isIp = exports.isAscii = exports.isAsyncGeneratorFunction = exports.isGeneratorFunction = exports.isAsyncFunction = exports.isBasicFunction = exports.isFunction = exports.isArray = exports.isPlainObject = exports.isBasicObject = exports.isObject = exports.FormatsManager = exports.EventsManager = exports.AbstractPlugin = exports.SchemaPlugins = exports.Schema = void 0;
 var schema_1 = require("./schema");
 Object.defineProperty(exports, "Schema", { enumerable: true, get: function () { return schema_1.Schema; } });
 Object.defineProperty(exports, "SchemaPlugins", { enumerable: true, get: function () { return schema_1.SchemaPlugins; } });
 Object.defineProperty(exports, "AbstractPlugin", { enumerable: true, get: function () { return schema_1.AbstractPlugin; } });
+var managers_1 = require("./schema/managers");
+Object.defineProperty(exports, "EventsManager", { enumerable: true, get: function () { return managers_1.EventsManager; } });
+Object.defineProperty(exports, "FormatsManager", { enumerable: true, get: function () { return managers_1.FormatsManager; } });
 var object_1 = require("./testers/object");
 Object.defineProperty(exports, "isObject", { enumerable: true, get: function () { return object_1.isObject; } });
 Object.defineProperty(exports, "isBasicObject", { enumerable: true, get: function () { return object_1.isBasicObject; } });

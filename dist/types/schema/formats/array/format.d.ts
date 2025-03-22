@@ -1,3 +1,3 @@
 import type { ArraySetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
-export declare const ArrayFormat: FormatTemplate<ArraySetableCriteria>;
+import type { Format } from "../types";
+export declare const ArrayFormat: Format<ArraySetableCriteria>;

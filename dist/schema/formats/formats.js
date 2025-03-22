@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.nativeFormats = exports.staticDefaultCriteria = void 0;
+exports.formatNatives = exports.staticDefaultCriteria = void 0;
 const format_1 = require("./array/format");
 const format_2 = require("./tuple/format");
 const format_3 = require("./record/format");
@@ -14,7 +14,7 @@ exports.staticDefaultCriteria = {
     nullable: false,
     undefinable: false
 };
-exports.nativeFormats = {
+exports.formatNatives = {
     array: format_1.ArrayFormat,
     boolean: format_8.BooleanFormat,
     number: format_5.NumberFormat,

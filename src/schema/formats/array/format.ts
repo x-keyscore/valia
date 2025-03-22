@@ -1,41 +1,42 @@
 import type { ArraySetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 import { isArray } from "../../../testers";
 
-export const ArrayFormat: FormatTemplate< ArraySetableCriteria> = {
+export const ArrayFormat: Format< ArraySetableCriteria> = {
 	defaultCriteria: {
 		empty: true
 	},
-	mounting(queue, path, criteria) {
-		queue.push({
-			prevNode: criteria,
-			prevPath: path,
-			currNode: criteria.item,
-			partPath: {
+	mount(chunk, criteria) {
+		chunk.add({
+			node: criteria.item,
+			partPaths: {
 				explicit: ["item"],
 				implicit: ["%", "number"],
 			}
 		});
 	},
-	checking(queue, path, criteria, value) {
-		if (!isArray(value)) {
+	check(chunk, criteria, data) {
+		if (!isArray(data)) {
 			return ("TYPE_NOT_ARRAY");
 		}
-		else if (!value.length) {
-			return (criteria.empty ? null : "VALUE_EMPTY");
+
+		const dataLength = data.length;
+		
+		if (!dataLength) {
+			return (criteria.empty ? null : "DATA_EMPTY");
 		}
-		else if (criteria.min !== undefined && value.length < criteria.min) {
-			return ("VALUE_INFERIOR_MIN");
+		else if (criteria.min !== undefined && dataLength < criteria.min) {
+			return ("DATA_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && value.length > criteria.max) {
-			return ("VALUE_SUPERIOR_MAX");
+		else if (criteria.max !== undefined && dataLength > criteria.max) {
+			return ("DATA_SUPERIOR_MAX");
 		}
 
-		for (let i = 0; i < value.length; i++) {
-			queue.push({
-				prevPath: path,
-				currNode: criteria.item,
-				value: value[i]
+		for (let i = 0; i < dataLength; i++) {
+			chunk.addTask({
+				data: data[i],
+				node: criteria.item
+				
 			});
 		}
 

@@ -64,13 +64,13 @@ describe("Schema instance", () => {
 				label: "schema_string_label",
 				message: "schema_string_message"
 			},
-			value: null
+			data: null
 		});
 
 		const data = { foo: "1" };
 		assert.deepStrictEqual(schema_struct.evaluate(data), {
 			reject: null,
-			value: data
+			data: data
 		});
 	});
 });

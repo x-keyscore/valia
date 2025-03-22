@@ -15,15 +15,13 @@ export {
     GuardedCriteria,
 	FormatClassicTypes,
 	FormatGenericTypes,
-	FormatTemplate,
-	NativeFormats
+	FormatNatives,
+	Format
 } from './schema/formats';
 
 export {
 	EventsManager,
-	RegistryManager,
-	RegistryKey,
-	RegistryValue
+	FormatsManager
 } from './schema/managers';
 
 export {

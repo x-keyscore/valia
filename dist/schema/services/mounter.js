@@ -1,51 +1,66 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.metadataSymbol = void 0;
-exports.isMountedCriteria = isMountedCriteria;
+exports.MountingChunk = exports.nodeSymbol = void 0;
+exports.hasNodeSymbol = hasNodeSymbol;
 exports.mounter = mounter;
 const formats_1 = require("../formats");
-exports.metadataSymbol = Symbol('matadata');
-function isMountedCriteria(obj) {
-    return (typeof obj === "object" && Reflect.has(obj, exports.metadataSymbol));
+exports.nodeSymbol = Symbol('internal');
+function hasNodeSymbol(obj) {
+    return (typeof obj === "object" && Reflect.has(obj, exports.nodeSymbol));
 }
-function mounter(managers, criteria) {
-    var _a;
-    const registryManager = managers.registry;
-    const eventsManager = managers.events;
-    let queue = [{
-            prevNode: null,
-            prevPath: { explicit: [], implicit: [] },
-            currNode: criteria,
-            partPath: { explicit: [], implicit: [] },
-        }];
-    while (queue.length > 0) {
-        const { prevNode, prevPath, currNode, partPath } = queue.pop();
-        const path = {
-            explicit: [...prevPath.explicit, ...partPath.explicit],
-            implicit: [...prevPath.implicit, ...partPath.implicit],
-        };
-        registryManager.set(prevNode, currNode, partPath);
-        if (isMountedCriteria(currNode)) {
-            registryManager.junction(currNode);
-        }
-        else {
-            const format = managers.formats.get(currNode.type);
-            (_a = format.mounting) === null || _a === void 0 ? void 0 : _a.call(format, queue, path, currNode);
-            Object.assign(currNode, {
-                ...formats_1.staticDefaultCriteria,
-                ...format.defaultCriteria,
-                ...currNode
-            });
-        }
-        Object.assign(currNode, {
-            [exports.metadataSymbol]: {
-                registry: registryManager.registry,
-                saveNode: currNode
+class MountingChunk extends Array {
+    constructor(paths) {
+        super();
+        this.paths = paths;
+    }
+    add(task) {
+        this.push({
+            node: task.node,
+            partPaths: task.partPaths,
+            fullPaths: {
+                explicit: [...this.paths.explicit, ...task.partPaths.explicit],
+                implicit: [...this.paths.implicit, ...task.partPaths.implicit]
             }
         });
-        eventsManager.emit("ONE_NODE_MOUNTED", currNode, path);
     }
-    eventsManager.emit("END_OF_MOUNTING", criteria);
-    return criteria;
+}
+exports.MountingChunk = MountingChunk;
+function mounter(managers, rootNode) {
+    var _a;
+    const formats = managers.formats;
+    const events = managers.events;
+    const queue = [{
+            node: rootNode,
+            partPaths: { explicit: [], implicit: [] },
+            fullPaths: { explicit: [], implicit: [] }
+        }];
+    while (queue.length > 0) {
+        const { node, partPaths, fullPaths } = queue.pop();
+        if (hasNodeSymbol(node)) {
+            node[exports.nodeSymbol] = {
+                partPaths,
+                childNodes: node[exports.nodeSymbol].childNodes,
+            };
+        }
+        else {
+            const format = formats.get(node.type);
+            const chunk = new MountingChunk(fullPaths);
+            (_a = format.mount) === null || _a === void 0 ? void 0 : _a.call(format, chunk, node);
+            Object.assign(node, {
+                ...formats_1.staticDefaultCriteria,
+                ...format.defaultCriteria,
+                ...node,
+                [exports.nodeSymbol]: {
+                    partPaths,
+                    childNodes: new Set(chunk.map((task) => task.node)),
+                }
+            });
+            Object.freeze(node);
+            queue.push(...chunk);
+            events.emit("ONE_NODE_MOUNTED", node, fullPaths);
+        }
+    }
+    events.emit("END_OF_MOUNTING", rootNode);
+    return rootNode;
 }
 ;

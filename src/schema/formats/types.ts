@@ -1,15 +1,15 @@
-import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
+import type { PathSegments, MountingChunkInstance, CheckingChunkInstance, CheckerReject } from "../services";
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
 import type { StringClassicTypes, StringGenericTypes, StringSetableCriteria } from "./string/types";
 import type { StructClassicTypes, StructGenericTypes, StructSetableCriteria } from "./struct/types";
 import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } from "./symbol/types";
+import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
-import type { CheckingTask, MountingTask, Rejection, metadataSymbol } from "../services";
-import { RegistryManager, RegistryValue } from "../managers";
-import { nativeFormats } from "./formats";
+import { formatNatives } from "./formats";
+import { nodeSymbol } from "../services";
 
 // TUNABLE CRITERIA TEMPLATE
 
@@ -60,7 +60,7 @@ export interface FormatClassicTypes<T extends keyof FormatClassicTypes = keyof F
 	union: UnionClassicTypes<T>;
 }
 
-export type KeyofFormatClassicTypes = keyof FormatClassicTypes;
+export type FormatClassicTypesKeys = keyof FormatClassicTypes;
 
 // FORMATS GENERIC TYPES
 
@@ -100,20 +100,20 @@ export type SetableCriteria<T extends keyof FormatClassicTypes = keyof FormatCla
 
 // DEFAULT CRITERIA
 
-export interface StaticDefaultCriteria {
-	nullable: boolean;
-	undefinable: boolean;
-}
-
 export type DefaultCriteria<T extends keyof FormatClassicTypes = keyof FormatClassicTypes> =
 	FormatClassicTypes<T>[T]['defaultCriteria']
 
 // MOUNTED CRITERIA
 
+export interface StaticDefaultCriteria {
+	nullable: boolean;
+	undefinable: boolean;
+}
+
 export interface StaticMountedCriteria {
-	[metadataSymbol]: {
-		registry: RegistryManager['registry'];
-		saveNode: MountedCriteria;
+	[nodeSymbol]: {
+		partPaths: PathSegments;
+		childNodes: Set<MountedCriteria>;
 	};
 }
 
@@ -131,34 +131,27 @@ export type MountedCriteria<T extends SetableCriteria = SetableCriteria> =
 export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = 
 	FormatGenericTypes<T>[keyof FormatGenericTypes]['guardedCriteria'];
 
-// FORMAT TEMPLATE
+// FORMAT
 
 /**
  * @template T Extended interface of `SettableCriteriaTemplate` that
  * defines the format criteria users must or can specify.
  * @template U Custom members you want to add to the format.
  */
-export type FormatTemplate<
+export type Format<
 	T extends SetableCriteria,
 	U extends Record<string, any> = {},
 > = {
 	defaultCriteria: FormatClassicTypes[T['type']]['defaultCriteria'];
-	mounting?(
-		queue: MountingTask[],
-		path: RegistryValue['partPaths'],
+	mount?(
+		chunk: MountingChunkInstance,
 		criteria: T
 	): void;
-	/**
-	 * **Warning:**
-	 * Do not fill the queue if a rejection can still be emitted by the function,
-	 * as it could disrupt the effect of the checking hooks.
-	 */
-    checking(
-		queue: CheckingTask[],
-		path: RegistryValue['partPaths'],
+    check(
+		chunk: CheckingChunkInstance,
         criteria: MountedCriteria<T>,
         value: unknown
-    ): Rejection['code'] | null;
+    ): CheckerReject['code'] | null;
 } & U;
 
-export type NativeFormats = typeof nativeFormats;
+export type FormatNatives = typeof formatNatives;

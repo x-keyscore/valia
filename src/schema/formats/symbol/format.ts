@@ -1,14 +1,14 @@
 import type { SymbolSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 
-export const SymbolFormat: FormatTemplate<SymbolSetableCriteria> = {
+export const SymbolFormat: Format<SymbolSetableCriteria> = {
 	defaultCriteria: {},
-	checking(queue, path, criteria, value) {
-		if (typeof value !== "symbol") {
+	check(queue, criteria, data) {
+		if (typeof data !== "symbol") {
 			return "TYPE_NOT_SYMBOL";
 		}
-		else if (criteria.symbol !== undefined && criteria.symbol !== value) {
-			return "VALUE_INVALID_SYMBOL";
+		else if (criteria.symbol !== undefined && data !== criteria.symbol) {
+			return "DATA_INVALID_SYMBOL";
 		}
 
 		return (null);

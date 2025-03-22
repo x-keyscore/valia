@@ -1,22 +1,21 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, NativeFormats } from "./formats";
-import { registryManager, eventsManager, formatsManager } from "./managers";
-import { mounter, checker, cloner } from "./services";
-import { nativeFormats } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNatives } from "./formats";
+import { EventsManager, FormatsManager } from "./managers";
+import { cloner, mounter, checker } from "./services";
+import { formatNatives } from "./formats";
 import { Issue } from "../utils";
 
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export class Schema<const T extends SetableCriteria = SetableCriteria<keyof NativeFormats>> {
+export class Schema<const T extends SetableCriteria = SetableCriteria<keyof FormatNatives>> {
 	private mountedCriteria: MountedCriteria<T> | undefined;
 	protected managers = {
-		registry: registryManager(),
-		formats: formatsManager(),
-		events: eventsManager()
+		formats: new FormatsManager(),
+		events: new EventsManager()
 	}
 
 	protected initiate(definedCriteria: T) {
-		this.managers.formats.set(nativeFormats);
+		this.managers.formats.set(formatNatives);
 
 		const clonedCriteria = cloner(definedCriteria);
 		this.mountedCriteria = mounter(this.managers, clonedCriteria);
@@ -45,31 +44,31 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Nati
 	/**
 	 * Validates the provided data against the schema.
 	 * 
-	 * @param value - The data to be validated.
+	 * @param data - The data to be validated.
 	 * 
 	 * @returns `true` if the value is **valid**, otherwise `false`.  
 	 * This function acts as a **type guard**, ensuring that
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
-	validate(value: unknown): value is GuardedCriteria<T> {
-		const reject = checker(this.managers, this.criteria, value);
+	validate(data: unknown): data is GuardedCriteria<T> {
+		const reject = checker(this.managers, this.criteria, data);
 		return (!reject);
 	}
 
 	/**
 	 * Evaluates the provided data against the schema.
 	 *
-	 * @param value - The data to be evaluated.
+	 * @param data - The data to be evaluated.
 	 * 
 	 * @returns An object containing:
 	 * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
 	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
 	 */
-	evaluate(value: unknown) {
-		const reject = checker(this.managers, this.criteria, value);
+	evaluate(data: unknown) {
+		const reject = checker(this.managers, this.criteria, data);
 		if (reject) {
-			return ({ reject, value: null });
+			return ({ reject, data: null });
 		}
-		return ({ reject: null, value }) as { reject: null, value: GuardedCriteria<T> };
+		return ({ reject: null, data: data as GuardedCriteria<T> });
 	}
 }

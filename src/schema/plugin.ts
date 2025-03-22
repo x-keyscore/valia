@@ -1,4 +1,4 @@
-import type { SetableCriteria, FormatTemplate, SetableCriteriaTemplate } from "./formats";
+import type { SetableCriteria, Format, SetableCriteriaTemplate } from "./formats";
 import type { Constructor } from "../types";
 import type { SchemaType } from "./types";
 import { Schema } from "./schema";

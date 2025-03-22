@@ -1,6 +1,6 @@
 import type { SetableCriteria } from "../formats";
 import { isArray, isBasicObject } from "../../testers";
-import { isMountedCriteria } from "./mounter";
+import { hasNodeSymbol } from "./mounter";
 
 interface CloningTask {
 	src: unknown;
@@ -12,7 +12,7 @@ function processTask(
 	{ src, cpy }: CloningTask
 ) {
 	if (isBasicObject(src)) {
-		if (isMountedCriteria(src)) {
+		if (hasNodeSymbol(src)) {
 			cpy = {...src};
 		}
 		else {
@@ -21,8 +21,8 @@ function processTask(
 				const key = keys[i];
 
 				if (isBasicObject(src[key])) {
-					if (isMountedCriteria(src[key])) {
-						cpy[key] = {...src[key]};
+					if (hasNodeSymbol(src[key])) {
+						cpy[key] = { ...src[key] };
 					} else {
 						cpy[key] = {};
 
@@ -49,8 +49,8 @@ function processTask(
 			const index = i;
 
 			if (isBasicObject(src[index])) {
-				if (isMountedCriteria(src[index])) {
-					cpy[i] = {...src[index]};
+				if (hasNodeSymbol(src[index])) {
+					cpy[i] = { ...src[index] };
 				} else {
 					cpy[i] = {};
 

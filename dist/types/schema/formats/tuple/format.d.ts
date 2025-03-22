@@ -1,3 +1,3 @@
 import type { TupleSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
-export declare const TupleFormat: FormatTemplate<TupleSetableCriteria>;
+import type { Format } from "../types";
+export declare const TupleFormat: Format<TupleSetableCriteria>;

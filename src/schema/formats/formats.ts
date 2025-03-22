@@ -1,4 +1,4 @@
-import type { FormatTemplate, SetableCriteria, StaticDefaultCriteria } from "./types";
+import type { Format, SetableCriteria, StaticDefaultCriteria } from "./types";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { RecordFormat } from "./record/format";
@@ -14,7 +14,7 @@ export const staticDefaultCriteria: StaticDefaultCriteria = {
 	undefinable: false
 }
 
-export const nativeFormats = {
+export const formatNatives = {
 	array: ArrayFormat,
 	boolean: BooleanFormat,
 	number: NumberFormat,
@@ -24,4 +24,4 @@ export const nativeFormats = {
 	symbol: SymbolFormat,
 	tuple: TupleFormat,
 	union: UnionFormat
-} satisfies Record<string, FormatTemplate<SetableCriteria>>;
+} satisfies Record<string, Format<SetableCriteria>>;

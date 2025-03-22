@@ -1,31 +1,28 @@
 import type { RecordSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
 
-export const RecordFormat: FormatTemplate<RecordSetableCriteria> = {
+export const RecordFormat: Format<RecordSetableCriteria> = {
 	defaultCriteria: {
 		empty: false
 	},
-	mounting(queue, path, criteria) {
-		queue.push({
-			prevNode: criteria,
-			prevPath: path,
-			currNode: criteria.key,
-			partPath: {
+	mount(chunk, criteria) {
+		chunk.add({
+			node: criteria.key,
+			partPaths: {
 				explicit: ["key"],
 				implicit: []
 			}
-		}, {
-			prevNode: criteria,
-			prevPath: path,
-			currNode: criteria.value,
-			partPath: {
+		})
+		chunk.add({
+			node: criteria.value,
+			partPaths: {
 				explicit: ["value"],
 				implicit: ["%", "string", "symbol"]
 			}
-		});
+		})
 	},
-	checking(queue, path, criteria, value) {
+	check(chunk, criteria, value) {
 		if (!isPlainObject(value)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
@@ -43,21 +40,19 @@ export const RecordFormat: FormatTemplate<RecordSetableCriteria> = {
 			return ("VALUE_SUPERIOR_MAX");
 		}
 
-		const criteriaKey = criteria.key;
-		const criteriaValue = criteria.value;
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 
-			queue.push({
-				prevPath: path,
-				currNode: criteriaKey,
-				value: key
+			chunk.addTask({
+				data: key,
+				node: criteria.key,
+				
 			});
 
-			queue.push({
-				prevPath: path,
-				currNode: criteriaValue,
-				value: value[key]
+			chunk.addTask({
+				data: value[key],
+				node: criteria.value,
+				
 			});
 		}
 

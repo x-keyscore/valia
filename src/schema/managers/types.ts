@@ -1,52 +1,30 @@
-import type { MountedCriteria, SetableCriteria } from "../formats";
-import type { LooseAutocomplete } from "../../types";
-import type { Rejection } from "../services";
-import { registryManager } from "./registry";
-import { formatsManager } from "./formats";
-import { eventsManager } from "./events";
-
-// REGISTRY
-
-type ExplicitPathArray = (string | number | symbol)[];
-
-type ImplicitPathSyntax = (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol);
-
-type ImplicitPathArray = ImplicitPathSyntax[];
-
-export type RegistryKey = SetableCriteria | MountedCriteria;
-
-export interface RegistryValue {
-    nextNodes: Set<RegistryKey>;
-    partPaths: {
-        explicit: ExplicitPathArray;
-        implicit: ImplicitPathArray;
-    };
-}
-
-export type RegistryManager = ReturnType<typeof registryManager>;
+import type { PathSegments, CheckerReject } from "../services";
+import type { MountedCriteria } from "../formats";
+import { FormatsManager } from "./formats";
+import { EventsManager } from "./events";
 
 // FORMATS
 
-export type FormatsManager = ReturnType<typeof formatsManager>;
+export type FormatsManagerInstance = InstanceType<typeof FormatsManager>;
 
 // EVENTS
 
 export interface Events {
     "ONE_NODE_MOUNTED": (
-        criteria: MountedCriteria,
-        path: RegistryValue['partPaths']
+        node: MountedCriteria,
+        path: PathSegments
     ) => void;
     "END_OF_MOUNTING": (
-        criteria: MountedCriteria
+        node: MountedCriteria
     ) => void;
     "ONE_NODE_CHECKED": (
-        criteria: MountedCriteria,
-        path: RegistryValue['partPaths']
+        node: MountedCriteria,
+        path: PathSegments
     ) => void;
     "END_OF_CHECKING": (
-        criteria: MountedCriteria,
-        reject: Rejection | null
+        node: MountedCriteria,
+        reject: CheckerReject | null
     ) => void;
 }
 
-export type EventsManager = ReturnType<typeof eventsManager>;
+export type EventsManagerInstance = InstanceType<typeof EventsManager>;

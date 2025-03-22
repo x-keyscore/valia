@@ -1,95 +1,115 @@
-import type { EventsManager, RegistryValue } from "../managers";
-import type { CheckingTask, Rejection } from "./types";
+import type { PathSegments, CheckingTask, CheckingTaskHooks, CheckerReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
-import { Issue } from "../../utils";
+import { nodeSymbol } from "./mounter";
 
-function rejection(
-	eventsManager: EventsManager,
+function reject(
 	code: string,
 	node: MountedCriteria,
-	path: RegistryValue['partPaths']
-): Rejection {
-	const result = {
+	path: PathSegments,
+): CheckerReject {
+	return ({
 		path,
 		code: code,
 		type: node.type,
 		label: node.label,
 		message: node.message
+	});
+}
+
+export class CheckingChunk extends Array<CheckingTask> {
+	constructor(public paths: PathSegments) {
+		super();
 	}
 
-	eventsManager.emit("END_OF_CHECKING", node, result);
+	addTask(
+		task: {
+			data: unknown;
+			node: MountedCriteria;
+			hooks?: CheckingTaskHooks;
+		}
+	) {
+		const partPaths = task.node[nodeSymbol].partPaths;
 
-	return (result);
+		this.push({
+			data: task.data,
+			node: task.node,
+			fullPaths: {
+				explicit: [...this.paths.explicit, ...partPaths.explicit],
+				implicit: [...this.paths.implicit, ...partPaths.implicit]
+			}
+		});
+	}
 }
 
 export function checker(
 	managers: SchemaInstance['managers'],
-	criteria: MountedCriteria,
-	value: unknown
-): Rejection | null {
-	const registryManager = managers.registry;
-	const eventsManager = managers.events;
-	let queue: CheckingTask[] = [{
-		prevPath: { explicit: [], implicit: [] },
-		currNode: criteria,
-		value
+	rootNode: MountedCriteria,
+	rootData: unknown
+): CheckerReject | null {
+	const formats = managers.formats;
+	const events = managers.events;
+	const queue: CheckingTask[] = [{
+		data: rootData,
+		node: rootNode,
+		fullPaths: { explicit: [], implicit: [] }
 	}];
 
 	while (queue.length > 0) {
-		const { prevPath, currNode, value, hooks } = queue.pop()!;
+		const { data, node, fullPaths } = queue.pop()!;
+		const chunk = new CheckingChunk(fullPaths);
 
-		const partPath = registryManager.getPartPaths(currNode);
-		const path = {
-			explicit: [...prevPath.explicit, ...partPath.explicit],
-			implicit: [...prevPath.implicit, ...partPath.implicit],
-		}
-
-		if (hooks) {
-			const response = hooks.beforeCheck(currNode);
-			if (response === false) continue;
-			if (typeof response === "string") {
-				return(rejection(
-					eventsManager,
-					response,
-					hooks.owner.node,
-					hooks.owner.path
-				));
-			}
-		}
-
-		let reject = null;
-		if (value === null) {
-			if (currNode.nullable) reject = null;
-			else reject = "TYPE_NULL";
-		} else if (value === undefined) {
-			if (currNode.undefinable) reject = null;
-			else reject = "TYPE_UNDEFINED";
+		let code = null;
+		if (data === null) {
+			if (node.nullable) code = null;
+			else code = "TYPE_NULL";
+		} else if (data === undefined) {
+			if (node.undefinable) code = null;
+			else code = "TYPE_UNDEFINED";
 		} else {
-			const format = managers.formats.get(currNode.type);
+			const format = formats.get(node.type);
 
-			reject = format.checking(queue, path, currNode, value);
+			code = format.check(chunk, node, data);
 		}
 
-		if (hooks) {
-			const response = hooks.afterCheck(currNode, reject);
-			if (response === false) continue;
-			if (typeof response === "string") {
-				return(rejection(
-					eventsManager,
-					response,
-					hooks.owner.node,
-					hooks.owner.path
-				));
-			}
+		if (code) {
+			return (reject(code, node, fullPaths));
 		}
 
-		if (reject) {
-			return (rejection(eventsManager, reject, currNode, path));
-		}
+		queue.push(...chunk);
 
-		eventsManager.emit('ONE_NODE_CHECKED', currNode, path);
+		events.emit('ONE_NODE_CHECKED', node, fullPaths);
 	}
+
+	events.emit("END_OF_CHECKING", rootNode, null);
 
 	return (null);
 };
+
+/*
+if (hooks) {
+	const response = hooks.beforeCheck(currNode);
+	if (response === false) continue;
+	if (typeof response === "string") {
+		return(rejection(
+			events,
+			response,
+			hooks.owner.node,
+			hooks.owner.path
+		));
+	}
+}*/
+
+/*
+if (hooks) {
+	const response = hooks.afterCheck(currNode, code);
+	if (response === false) continue;
+	if (typeof response === "string") {
+		return(rejection(
+			events,
+			response,
+			hooks.owner.node,
+			hooks.owner.path
+		));
+	}
+}*/

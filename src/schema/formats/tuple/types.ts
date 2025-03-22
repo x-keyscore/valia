@@ -1,13 +1,13 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, KeyofFormatClassicTypes,
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, FormatClassicTypesKeys,
 	SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 
 export interface TupleSetableCriteria<
-	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+	T extends FormatClassicTypesKeys = FormatClassicTypesKeys
 > extends SetableCriteriaTemplate<"tuple"> {
 	tuple: [SetableCriteria<T>, ...SetableCriteria<T>[]];
 }
 
-export interface TupleClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+export interface TupleClassicTypes<T extends FormatClassicTypesKeys> extends ClassicTypesTemplate<
 	TupleSetableCriteria<T>,
 	{}
 > {}

@@ -56,7 +56,7 @@ describe("Schema format: 'struct'", () => {
 				label: undefined,
 				message: undefined
 			},
-			value: null
+			data: null
 		});
 		assert.strictEqual(schema_struct.validate({ 
 			foobar: { 
