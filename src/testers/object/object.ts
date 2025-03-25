@@ -7,6 +7,20 @@ export function isObject(x: unknown): x is object {
 }
 
 /**
+ * A basic object is considered as follows:
+ * - It must be an object.
+ * - It must have a prototype of `Object.prototype` or `null`.
+*/
+export function isBasicObject(x: unknown): x is PlainObject {
+	if (x === null || typeof x !== "object") return (false);
+	const prototype = Object.getPrototypeOf(x);
+	if (prototype === Object.prototype || prototype === null) {
+		return (true);
+	}
+    return (false);
+}
+
+/**
  * A plain object is considered as follows:
  * - It must be an object.
  * - It must have a prototype of `Object.prototype` or `null`.
@@ -25,20 +39,6 @@ export function isPlainObject(x: unknown): x is PlainObject {
         }
     }
     return (true);
-}
-
-/**
- * A basic object is considered as follows:
- * - It must be an object.
- * - It must have a prototype of `Object.prototype` or `null`.
-*/
-export function isBasicObject(x: unknown): x is PlainObject {
-	if (x === null || typeof x !== "object") return (false);
-	const prototype = Object.getPrototypeOf(x);
-	if (prototype === Object.prototype || prototype === null) {
-		return (true);
-	}
-    return (false);
 }
 
 // ARRAY

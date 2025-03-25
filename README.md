@@ -41,7 +41,7 @@ type UserSchema = SchemaInfer<typeof userSchema>;
 
 let data: unknown = { name: "Tintin", role: "ADMIN" };
 
-if (userSchema.validate(data) {
+if (userSchema.validate(data)) {
     /*
     The data type is now:
     data: {
@@ -65,8 +65,8 @@ if (userSchema.validate(data) {
 
 ```ts
 criteria: MountedCriteria<T>;
-validate(value: unknown): value is GuardedCriteria<T>;
-evaluate(value: unknown): { reject: SchemaReject, value: null } | { reject: null, value: GuardedCriteria<T> };
+validate(data: unknown): data is GuardedCriteria<T>;
+evaluate(data: unknown): { reject: SchemaReject, data: null } | { reject: null, data: GuardedCriteria<T> };
 ```
 ```ts
 interface SchemaReject {
@@ -121,7 +121,7 @@ console.log(reject);
     explicit: ['struct', 'age'],
     implicit: ['&', 'age']
   },
-  code: 'VALUE_SUPERIOR_MAX',
+  code: 'DATA_SUPERIOR_MAX',
   type: 'number',
   label: 'AGE_FORMAT',
   message: undefined

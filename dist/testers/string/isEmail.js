@@ -9,7 +9,7 @@ const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\
 const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
 const localPartQuotedRegex = (0, utils_1.lazy)(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
 const domainPartAddrLiteralRegex = (0, utils_1.lazy)(() => new RegExp(`^\\[(?:IPv6:${isIp_1.IPv6Pattern}|${isIp_1.ipV4Pattern})\\]$`));
-const domainPartGeneralAddrLiteralRegex = (0, utils_1.lazy)(() => new RegExp(`[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
+const domainPartGeneralAddrLiteralRegex = (0, utils_1.lazy)(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 function splitEmail(str) {
     const arrayLength = str.length;
     // FIND SYMBOL INDEX

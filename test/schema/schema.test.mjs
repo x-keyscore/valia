@@ -76,7 +76,7 @@ describe("Schema instance", () => {
 });
 
 describe("Schema global criteria", () => {
-	it("'nullable' property", () => {
+	it("'nullable' parameter", () => {
 		const schema = new Schema({
 			type: "string",
 			nullable: true
@@ -88,7 +88,7 @@ describe("Schema global criteria", () => {
 
 		assert.strictEqual(schema.validate(null), true);
 	});
-	it("'undefinable' property", () => {
+	it("'undefinable' parameter", () => {
 		const schema = new Schema({
 			type: "string",
 			undefinable: true

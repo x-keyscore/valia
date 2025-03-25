@@ -1,4 +1,4 @@
-import type { PathSegments, CheckingTask, CheckingTaskHooks, CheckerReject } from "./types";
+import type { PathSegments, CheckingTask, CheckerReject, CheckingTaskHooks, CheckingTaskCallbacks } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
@@ -9,8 +9,8 @@ function reject(
 	path: PathSegments,
 ): CheckerReject {
 	return ({
+		code,
 		path,
-		code: code,
 		type: node.type,
 		label: node.label,
 		message: node.message
@@ -18,7 +18,10 @@ function reject(
 }
 
 export class CheckingChunk extends Array<CheckingTask> {
-	constructor(public paths: PathSegments) {
+	constructor(
+		public queue: CheckingTask[],
+		public owner: CheckingTask
+	) {
 		super();
 	}
 
@@ -26,18 +29,31 @@ export class CheckingChunk extends Array<CheckingTask> {
 		task: {
 			data: unknown;
 			node: MountedCriteria;
-			hooks?: CheckingTaskHooks;
+			hooks?: CheckingTaskCallbacks
 		}
 	) {
 		const partPaths = task.node[nodeSymbol].partPaths;
+		let branchHooks = this.owner.branchHooks;
+
+		if (task.hooks && Object.keys(task.hooks)) {
+			const hooks = {
+				owner: this.owner,
+				callbacks: task.hooks,
+				awaitTasks: 0,
+				resetIndex: this.queue.length - 1
+			}
+
+			branchHooks = branchHooks ? branchHooks.concat(hooks) : [hooks];
+		}
 
 		this.push({
 			data: task.data,
 			node: task.node,
 			fullPaths: {
-				explicit: [...this.paths.explicit, ...partPaths.explicit],
-				implicit: [...this.paths.implicit, ...partPaths.implicit]
-			}
+				explicit: this.owner.fullPaths.explicit.concat(partPaths.explicit),
+				implicit: this.owner.fullPaths.implicit.concat(partPaths.implicit)
+			},
+			branchHooks
 		});
 	}
 }
@@ -55,9 +71,10 @@ export function checker(
 		fullPaths: { explicit: [], implicit: [] }
 	}];
 
-	while (queue.length > 0) {
-		const { data, node, fullPaths } = queue.pop()!;
-		const chunk = new CheckingChunk(fullPaths);
+	while (queue.length) {
+		const task = queue.pop()!;
+		const chunk = new CheckingChunk(queue, task);
+		const { data, node, fullPaths, branchHooks } = task;
 
 		let code = null;
 		if (data === null) {
@@ -76,12 +93,12 @@ export function checker(
 			return (reject(code, node, fullPaths));
 		}
 
-		queue.push(...chunk);
-
-		events.emit('ONE_NODE_CHECKED', node, fullPaths);
+		if (chunk.length) {
+			queue.push(...chunk);
+		}
 	}
 
-	events.emit("END_OF_CHECKING", rootNode, null);
+	events.emit("TREE_CHECKED", rootNode, null);
 
 	return (null);
 };

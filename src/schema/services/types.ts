@@ -1,7 +1,5 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
-import type { MountingChunk } from "./mounter";
-import type { CheckingChunk } from "./checker";
 
 type PathSegmentsImplicitSyntax = (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol);
 
@@ -11,7 +9,7 @@ type PathSegmentsImplicitSyntax = (LooseAutocomplete<"&" | "%" | "@" | "string" 
  * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
  * static-key    = ["&", (string / number / symbol)]
  * segment       = dynamic-key / static-key
- * path          = [1*(...segment)]
+ * path          = [*(...segment)]
  * ```
  * 
  * **Exemple :**
@@ -49,37 +47,28 @@ export interface MountingTask {
 	fullPaths: PathSegments;
 }
 
-export type MountingChunkInstance = InstanceType<typeof MountingChunk>;
-
 // CHECKING
 
-/**
- * @template U Custom members you want to add to the object.
- */
-export type CheckingTaskHooks<U extends Record<string, any> = never> = {
-	nodeAccepted?(criteria: MountedCriteria): boolean | string;
-	nodeRejected?(criteria: MountedCriteria, reject: string | null): boolean | string;
-	branchAccepted?(criteria: MountedCriteria): boolean | string;
-	branchRejected?(criteria: MountedCriteria, reject: string | null): boolean | string;
-} & U;
+export interface CheckingTaskCallbacks {
+	onAccept?(criteria: MountedCriteria): boolean | string;
+	onReject?(criteria: MountedCriteria, code: string): boolean | string;
+}
+
+export interface CheckingTaskHooks {
+	owner: CheckingTask;
+	callbacks: CheckingTaskCallbacks;
+	awaitTasks: number;
+	resetIndex: number;
+}
 
 export interface CheckingTask {
 	data: unknown;
 	node: MountedCriteria;
-	hooks?: CheckingTaskHooks;
 	fullPaths: PathSegments;
+	branchHooks?: CheckingTaskHooks[];
 }
-
-export interface CheckingChunkHooks {
-	childTasks: number;
-	chunkHooks: { }[];
-	
-}
-
-export type CheckingChunkInstance = InstanceType<typeof CheckingChunk>;
 
 export interface CheckerReject {
-	path: PathSegments;
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 
@@ -90,6 +79,7 @@ export interface CheckerReject {
 	 * `<DETAIL>`: A specific description of the error, such as `NOT_STRING`, `MISSING_KEY`, etc.
 	 */
 	code: string;
+	path: PathSegments;
 	type: string;
 	label: string | undefined;
 	message: string | undefined;

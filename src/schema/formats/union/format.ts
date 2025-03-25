@@ -28,7 +28,15 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 		for (let i = 0; i < unionLength; i++) {
 			chunk.addTask({
 				data,
-				node: criteria.union[i]
+				node: criteria.union[i],
+				hooks: {
+					onAccept() {
+						return true
+					},
+					onReject() {
+						return true
+					}
+				}
 			});
 		}
 

@@ -13,7 +13,7 @@ function processTask(
 ) {
 	if (isBasicObject(src)) {
 		if (hasNodeSymbol(src)) {
-			cpy = {...src};
+			cpy = { ...src };
 		}
 		else {
 			const keys = Reflect.ownKeys(src);

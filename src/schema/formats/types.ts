@@ -1,4 +1,4 @@
-import type { PathSegments, MountingChunkInstance, CheckingChunkInstance, CheckerReject } from "../services";
+import type { PathSegments, MountingChunk, CheckingChunk, CheckerReject } from "../services";
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
@@ -144,11 +144,11 @@ export type Format<
 > = {
 	defaultCriteria: FormatClassicTypes[T['type']]['defaultCriteria'];
 	mount?(
-		chunk: MountingChunkInstance,
+		chunk: MountingChunk,
 		criteria: T
 	): void;
     check(
-		chunk: CheckingChunkInstance,
+		chunk: CheckingChunk,
         criteria: MountedCriteria<T>,
         value: unknown
     ): CheckerReject['code'] | null;

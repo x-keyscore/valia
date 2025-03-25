@@ -5,27 +5,39 @@ exports.checker = checker;
 const mounter_1 = require("./mounter");
 function reject(code, node, path) {
     return ({
+        code,
         path,
-        code: code,
         type: node.type,
         label: node.label,
         message: node.message
     });
 }
 class CheckingChunk extends Array {
-    constructor(paths) {
+    constructor(queue, owner) {
         super();
-        this.paths = paths;
+        this.queue = queue;
+        this.owner = owner;
     }
     addTask(task) {
         const partPaths = task.node[mounter_1.nodeSymbol].partPaths;
+        let branchHooks = this.owner.branchHooks;
+        if (task.hooks && Object.keys(task.hooks)) {
+            const hooks = {
+                owner: this.owner,
+                callbacks: task.hooks,
+                awaitTasks: 0,
+                resetIndex: this.queue.length - 1
+            };
+            branchHooks = branchHooks ? branchHooks.concat(hooks) : [hooks];
+        }
         this.push({
             data: task.data,
             node: task.node,
             fullPaths: {
-                explicit: [...this.paths.explicit, ...partPaths.explicit],
-                implicit: [...this.paths.implicit, ...partPaths.implicit]
-            }
+                explicit: this.owner.fullPaths.explicit.concat(partPaths.explicit),
+                implicit: this.owner.fullPaths.implicit.concat(partPaths.implicit)
+            },
+            branchHooks
         });
     }
 }
@@ -38,9 +50,11 @@ function checker(managers, rootNode, rootData) {
             node: rootNode,
             fullPaths: { explicit: [], implicit: [] }
         }];
-    while (queue.length > 0) {
-        const { data, node, fullPaths } = queue.pop();
-        const chunk = new CheckingChunk(fullPaths);
+    while (queue.length) {
+        const task = queue.pop();
+        const chunk = new CheckingChunk(queue, task);
+        const { data, node, fullPaths, branchHooks } = task;
+        //console.log(fullPaths.explicit.join("."));
         let code = null;
         if (data === null) {
             if (node.nullable)
@@ -61,10 +75,11 @@ function checker(managers, rootNode, rootData) {
         if (code) {
             return (reject(code, node, fullPaths));
         }
-        queue.push(...chunk);
-        events.emit('ONE_NODE_CHECKED', node, fullPaths);
+        if (chunk.length) {
+            queue.push(...chunk);
+        }
     }
-    events.emit("END_OF_CHECKING", rootNode, null);
+    events.emit("TREE_CHECKED", rootNode, null);
     return (null);
 }
 ;

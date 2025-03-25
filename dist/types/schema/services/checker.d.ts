@@ -1,13 +1,14 @@
-import type { PathSegments, CheckingTask, CheckingTaskHooks, CheckerReject } from "./types";
+import type { CheckingTask, CheckerReject, CheckingTaskCallbacks } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 export declare class CheckingChunk extends Array<CheckingTask> {
-    paths: PathSegments;
-    constructor(paths: PathSegments);
+    queue: CheckingTask[];
+    owner: CheckingTask;
+    constructor(queue: CheckingTask[], owner: CheckingTask);
     addTask(task: {
         data: unknown;
         node: MountedCriteria;
-        hooks?: CheckingTaskHooks;
+        hooks?: CheckingTaskCallbacks;
     }): void;
 }
 export declare function checker(managers: SchemaInstance['managers'], rootNode: MountedCriteria, rootData: unknown): CheckerReject | null;

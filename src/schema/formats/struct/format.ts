@@ -70,7 +70,6 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 			chunk.addTask({
 				data: data[key],
 				node: criteria.struct[key],
-				
 			});
 		}
 

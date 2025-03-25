@@ -72,3 +72,101 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 		return ({ reject: null, data: data as GuardedCriteria<T> });
 	}
 }
+
+/*
+const schema = new Schema({
+	type: "struct",
+	label: "root",
+	struct: {
+		branch_1: {
+			type: "struct",
+			label: "branch_1",
+			struct: {
+				element: {
+					type: "struct",
+					label: "struct_b1",
+					struct: {
+						element: {
+							type: "struct",
+							label: "struct_b1",
+							struct: {
+								element: {
+									type: "string",
+									label: "string_b1"
+								}	
+							}
+						}
+					}
+				}
+			}
+		},
+		branch_2: {
+			type: "struct",
+			label: "branch_2",
+			struct: {
+				element: {
+					type: "struct",
+					label: "struct_b2",
+					struct: {
+						element: {
+							type: "struct",
+							label: "struct_b2",
+							struct: {
+								element: {
+									type: "string",
+									label: "string_b2"
+								}	
+							}
+						}
+					}
+				}
+			}
+		},
+		branch_3: {
+			type: "struct",
+			label: "branch_3",
+			struct: {
+				element: {
+					type: "struct",
+					label: "struct_b3",
+					struct: {
+						element: {
+							type: "struct",
+							label: "struct_b3",
+							struct: {
+								element: {
+									type: "string",
+									label: "string_b3"
+								}	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+});
+
+schema.validate({
+	branch_1: {
+		element: {
+			element: {
+				element: "string_b1"
+			} 
+		}
+	},
+	branch_2: {
+		element: {
+			element: {
+				element: "string_b2"
+			} 
+		}
+	},
+	branch_3: {
+		element: {
+			element: {
+				element: "string_b3"
+			} 
+		}
+	},
+})*/

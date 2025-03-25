@@ -24,8 +24,8 @@ export class MountingChunk extends Array<MountingTask> {
 			node: task.node,
 			partPaths: task.partPaths,
 			fullPaths: {
-				explicit: [...this.paths.explicit, ...task.partPaths.explicit],
-				implicit: [...this.paths.implicit, ...task.partPaths.implicit]
+				explicit: this.paths.explicit.concat(task.partPaths.explicit),
+				implicit: this.paths.implicit.concat(task.partPaths.implicit)
 			}
 		});
 	}
@@ -43,7 +43,7 @@ export function mounter<T extends SetableCriteria>(
 		fullPaths: { explicit: [], implicit: [] }
 	}];
 
-	while (queue.length > 0) {
+	while (queue.length) {
 		const { node, partPaths, fullPaths } = queue.pop()!;
 
 		if (hasNodeSymbol(node)) {
@@ -69,10 +69,10 @@ export function mounter<T extends SetableCriteria>(
 
 			Object.freeze(node);
 
-			queue.push(...chunk);
+			if (chunk.length) queue.push(...chunk);
 
 			events.emit(
-				"ONE_NODE_MOUNTED",
+				"NODE_MOUNTED",
 				node as MountedCriteria,
 				fullPaths
 			);
@@ -80,7 +80,7 @@ export function mounter<T extends SetableCriteria>(
 	}
 
 	events.emit(
-		"END_OF_MOUNTING",
+		"TREE_MOUNTED",
 		rootNode as MountedCriteria<T>
 	);
 

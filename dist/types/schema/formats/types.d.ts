@@ -1,4 +1,4 @@
-import type { PathSegments, MountingChunkInstance, CheckingChunkInstance, CheckerReject } from "../services";
+import type { PathSegments, MountingChunk, CheckingChunk, CheckerReject } from "../services";
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
@@ -94,7 +94,7 @@ export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = Forma
  */
 export type Format<T extends SetableCriteria, U extends Record<string, any> = {}> = {
     defaultCriteria: FormatClassicTypes[T['type']]['defaultCriteria'];
-    mount?(chunk: MountingChunkInstance, criteria: T): void;
-    check(chunk: CheckingChunkInstance, criteria: MountedCriteria<T>, value: unknown): CheckerReject['code'] | null;
+    mount?(chunk: MountingChunk, criteria: T): void;
+    check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): CheckerReject['code'] | null;
 } & U;
 export type FormatNatives = typeof formatNatives;

@@ -18,8 +18,8 @@ class MountingChunk extends Array {
             node: task.node,
             partPaths: task.partPaths,
             fullPaths: {
-                explicit: [...this.paths.explicit, ...task.partPaths.explicit],
-                implicit: [...this.paths.implicit, ...task.partPaths.implicit]
+                explicit: this.paths.explicit.concat(task.partPaths.explicit),
+                implicit: this.paths.implicit.concat(task.partPaths.implicit)
             }
         });
     }
@@ -34,7 +34,7 @@ function mounter(managers, rootNode) {
             partPaths: { explicit: [], implicit: [] },
             fullPaths: { explicit: [], implicit: [] }
         }];
-    while (queue.length > 0) {
+    while (queue.length) {
         const { node, partPaths, fullPaths } = queue.pop();
         if (hasNodeSymbol(node)) {
             node[exports.nodeSymbol] = {
@@ -56,11 +56,12 @@ function mounter(managers, rootNode) {
                 }
             });
             Object.freeze(node);
-            queue.push(...chunk);
-            events.emit("ONE_NODE_MOUNTED", node, fullPaths);
+            if (chunk.length)
+                queue.push(...chunk);
+            events.emit("NODE_MOUNTED", node, fullPaths);
         }
     }
-    events.emit("END_OF_MOUNTING", rootNode);
+    events.emit("TREE_MOUNTED", rootNode);
     return rootNode;
 }
 ;
