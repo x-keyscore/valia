@@ -43,7 +43,7 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 				}
 			}
 
-			chunk.add({
+			chunk.push({
 				node: criteria.struct[key],
 				partPaths: {
 					explicit: ["struct", key],
@@ -67,9 +67,9 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
-			chunk.addTask({
+			chunk.push({
 				data: data[key],
-				node: criteria.struct[key],
+				node: criteria.struct[key]
 			});
 		}
 

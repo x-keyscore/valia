@@ -7,14 +7,14 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 		empty: false
 	},
 	mount(chunk, criteria) {
-		chunk.add({
+		chunk.push({
 			node: criteria.key,
 			partPaths: {
 				explicit: ["key"],
 				implicit: []
 			}
 		})
-		chunk.add({
+		chunk.push({
 			node: criteria.value,
 			partPaths: {
 				explicit: ["value"],
@@ -43,16 +43,13 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 
-			chunk.addTask({
+			chunk.push({
 				data: key,
-				node: criteria.key,
+				node: criteria.key
 				
-			});
-
-			chunk.addTask({
+			}, {
 				data: value[key],
-				node: criteria.value,
-				
+				node: criteria.value
 			});
 		}
 

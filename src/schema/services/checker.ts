@@ -1,13 +1,13 @@
-import type { PathSegments, CheckingTask, CheckerReject, CheckingTaskHooks, CheckingTaskCallbacks } from "./types";
+import type { PathSegments, CheckTask, CheckChunk, CheckReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
 
-function reject(
+function makeReject(
 	code: string,
 	node: MountedCriteria,
-	path: PathSegments,
-): CheckerReject {
+	path: PathSegments
+): CheckReject {
 	return ({
 		code,
 		path,
@@ -17,44 +17,47 @@ function reject(
 	});
 }
 
-export class CheckingChunk extends Array<CheckingTask> {
-	constructor(
-		public queue: CheckingTask[],
-		public owner: CheckingTask
-	) {
+export class CheckingQueue extends Array<CheckTask> {
+	constructor(rootNode: MountedCriteria, rootData: unknown) { 
 		super();
-	}
-
-	addTask(
-		task: {
-			data: unknown;
-			node: MountedCriteria;
-			hooks?: CheckingTaskCallbacks
-		}
-	) {
-		const partPaths = task.node[nodeSymbol].partPaths;
-		let branchHooks = this.owner.branchHooks;
-
-		if (task.hooks && Object.keys(task.hooks)) {
-			const hooks = {
-				owner: this.owner,
-				callbacks: task.hooks,
-				awaitTasks: 0,
-				resetIndex: this.queue.length - 1
-			}
-
-			branchHooks = branchHooks ? branchHooks.concat(hooks) : [hooks];
-		}
 
 		this.push({
-			data: task.data,
-			node: task.node,
-			fullPaths: {
-				explicit: this.owner.fullPaths.explicit.concat(partPaths.explicit),
-				implicit: this.owner.fullPaths.implicit.concat(partPaths.implicit)
-			},
-			branchHooks
-		});
+			data: rootData,
+			node: rootNode,
+			fullPaths: { explicit: [], implicit: [] }
+		})
+	}
+
+	pushChunk(
+		owner: CheckTask,
+		chunk: CheckChunk
+	) {
+		for (let i = 0; i < chunk.length; i++) {
+			const task = chunk[i];
+			const partPaths = task.node[nodeSymbol].partPaths;
+			let listHooks = owner.listHooks;
+
+			if (task.hooks) {
+				const hooks = {
+					owner,
+					callbacks: task.hooks,
+					awaitTasks: 0,
+					resetIndex: this.length - 1
+				}
+	
+				listHooks = listHooks ? listHooks.concat(hooks) : [hooks];
+			}
+
+			this.push({
+				data: task.data,
+				node: task.node,
+				fullPaths: {
+					explicit: owner.fullPaths.explicit.concat(partPaths.explicit),
+					implicit: owner.fullPaths.implicit.concat(partPaths.implicit)
+				},
+				listHooks
+			});
+		}
 	}
 }
 
@@ -62,19 +65,15 @@ export function checker(
 	managers: SchemaInstance['managers'],
 	rootNode: MountedCriteria,
 	rootData: unknown
-): CheckerReject | null {
+): CheckReject | null {
 	const formats = managers.formats;
 	const events = managers.events;
-	const queue: CheckingTask[] = [{
-		data: rootData,
-		node: rootNode,
-		fullPaths: { explicit: [], implicit: [] }
-	}];
+	const queue = new CheckingQueue(rootNode, rootData);
 
 	while (queue.length) {
 		const task = queue.pop()!;
-		const chunk = new CheckingChunk(queue, task);
-		const { data, node, fullPaths, branchHooks } = task;
+		const { data, node, fullPaths, listHooks } = task;
+		const chunk: CheckChunk = [];
 
 		let code = null;
 		if (data === null) {
@@ -89,12 +88,19 @@ export function checker(
 			code = format.check(chunk, node, data);
 		}
 
+		if (listHooks) {
+			for (const hooks of listHooks) {
+				hooks.awaitTasks += chunk.length - 1;
+				
+			}
+		} 
+		
 		if (code) {
-			return (reject(code, node, fullPaths));
+			return (makeReject(code, node, fullPaths));
 		}
 
 		if (chunk.length) {
-			queue.push(...chunk);
+			queue.pushChunk(task, chunk);
 		}
 	}
 

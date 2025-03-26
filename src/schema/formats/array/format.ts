@@ -7,7 +7,7 @@ export const ArrayFormat: Format< ArraySetableCriteria> = {
 		empty: true
 	},
 	mount(chunk, criteria) {
-		chunk.add({
+		chunk.push({
 			node: criteria.item,
 			partPaths: {
 				explicit: ["item"],
@@ -33,10 +33,9 @@ export const ArrayFormat: Format< ArraySetableCriteria> = {
 		}
 
 		for (let i = 0; i < dataLength; i++) {
-			chunk.addTask({
+			chunk.push({
 				data: data[i],
 				node: criteria.item
-				
 			});
 		}
 

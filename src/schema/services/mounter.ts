@@ -36,7 +36,6 @@ export class MountingQueue extends Array<MountingTask> {
 				}
 			});
 		}
-		
 	}
 }
 
@@ -69,13 +68,15 @@ export function mounter<T extends SetableCriteria>(
 				...node,
 				[nodeSymbol]: {
 					partPaths,
-					childNodes: new Set(chunk.map((task) => task.node)),
+					childNodes: chunk.map((task) => task.node)
 				}
 			});
 
 			Object.freeze(node);
 
-			if (chunk.length) queue.pushChunk(task, chunk);
+			if (chunk.length) {
+				queue.pushChunk(task, chunk);
+			}
 
 			events.emit(
 				"NODE_MOUNTED",

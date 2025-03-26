@@ -50,30 +50,34 @@ export interface MountingTask {
 export type MountingChunk = {
 	node: SetableCriteria | MountedCriteria;
 	partPaths: PathSegments;
-}[]
+}[];
 
 // CHECKING
 
-export interface CheckingTaskCallbacks {
-	onAccept?(criteria: MountedCriteria): boolean | string;
-	onReject?(criteria: MountedCriteria, code: string): boolean | string;
+export interface CheckTask {
+	data: unknown;
+	node: MountedCriteria;
+	fullPaths: PathSegments;
+	listHooks?: CheckTaskHooks[];
 }
 
-export interface CheckingTaskHooks {
-	owner: CheckingTask;
-	callbacks: CheckingTaskCallbacks;
+export interface CheckTaskHooks {
+	owner: CheckTask;
+	callbacks: {
+		onAccept(criteria: MountedCriteria): boolean | string;
+		onReject(criteria: MountedCriteria, code: string): boolean | string;
+	};
 	awaitTasks: number;
 	resetIndex: number;
 }
 
-export interface CheckingTask {
-	data: unknown;
-	node: MountedCriteria;
-	fullPaths: PathSegments;
-	branchHooks?: CheckingTaskHooks[];
-}
+export type CheckChunk = {
+	data: CheckTask['data'];
+	node: CheckTask['node'];
+	hooks?: CheckTaskHooks['callbacks']
+}[];
 
-export interface CheckerReject {
+export interface CheckReject {
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 

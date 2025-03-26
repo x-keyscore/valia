@@ -13,7 +13,7 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 	},
 	mount(chunk, criteria) {
 		for (let i = 0; i < criteria.union.length; i++) {
-			chunk.add({
+			chunk.push({
 				node: criteria.union[i],
 				partPaths: {
 					explicit: ["union", i],
@@ -26,7 +26,7 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 		const unionLength = criteria.union.length;
 
 		for (let i = 0; i < unionLength; i++) {
-			chunk.addTask({
+			chunk.push({
 				data,
 				node: criteria.union[i],
 				hooks: {

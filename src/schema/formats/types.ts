@@ -1,4 +1,3 @@
-import type { PathSegments, MountingChunk, CheckingChunk, CheckerReject } from "../services";
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
@@ -8,6 +7,7 @@ import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } fr
 import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
+import type { PathSegments, MountingChunk, CheckChunk, CheckReject } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
 
@@ -73,10 +73,7 @@ export type FormatClassicTypesKeys = keyof FormatClassicTypes;
  * @template Guarded Properties that will be added to or override
  * the format criteria after the mounting process.
  */
-export interface GenericTypesTemplate<
-	Mounted,
-	Guarded
-> {
+export interface GenericTypesTemplate<Mounted, Guarded> {
 	mountedCriteria: Mounted;
 	guardedCriteria: Guarded;
 }
@@ -148,10 +145,10 @@ export type Format<
 		criteria: T
 	): void;
     check(
-		chunk: CheckingChunk,
+		chunk: CheckChunk,
         criteria: MountedCriteria<T>,
         value: unknown
-    ): CheckerReject['code'] | null;
+    ): CheckReject['code'] | null;
 } & U;
 
 export type FormatNatives = typeof formatNatives;

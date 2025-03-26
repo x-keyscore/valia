@@ -8,7 +8,7 @@ export const TupleFormat: Format<TupleSetableCriteria> = {
 	},
 	mount(chunk, criteria) {
 		for (let i = 0; i < criteria.tuple.length; i++) {
-			chunk.add({
+			chunk.push({
 				node:  criteria.tuple[i],
 				partPaths: {
 					explicit: ["tuple", i],
@@ -32,7 +32,7 @@ export const TupleFormat: Format<TupleSetableCriteria> = {
 		}
 
 		for (let i = 0; i < dataLength; i++) {
-			chunk.addTask({
+			chunk.push({
 				data: data[i],
 				node: criteria.tuple[i]
 			});
