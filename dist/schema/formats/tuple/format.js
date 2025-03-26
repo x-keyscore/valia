@@ -8,7 +8,7 @@ exports.TupleFormat = {
     },
     mount(chunk, criteria) {
         for (let i = 0; i < criteria.tuple.length; i++) {
-            chunk.add({
+            chunk.push({
                 node: criteria.tuple[i],
                 partPaths: {
                     explicit: ["tuple", i],
@@ -29,7 +29,7 @@ exports.TupleFormat = {
             return ("DATA_SUPERIOR_TUPLE");
         }
         for (let i = 0; i < dataLength; i++) {
-            chunk.addTask({
+            chunk.push({
                 data: data[i],
                 node: criteria.tuple[i]
             });

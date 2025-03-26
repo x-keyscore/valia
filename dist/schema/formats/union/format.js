@@ -7,7 +7,7 @@ exports.UnionFormat = {
     },
     mount(chunk, criteria) {
         for (let i = 0; i < criteria.union.length; i++) {
-            chunk.add({
+            chunk.push({
                 node: criteria.union[i],
                 partPaths: {
                     explicit: ["union", i],
@@ -18,16 +18,32 @@ exports.UnionFormat = {
     },
     check(chunk, criteria, data) {
         const unionLength = criteria.union.length;
+        const ctx = {
+            totalRejected: 0,
+            totalHooked: unionLength,
+        };
         for (let i = 0; i < unionLength; i++) {
-            chunk.addTask({
+            chunk.push({
                 data,
                 node: criteria.union[i],
                 hooks: {
                     onAccept() {
-                        return true;
+                        return ({
+                            action: "RESET",
+                            before: "CHUNK"
+                        });
                     },
                     onReject() {
-                        return true;
+                        ctx.totalRejected++;
+                        if (ctx.totalRejected === ctx.totalHooked) {
+                            return ({
+                                action: "REJECT",
+                                code: "VALUE_UNSATISFIED_UNION"
+                            });
+                        }
+                        return ({
+                            action: "IGNORE"
+                        });
                     }
                 }
             });

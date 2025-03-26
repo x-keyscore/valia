@@ -1,60 +1,104 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CheckingChunk = void 0;
+exports.CheckingQueue = void 0;
 exports.checker = checker;
 const mounter_1 = require("./mounter");
-function reject(code, node, path) {
+function makeReject(code, task) {
     return ({
         code,
-        path,
-        type: node.type,
-        label: node.label,
-        message: node.message
+        path: task.fullPaths,
+        type: task.node.type,
+        label: task.node.label,
+        message: task.node.message
     });
 }
-class CheckingChunk extends Array {
-    constructor(queue, owner) {
+class CheckingQueue extends Array {
+    constructor(rootNode, rootData) {
         super();
-        this.queue = queue;
-        this.owner = owner;
-    }
-    addTask(task) {
-        const partPaths = task.node[mounter_1.nodeSymbol].partPaths;
-        let branchHooks = this.owner.branchHooks;
-        if (task.hooks && Object.keys(task.hooks)) {
-            const hooks = {
-                owner: this.owner,
-                callbacks: task.hooks,
-                awaitTasks: 0,
-                resetIndex: this.queue.length - 1
-            };
-            branchHooks = branchHooks ? branchHooks.concat(hooks) : [hooks];
-        }
         this.push({
-            data: task.data,
-            node: task.node,
-            fullPaths: {
-                explicit: this.owner.fullPaths.explicit.concat(partPaths.explicit),
-                implicit: this.owner.fullPaths.implicit.concat(partPaths.implicit)
-            },
-            branchHooks
-        });
-    }
-}
-exports.CheckingChunk = CheckingChunk;
-function checker(managers, rootNode, rootData) {
-    const formats = managers.formats;
-    const events = managers.events;
-    const queue = [{
             data: rootData,
             node: rootNode,
             fullPaths: { explicit: [], implicit: [] }
-        }];
+        });
+    }
+    pushChunk(sourceTask, chunk) {
+        for (let i = 0; i < chunk.length; i++) {
+            const task = chunk[i];
+            const partPaths = task.node[mounter_1.nodeSymbol].partPaths;
+            let listHooks = sourceTask.listHooks;
+            if (task.hooks) {
+                const hooks = {
+                    sourceTask,
+                    awaitTasks: 0,
+                    queueIndex: {
+                        self: this.length,
+                        chunk: this.length - i
+                    },
+                    callbacks: task.hooks,
+                };
+                if (listHooks) {
+                    listHooks = listHooks.concat(hooks);
+                }
+                else {
+                    listHooks = [hooks];
+                }
+            }
+            this.push({
+                data: task.data,
+                node: task.node,
+                fullPaths: {
+                    explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
+                    implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
+                },
+                listHooks
+            });
+        }
+    }
+    execHooks(code, listHooks, chunkLength) {
+        let reject = null;
+        for (let i = listHooks.length - 1; i >= 0; i--) {
+            const hooks = listHooks[i];
+            // UPDATE AWAITING TASKS
+            hooks.awaitTasks += chunkLength - 1;
+            // RETURN IF TASKS REMAIN
+            if (hooks.awaitTasks)
+                return (null);
+            // EXECUTE HOOKS
+            let claim = null;
+            if (code)
+                claim = hooks.callbacks.onReject(code);
+            else
+                claim = hooks.callbacks.onAccept();
+            if (claim.action === "REJECT") {
+                this.length = hooks.queueIndex.self;
+                code = claim.code;
+                reject = makeReject(code, hooks.sourceTask);
+            }
+            if (claim.action === "IGNORE") {
+                this.length = hooks.queueIndex.self;
+                return (null);
+            }
+            if (claim.action === "RESET") {
+                if (claim.before === "SELF")
+                    this.length = hooks.queueIndex.self;
+                else if (claim.before === "CHUNK")
+                    this.length = hooks.queueIndex.chunk;
+                return (null);
+            }
+        }
+        return (reject);
+    }
+}
+exports.CheckingQueue = CheckingQueue;
+function checker(managers, rootNode, rootData) {
+    const formats = managers.formats;
+    const events = managers.events;
+    const queue = new CheckingQueue(rootNode, rootData);
+    let reject = null;
     while (queue.length) {
         const task = queue.pop();
-        const chunk = new CheckingChunk(queue, task);
-        const { data, node, fullPaths, branchHooks } = task;
-        //console.log(fullPaths.explicit.join("."));
+        const { data, node, listHooks } = task;
+        const chunk = [];
         let code = null;
         if (data === null) {
             if (node.nullable)
@@ -72,40 +116,19 @@ function checker(managers, rootNode, rootData) {
             const format = formats.get(node.type);
             code = format.check(chunk, node, data);
         }
-        if (code) {
-            return (reject(code, node, fullPaths));
+        if (listHooks === null || listHooks === void 0 ? void 0 : listHooks.length) {
+            reject = queue.execHooks(code, listHooks, chunk.length);
+            break;
+        }
+        else if (code) {
+            reject = makeReject(code, task);
+            break;
         }
         if (chunk.length) {
-            queue.push(...chunk);
+            queue.pushChunk(task, chunk);
         }
     }
-    events.emit("TREE_CHECKED", rootNode, null);
-    return (null);
+    events.emit("DATA_CHECKED", rootNode, reject);
+    return (reject);
 }
 ;
-/*
-if (hooks) {
-    const response = hooks.beforeCheck(currNode);
-    if (response === false) continue;
-    if (typeof response === "string") {
-        return(rejection(
-            events,
-            response,
-            hooks.owner.node,
-            hooks.owner.path
-        ));
-    }
-}*/
-/*
-if (hooks) {
-    const response = hooks.afterCheck(currNode, code);
-    if (response === false) continue;
-    if (typeof response === "string") {
-        return(rejection(
-            events,
-            response,
-            hooks.owner.node,
-            hooks.owner.path
-        ));
-    }
-}*/ 

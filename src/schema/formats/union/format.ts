@@ -25,16 +25,33 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 	check(chunk, criteria, data) {
 		const unionLength = criteria.union.length;
 
+		const ctx = {
+			totalRejected: 0,
+			totalHooked: unionLength,
+		}
+
 		for (let i = 0; i < unionLength; i++) {
 			chunk.push({
 				data,
 				node: criteria.union[i],
 				hooks: {
 					onAccept() {
-						return true
+						return ({
+							action: "RESET",
+							before: "CHUNK"
+						})
 					},
 					onReject() {
-						return true
+						ctx.totalRejected++;
+						if (ctx.totalRejected === ctx.totalHooked) {
+							return ({
+								action: "REJECT",
+								code: "VALUE_UNSATISFIED_UNION"
+							});
+						}
+						return ({
+							action: "IGNORE"
+						});
 					}
 				}
 			});

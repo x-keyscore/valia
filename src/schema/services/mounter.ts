@@ -1,5 +1,5 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { PathSegments, MountingTask, MountingChunk } from "./types";
+import type { MountingTask, MountingChunk } from "./types";
 import type { SchemaInstance } from "../types";
 import { staticDefaultCriteria } from "../formats";
 
@@ -24,15 +24,17 @@ export class MountingQueue extends Array<MountingTask> {
 		owner: MountingTask,
 		chunk: MountingChunk
 	) {
+		const { fullPaths } = owner;
+
 		for (let i = 0; i < chunk.length; i++) {
-			const task = chunk[i];
+			const { node, partPaths } = chunk[i];
 
 			this.push({
-				node: task.node,
-				partPaths: task.partPaths,
+				node,
+				partPaths,
 				fullPaths: {
-					explicit: owner.fullPaths.explicit.concat(task.partPaths.explicit),
-					implicit: owner.fullPaths.implicit.concat(task.partPaths.implicit)
+					explicit: fullPaths.explicit.concat(partPaths.explicit),
+					implicit: fullPaths.implicit.concat(partPaths.implicit)
 				}
 			});
 		}
@@ -48,8 +50,8 @@ export function mounter<T extends SetableCriteria>(
 	const queue = new MountingQueue(rootNode);
 
 	while (queue.length) {
-		const task = queue.pop()!;
-		const { node, partPaths, fullPaths } = task;
+		const currentTask = queue.pop()!;
+		const { node, partPaths, fullPaths } = currentTask;
 
 		if (hasNodeSymbol(node)) {
 			node[nodeSymbol] = {
@@ -71,11 +73,10 @@ export function mounter<T extends SetableCriteria>(
 					childNodes: chunk.map((task) => task.node)
 				}
 			});
-
 			Object.freeze(node);
 
 			if (chunk.length) {
-				queue.pushChunk(task, chunk);
+				queue.pushChunk(currentTask, chunk);
 			}
 
 			events.emit(

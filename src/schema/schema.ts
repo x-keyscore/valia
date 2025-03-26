@@ -16,7 +16,6 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 
 	protected initiate(definedCriteria: T) {
 		this.managers.formats.set(formatNatives);
-
 		const clonedCriteria = cloner(definedCriteria);
 		this.mountedCriteria = mounter(this.managers, clonedCriteria);
 	}
@@ -38,6 +37,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 		if (!this.mountedCriteria) {
 			throw new Issue("Schema", "Criteria are not initialized.");
 		}
+
 		return (this.mountedCriteria);
 	}
 
@@ -52,6 +52,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 	 */
 	validate(data: unknown): data is GuardedCriteria<T> {
 		const reject = checker(this.managers, this.criteria, data);
+
 		return (!reject);
 	}
 
@@ -66,9 +67,8 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 	 */
 	evaluate(data: unknown) {
 		const reject = checker(this.managers, this.criteria, data);
-		if (reject) {
-			return ({ reject, data: null });
-		}
+
+		if (reject) return ({ reject, data: null });
 		return ({ reject: null, data: data as GuardedCriteria<T> });
 	}
 }

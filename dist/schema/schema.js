@@ -60,9 +60,8 @@ class Schema {
      */
     evaluate(data) {
         const reject = (0, services_1.checker)(this.managers, this.criteria, data);
-        if (reject) {
+        if (reject)
             return ({ reject, data: null });
-        }
         return ({ reject: null, data: data });
     }
 }

@@ -36,7 +36,7 @@ export declare class Schema<const T extends SetableCriteria = SetableCriteria<ke
      * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
      */
     evaluate(data: unknown): {
-        reject: import("./services").CheckerReject;
+        reject: import("./services").CheckingReject;
         data: null;
     } | {
         reject: null;

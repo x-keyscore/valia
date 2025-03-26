@@ -1,23 +1,22 @@
-import type { PathSegments, CheckTask, CheckChunk, CheckReject } from "./types";
+import type { CheckingTask, CheckingHooks, CheckingChunk, CheckingReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
 
 function makeReject(
-	code: string,
-	node: MountedCriteria,
-	path: PathSegments
-): CheckReject {
+	task: CheckingTask,
+	code: string
+): CheckingReject {
 	return ({
 		code,
-		path,
-		type: node.type,
-		label: node.label,
-		message: node.message
+		path: task.fullPaths,
+		type: task.node.type,
+		label: task.node.label,
+		message: task.node.message
 	});
 }
 
-export class CheckingQueue extends Array<CheckTask> {
+export class CheckingQueue extends Array<CheckingTask> {
 	constructor(rootNode: MountedCriteria, rootData: unknown) { 
 		super();
 
@@ -29,35 +28,85 @@ export class CheckingQueue extends Array<CheckTask> {
 	}
 
 	pushChunk(
-		owner: CheckTask,
-		chunk: CheckChunk
+		sourceTask: CheckingTask,
+		chunk: CheckingChunk
 	) {
 		for (let i = 0; i < chunk.length; i++) {
 			const task = chunk[i];
 			const partPaths = task.node[nodeSymbol].partPaths;
-			let listHooks = owner.listHooks;
+			let listHooks = sourceTask.listHooks;
 
 			if (task.hooks) {
 				const hooks = {
-					owner,
-					callbacks: task.hooks,
+					sourceTask,
 					awaitTasks: 0,
-					resetIndex: this.length - 1
+					queueIndex : {
+						self: this.length,
+						chunk: this.length - i
+					},
+					callbacks: task.hooks,
 				}
 	
-				listHooks = listHooks ? listHooks.concat(hooks) : [hooks];
+				if (listHooks) {
+					listHooks = listHooks.concat(hooks);
+				} else {
+					listHooks = [hooks];
+				}
 			}
 
 			this.push({
 				data: task.data,
 				node: task.node,
 				fullPaths: {
-					explicit: owner.fullPaths.explicit.concat(partPaths.explicit),
-					implicit: owner.fullPaths.implicit.concat(partPaths.implicit)
+					explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
+					implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
 				},
 				listHooks
 			});
 		}
+	}
+
+	execHooks(
+		code: string | null,
+		listHooks: CheckingHooks[],
+		chunkLength: number
+	) {
+		let reject = null;
+
+		for (let i = listHooks.length - 1; i >= 0; i--) {
+			const hooks = listHooks[i];
+
+			// UPDATE AWAITING TASKS
+			hooks.awaitTasks += chunkLength - 1;
+
+			// RETURN IF TASKS REMAIN
+			if (hooks.awaitTasks) return (null);
+
+			// EXECUTE HOOKS
+			let claim = null;
+			if (code) claim = hooks.callbacks.onReject(code);
+			else claim = hooks.callbacks.onAccept();
+
+			if (claim.action === "REJECT") {
+				this.length = hooks.queueIndex.self;
+				code = claim.code;
+				reject = makeReject(hooks.sourceTask, code);
+			}
+
+			if (claim.action === "IGNORE") {
+				this.length = hooks.queueIndex.self;
+				return (null);
+			}
+
+			if (claim.action === "RESET") {
+				if (claim.before === "SELF") this.length = hooks.queueIndex.self;
+				else if (claim.before === "CHUNK") this.length = hooks.queueIndex.chunk;
+	
+				return (null);
+			}
+		}
+
+		return (reject);
 	}
 }
 
@@ -65,15 +114,16 @@ export function checker(
 	managers: SchemaInstance['managers'],
 	rootNode: MountedCriteria,
 	rootData: unknown
-): CheckReject | null {
+): CheckingReject | null {
 	const formats = managers.formats;
 	const events = managers.events;
 	const queue = new CheckingQueue(rootNode, rootData);
+	let reject = null;
 
 	while (queue.length) {
-		const task = queue.pop()!;
-		const { data, node, fullPaths, listHooks } = task;
-		const chunk: CheckChunk = [];
+		const currentTask = queue.pop()!;
+		const { data, node, listHooks } = currentTask;
+		const chunk: CheckingChunk = [];
 
 		let code = null;
 		if (data === null) {
@@ -88,51 +138,20 @@ export function checker(
 			code = format.check(chunk, node, data);
 		}
 
-		if (listHooks) {
-			for (const hooks of listHooks) {
-				hooks.awaitTasks += chunk.length - 1;
-				
-			}
-		} 
-		
-		if (code) {
-			return (makeReject(code, node, fullPaths));
+		if (listHooks?.length) {
+			reject = queue.execHooks(code, listHooks, chunk.length);
+			break;
+		} else if (code) {
+			reject = makeReject(currentTask, code);
+			break;
 		}
 
 		if (chunk.length) {
-			queue.pushChunk(task, chunk);
+			queue.pushChunk(currentTask, chunk);
 		}
 	}
 
-	events.emit("TREE_CHECKED", rootNode, null);
+	events.emit("DATA_CHECKED", rootNode, rootData, reject);
 
-	return (null);
+	return (reject);
 };
-
-/*
-if (hooks) {
-	const response = hooks.beforeCheck(currNode);
-	if (response === false) continue;
-	if (typeof response === "string") {
-		return(rejection(
-			events,
-			response,
-			hooks.owner.node,
-			hooks.owner.path
-		));
-	}
-}*/
-
-/*
-if (hooks) {
-	const response = hooks.afterCheck(currNode, code);
-	if (response === false) continue;
-	if (typeof response === "string") {
-		return(rejection(
-			events,
-			response,
-			hooks.owner.node,
-			hooks.owner.path
-		));
-	}
-}*/

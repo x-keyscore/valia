@@ -1,4 +1,4 @@
-export type { PathSegments, MountingTask, CheckingTask, CheckerReject } from './types';
-export { mounter, MountingChunk, nodeSymbol, hasNodeSymbol } from "./mounter";
-export { checker, CheckingChunk } from "./checker";
+export type { PathSegments, MountingTask, MountingChunk, CheckingTask, CheckingChunk, CheckingReject } from './types';
+export { mounter, nodeSymbol, hasNodeSymbol } from "./mounter";
+export { checker } from "./checker";
 export { cloner } from "./cloner";

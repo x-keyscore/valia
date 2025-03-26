@@ -27,7 +27,7 @@ exports.StructFormat = {
                     struct: criteria.struct[key]
                 };
             }
-            chunk.add({
+            chunk.push({
                 node: criteria.struct[key],
                 partPaths: {
                     explicit: ["struct", key],
@@ -49,9 +49,9 @@ exports.StructFormat = {
         }
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            chunk.addTask({
+            chunk.push({
                 data: data[key],
-                node: criteria.struct[key],
+                node: criteria.struct[key]
             });
         }
         return (null);

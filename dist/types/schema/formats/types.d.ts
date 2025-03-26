@@ -1,4 +1,3 @@
-import type { PathSegments, MountingChunk, CheckingChunk, CheckerReject } from "../services";
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
@@ -8,6 +7,7 @@ import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } fr
 import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
+import type { PathSegments, MountingChunk, CheckingChunk, CheckingReject } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
 export interface SetableCriteriaBase {
@@ -95,6 +95,6 @@ export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = Forma
 export type Format<T extends SetableCriteria, U extends Record<string, any> = {}> = {
     defaultCriteria: FormatClassicTypes[T['type']]['defaultCriteria'];
     mount?(chunk: MountingChunk, criteria: T): void;
-    check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): CheckerReject['code'] | null;
+    check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): CheckingReject['code'] | null;
 } & U;
 export type FormatNatives = typeof formatNatives;

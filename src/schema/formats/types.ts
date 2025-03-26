@@ -7,7 +7,7 @@ import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } fr
 import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
-import type { PathSegments, MountingChunk, CheckChunk, CheckReject } from "../services";
+import type { PathSegments, MountingChunk, CheckingChunk, CheckingReject } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
 
@@ -145,10 +145,10 @@ export type Format<
 		criteria: T
 	): void;
     check(
-		chunk: CheckChunk,
+		chunk: CheckingChunk,
         criteria: MountedCriteria<T>,
         value: unknown
-    ): CheckReject['code'] | null;
+    ): CheckingReject['code'] | null;
 } & U;
 
 export type FormatNatives = typeof formatNatives;

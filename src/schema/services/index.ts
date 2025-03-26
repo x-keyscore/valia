@@ -2,9 +2,9 @@ export type {
     PathSegments,
     MountingTask,
     MountingChunk,
-    CheckTask,
-    CheckChunk,
-    CheckReject
+    CheckingTask,
+    CheckingChunk,
+    CheckingReject
 } from './types';
 
 export { mounter, nodeSymbol, hasNodeSymbol } from "./mounter";

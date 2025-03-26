@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MountingChunk = exports.nodeSymbol = void 0;
+exports.MountingQueue = exports.nodeSymbol = void 0;
 exports.hasNodeSymbol = hasNodeSymbol;
 exports.mounter = mounter;
 const formats_1 = require("../formats");
@@ -8,43 +8,47 @@ exports.nodeSymbol = Symbol('internal');
 function hasNodeSymbol(obj) {
     return (typeof obj === "object" && Reflect.has(obj, exports.nodeSymbol));
 }
-class MountingChunk extends Array {
-    constructor(paths) {
+class MountingQueue extends Array {
+    constructor(rootNode) {
         super();
-        this.paths = paths;
-    }
-    add(task) {
         this.push({
-            node: task.node,
-            partPaths: task.partPaths,
-            fullPaths: {
-                explicit: this.paths.explicit.concat(task.partPaths.explicit),
-                implicit: this.paths.implicit.concat(task.partPaths.implicit)
-            }
+            node: rootNode,
+            partPaths: { explicit: [], implicit: [] },
+            fullPaths: { explicit: [], implicit: [] }
         });
     }
+    pushChunk(owner, chunk) {
+        for (let i = 0; i < chunk.length; i++) {
+            const task = chunk[i];
+            this.push({
+                node: task.node,
+                partPaths: task.partPaths,
+                fullPaths: {
+                    explicit: owner.fullPaths.explicit.concat(task.partPaths.explicit),
+                    implicit: owner.fullPaths.implicit.concat(task.partPaths.implicit)
+                }
+            });
+        }
+    }
 }
-exports.MountingChunk = MountingChunk;
+exports.MountingQueue = MountingQueue;
 function mounter(managers, rootNode) {
     var _a;
     const formats = managers.formats;
     const events = managers.events;
-    const queue = [{
-            node: rootNode,
-            partPaths: { explicit: [], implicit: [] },
-            fullPaths: { explicit: [], implicit: [] }
-        }];
+    const queue = new MountingQueue(rootNode);
     while (queue.length) {
-        const { node, partPaths, fullPaths } = queue.pop();
+        const task = queue.pop();
+        const { node, partPaths, fullPaths } = task;
         if (hasNodeSymbol(node)) {
             node[exports.nodeSymbol] = {
-                partPaths,
-                childNodes: node[exports.nodeSymbol].childNodes,
+                ...node[exports.nodeSymbol],
+                partPaths
             };
         }
         else {
             const format = formats.get(node.type);
-            const chunk = new MountingChunk(fullPaths);
+            const chunk = [];
             (_a = format.mount) === null || _a === void 0 ? void 0 : _a.call(format, chunk, node);
             Object.assign(node, {
                 ...formats_1.staticDefaultCriteria,
@@ -52,12 +56,13 @@ function mounter(managers, rootNode) {
                 ...node,
                 [exports.nodeSymbol]: {
                     partPaths,
-                    childNodes: new Set(chunk.map((task) => task.node)),
+                    childNodes: chunk.map((task) => task.node)
                 }
             });
             Object.freeze(node);
-            if (chunk.length)
-                queue.push(...chunk);
+            if (chunk.length) {
+                queue.pushChunk(task, chunk);
+            }
             events.emit("NODE_MOUNTED", node, fullPaths);
         }
     }

@@ -39,7 +39,7 @@ export interface PathSegments {
 	implicit: PathSegmentsImplicit;
 }
 
-// MOUNTING
+// MOUNTER
 
 export interface MountingTask {
 	node: SetableCriteria | MountedCriteria;
@@ -52,32 +52,48 @@ export type MountingChunk = {
 	partPaths: PathSegments;
 }[];
 
-// CHECKING
+// CHECKER
 
-export interface CheckTask {
+export interface CheckingHooks {
+	sourceTask: CheckingTask;
+	awaitTasks: number;
+	queueIndex: {
+		self: number;
+		chunk: number;
+	};
+	callbacks: {
+		onAccept(): {
+			action: "NORMAL";
+		} | {
+			action: "REJECT";
+			code: string;
+		} | {
+			action: "RESET";
+			before: "SELF" | "CHUNK";
+		};
+		onReject(code: string): {
+			action: "NORMAL" | "IGNORE";
+		} | {
+			action: "REJECT";
+			code: string;
+		};
+	};
+}
+
+export interface CheckingTask {
 	data: unknown;
 	node: MountedCriteria;
 	fullPaths: PathSegments;
-	listHooks?: CheckTaskHooks[];
+	listHooks?: CheckingHooks[];
 }
 
-export interface CheckTaskHooks {
-	owner: CheckTask;
-	callbacks: {
-		onAccept(criteria: MountedCriteria): boolean | string;
-		onReject(criteria: MountedCriteria, code: string): boolean | string;
-	};
-	awaitTasks: number;
-	resetIndex: number;
-}
-
-export type CheckChunk = {
-	data: CheckTask['data'];
-	node: CheckTask['node'];
-	hooks?: CheckTaskHooks['callbacks']
+export type CheckingChunk = {
+	data: CheckingTask['data'];
+	node: CheckingTask['node'];
+	hooks?: CheckingHooks['callbacks']
 }[];
 
-export interface CheckReject {
+export interface CheckingReject {
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 
@@ -88,8 +104,8 @@ export interface CheckReject {
 	 * `<DETAIL>`: A specific description of the error, such as `NOT_STRING`, `MISSING_KEY`, etc.
 	 */
 	code: string;
-	path: PathSegments;
 	type: string;
+	path: PathSegments;
 	label: string | undefined;
 	message: string | undefined;
 }
