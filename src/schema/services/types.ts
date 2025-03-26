@@ -47,6 +47,11 @@ export interface MountingTask {
 	fullPaths: PathSegments;
 }
 
+export type MountingChunk = {
+	node: SetableCriteria | MountedCriteria;
+	partPaths: PathSegments;
+}[]
+
 // CHECKING
 
 export interface CheckingTaskCallbacks {
