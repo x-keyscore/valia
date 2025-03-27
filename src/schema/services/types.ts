@@ -54,30 +54,23 @@ export type MountingChunk = {
 
 // CHECKER
 
-export type CheckingHooksCallbacks = {
-	action: "ACCEPT";
-} | {
-	action: "REJECT";
-	code: string;
-};
-
 export interface CheckingHooks {
 	sourceTask: CheckingTask;
-	awaitTasks: number;
 	queueIndex: {
-		self: number;
 		chunk: number;
+		branch: number;
 	};
 	callbacks: {
 		onAccept(): {
-			action: "ACCEPT";
+			action: "BYPASS";
+			target: "CHUNK";
 		} | {
 			action: "REJECT";
 			code: string;
 		};
 		onReject(code: string): {
-			action: "ACCEPT";
-			that: "CHUNK" | "SELF";
+			action: "BYPASS";
+			target: "CHUNK" | "BRANCH";
 		} | {
 			action: "REJECT";
 			code: string;

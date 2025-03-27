@@ -1,5 +1,6 @@
 import type { UnionSetableCriteria } from "./types";
 import type { Format } from "../types";
+import { CheckingHooks, CheckingHooksCallbacks } from "../../services/types";
 
 interface HooksCustomProperties {
 	totalRejected: number;
@@ -30,30 +31,34 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 			totalHooked: unionLength,
 		}
 
+		const hooks: CheckingHooks['callbacks'] = {
+			totalHooked: 0,
+			onAccept() {
+				return ({
+					action: "BYPASS",
+					target: "CHUNK"
+				});
+			},
+			onReject() {
+				ctx.totalRejected++;
+				if (ctx.totalRejected === ctx.totalHooked) {
+					return ({
+						action: "REJECT",
+						code: "DATA_UNSATISFIED_UNION"
+					});
+				}
+				return ({
+					action: "BYPASS",
+					target: "BRANCH"
+				});
+			}
+		};
+
 		for (let i = 0; i < unionLength; i++) {
 			chunk.push({
 				data,
 				node: criteria.union[i],
-				hooks: {
-					onAccept() {
-						return ({
-							action: "DEFAULT",
-							reset: "CHUNK"
-						})
-					},
-					onReject() {
-						ctx.totalRejected++;
-						if (ctx.totalRejected === ctx.totalHooked) {
-							return ({
-								action: "REJECT",
-								code: "DATA_UNSATISFIED_UNION"
-							});
-						}
-						return ({
-							action: "IGNORE"
-						});
-					}
-				}
+				hooks: 
 			});
 		}
 

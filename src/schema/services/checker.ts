@@ -41,7 +41,7 @@ export class CheckingQueue extends Array<CheckingTask> {
 					sourceTask,
 					awaitTasks: 0,
 					queueIndex : {
-						self: this.length,
+						branch: this.length,
 						chunk: this.length - i
 					},
 					callbacks: task.hooks,
@@ -67,42 +67,39 @@ export class CheckingQueue extends Array<CheckingTask> {
 	}
 
 	execHooks(
-		code: string | null,
 		listHooks: CheckingHooks[],
-		chunkLength: number
+		code: string | null
 	) {
 		let reject = null;
 
 		for (let i = listHooks.length - 1; i >= 0; i--) {
 			const hooks = listHooks[i];
 
-			// UPDATE AWAITING TASKS
-			hooks.awaitTasks += chunkLength - 1;
-
-			// RETURN IF TASKS REMAIN
-			if (hooks.awaitTasks) return (null);
-
-			// EXECUTE HOOKS
+			// EXECUTE CALLBACKS
 			let claim = null;
-			if (code) claim = hooks.callbacks.onReject(code);
-			else claim = hooks.callbacks.onAccept();
+			if (code) {
+				claim = hooks.callbacks.onReject(code);
+			}
+			else if (this.length === hooks.queueIndex.branch) {
+				claim = hooks.callbacks.onAccept();
+			}
+			else {
+				return (null);
+			}
+
+			if (claim.action === "BYPASS") {
+				if (claim.target === "CHUNK") {
+					this.length = hooks.queueIndex.chunk;
+				} else if (claim.target === "BRANCH") {
+					this.length = hooks.queueIndex.branch;
+				}
+				return (null);
+			}
 
 			if (claim.action === "REJECT") {
-				this.length = hooks.queueIndex.self;
+				this.length = hooks.queueIndex.branch;
 				code = claim.code;
 				reject = makeReject(hooks.sourceTask, code);
-			}
-
-			if (claim.action === "IGNORE") {
-				this.length = hooks.queueIndex.self;
-				return (null);
-			}
-
-			if (claim.erase === "") {
-				if (claim.before === "SELF") this.length = hooks.queueIndex.self;
-				else if (claim.before === "CHUNK") this.length = hooks.queueIndex.chunk;
-	
-				return (null);
 			}
 		}
 
@@ -138,12 +135,10 @@ export function checker(
 			code = format.check(chunk, node, data);
 		}
 
-		if (listHooks?.length) {
-			reject = queue.execHooks(code, listHooks, chunk.length);
-			break;
+		if (listHooks) {
+			reject = queue.execHooks(listHooks, code);
 		} else if (code) {
 			reject = makeReject(currentTask, code);
-			break;
 		}
 
 		if (chunk.length) {
