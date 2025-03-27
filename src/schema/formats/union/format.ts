@@ -37,8 +37,8 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 				hooks: {
 					onAccept() {
 						return ({
-							action: "RESET",
-							before: "CHUNK"
+							action: "DEFAULT",
+							reset: "CHUNK"
 						})
 					},
 					onReject() {
@@ -46,7 +46,7 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 						if (ctx.totalRejected === ctx.totalHooked) {
 							return ({
 								action: "REJECT",
-								code: "VALUE_UNSATISFIED_UNION"
+								code: "DATA_UNSATISFIED_UNION"
 							});
 						}
 						return ({

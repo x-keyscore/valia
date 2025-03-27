@@ -98,7 +98,7 @@ export class CheckingQueue extends Array<CheckingTask> {
 				return (null);
 			}
 
-			if (claim.action === "RESET") {
+			if (claim.erase === "") {
 				if (claim.before === "SELF") this.length = hooks.queueIndex.self;
 				else if (claim.before === "CHUNK") this.length = hooks.queueIndex.chunk;
 	

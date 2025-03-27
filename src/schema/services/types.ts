@@ -54,6 +54,13 @@ export type MountingChunk = {
 
 // CHECKER
 
+export type CheckingHooksCallbacks = {
+	action: "ACCEPT";
+} | {
+	action: "REJECT";
+	code: string;
+};
+
 export interface CheckingHooks {
 	sourceTask: CheckingTask;
 	awaitTasks: number;
@@ -63,16 +70,14 @@ export interface CheckingHooks {
 	};
 	callbacks: {
 		onAccept(): {
-			action: "NORMAL";
+			action: "ACCEPT";
 		} | {
 			action: "REJECT";
 			code: string;
-		} | {
-			action: "RESET";
-			before: "SELF" | "CHUNK";
 		};
 		onReject(code: string): {
-			action: "NORMAL" | "IGNORE";
+			action: "ACCEPT";
+			that: "CHUNK" | "SELF";
 		} | {
 			action: "REJECT";
 			code: string;
