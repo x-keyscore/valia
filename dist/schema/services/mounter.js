@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MountingQueue = exports.nodeSymbol = void 0;
+exports.MountingStack = exports.nodeSymbol = void 0;
 exports.hasNodeSymbol = hasNodeSymbol;
 exports.mounter = mounter;
 const formats_1 = require("../formats");
@@ -8,7 +8,7 @@ exports.nodeSymbol = Symbol('internal');
 function hasNodeSymbol(obj) {
     return (typeof obj === "object" && Reflect.has(obj, exports.nodeSymbol));
 }
-class MountingQueue extends Array {
+class MountingStack extends Array {
     constructor(rootNode) {
         super();
         this.push({
@@ -17,29 +17,29 @@ class MountingQueue extends Array {
             fullPaths: { explicit: [], implicit: [] }
         });
     }
-    pushChunk(owner, chunk) {
+    addChunk(owner, chunk) {
+        const { fullPaths } = owner;
         for (let i = 0; i < chunk.length; i++) {
-            const task = chunk[i];
+            const { node, partPaths } = chunk[i];
             this.push({
-                node: task.node,
-                partPaths: task.partPaths,
+                node,
+                partPaths,
                 fullPaths: {
-                    explicit: owner.fullPaths.explicit.concat(task.partPaths.explicit),
-                    implicit: owner.fullPaths.implicit.concat(task.partPaths.implicit)
+                    explicit: fullPaths.explicit.concat(partPaths.explicit),
+                    implicit: fullPaths.implicit.concat(partPaths.implicit)
                 }
             });
         }
     }
 }
-exports.MountingQueue = MountingQueue;
+exports.MountingStack = MountingStack;
 function mounter(managers, rootNode) {
     var _a;
-    const formats = managers.formats;
-    const events = managers.events;
-    const queue = new MountingQueue(rootNode);
-    while (queue.length) {
-        const task = queue.pop();
-        const { node, partPaths, fullPaths } = task;
+    const { formats, events } = managers;
+    const stack = new MountingStack(rootNode);
+    while (stack.length) {
+        const currentTask = stack.pop();
+        const { node, partPaths, fullPaths } = currentTask;
         if (hasNodeSymbol(node)) {
             node[exports.nodeSymbol] = {
                 ...node[exports.nodeSymbol],
@@ -55,13 +55,13 @@ function mounter(managers, rootNode) {
                 ...format.defaultCriteria,
                 ...node,
                 [exports.nodeSymbol]: {
-                    partPaths,
-                    childNodes: chunk.map((task) => task.node)
+                    childNodes: chunk.map((task) => task.node),
+                    partPaths
                 }
             });
             Object.freeze(node);
             if (chunk.length) {
-                queue.pushChunk(task, chunk);
+                stack.addChunk(currentTask, chunk);
             }
             events.emit("NODE_MOUNTED", node, fullPaths);
         }

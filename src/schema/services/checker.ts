@@ -1,4 +1,4 @@
-import type { CheckingTask, CheckingHooks, CheckingChunk, CheckingReject } from "./types";
+import type { CheckingTask, CheckingChunk, CheckingReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
@@ -16,93 +16,89 @@ function makeReject(
 	});
 }
 
-export class CheckingQueue extends Array<CheckingTask> {
-	constructor(rootNode: MountedCriteria, rootData: unknown) { 
-		super();
+export class CheckingStack {
+	tasks: CheckingTask[] = [];
 
-		this.push({
+	constructor(
+		rootNode: MountedCriteria,
+		rootData: unknown
+	) {
+		this.tasks.push({
 			data: rootData,
 			node: rootNode,
 			fullPaths: { explicit: [], implicit: [] }
-		})
+		});
 	}
 
-	pushChunk(
+	addChunk(
 		sourceTask: CheckingTask,
 		chunk: CheckingChunk
 	) {
 		for (let i = 0; i < chunk.length; i++) {
-			const task = chunk[i];
-			const partPaths = task.node[nodeSymbol].partPaths;
-			let listHooks = sourceTask.listHooks;
+			const currentTask = chunk[i];
+			const partPaths = currentTask.node[nodeSymbol].partPaths;
+			let stepHooks = sourceTask.stepHooks;
 
-			if (task.hooks) {
+			if (currentTask.hooks) {
 				const hooks = {
-					sourceTask,
-					awaitTasks: 0,
-					queueIndex : {
-						branch: this.length,
-						chunk: this.length - i
+					owner: sourceTask,
+					index: {
+						chunk: this.tasks.length - i,
+						branch: this.tasks.length
 					},
-					callbacks: task.hooks,
+					...currentTask.hooks
 				}
-	
-				if (listHooks) {
-					listHooks = listHooks.concat(hooks);
-				} else {
-					listHooks = [hooks];
-				}
+
+				stepHooks = stepHooks ? stepHooks.concat(hooks) : [hooks];
 			}
 
-			this.push({
-				data: task.data,
-				node: task.node,
+			this.tasks.push({
+				data: currentTask.data,
+				node: currentTask.node,
 				fullPaths: {
 					explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
 					implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
 				},
-				listHooks
+				stepHooks
 			});
 		}
 	}
 
-	execHooks(
-		listHooks: CheckingHooks[],
-		code: string | null
+	runHooks(
+		currentTask: CheckingTask,
+		reject: CheckingReject | null
 	) {
-		let reject = null;
+		const stepHooks = currentTask.stepHooks;
+		if (!stepHooks) return (null);
 
-		for (let i = listHooks.length - 1; i >= 0; i--) {
-			const hooks = listHooks[i];
-
-			// EXECUTE CALLBACKS
-			let claim = null;
-			if (code) {
-				claim = hooks.callbacks.onReject(code);
-			}
-			else if (this.length === hooks.queueIndex.branch) {
-				claim = hooks.callbacks.onAccept();
-			}
-			else {
-				return (null);
-			}
-
-			if (claim.action === "BYPASS") {
-				if (claim.target === "CHUNK") {
-					this.length = hooks.queueIndex.chunk;
-				} else if (claim.target === "BRANCH") {
-					this.length = hooks.queueIndex.branch;
-				}
-				return (null);
-			}
-
-			if (claim.action === "REJECT") {
-				this.length = hooks.queueIndex.branch;
-				code = claim.code;
-				reject = makeReject(hooks.sourceTask, code);
-			}
+		const lastHooks = stepHooks[stepHooks.length - 1];
+		if (!reject && lastHooks.index.branch !== this.tasks.length) {
+			return (null);
 		}
 
+		for (let i = stepHooks.length - 1; i >= 0; i--) {
+			const hooks = stepHooks[i];
+
+			const claim = reject ? hooks.onReject(reject) : hooks.onAccept();
+
+			switch (claim.action) {
+				case "DEFAULT":
+					this.tasks.length = hooks.index.branch;
+					if (!reject) return (null);
+					continue;
+				case "REJECT":
+					this.tasks.length = hooks.index.branch;
+					reject = makeReject(hooks.owner, claim.code);
+					continue;
+				case "IGNORE":
+					if (claim?.target === "CHUNK") {
+						this.tasks.length = hooks.index.chunk;
+					} else {
+						this.tasks.length = hooks.index.branch;
+					}
+					return (null);
+			}
+		}
 		return (reject);
 	}
 }
@@ -112,38 +108,32 @@ export function checker(
 	rootNode: MountedCriteria,
 	rootData: unknown
 ): CheckingReject | null {
-	const formats = managers.formats;
-	const events = managers.events;
-	const queue = new CheckingQueue(rootNode, rootData);
-	let reject = null;
+	const { formats, events } = managers;
+	const stack = new CheckingStack(rootNode, rootData);
 
-	while (queue.length) {
-		const currentTask = queue.pop()!;
-		const { data, node, listHooks } = currentTask;
+	let reject = null;
+	while (stack.tasks.length) {
+		const currentTask = stack.tasks.pop()!;
+		const { data, node, stepHooks } = currentTask;
 		const chunk: CheckingChunk = [];
 
 		let code = null;
 		if (data === null) {
-			if (node.nullable) code = null;
-			else code = "TYPE_NULL";
-		} else if (data === undefined) {
-			if (node.undefinable) code = null;
-			else code = "TYPE_UNDEFINED";
-		} else {
+			if (!node.nullable) code = "TYPE_NULL";
+		}
+		else if (data === undefined) {
+			if (!node.undefinable) code = "TYPE_UNDEFINED";
+		}
+		else {
 			const format = formats.get(node.type);
-
 			code = format.check(chunk, node, data);
 		}
 
-		if (listHooks) {
-			reject = queue.execHooks(listHooks, code);
-		} else if (code) {
-			reject = makeReject(currentTask, code);
-		}
+		if (code) reject = makeReject(currentTask, code);
+		else if (chunk.length) stack.addChunk(currentTask, chunk);
+		if (stepHooks) reject = stack.runHooks(currentTask, reject);
 
-		if (chunk.length) {
-			queue.pushChunk(currentTask, chunk);
-		}
+		if (reject) break;
 	}
 
 	events.emit("DATA_CHECKED", rootNode, rootData, reject);

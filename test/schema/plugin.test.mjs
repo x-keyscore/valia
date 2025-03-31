@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { AbstractPlugin, SchemaPlugins, Issue } from "../../dist/index.js";
+import { AbstractPlugin, SchemaPlugins } from "../../dist/index.js";
 
 describe("Schema global criteria", () => {
     it("schema plugin '1' plugin", () => {

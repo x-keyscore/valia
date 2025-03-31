@@ -8,4 +8,4 @@ import type { SetableCriteria } from "../formats";
  * @param src Source object of the clone
  * @returns Clone of the source object
  */
-export declare function cloner<T extends SetableCriteria>(src: T): T;
+export declare function cloner<T extends SetableCriteria>(rootSrc: T): T;

@@ -4,7 +4,7 @@ exports.RecordFormat = void 0;
 const testers_1 = require("../../../testers");
 exports.RecordFormat = {
     defaultCriteria: {
-        empty: false
+        empty: true
     },
     mount(chunk, criteria) {
         chunk.push({
@@ -22,11 +22,11 @@ exports.RecordFormat = {
             }
         });
     },
-    check(chunk, criteria, value) {
-        if (!(0, testers_1.isPlainObject)(value)) {
+    check(chunk, criteria, data) {
+        if (!(0, testers_1.isPlainObject)(data)) {
             return ("TYPE_NOT_PLAIN_OBJECT");
         }
-        const keys = Object.keys(value);
+        const keys = Reflect.ownKeys(data);
         const totalKeys = keys.length;
         if (totalKeys === 0) {
             return (criteria.empty ? null : "VALUE_EMPTY");
@@ -43,7 +43,7 @@ exports.RecordFormat = {
                 data: key,
                 node: criteria.key
             }, {
-                data: value[key],
+                data: data[key],
                 node: criteria.value
             });
         }

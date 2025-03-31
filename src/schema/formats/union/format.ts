@@ -1,12 +1,6 @@
+import type { CheckingChunkTask } from "../../services";
 import type { UnionSetableCriteria } from "./types";
 import type { Format } from "../types";
-import { CheckingHooks, CheckingHooksCallbacks } from "../../services/types";
-
-interface HooksCustomProperties {
-	totalRejected: number;
-	totalHooked: number;
-	isFinished: boolean;
-}
 
 export const UnionFormat: Format<UnionSetableCriteria> = {
 	defaultCriteria: {
@@ -27,28 +21,27 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 		const unionLength = criteria.union.length;
 
 		const ctx = {
-			totalRejected: 0,
-			totalHooked: unionLength,
-		}
+			hooked: unionLength,
+			rejected: 0
+		};
 
-		const hooks: CheckingHooks['callbacks'] = {
-			totalHooked: 0,
+		const hooks: CheckingChunkTask['hooks'] = {
 			onAccept() {
 				return ({
-					action: "BYPASS",
+					action: "IGNORE",
 					target: "CHUNK"
 				});
 			},
 			onReject() {
-				ctx.totalRejected++;
-				if (ctx.totalRejected === ctx.totalHooked) {
+				ctx.rejected++;
+				if (ctx.rejected === ctx.hooked) {
 					return ({
 						action: "REJECT",
 						code: "DATA_UNSATISFIED_UNION"
 					});
 				}
 				return ({
-					action: "BYPASS",
+					action: "IGNORE",
 					target: "BRANCH"
 				});
 			}
@@ -56,38 +49,12 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 
 		for (let i = 0; i < unionLength; i++) {
 			chunk.push({
+				hooks,
 				data,
-				node: criteria.union[i],
-				hooks: 
+				node: criteria.union[i]
 			});
 		}
 
 		return (null);
 	}
 }
-
-/*
-const hooks: CheckingTaskHooks<HooksCustomProperties> = {
-	owner: { node: criteria, path },
-	totalRejected: 0,
-	totalHooked: unionLength,
-	isFinished: false,
-	beforeCheck(criteria) {
-		if(this.isFinished) return (false);
-		return (true);
-	},
-	afterCheck(criteria, reject) {
-		if (reject) this.totalRejected++;
-
-		if (this.totalRejected === this.totalHooked) {
-			this.isFinished = true;
-			return ("VALUE_UNSATISFIED_UNION");
-		} else if (reject) {
-			return (false);
-		} else {
-			return (true);
-		}
-	}
-};*/
-
-

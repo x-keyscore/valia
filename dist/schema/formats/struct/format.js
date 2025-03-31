@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StructFormat = void 0;
 const testers_1 = require("../../../testers");
-function isSubStruct(obj) {
+function isShorthandStruct(obj) {
     return ((0, testers_1.isPlainObject)(obj) && typeof (obj === null || obj === void 0 ? void 0 : obj.type) !== "string");
 }
 exports.StructFormat = {
@@ -17,11 +17,11 @@ exports.StructFormat = {
     },
     mount(chunk, criteria) {
         const acceptedKeys = Reflect.ownKeys(criteria.struct);
-        const requiredKeys = acceptedKeys.filter(key => { var _a; return !((_a = criteria === null || criteria === void 0 ? void 0 : criteria.optional) === null || _a === void 0 ? void 0 : _a.includes(key)); });
+        const requiredKeys = acceptedKeys.filter(key => { var _a; return !((_a = criteria.optional) === null || _a === void 0 ? void 0 : _a.includes(key)); });
         Object.assign(criteria, { acceptedKeys, requiredKeys });
         for (let i = 0; i < acceptedKeys.length; i++) {
             const key = acceptedKeys[i];
-            if (isSubStruct(criteria.struct[key])) {
+            if (isShorthandStruct(criteria.struct[key])) {
                 criteria.struct[key] = {
                     type: "struct",
                     struct: criteria.struct[key]

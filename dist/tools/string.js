@@ -34,7 +34,6 @@ function convertBase16ToBase64(input, base64, padding) {
     }
     return (output);
 }
-// 100 01000 01100 10000 00000 4 8 12 16
 function convertBase16ToBase32(input, base32, padding = true) {
     const totalChunksLength = Math.floor(input.length / 10) * 10;
     let output = "";

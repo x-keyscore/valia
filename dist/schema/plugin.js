@@ -21,7 +21,7 @@ function assignProperties(source, target, transformKey) {
             continue;
         let newKey = (transformKey === null || transformKey === void 0 ? void 0 : transformKey(key)) || key;
         if (newKey in target.prototype) {
-            throw new Error(`Property key conflict in prototype properties.\nConflictual key: '${key}'`);
+            throw new Error(`Property key conflict in prototype properties.\nConflictual keys: '${key}'`);
         }
         Object.defineProperty(target.prototype, newKey, srcPrototypeDescriptors[key]);
     }
@@ -30,7 +30,7 @@ function assignProperties(source, target, transformKey) {
             continue;
         let newKey = (transformKey === null || transformKey === void 0 ? void 0 : transformKey(key)) || key;
         if (newKey in target) {
-            throw Error(`Property key conflict in static properties.\nConflictual key: '${key}'`);
+            throw Error(`Property key conflict in static properties.\nConflictual keys: '${key}'`);
         }
         Object.defineProperty(target, newKey, srcPrototypeDescriptors[key]);
     }

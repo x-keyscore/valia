@@ -4,7 +4,7 @@ import { isPlainObject } from "../../../testers";
 
 export const RecordFormat: Format<RecordSetableCriteria> = {
 	defaultCriteria: {
-		empty: false
+		empty: true
 	},
 	mount(chunk, criteria) {
 		chunk.push({
@@ -22,12 +22,12 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 			}
 		})
 	},
-	check(chunk, criteria, value) {
-		if (!isPlainObject(value)) {
+	check(chunk, criteria, data) {
+		if (!isPlainObject(data)) {
 			return ("TYPE_NOT_PLAIN_OBJECT");
 		}
 
-		const keys = Object.keys(value);
+		const keys = Reflect.ownKeys(data);
 		const totalKeys = keys.length;
 
 		if (totalKeys === 0) {
@@ -46,9 +46,8 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 			chunk.push({
 				data: key,
 				node: criteria.key
-				
 			}, {
-				data: value[key],
+				data: data[key],
 				node: criteria.value
 			});
 		}

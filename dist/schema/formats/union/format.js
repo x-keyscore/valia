@@ -19,58 +19,37 @@ exports.UnionFormat = {
     check(chunk, criteria, data) {
         const unionLength = criteria.union.length;
         const ctx = {
-            totalRejected: 0,
-            totalHooked: unionLength,
+            hooked: unionLength,
+            rejected: 0
+        };
+        const hooks = {
+            onAccept() {
+                return ({
+                    action: "IGNORE",
+                    target: "CHUNK"
+                });
+            },
+            onReject() {
+                ctx.rejected++;
+                if (ctx.rejected === ctx.hooked) {
+                    return ({
+                        action: "REJECT",
+                        code: "DATA_UNSATISFIED_UNION"
+                    });
+                }
+                return ({
+                    action: "IGNORE",
+                    target: "BRANCH"
+                });
+            }
         };
         for (let i = 0; i < unionLength; i++) {
             chunk.push({
+                hooks,
                 data,
-                node: criteria.union[i],
-                hooks: {
-                    onAccept() {
-                        return ({
-                            action: "RESET",
-                            before: "CHUNK"
-                        });
-                    },
-                    onReject() {
-                        ctx.totalRejected++;
-                        if (ctx.totalRejected === ctx.totalHooked) {
-                            return ({
-                                action: "REJECT",
-                                code: "VALUE_UNSATISFIED_UNION"
-                            });
-                        }
-                        return ({
-                            action: "IGNORE"
-                        });
-                    }
-                }
+                node: criteria.union[i]
             });
         }
         return (null);
     }
 };
-/*
-const hooks: CheckingTaskHooks<HooksCustomProperties> = {
-    owner: { node: criteria, path },
-    totalRejected: 0,
-    totalHooked: unionLength,
-    isFinished: false,
-    beforeCheck(criteria) {
-        if(this.isFinished) return (false);
-        return (true);
-    },
-    afterCheck(criteria, reject) {
-        if (reject) this.totalRejected++;
-
-        if (this.totalRejected === this.totalHooked) {
-            this.isFinished = true;
-            return ("VALUE_UNSATISFIED_UNION");
-        } else if (reject) {
-            return (false);
-        } else {
-            return (true);
-        }
-    }
-};*/

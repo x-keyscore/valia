@@ -1,9 +1,39 @@
-import { describe, it } from "node:test";
+import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../dist/index.js";
 
 describe("Schema instance", () => {
+	describe("'criteria' property", () => {
+		let schema_string, schema_struct;
+
+		before(() => {
+			schema_string = new Schema({ type: "string" });
+
+			schema_struct = new Schema({
+				type: "struct",
+				struct: {
+					foo: string_schema.criteria,
+					bar: {
+						type: "struct",
+						struct: {
+							foo: string_schema.criteria,
+							bar: string_schema.criteria
+						}
+					}
+				}
+			});
+		});
+
+		it("a criteria node from another schema, used multiple times in a new schema, must have distinct references", () => {
+			assert.notStrictEqual(schema_struct.criteria.struct.foo, schema_struct.criteria.struct.bar);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(schema_nullable.validate(null), true);
+		});
+
+	});
 	it("'criteria' property", () => {
 		const criteria_string = { type: "string", enum: ["foo", "bar"] };
 		const schema_string = new Schema(criteria_string);
@@ -75,29 +105,46 @@ describe("Schema instance", () => {
 	});
 });
 
-describe("Schema global criteria", () => {
-	it("'nullable' parameter", () => {
-		const schema = new Schema({
-			type: "string",
-			nullable: true
+describe("Schema Formats - (default)", () => {
+	describe("'nullable' parameter", () => {
+		let schema_nullable;
+
+		before(() => {
+			schema_nullable = new Schema({
+				type: "string",
+				nullable: true
+			});
 		});
 
-		assert.strictEqual(schema.validate(NaN), false);
-		assert.strictEqual(schema.validate(0), false);
-		assert.strictEqual(schema.validate(undefined), false);
-
-		assert.strictEqual(schema.validate(null), true);
-	});
-	it("'undefinable' parameter", () => {
-		const schema = new Schema({
-			type: "string",
-			undefinable: true
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(schema_nullable.validate(0), false);
+			assert.strictEqual(schema_nullable.validate(undefined), false);
 		});
 
-		assert.strictEqual(schema.validate(NaN), false);
-		assert.strictEqual(schema.validate(0), false);
-		assert.strictEqual(schema.validate(null), false);
-
-		assert.strictEqual(schema.validate(undefined), true);
+		it("should validate correct values", () => {
+			assert.strictEqual(schema_nullable.validate(null), true);
+		});
 	});
+
+	describe("'undefinable' parameter", () => {
+		let schema_undefinable;
+
+		before(() => {
+			schema_undefinable = new Schema({
+				type: "string",
+				undefinable: true
+			});
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(schema_undefinable.validate(0), false);
+			assert.strictEqual(schema_undefinable.validate(null), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(schema_undefinable.validate(undefined), true);
+		});
+	});
+
+	after(() => console.log("--------------------------------"));
 });

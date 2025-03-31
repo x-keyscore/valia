@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CheckingQueue = void 0;
+exports.CheckingStack = void 0;
 exports.checker = checker;
 const mounter_1 = require("./mounter");
-function makeReject(code, task) {
+function makeReject(task, code) {
     return ({
         code,
         path: task.fullPaths,
@@ -12,123 +12,108 @@ function makeReject(code, task) {
         message: task.node.message
     });
 }
-class CheckingQueue extends Array {
+class CheckingStack {
     constructor(rootNode, rootData) {
-        super();
-        this.push({
+        this.tasks = [];
+        this.tasks.push({
             data: rootData,
             node: rootNode,
             fullPaths: { explicit: [], implicit: [] }
         });
     }
-    pushChunk(sourceTask, chunk) {
+    addChunk(sourceTask, chunk) {
         for (let i = 0; i < chunk.length; i++) {
-            const task = chunk[i];
-            const partPaths = task.node[mounter_1.nodeSymbol].partPaths;
-            let listHooks = sourceTask.listHooks;
-            if (task.hooks) {
+            const currentTask = chunk[i];
+            const partPaths = currentTask.node[mounter_1.nodeSymbol].partPaths;
+            let stepHooks = sourceTask.stepHooks;
+            if (currentTask.hooks) {
                 const hooks = {
-                    sourceTask,
-                    awaitTasks: 0,
-                    queueIndex: {
-                        self: this.length,
-                        chunk: this.length - i
+                    owner: sourceTask,
+                    index: {
+                        chunk: this.tasks.length - i,
+                        branch: this.tasks.length
                     },
-                    callbacks: task.hooks,
+                    ...currentTask.hooks
                 };
-                if (listHooks) {
-                    listHooks = listHooks.concat(hooks);
-                }
-                else {
-                    listHooks = [hooks];
-                }
+                stepHooks = stepHooks ? stepHooks.concat(hooks) : [hooks];
             }
-            this.push({
-                data: task.data,
-                node: task.node,
+            this.tasks.push({
+                data: currentTask.data,
+                node: currentTask.node,
                 fullPaths: {
                     explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
                     implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
                 },
-                listHooks
+                stepHooks
             });
         }
     }
-    execHooks(code, listHooks, chunkLength) {
-        let reject = null;
-        for (let i = listHooks.length - 1; i >= 0; i--) {
-            const hooks = listHooks[i];
-            // UPDATE AWAITING TASKS
-            hooks.awaitTasks += chunkLength - 1;
-            // RETURN IF TASKS REMAIN
-            if (hooks.awaitTasks)
-                return (null);
-            // EXECUTE HOOKS
-            let claim = null;
-            if (code)
-                claim = hooks.callbacks.onReject(code);
-            else
-                claim = hooks.callbacks.onAccept();
-            if (claim.action === "REJECT") {
-                this.length = hooks.queueIndex.self;
-                code = claim.code;
-                reject = makeReject(code, hooks.sourceTask);
-            }
-            if (claim.action === "IGNORE") {
-                this.length = hooks.queueIndex.self;
-                return (null);
-            }
-            if (claim.action === "RESET") {
-                if (claim.before === "SELF")
-                    this.length = hooks.queueIndex.self;
-                else if (claim.before === "CHUNK")
-                    this.length = hooks.queueIndex.chunk;
-                return (null);
+    runHooks(currentTask, reject) {
+        const stepHooks = currentTask.stepHooks;
+        if (!stepHooks)
+            return (null);
+        const lastHooks = stepHooks[stepHooks.length - 1];
+        if (!reject && lastHooks.index.branch !== this.tasks.length) {
+            return (null);
+        }
+        for (let i = stepHooks.length - 1; i >= 0; i--) {
+            const hooks = stepHooks[i];
+            const claim = reject ? hooks.onReject(reject) : hooks.onAccept();
+            switch (claim.action) {
+                case "DEFAULT":
+                    this.tasks.length = hooks.index.branch;
+                    if (!reject)
+                        return (null);
+                    continue;
+                case "REJECT":
+                    this.tasks.length = hooks.index.branch;
+                    reject = makeReject(hooks.owner, claim.code);
+                    continue;
+                case "IGNORE":
+                    if ((claim === null || claim === void 0 ? void 0 : claim.target) === "CHUNK") {
+                        this.tasks.length = hooks.index.chunk;
+                    }
+                    else {
+                        this.tasks.length = hooks.index.branch;
+                    }
+                    return (null);
             }
         }
         return (reject);
     }
 }
-exports.CheckingQueue = CheckingQueue;
+exports.CheckingStack = CheckingStack;
 function checker(managers, rootNode, rootData) {
-    const formats = managers.formats;
-    const events = managers.events;
-    const queue = new CheckingQueue(rootNode, rootData);
+    const { formats, events } = managers;
+    const stack = new CheckingStack(rootNode, rootData);
     let reject = null;
-    while (queue.length) {
-        const task = queue.pop();
-        const { data, node, listHooks } = task;
+    while (stack.tasks.length) {
+        const currentTask = stack.tasks.pop();
+        const { data, node, stepHooks } = currentTask;
         const chunk = [];
         let code = null;
         if (data === null) {
-            if (node.nullable)
-                code = null;
-            else
+            if (!node.nullable)
                 code = "TYPE_NULL";
         }
         else if (data === undefined) {
-            if (node.undefinable)
-                code = null;
-            else
+            if (!node.undefinable)
                 code = "TYPE_UNDEFINED";
         }
         else {
             const format = formats.get(node.type);
             code = format.check(chunk, node, data);
         }
-        if (listHooks === null || listHooks === void 0 ? void 0 : listHooks.length) {
-            reject = queue.execHooks(code, listHooks, chunk.length);
+        if (code)
+            reject = makeReject(currentTask, code);
+        else if (chunk.length)
+            stack.addChunk(currentTask, chunk);
+        if (stepHooks)
+            reject = stack.runHooks(currentTask, reject);
+        if (reject)
             break;
-        }
-        else if (code) {
-            reject = makeReject(code, task);
-            break;
-        }
-        if (chunk.length) {
-            queue.pushChunk(task, chunk);
-        }
     }
-    events.emit("DATA_CHECKED", rootNode, reject);
+    events.emit("DATA_CHECKED", rootNode, rootData, reject);
     return (reject);
 }
 ;

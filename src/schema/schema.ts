@@ -3,6 +3,7 @@ import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
+import { SchemaInfer } from "./types";
 
 /**
  * Represents a schema for data validation, including the validation criteria structure.
@@ -169,4 +170,110 @@ schema.validate({
 			} 
 		}
 	},
-})*/
+})
+*/
+/*
+const test = new Schema({
+	type: "union",
+	union: [{
+		type: "struct",
+		struct: {
+			foo: { type: "string" },
+			bar: {
+				type: "struct",
+				struct: {
+					foobar: {
+						foo: { type: "string" },
+						bar: {
+							type: "struct",
+							struct: {
+								foobar: { type: "string" }
+							}
+						}
+					}
+				}
+			}
+		}
+	}, {
+		type: "struct",
+		struct: {
+			foo: {
+				type: "struct",
+				struct: {
+					foobar: { type: "string" }
+				}
+			},
+			bar: { type: "string" }
+		}
+	}]
+});
+
+console.log(test.evaluate({
+	foo: "x",
+	bar: {
+		foobar: {
+			foo: "x",
+			bar: {
+				foobar: "x"
+			}
+		}
+	}
+}))*/
+/*
+const schema_union = new Schema({
+	type: "struct",
+	struct: {
+		foo: {
+			type: "union",
+			union: [
+				{
+					type: "struct",
+					struct: {
+						foo: {
+							type: "union",
+							union: [{
+								type: "struct",
+								struct: {
+									foo: { type: "number" },
+									bar: { type: "string" }
+								}
+							}, {
+								type: "string"
+							}]
+						},
+						bar: { type: "string" }
+					}
+				},
+				{
+					type: "struct",
+					struct: {
+						foo: { type: "string" }, 
+						bar: {
+							type: "union",
+							union: [{
+								type: "struct",
+								struct: {
+									foo: { type: "string" },
+									bar: { type: "number" }
+								}
+							}, {
+								type: "string"
+							}]
+						}
+					}
+				}
+			]
+		}
+	}
+});
+
+type schem = SchemaInfer<typeof schema_union>
+
+
+const ddata: unknown = { foo: { foo: { foo: "x", bar: "x" }, bar: "x" }};
+if (schema_union.validate(ddata)) {
+	if (typeof ddata.foo.foo !== "string") ddata.foo.foo.bar
+	
+	
+}	
+console.log();*/

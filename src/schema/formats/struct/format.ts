@@ -1,5 +1,5 @@
 import type { Format, MountedCriteria } from "../types";
-import type { StructSetableCriteria, StructCriteria } from "./types";
+import type { StructSetableCriteria, StructDefinition } from "./types";
 import { isPlainObject } from "../../../testers";
 
 export interface CustomProperties {
@@ -13,7 +13,7 @@ export interface CustomProperties {
 	): boolean;
 }
 
-function isSubStruct(obj: object): obj is StructCriteria {
+function isShorthandStruct(obj: object): obj is StructDefinition {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 
@@ -29,14 +29,14 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 	},
 	mount(chunk, criteria) {
 		const acceptedKeys = Reflect.ownKeys(criteria.struct);
-		const requiredKeys = acceptedKeys.filter(key => !criteria?.optional?.includes(key));
+		const requiredKeys = acceptedKeys.filter(key => !criteria.optional?.includes(key));
 
 		Object.assign(criteria, { acceptedKeys, requiredKeys });
 
 		for (let i = 0; i < acceptedKeys.length; i++) {
 			const key = acceptedKeys[i];
 
-			if (isSubStruct(criteria.struct[key])) {
+			if (isShorthandStruct(criteria.struct[key])) {
 				criteria.struct[key] = {
 					type: "struct",
 					struct: criteria.struct[key]

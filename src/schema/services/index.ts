@@ -4,6 +4,7 @@ export type {
     MountingChunk,
     CheckingTask,
     CheckingChunk,
+    CheckingChunkTask,
     CheckingReject
 } from './types';
 

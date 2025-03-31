@@ -55,26 +55,28 @@ export type MountingChunk = {
 // CHECKER
 
 export interface CheckingHooks {
-	sourceTask: CheckingTask;
-	queueIndex: {
+	owner: CheckingTask;
+	index: {
 		chunk: number;
 		branch: number;
 	};
-	callbacks: {
-		onAccept(): {
-			action: "BYPASS";
-			target: "CHUNK";
-		} | {
-			action: "REJECT";
-			code: string;
-		};
-		onReject(code: string): {
-			action: "BYPASS";
-			target: "CHUNK" | "BRANCH";
-		} | {
-			action: "REJECT";
-			code: string;
-		};
+	onAccept(): {
+		action: "DEFAULT"
+	} | {
+		action: "IGNORE";
+		target: "CHUNK";
+	} | {
+		action: "REJECT";
+		code: string;
+	};
+	onReject(reject: CheckingReject): {
+		action: "DEFAULT"
+	} | {
+		action: "IGNORE";
+		target: "CHUNK" | "BRANCH";
+	} | {
+		action: "REJECT";
+		code: string;
 	};
 }
 
@@ -82,16 +84,19 @@ export interface CheckingTask {
 	data: unknown;
 	node: MountedCriteria;
 	fullPaths: PathSegments;
-	listHooks?: CheckingHooks[];
+	stepHooks?: CheckingHooks[];
 }
 
-export type CheckingChunk = {
+export interface CheckingChunkTask {
 	data: CheckingTask['data'];
 	node: CheckingTask['node'];
-	hooks?: CheckingHooks['callbacks']
-}[];
+	hooks?: Omit<CheckingHooks, "owner" | "index">;
+};
+
+export type CheckingChunk = CheckingChunkTask[];
 
 export interface CheckingReject {
+	path: PathSegments;
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 
@@ -103,7 +108,6 @@ export interface CheckingReject {
 	 */
 	code: string;
 	type: string;
-	path: PathSegments;
 	label: string | undefined;
 	message: string | undefined;
 }

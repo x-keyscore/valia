@@ -9,10 +9,10 @@ type Testers = {
     };
 }[keyof StringTesters];
 export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
-    min?: number;
-    max?: number;
     /** @default true */
     empty?: boolean;
+    min?: number;
+    max?: number;
     enum?: string[] | Record<string | number, string>;
     regex?: RegExp;
     tester?: Testers;

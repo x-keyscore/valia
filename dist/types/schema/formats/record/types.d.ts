@@ -1,6 +1,7 @@
 import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, FormatClassicTypesKeys, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 type KeyCriteria = SetableCriteria<"string" | "symbol">;
 export interface RecordSetableCriteria<T extends FormatClassicTypesKeys = FormatClassicTypesKeys> extends SetableCriteriaTemplate<"record"> {
+    /** @default true */
     empty?: boolean;
     min?: number;
     max?: number;

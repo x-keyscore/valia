@@ -6,6 +6,7 @@ type KeyCriteria = SetableCriteria<"string" | "symbol">;
 export interface RecordSetableCriteria<
 	T extends FormatClassicTypesKeys = FormatClassicTypesKeys
 > extends SetableCriteriaTemplate<"record"> {
+	/** @default true */
 	empty?: boolean
 	min?: number;
 	max?: number;
@@ -38,3 +39,8 @@ export interface RecordGenericTypes<T extends RecordSetableCriteria> extends Gen
 	RecordMountedCriteria,
 	RecordGuardedCriteria<T>
 > {}
+
+
+
+const text = "poule"
+text[4]

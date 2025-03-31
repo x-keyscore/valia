@@ -9,7 +9,7 @@ export function hasNodeSymbol(obj: object): obj is MountedCriteria {
 	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
 }
 
-export class MountingQueue extends Array<MountingTask> {
+export class MountingStack extends Array<MountingTask> {
 	constructor(rootNode: SetableCriteria | MountedCriteria) { 
 		super();
 
@@ -20,7 +20,7 @@ export class MountingQueue extends Array<MountingTask> {
 		})
 	}
 
-	pushChunk(
+	addChunk(
 		owner: MountingTask,
 		chunk: MountingChunk
 	) {
@@ -45,12 +45,11 @@ export function mounter<T extends SetableCriteria>(
 	managers: SchemaInstance['managers'],
 	rootNode: SetableCriteria & T
 ): MountedCriteria<T> {
-	const formats = managers.formats;
-	const events = managers.events;
-	const queue = new MountingQueue(rootNode);
+	const { formats, events } = managers;
+	const stack = new MountingStack(rootNode);
 
-	while (queue.length) {
-		const currentTask = queue.pop()!;
+	while (stack.length) {
+		const currentTask = stack.pop()!;
 		const { node, partPaths, fullPaths } = currentTask;
 
 		if (hasNodeSymbol(node)) {
@@ -69,14 +68,14 @@ export function mounter<T extends SetableCriteria>(
 				...format.defaultCriteria,
 				...node,
 				[nodeSymbol]: {
-					partPaths,
-					childNodes: chunk.map((task) => task.node)
+					childNodes: chunk.map((task) => task.node),
+					partPaths
 				}
 			});
 			Object.freeze(node);
 
 			if (chunk.length) {
-				queue.pushChunk(currentTask, chunk);
+				stack.addChunk(currentTask, chunk);
 			}
 
 			events.emit(
