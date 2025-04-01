@@ -1,16 +1,9 @@
 import type { PlainObject, PlainFunction, AsyncFunction } from "../types";
 export declare function isObject(x: unknown): x is object;
 /**
- * A basic object is considered as follows:
- * - It must be an object.
- * - It must have a prototype of `Object.prototype` or `null`.
-*/
-export declare function isBasicObject(x: unknown): x is PlainObject;
-/**
  * A plain object is considered as follows:
  * - It must be an object.
  * - It must have a prototype of `Object.prototype` or `null`.
- * - It must only have keys of type `string` or `symbol`.
 */
 export declare function isPlainObject(x: unknown): x is PlainObject;
 export declare function isArray(x: unknown): x is unknown[];

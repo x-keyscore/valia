@@ -20,7 +20,7 @@ function cloner(rootSrc) {
         }];
     while (stack.length > 0) {
         let { src, cpy } = stack.pop();
-        if ((0, testers_1.isBasicObject)(src)) {
+        if ((0, testers_1.isPlainObject)(src)) {
             if ((0, mounter_1.hasNodeSymbol)(src)) {
                 cpy = { ...src };
             }
@@ -28,7 +28,7 @@ function cloner(rootSrc) {
                 const keys = Reflect.ownKeys(src);
                 for (let i = 0; i < keys.length; i++) {
                     const key = keys[i];
-                    if ((0, testers_1.isBasicObject)(src[key])) {
+                    if ((0, testers_1.isPlainObject)(src[key])) {
                         if ((0, mounter_1.hasNodeSymbol)(src[key])) {
                             cpy[key] = { ...src[key] };
                         }
@@ -56,7 +56,7 @@ function cloner(rootSrc) {
         else if ((0, testers_1.isArray)(src)) {
             for (let i = 0; i < src.length; i++) {
                 const index = i;
-                if ((0, testers_1.isBasicObject)(src[index])) {
+                if ((0, testers_1.isPlainObject)(src[index])) {
                     if ((0, mounter_1.hasNodeSymbol)(src[index])) {
                         cpy[i] = { ...src[index] };
                     }

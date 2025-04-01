@@ -12,7 +12,7 @@ class Schema {
     initiate(definedCriteria) {
         this.managers.formats.set(formats_1.formatNatives);
         const clonedCriteria = (0, services_1.cloner)(definedCriteria);
-        this.mountedCriteria = (0, services_1.mounter)(this.managers, clonedCriteria);
+        this._criteria = (0, services_1.mounter)(this.managers, clonedCriteria);
     }
     constructor(criteria) {
         this.managers = {
@@ -31,10 +31,10 @@ class Schema {
      * which can be used in other schemas.
      */
     get criteria() {
-        if (!this.mountedCriteria) {
+        if (!this._criteria) {
             throw new utils_1.Issue("Schema", "Criteria are not initialized.");
         }
-        return (this.mountedCriteria);
+        return (this._criteria);
     }
     /**
      * Validates the provided data against the schema.

@@ -1,7 +1,4 @@
-import { LooseAutocomplete } from "../types";
-import { StandardTags } from "./types";
-export declare function lazy<T extends object>(callback: () => T): () => T;
-export declare function hasTag(x: unknown, tag: LooseAutocomplete<StandardTags>): boolean;
+export declare function lazy<O extends object>(callback: () => O): () => O;
 /**
  * @see https://www.garykessler.net/library/file_sigs.html
  * @see https://en.wikipedia.org/wiki/List_of_file_signatures

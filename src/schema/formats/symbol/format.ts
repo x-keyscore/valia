@@ -5,10 +5,10 @@ export const SymbolFormat: Format<SymbolSetableCriteria> = {
 	defaultCriteria: {},
 	check(queue, criteria, data) {
 		if (typeof data !== "symbol") {
-			return "TYPE_NOT_SYMBOL";
+			return "TYPE_SYMBOL_REQUIRED";
 		}
 		else if (criteria.symbol !== undefined && data !== criteria.symbol) {
-			return "DATA_INVALID_SYMBOL";
+			return "DATA_SYMBOL_MISMATCH";
 		}
 
 		return (null);

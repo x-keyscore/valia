@@ -39,11 +39,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.testers = void 0;
 const string = __importStar(require("./string"));
 const object = __importStar(require("./object"));
-const utils_1 = require("./utils");
 __exportStar(require("./string"), exports);
 __exportStar(require("./object"), exports);
 exports.testers = {
     object,
-    string,
-    hasTag: utils_1.hasTag
+    string
 };

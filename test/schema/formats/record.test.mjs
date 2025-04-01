@@ -103,7 +103,5 @@ describe("Schema Formats - Record", () => {
 			assert.strictEqual(record_max.validate({ x: "x", y: "y", z: "z", a: "a" }), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });
 

@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../dist/index.js";
 
-describe("Schema instance", () => {
+describe("Schema Instance", () => {
 	describe("'criteria' property", () => {
 		let string_criteria, string_schema, tuple_criteria, tuple_schema, struct_schema, main_schema;
 
@@ -24,102 +24,96 @@ describe("Schema instance", () => {
 			main_schema = new Schema({
 				type: "struct",
 				struct: {
-					foo: string_schema.criteria,
-					bar: struct_schema.
+					foo: struct_schema.criteria,
+					bar: struct_schema.criteria
 				}
 			});
 		});
 
-		it(`All objects defined in the schema with a prototype of Object.prototype or null
-			(except for arrays and sub-objects of mounted node grafts) must have a distinct
-			reference from the original after instantiation.`, () => {
+		it("All objects defined in the schema with a prototype of Object.prototype or null\n" +
+		  	"(except for arrays and sub-objects of mounted node grafts) must have a distinct\n" +
+			"reference from the original after instantiation.", () => {
 			assert.notStrictEqual(string_criteria, string_schema.criteria);
 			assert.notStrictEqual(string_criteria.enum, string_schema.criteria.enum);
+			assert.notStrictEqual(tuple_criteria, tuple_schema.criteria);
+			assert.notStrictEqual(tuple_criteria.tuple, tuple_schema.criteria.tuple);
+			assert.notStrictEqual(tuple_criteria.tuple[0], tuple_schema.criteria.tuple[0]);
+			assert.notStrictEqual(tuple_criteria.tuple[1], tuple_schema.criteria.tuple[1]);
 		});
 
-		it(`The root objects of mounted node grafts, when used one or multiple times in
-			the definition of a new schema, all have distinct references after the instantiation
-			of the new schema.`, () => {
-			assert.notStrictEqual(struct_schema.criteria.struct.foo, string_schema.criteria);
-			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.foo, string_schema.criteria);
-			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.bar, string_schema.criteria);
-			assert.notStrictEqual(struct_schema.criteria.struct.foo, struct_schema.criteria.struct.bar.struct.foo);
-			assert.notStrictEqual(struct_schema.criteria.struct.foo, struct_schema.criteria.struct.bar.struct.bar);
-			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.foo, struct_schema.criteria.struct.bar.struct.bar);
+		it("The root objects of mounted node grafts, when used one or multiple times in\n" +
+			"the definition of a new schema, all have distinct references after the instantiation\n" +
+			"of the new schema.", () => {
+			assert.notStrictEqual(main_schema.criteria.struct.foo, struct_schema.criteria);
+			assert.notStrictEqual(main_schema.criteria.struct.bar, struct_schema.criteria);
+			assert.notStrictEqual(main_schema.criteria.struct.foo, main_schema.criteria.struct.bar);
+
+			/*
+			  Verification that the sub-objects of mounted node grafts
+			  retain references to their previous schema.
+			*/
+			assert.strictEqual(main_schema.criteria.struct.foo.struct, struct_schema.criteria.struct);
+			assert.strictEqual(main_schema.criteria.struct.bar.struct, struct_schema.criteria.struct);
+			assert.strictEqual(main_schema.criteria.struct.foo.struct.foo.enum, string_schema.criteria.enum);
+			assert.strictEqual(main_schema.criteria.struct.bar.struct.bar.tuple, tuple_schema.criteria.tuple);
 		});
 	});
-	it("'criteria' property", () => {
-		const criteria_string = { type: "string", enum: ["foo", "bar"] };
-		const schema_string = new Schema(criteria_string);
+	describe("'validate()' method", () => {
+		let main_schema;
 
-		const criteria_struct = {
-			type: "struct",
-			struct: {
-				bar: schema_string.criteria,
-				foo: schema_string.criteria
-			}
-		};
-		const schema_struct = new Schema(criteria_struct);
-
-		const schema_root = new Schema({
-			type: "struct",
-			struct: {
-				foo: schema_struct.criteria
-			}
+		before(() => {
+			main_schema = new Schema({ type: "string" });
 		});
 
-		assert.strictEqual(schema_root.criteria.struct.foo.struct.bar.enum, schema_string.criteria.enum);
-		assert.notStrictEqual(schema_root.criteria.struct.foo.struct.bar, schema_string.criteria);
-
-		assert.strictEqual(schema_root.criteria.struct.foo.struct, schema_struct.criteria.struct);
-		assert.notStrictEqual(schema_root.criteria.struct.foo, schema_struct.criteria);
-
-		assert.notStrictEqual(schema_struct.criteria.struct.foo, schema_struct.criteria.struct.bar);
-		
-		assert.notStrictEqual(criteria_struct, schema_struct.criteria);
+		it("should return a boolean", () => {
+			assert.strictEqual(typeof main_schema.validate(0), "boolean");
+			assert.strictEqual(typeof main_schema.validate("x"), "boolean");
+		});
 	});
-	it("'validate()' method", () => {
-		const schema = new Schema({ type: "string", empty: true });
+	describe("'evaluate()' method", () => {
+		let main_schema;
 
-		assert.strictEqual(schema.validate(0), false);
-		assert.strictEqual(schema.validate(""), true);
-	});
-	it("'evaluate()' method", () => {
-		const schema_string = new Schema({
-			type: "string",
-			label: "schema_string_label",
-			message: "schema_string_message"
-		});
-		const schema_struct = new Schema({
-			type: "struct",
-			struct: {
-				foo: schema_string.criteria
-			}
+		before(() => {
+			main_schema = new Schema({
+				type: "struct",
+				struct: {
+					foo: { type: "string" },
+					bar: {
+						type: "string",
+						label: "TEST_LABEL",
+						message: "TEST_MESSAGE"
+					}
+				}
+			});
 		});
 
-		assert.deepStrictEqual(schema_struct.evaluate({ foo: 1 }), {
-			reject: {
-				code: "TYPE_NOT_STRING",
-				type: "string",
-				path: {
-					explicit: ["struct", "foo"],
-					implicit: ["&", "foo"]
+		it("should return a correct rejection", () => {
+			assert.deepStrictEqual(main_schema.evaluate({ foo: "x", bar: 0 }), {
+				reject: {
+					code: "TYPE_NOT_STRING",
+					type: "string",
+					path: {
+						explicit: ["struct", "bar"],
+						implicit: ["&", "bar"]
+					},
+					label: "TEST_LABEL",
+					message: "TEST_MESSAGE"
 				},
-				label: "schema_string_label",
-				message: "schema_string_message"
-			},
-			data: null
+				data: null
+			});
 		});
 
-		const data = { foo: "1" };
-		assert.deepStrictEqual(schema_struct.evaluate(data), {
-			reject: null,
-			data: data
+		it("should return a correct acceptance", () => {
+			const candidate = { foo: "x", bar: "x" };
+			assert.deepStrictEqual(main_schema.evaluate(candidate), {
+				reject: null,
+				data: candidate
+			});
 		});
 	});
 });
 
-describe("Schema Formats - (default)", () => {
+describe("Schema Formats - (Global Parameter)", () => {
 	describe("'nullable' parameter", () => {
 		let schema_nullable;
 
@@ -159,6 +153,4 @@ describe("Schema Formats - (default)", () => {
 			assert.strictEqual(schema_undefinable.validate(undefined), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

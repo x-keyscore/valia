@@ -9,7 +9,7 @@ import { SchemaInfer } from "./types";
  * Represents a schema for data validation, including the validation criteria structure.
  */
 export class Schema<const T extends SetableCriteria = SetableCriteria<keyof FormatNatives>> {
-	private mountedCriteria: MountedCriteria<T> | undefined;
+	private _criteria: MountedCriteria<T> | undefined;
 	protected managers = {
 		formats: new FormatsManager(),
 		events: new EventsManager()
@@ -18,7 +18,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 	protected initiate(definedCriteria: T) {
 		this.managers.formats.set(formatNatives);
 		const clonedCriteria = cloner(definedCriteria);
-		this.mountedCriteria = mounter(this.managers, clonedCriteria);
+		this._criteria = mounter(this.managers, clonedCriteria);
 	}
 
 	constructor(criteria: T) {
@@ -35,11 +35,10 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 	 * which can be used in other schemas.
 	 */
 	get criteria(): MountedCriteria<T> {
-		if (!this.mountedCriteria) {
+		if (!this._criteria) {
 			throw new Issue("Schema", "Criteria are not initialized.");
 		}
-
-		return (this.mountedCriteria);
+		return (this._criteria);
 	}
 
 	/**
@@ -73,6 +72,15 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 		return ({ reject: null, data: data as GuardedCriteria<T> });
 	}
 }
+
+const test = new Schema({
+	type: "struct",
+	struct: {
+		foo: { type: "atomic", atomic: "any" }
+	}
+});
+
+type test = SchemaInfer<typeof test>;
 
 /*
 const schema = new Schema({

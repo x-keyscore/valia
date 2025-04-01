@@ -2,6 +2,7 @@ import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
+import { isOptionalChain } from "typescript";
 
 describe("Schema Formats - Tuple", () => {
 	describe("Default", () => {
@@ -50,6 +51,4 @@ describe("Schema Formats - Tuple", () => {
 			assert.strictEqual(tuple_item_2.validate([0, "x"]), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

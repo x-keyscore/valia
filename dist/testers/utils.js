@@ -1,26 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lazy = lazy;
-exports.hasTag = hasTag;
 exports.hasFileSignature = hasFileSignature;
-const supportWeakRef = typeof WeakRef !== 'undefined';
 function lazy(callback) {
-    let cache;
+    let ref = null, val = null;
+    // Test 'WeakRef' support
+    if (typeof WeakRef !== "undefined") {
+        ref = undefined;
+    }
     return () => {
-        if (supportWeakRef) {
-            if (!(cache === null || cache === void 0 ? void 0 : cache.deref())) {
-                cache = new WeakRef(callback());
+        if (ref !== null) {
+            const temp = ref === null || ref === void 0 ? void 0 : ref.deref();
+            if (!temp) {
+                ref = new WeakRef(callback());
+                return (ref.deref());
             }
-            return (cache === null || cache === void 0 ? void 0 : cache.deref());
+            return (temp);
         }
-        else if (!cache) {
-            cache = callback();
+        else if (val === null) {
+            val = callback();
         }
-        return (cache);
+        return (val);
     };
-}
-function hasTag(x, tag) {
-    return (Object.prototype.toString.call(x).slice(8, -1) === tag);
 }
 /**
  * @see https://www.garykessler.net/library/file_sigs.html

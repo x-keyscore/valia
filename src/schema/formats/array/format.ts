@@ -17,19 +17,19 @@ export const ArrayFormat: Format< ArraySetableCriteria> = {
 	},
 	check(chunk, criteria, data) {
 		if (!isArray(data)) {
-			return ("TYPE_NOT_ARRAY");
+			return ("TYPE_ARRAY_REQUIRED");
 		}
 
 		const dataLength = data.length;
 		
 		if (!dataLength) {
-			return (criteria.empty ? null : "DATA_EMPTY");
+			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
 		}
 		else if (criteria.min !== undefined && dataLength < criteria.min) {
-			return ("DATA_INFERIOR_MIN");
+			return ("DATA_LENGTH_INFERIOR_MIN");
 		}
 		else if (criteria.max !== undefined && dataLength > criteria.max) {
-			return ("DATA_SUPERIOR_MAX");
+			return ("DATA_LENGTH_SUPERIOR_MAX");
 		}
 
 		for (let i = 0; i < dataLength; i++) {

@@ -54,15 +54,15 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 	},
 	check(chunk, criteria, data) {
 		if (!isPlainObject(data)) {
-			return ("TYPE_NOT_PLAIN_OBJECT");
+			return ("TYPE_PLAIN_OBJECT_REQUIRED");
 		}
 
 		const keys = Reflect.ownKeys(data);
 		if (!this.hasAcceptedKeys(criteria, keys)) {
-			return ("DATA_INVALID_KEY");
+			return ("DATA_KEYS_INVALID");
 		}
 		else if (!this.hasRequiredKeys(criteria, keys)) {
-			return ("DATA_MISSING_KEY");
+			return ("DATA_KEYS_MISSING");
 		}
 
 		for (let i = 0; i < keys.length; i++) {

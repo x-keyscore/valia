@@ -100,6 +100,4 @@ describe("Schema Formats - Array", () => {
 			assert.strictEqual(array_max.validate(["x", "x", "x", "x"]), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

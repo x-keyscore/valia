@@ -41,6 +41,4 @@ describe("Schema Formats - Symbol", () => {
 			assert.strictEqual(symbol_symbol.validate(xSymbol), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

@@ -1,4 +1,5 @@
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
+import type { AtomicClassicTypes, AtomicGenericTypes, AtomicSetableCriteria } from "./atomic/types";
 import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
 import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
 import type { StringClassicTypes, StringGenericTypes, StringSetableCriteria } from "./string/types";
@@ -50,6 +51,7 @@ export interface ClassicTypesTemplate<
 
 export interface FormatClassicTypes<T extends keyof FormatClassicTypes = keyof FormatClassicTypes<any>> {
 	array: ArrayClassicTypes<T>;
+	atomic: AtomicClassicTypes;
 	boolean: BooleanClassicTypes;
 	number: NumberClassicTypes;
 	record: RecordClassicTypes<T>;
@@ -80,6 +82,7 @@ export interface GenericTypesTemplate<Mounted, Guarded> {
 
 export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria> {
 	array: T extends ArraySetableCriteria ? ArrayGenericTypes<T> : never;
+	atomic: T extends AtomicSetableCriteria ? AtomicGenericTypes<T> : never;
 	boolean: T extends BooleanSetableCriteria ? BooleanGenericTypes : never
 	number: T extends NumberSetableCriteria ? NumberGenericTypes<T> : never
 	record: T extends RecordSetableCriteria ? RecordGenericTypes<T> : never

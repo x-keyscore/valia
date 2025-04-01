@@ -1,5 +1,4 @@
 import type { SetableCriteria } from "./formats";
-import type { SchemaType } from "./types";
 import { Schema } from "./schema";
 export declare abstract class AbstractPlugin<const T extends SetableCriteria> extends Schema<T> {
     /**
@@ -13,6 +12,6 @@ export declare abstract class AbstractPlugin<const T extends SetableCriteria> ex
      * This method is automatically called after the schema initialization.
      */
     protected abstract afterInitate(): void;
-    constructor(...args: ConstructorParameters<SchemaType<T>>);
+    constructor(...args: ConstructorParameters<typeof Schema<T>>);
 }
 export declare function SchemaPlugins<T, U, V, W, X, Y>(plugin_1: new (...args: T[]) => U, plugin_2?: new (...args: V[]) => W, plugin_3?: new (...args: X[]) => Y): new (...args: T[] & V[] & X[]) => U & W & Y;

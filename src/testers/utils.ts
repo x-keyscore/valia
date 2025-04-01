@@ -1,24 +1,25 @@
-import { LooseAutocomplete } from "../types";
-import { StandardTags } from "./types";
+export function lazy<O extends object>(callback: () => O): () => O {
+	let ref: WeakRef<O> | undefined | null = null, val: O | null = null;
 
-const supportWeakRef = typeof WeakRef !== 'undefined';
-export function lazy<T extends object>(callback: () => T): () => T {
-	let cache: any;
+	// Test 'WeakRef' support
+	if (typeof WeakRef !== "undefined") {
+		ref = undefined;
+	}
+
     return () => {
-		if (supportWeakRef) {
-			if (!cache?.deref()) {
-				cache = new WeakRef(callback());
+		if (ref !== null) {
+			const temp = ref?.deref();
+			if (!temp) {
+				ref = new WeakRef(callback());
+				return (ref.deref()!);
 			}
-			return (cache?.deref());
-		} else if (!cache) {
-			cache = callback();
+			return (temp);
 		}
-        return (cache);
+		else if (val === null) {
+			val = callback();
+		}
+        return (val);
     };
-}
-
-export function hasTag(x: unknown, tag: LooseAutocomplete<StandardTags>): boolean {
-	return (Object.prototype.toString.call(x).slice(8, -1) === tag);
 }
 
 /**

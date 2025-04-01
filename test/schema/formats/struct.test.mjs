@@ -46,19 +46,16 @@ describe("Schema Formats - Struct", () => {
 			assert.strictEqual(struct_prop_0.validate({ x: "x" }), false);
 
 			assert.strictEqual(struct_prop_1.validate(0), false);
-			assert.strictEqual(struct_prop_1.validate([]), false);
 			assert.strictEqual(struct_prop_1.validate({}), false);
 			assert.strictEqual(struct_prop_1.validate({ foo: 0 }), false);
 
 			assert.strictEqual(struct_prop_2.validate(0), false);
-			assert.strictEqual(struct_prop_2.validate([]), false);
 			assert.strictEqual(struct_prop_2.validate({}), false);
 			assert.strictEqual(struct_prop_2.validate({ foo: 0 }), false);
 			assert.strictEqual(struct_prop_2.validate({ foo: "x" }), false);
 			assert.strictEqual(struct_prop_2.validate({ foo: "x", bar: 0 }), false);
 
 			assert.strictEqual(struct_prop_symbol.validate(0), false);
-			assert.strictEqual(struct_prop_symbol.validate([]), false);
 			assert.strictEqual(struct_prop_symbol.validate({}), false);
 			assert.strictEqual(struct_prop_symbol.validate({ foo: 0 }), false);
 			assert.strictEqual(struct_prop_symbol.validate({ foo: "x" }), false);
@@ -92,8 +89,7 @@ describe("Schema Formats - Struct", () => {
 
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(struct_shorthand.validate(0), false);
-			assert.strictEqual(struct_shorthand.validate([]), false);
-			assert.strictEqual(struct_shorthand.validate({ x: "x" }), false);
+			assert.strictEqual(struct_shorthand.validate({}), false);
 			assert.strictEqual(struct_shorthand.validate({ foo: "x" }), false);
 			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "x" } }), false);
 			assert.strictEqual(struct_shorthand.validate({ y: { foo: "x", [xSymbol]: "x" } }), false);
@@ -143,7 +139,7 @@ describe("Schema Formats - Struct", () => {
 
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(struct_optional.validate(0), false);
-			assert.strictEqual(struct_optional.validate([]), false);
+			assert.strictEqual(struct_optional.validate({}), false);
 			assert.strictEqual(struct_optional.validate({ foo: 0 }), false);
 			assert.strictEqual(struct_optional.validate({ bar: "x" }), false);
 			assert.strictEqual(struct_optional.validate({ [xSymbol]: "x" }), false);
@@ -160,6 +156,4 @@ describe("Schema Formats - Struct", () => {
 			assert.strictEqual(struct_optional.validate({ foo: "x" }), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

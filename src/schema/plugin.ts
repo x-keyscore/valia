@@ -1,6 +1,5 @@
 import type { SetableCriteria, Format, SetableCriteriaTemplate } from "./formats";
 import type { Constructor } from "../types";
-import type { SchemaType } from "./types";
 import { Schema } from "./schema";
 import { Issue } from "../utils";
 import { ClassicTypesTemplate, GenericTypesTemplate } from "./formats/types";
@@ -19,7 +18,7 @@ export abstract class AbstractPlugin<const T extends SetableCriteria> extends Sc
 	 */
 	protected abstract afterInitate(): void;
 
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+	constructor(...args: ConstructorParameters<typeof Schema<T>>) {
 		super(...args);
 
 		this.beforeInitate();

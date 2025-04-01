@@ -96,6 +96,4 @@ describe("Schema Formats - Number", () => {
 			assert.strictEqual(number_custom .validate(2), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

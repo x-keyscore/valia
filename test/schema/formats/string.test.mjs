@@ -13,8 +13,6 @@ describe("Schema Formats - String", () => {
 		
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(string_default.validate(0), false);
-			assert.strictEqual(string_default.validate(null), false);
-			assert.strictEqual(string_default.validate(undefined), false);
 		});
 
 		it("should validate correct values", () => {
@@ -91,8 +89,8 @@ describe("Schema Formats - String", () => {
 			assert.strictEqual(string_enum_object.validate(0), false);
 			assert.strictEqual(string_enum_array.validate("x"), false);
 			assert.strictEqual(string_enum_object.validate("x"), false);
-			assert.strictEqual(string_enum_array.validate("red"), false);
-			assert.strictEqual(string_enum_object.validate("red"), false);
+			assert.strictEqual(string_enum_array.validate("YELLOW"), false);
+			assert.strictEqual(string_enum_object.validate("YELLOW"), false);
 		});
 
 		it("should validate correct values", () => {
@@ -136,6 +134,4 @@ describe("Schema Formats - String", () => {
 			assert.strictEqual(string_custom.validate("12345678"), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

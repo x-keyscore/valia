@@ -4,7 +4,7 @@ import assert from "node:assert";
 import { Schema } from "../../../dist/index.js";
 
 describe("Schema Formats - Union", () => {
-	describe("Default (Primitive only)", () => {
+	describe("Default (Primitive Only)", () => {
 		let schema_primitve;
 
 		before(() => {
@@ -26,7 +26,7 @@ describe("Schema Formats - Union", () => {
 		});
 	});
 
-	describe("Default (Object only)", () => {
+	describe("Default (Object Only)", () => {
 		let union_object;
 
 		before(() => {
@@ -101,7 +101,7 @@ describe("Schema Formats - Union", () => {
 		});
 	});
 
-	describe("Default (Primitive and Object)", () => {
+	describe("Default (Primitive, Object)", () => {
 		let union_primitive_object;
 
 		before(() => {
@@ -133,7 +133,7 @@ describe("Schema Formats - Union", () => {
 		});
 	});
 
-	describe("Default (Nesting of Union)", () => {
+	describe("Default (Nesting Union)", () => {
 		let union_nested;
 
 		before(() => {
@@ -214,6 +214,4 @@ describe("Schema Formats - Union", () => {
 			);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

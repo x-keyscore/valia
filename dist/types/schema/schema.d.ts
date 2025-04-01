@@ -4,7 +4,7 @@ import { EventsManager, FormatsManager } from "./managers";
  * Represents a schema for data validation, including the validation criteria structure.
  */
 export declare class Schema<const T extends SetableCriteria = SetableCriteria<keyof FormatNatives>> {
-    private mountedCriteria;
+    private _criteria;
     protected managers: {
         formats: FormatsManager;
         events: EventsManager;

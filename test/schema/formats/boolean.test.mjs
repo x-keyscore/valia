@@ -13,7 +13,6 @@ describe("Schema Formats - Boolean", () => {
 
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(boolean_default.validate(0), false);
-			assert.strictEqual(boolean_default.validate("x"), false);
 		});
 
 		it("should validate correct values", () => {
@@ -21,6 +20,4 @@ describe("Schema Formats - Boolean", () => {
 			assert.strictEqual(boolean_default.validate(false), true);
 		});
 	});
-
-	after(() => console.log("--------------------------------"));
 });

@@ -1,5 +1,5 @@
 import type { SetableCriteria } from "../formats";
-import { isArray, isBasicObject } from "../../testers";
+import { isArray, isPlainObject } from "../../testers";
 import { hasNodeSymbol } from "./mounter";
 
 interface CloningTask {
@@ -28,7 +28,7 @@ export function cloner<T extends SetableCriteria>(
 	while (stack.length > 0) {
 		let { src, cpy } = stack.pop()!;
 
-		if (isBasicObject(src)) {
+		if (isPlainObject(src)) {
 			if (hasNodeSymbol(src)) {
 				cpy = { ...src };
 			}
@@ -37,7 +37,7 @@ export function cloner<T extends SetableCriteria>(
 				for (let i = 0; i < keys.length; i++) {
 					const key = keys[i];
 	
-					if (isBasicObject(src[key])) {
+					if (isPlainObject(src[key])) {
 						if (hasNodeSymbol(src[key])) {
 							cpy[key] = { ...src[key] };
 						} else {
@@ -65,7 +65,7 @@ export function cloner<T extends SetableCriteria>(
 			for (let i = 0; i < src.length; i++) {
 				const index = i;
 	
-				if (isBasicObject(src[index])) {
+				if (isPlainObject(src[index])) {
 					if (hasNodeSymbol(src[index])) {
 						cpy[i] = { ...src[index] };
 					} else {
@@ -78,7 +78,7 @@ export function cloner<T extends SetableCriteria>(
 					}
 				} else if (isArray(src[index])) {
 					cpy[index] = [];
-	
+
 					stack.push({
 						src: src[index],
 						cpy: cpy[index]
