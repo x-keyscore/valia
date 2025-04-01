@@ -5,34 +5,48 @@ import { Schema } from "../../dist/index.js";
 
 describe("Schema instance", () => {
 	describe("'criteria' property", () => {
-		let schema_string, schema_struct;
+		let string_criteria, string_schema, tuple_criteria, tuple_schema, struct_schema, main_schema;
 
 		before(() => {
-			schema_string = new Schema({ type: "string" });
+			string_criteria = { type: "string", enum: ["foo", "bar"] };
+			string_schema = new Schema(string_criteria);
+			tuple_criteria = { type: "tuple", tuple: [{ type: "string" }, { type: "string" }] };
+			tuple_schema = new Schema(tuple_criteria);
 
-			schema_struct = new Schema({
+			struct_schema = new Schema({
 				type: "struct",
 				struct: {
 					foo: string_schema.criteria,
-					bar: {
-						type: "struct",
-						struct: {
-							foo: string_schema.criteria,
-							bar: string_schema.criteria
-						}
-					}
+					bar: tuple_schema.criteria
+				}
+			});
+
+			main_schema = new Schema({
+				type: "struct",
+				struct: {
+					foo: string_schema.criteria,
+					bar: struct_schema.
 				}
 			});
 		});
 
-		it("a criteria node from another schema, used multiple times in a new schema, must have distinct references", () => {
-			assert.notStrictEqual(schema_struct.criteria.struct.foo, schema_struct.criteria.struct.bar);
+		it(`All objects defined in the schema with a prototype of Object.prototype or null
+			(except for arrays and sub-objects of mounted node grafts) must have a distinct
+			reference from the original after instantiation.`, () => {
+			assert.notStrictEqual(string_criteria, string_schema.criteria);
+			assert.notStrictEqual(string_criteria.enum, string_schema.criteria.enum);
 		});
 
-		it("should validate correct values", () => {
-			assert.strictEqual(schema_nullable.validate(null), true);
+		it(`The root objects of mounted node grafts, when used one or multiple times in
+			the definition of a new schema, all have distinct references after the instantiation
+			of the new schema.`, () => {
+			assert.notStrictEqual(struct_schema.criteria.struct.foo, string_schema.criteria);
+			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.foo, string_schema.criteria);
+			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.bar, string_schema.criteria);
+			assert.notStrictEqual(struct_schema.criteria.struct.foo, struct_schema.criteria.struct.bar.struct.foo);
+			assert.notStrictEqual(struct_schema.criteria.struct.foo, struct_schema.criteria.struct.bar.struct.bar);
+			assert.notStrictEqual(struct_schema.criteria.struct.bar.struct.foo, struct_schema.criteria.struct.bar.struct.bar);
 		});
-
 	});
 	it("'criteria' property", () => {
 		const criteria_string = { type: "string", enum: ["foo", "bar"] };

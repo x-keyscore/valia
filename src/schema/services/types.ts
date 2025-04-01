@@ -84,7 +84,7 @@ export interface CheckingTask {
 	data: unknown;
 	node: MountedCriteria;
 	fullPaths: PathSegments;
-	stepHooks?: CheckingHooks[];
+	stackHooks?: CheckingHooks[];
 }
 
 export interface CheckingChunkTask {

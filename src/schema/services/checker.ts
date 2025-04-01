@@ -37,7 +37,7 @@ export class CheckingStack {
 		for (let i = 0; i < chunk.length; i++) {
 			const currentTask = chunk[i];
 			const partPaths = currentTask.node[nodeSymbol].partPaths;
-			let stepHooks = sourceTask.stepHooks;
+			let stackHooks = sourceTask.stackHooks;
 
 			if (currentTask.hooks) {
 				const hooks = {
@@ -49,7 +49,7 @@ export class CheckingStack {
 					...currentTask.hooks
 				}
 
-				stepHooks = stepHooks ? stepHooks.concat(hooks) : [hooks];
+				stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
 			}
 
 			this.tasks.push({
@@ -59,7 +59,7 @@ export class CheckingStack {
 					explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
 					implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
 				},
-				stepHooks
+				stackHooks
 			});
 		}
 	}
@@ -68,16 +68,16 @@ export class CheckingStack {
 		currentTask: CheckingTask,
 		reject: CheckingReject | null
 	) {
-		const stepHooks = currentTask.stepHooks;
-		if (!stepHooks) return (null);
+		const stackHooks = currentTask.stackHooks;
+		if (!stackHooks) return (null);
 
-		const lastHooks = stepHooks[stepHooks.length - 1];
+		const lastHooks = stackHooks[stackHooks.length - 1];
 		if (!reject && lastHooks.index.branch !== this.tasks.length) {
 			return (null);
 		}
 
-		for (let i = stepHooks.length - 1; i >= 0; i--) {
-			const hooks = stepHooks[i];
+		for (let i = stackHooks.length - 1; i >= 0; i--) {
+			const hooks = stackHooks[i];
 
 			const claim = reject ? hooks.onReject(reject) : hooks.onAccept();
 
@@ -114,7 +114,7 @@ export function checker(
 	let reject = null;
 	while (stack.tasks.length) {
 		const currentTask = stack.tasks.pop()!;
-		const { data, node, stepHooks } = currentTask;
+		const { data, node, stackHooks } = currentTask;
 		const chunk: CheckingChunk = [];
 
 		let code = null;
@@ -131,7 +131,7 @@ export function checker(
 
 		if (code) reject = makeReject(currentTask, code);
 		else if (chunk.length) stack.addChunk(currentTask, chunk);
-		if (stepHooks) reject = stack.runHooks(currentTask, reject);
+		if (stackHooks) reject = stack.runHooks(currentTask, reject);
 
 		if (reject) break;
 	}

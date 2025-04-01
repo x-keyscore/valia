@@ -10,7 +10,10 @@
 		"start": "tsc && node dist",
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && tsc",
-		"test": "npm run build && node --test"
+		"test": "npm run build && node --test",
+		"clean:win32": "rmdir /s /q dist",
+		"build:win32": "npm run clean:win32 && tsc",
+		"test:win32": "npm run build:win32 && node --test"
 	},
 	"keywords": [
 		"valia",
