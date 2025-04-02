@@ -5,7 +5,7 @@ exports.BooleanFormat = {
     defaultCriteria: {},
     check(chunk, criteria, data) {
         if (typeof data !== "boolean") {
-            return ("TYPE_NOT_BOOLEAN");
+            return ("TYPE_BOOLEAN_REQUIRED");
         }
         return (null);
     },

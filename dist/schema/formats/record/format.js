@@ -24,18 +24,18 @@ exports.RecordFormat = {
     },
     check(chunk, criteria, data) {
         if (!(0, testers_1.isPlainObject)(data)) {
-            return ("TYPE_NOT_PLAIN_OBJECT");
+            return ("TYPE_PLAIN_OBJECT_REQUIRED");
         }
         const keys = Reflect.ownKeys(data);
         const totalKeys = keys.length;
         if (totalKeys === 0) {
-            return (criteria.empty ? null : "VALUE_EMPTY");
+            return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
         }
         else if (criteria.min !== undefined && totalKeys < criteria.min) {
-            return ("VALUE_INFERIOR_MIN");
+            return ("DATA_SIZE_INFERIOR_MIN");
         }
         else if (criteria.max !== undefined && totalKeys > criteria.max) {
-            return ("VALUE_SUPERIOR_MAX");
+            return ("DATA_SIZE_SUPERIOR_MAX");
         }
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];

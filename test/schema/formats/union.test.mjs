@@ -1,32 +1,32 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
 describe("Schema Formats - Union", () => {
-	describe("Default (Primitive Only)", () => {
-		let schema_primitve;
+	describe("Default (Primitive Union)", () => {
+		let union_primitve;
 
 		before(() => {
-			schema_primitve = new Schema({
+			union_primitve = new Schema({
 				type: "union",
 				union: [{ type: "number" }, { type: "string" }, { type: "boolean" }]
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(schema_primitve.validate([]), false);
-			assert.strictEqual(schema_primitve.validate({}), false);
+			assert.strictEqual(union_primitve.validate({}), false);
+			assert.strictEqual(union_primitve.validate(Symbol("x")), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(schema_primitve.validate(0), true);
-			assert.strictEqual(schema_primitve.validate("x"), true);
-			assert.strictEqual(schema_primitve.validate(true), true);
+			assert.strictEqual(union_primitve.validate(0), true);
+			assert.strictEqual(union_primitve.validate("x"), true);
+			assert.strictEqual(union_primitve.validate(true), true);
 		});
 	});
 
-	describe("Default (Object Only)", () => {
+	describe("Default (Object Union)", () => {
 		let union_object;
 
 		before(() => {
@@ -101,7 +101,7 @@ describe("Schema Formats - Union", () => {
 		});
 	});
 
-	describe("Default (Primitive, Object)", () => {
+	describe("Default (Primitive Union and Object Union)", () => {
 		let union_primitive_object;
 
 		before(() => {
@@ -133,7 +133,7 @@ describe("Schema Formats - Union", () => {
 		});
 	});
 
-	describe("Default (Nesting Union)", () => {
+	describe("Default (Nested Union)", () => {
 		let union_nested;
 
 		before(() => {
@@ -203,7 +203,7 @@ describe("Schema Formats - Union", () => {
 				union_nested.evaluate({ foo: { foo: "x", bar: "x" }, bar: "x" }),
 				{
 					reject: {
-						code: 'DATA_UNSATISFIED_UNION',
+						code: 'DATA_UNION_MISMATCH',
 						path: { explicit: [], implicit: [] },
 						type: 'union',
 						label: undefined,

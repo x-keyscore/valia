@@ -7,6 +7,7 @@ import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } fr
 import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
+import type { OmegaClassicTypes, OmegaGenericTypes, OmegaSetableCriteria } from "./omega/types";
 import type { PathSegments, MountingChunk, CheckingChunk, CheckingReject } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
@@ -39,6 +40,7 @@ export interface ClassicTypesTemplate<Setable extends SetableCriteriaTemplate<st
 }
 export interface FormatClassicTypes<T extends keyof FormatClassicTypes = keyof FormatClassicTypes<any>> {
     array: ArrayClassicTypes<T>;
+    omega: OmegaClassicTypes;
     boolean: BooleanClassicTypes;
     number: NumberClassicTypes;
     record: RecordClassicTypes<T>;
@@ -64,6 +66,7 @@ export interface GenericTypesTemplate<Mounted, Guarded> {
 }
 export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria> {
     array: T extends ArraySetableCriteria ? ArrayGenericTypes<T> : never;
+    omega: T extends OmegaSetableCriteria ? OmegaGenericTypes<T> : never;
     boolean: T extends BooleanSetableCriteria ? BooleanGenericTypes : never;
     number: T extends NumberSetableCriteria ? NumberGenericTypes<T> : never;
     record: T extends RecordSetableCriteria ? RecordGenericTypes<T> : never;

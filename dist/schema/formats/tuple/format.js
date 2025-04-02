@@ -19,14 +19,14 @@ exports.TupleFormat = {
     },
     check(chunk, criteria, data) {
         if (!(0, testers_1.isArray)(data)) {
-            return ("TYPE_NOT_ARRAY");
+            return ("TYPE_ARRAY_REQUIRED");
         }
         const dataLength = data.length;
         if (dataLength < criteria.tuple.length) {
-            return ("DATA_INFERIOR_TUPLE");
+            return ("DATA_LENGTH_INFERIOR_MIN");
         }
         else if (dataLength > criteria.tuple.length) {
-            return ("DATA_SUPERIOR_TUPLE");
+            return ("DATA_LENGTH_SUPERIOR_MAX");
         }
         for (let i = 0; i < dataLength; i++) {
             chunk.push({

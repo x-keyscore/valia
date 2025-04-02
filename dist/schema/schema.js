@@ -67,6 +67,26 @@ class Schema {
 }
 exports.Schema = Schema;
 /*
+const xSymbol = Symbol("x");
+const struct_optional = new Schema({
+    type: "struct",
+    optional: ["bar", xSymbol],
+    struct: {
+        foo: { type: "string" }
+    }
+});
+
+console.log(struct_optional.evaluate({ }));*/
+/*
+const test = new Schema({
+    type: "struct",
+    struct: {
+        foo: { type: "omega", omega: "any" }
+    }
+});
+
+type test = SchemaInfer<typeof test>;*/
+/*
 const schema = new Schema({
     type: "struct",
     label: "root",

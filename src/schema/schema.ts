@@ -1,4 +1,4 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNatives } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeNames } from "./formats";
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
@@ -8,7 +8,7 @@ import { SchemaInfer } from "./types";
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export class Schema<const T extends SetableCriteria = SetableCriteria<keyof FormatNatives>> {
+export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
 	private _criteria: MountedCriteria<T> | undefined;
 	protected managers = {
 		formats: new FormatsManager(),
@@ -73,14 +73,29 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Form
 	}
 }
 
-const test = new Schema({
+const struct = new Schema({
 	type: "struct",
+	optional: ["foo"],
 	struct: {
-		foo: { type: "atomic", atomic: "any" }
+		foo: { type: "string" },
+		bar: { type: "string" }
 	}
 });
 
-type test = SchemaInfer<typeof test>;
+type test = SchemaInfer<typeof struct>
+let data: unknown = {};
+if (struct.validate(data)) {
+	data.foo
+}
+/*
+const test = new Schema({
+	type: "struct",
+	struct: {
+		foo: { type: "omega", omega: "any" }
+	}
+});
+
+type test = SchemaInfer<typeof test>;*/
 
 /*
 const schema = new Schema({

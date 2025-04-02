@@ -1,4 +1,4 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
@@ -103,23 +103,23 @@ describe("Schema Formats - Struct", () => {
 
 		it("should return the correct rejection", () => {
 			assert.deepStrictEqual(struct_shorthand.evaluate({ 
-				foo: {
+					foo: {
 						foo: "x",
 						[xSymbol]: 0
 					}
 				}), {
-				reject: {
-					code: "TYPE_NOT_STRING",
-					type: "string",
-					path: {
-						explicit: ['struct', 'foo', 'struct', xSymbol],
-						implicit: ['&', 'foo', '&', xSymbol]
+					reject: {
+						code: "TYPE_STRING_REQUIRED",
+						type: "string",
+						path: {
+							explicit: ['struct', 'foo', 'struct', xSymbol],
+							implicit: ['&', 'foo', '&', xSymbol]
+						},
+						label: undefined,
+						message: undefined
 					},
-					label: undefined,
-					message: undefined
-				},
-				data: null
-			});
+					data: null
+				});
 		});
 	});
 	describe("'optional' parameter", () => {

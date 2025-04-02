@@ -1,4 +1,4 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
@@ -17,6 +17,7 @@ describe("Schema Formats - Symbol", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(symbol_default.validate(0), false);
 			assert.strictEqual(symbol_default.validate({}), false);
+			assert.strictEqual(symbol_default.validate("x"), false);
 		});
 
 		it("should validate correct values", () => {

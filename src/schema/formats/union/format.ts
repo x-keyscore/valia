@@ -1,13 +1,14 @@
 import type { CheckingChunkTask } from "../../services";
 import type { UnionSetableCriteria } from "./types";
 import type { Format } from "../types";
+import { Issue } from "../../../utils";
 
 export const UnionFormat: Format<UnionSetableCriteria> = {
-	defaultCriteria: {
-		empty: false
-	},
+	defaultCriteria: {},
 	mount(chunk, criteria) {
-		for (let i = 0; i < criteria.union.length; i++) {
+		const unionLength = criteria.union.length;
+
+		for (let i = 0; i < unionLength; i++) {
 			chunk.push({
 				node: criteria.union[i],
 				partPaths: {
@@ -20,7 +21,7 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 	check(chunk, criteria, data) {
 		const unionLength = criteria.union.length;
 
-		const ctx = {
+		const total = {
 			hooked: unionLength,
 			rejected: 0
 		};
@@ -33,8 +34,8 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 				});
 			},
 			onReject() {
-				ctx.rejected++;
-				if (ctx.rejected === ctx.hooked) {
+				total.rejected++;
+				if (total.rejected === total.hooked) {
 					return ({
 						action: "REJECT",
 						code: "DATA_UNION_MISMATCH"

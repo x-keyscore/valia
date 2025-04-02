@@ -1,4 +1,4 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../dist/index.js";
@@ -90,7 +90,7 @@ describe("Schema Instance", () => {
 		it("should return a correct rejection", () => {
 			assert.deepStrictEqual(main_schema.evaluate({ foo: "x", bar: 0 }), {
 				reject: {
-					code: "TYPE_NOT_STRING",
+					code: "TYPE_STRING_REQUIRED",
 					type: "string",
 					path: {
 						explicit: ["struct", "bar"],

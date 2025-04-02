@@ -16,8 +16,8 @@ type MountedStruct<T extends StructDefinition> = {
 };
 export interface StructMountedCriteria<T extends StructSetableCriteria> {
     struct: MountedStruct<T['struct']>;
-    acceptedKeys: (string | symbol)[];
-    requiredKeys: (string | symbol)[];
+    acceptedKeys: Set<string | symbol>;
+    requiredKeys: Set<string | symbol>;
 }
 type OmitDynamicKey<K extends PropertyKey> = {} extends Record<K, unknown> ? never : K;
 type OptionalizeKeys<T, K extends (string | symbol)[] | undefined> = K extends PropertyKey[] ? Omit<T, K[number]> & Partial<Omit<T, keyof Omit<T, K[number]>>> : T;

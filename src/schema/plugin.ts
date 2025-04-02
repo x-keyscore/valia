@@ -134,14 +134,14 @@ declare module './formats/types' {
 	}
 }
 
-const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
+const ObjectId: Format<ObjectIdSetableCriteria> = {
 	defaultCriteria: {},
-	mounting(queue, path, criteria) {
+	mount(chunk, criteria) {
 		
 	},
-	checking(queue, path, criteria, value) {
+	check(chunk, criteria, value) {
 		return (null);
-	}
+	},
 }
 
 class Mongo<T extends SetableCriteria> extends AbstractPlugin<T> {
@@ -153,7 +153,7 @@ class Mongo<T extends SetableCriteria> extends AbstractPlugin<T> {
 
 	}
 
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+	constructor(...args: ConstructorParameters<typeof Schema<T>>) {
 		super(...args)
 	}
 }
@@ -167,7 +167,7 @@ class Maria<T extends SetableCriteria> extends AbstractPlugin<T> {
 		
 	}
 
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
+	constructor(...args: ConstructorParameters<typeof Schema<T>>) {
 		super(...args)
 	}
 }
@@ -177,5 +177,5 @@ const test = SchemaPlugins(Mongo, Maria)
 const eerer = new test({ type: "struct", struct: { test: { type: "objectId", unique: true }}})
 
 console.log(eerer.evaluate({ test: "df"}))
-
-//const lala = new Schema({ type: "struct", struct: { test: { type: 'boolean' }}})*/
+*/
+//const lala = new Schema({ type: "struct", struct: { test: { type: 'boolean' }}})

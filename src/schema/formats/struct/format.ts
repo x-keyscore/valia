@@ -1,37 +1,22 @@
-import type { Format, MountedCriteria } from "../types";
 import type { StructSetableCriteria, StructDefinition } from "./types";
+import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
-
-export interface CustomProperties {
-	hasRequiredKeys(
-		mountedCriteria: MountedCriteria<StructSetableCriteria>,
-		value: (string | symbol)[]
-	): boolean;
-	hasAcceptedKeys(
-		mountedCriteria: MountedCriteria<StructSetableCriteria>,
-		value: (string | symbol)[]
-	): boolean;
-}
 
 function isShorthandStruct(obj: object): obj is StructDefinition {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 
-export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
+export const StructFormat: Format<StructSetableCriteria> = {
 	defaultCriteria: {},
-	hasRequiredKeys(criteria, keys) {
-		const requiredKeys = criteria.requiredKeys;
-		return (requiredKeys.length <= keys.length && requiredKeys.every((key) => keys.includes(key)));
-	},
-	hasAcceptedKeys(criteria, keys) {
-		const acceptedKeys = criteria.acceptedKeys;
-		return (keys.length <= acceptedKeys.length && keys.every((key) => acceptedKeys.includes(key)));
-	},
 	mount(chunk, criteria) {
+		const optionalKeys = criteria.optional;
 		const acceptedKeys = Reflect.ownKeys(criteria.struct);
-		const requiredKeys = acceptedKeys.filter(key => !criteria.optional?.includes(key));
+		const requiredKeys = acceptedKeys.filter(key => !optionalKeys?.includes(key));
 
-		Object.assign(criteria, { acceptedKeys, requiredKeys });
+		Object.assign(criteria, {
+			acceptedKeys: new Set(acceptedKeys),
+			requiredKeys: new Set(requiredKeys)
+		});
 
 		for (let i = 0; i < acceptedKeys.length; i++) {
 			const key = acceptedKeys[i];
@@ -57,16 +42,27 @@ export const StructFormat: Format<StructSetableCriteria, CustomProperties> = {
 			return ("TYPE_PLAIN_OBJECT_REQUIRED");
 		}
 
+		const { acceptedKeys, requiredKeys } = criteria;
 		const keys = Reflect.ownKeys(data);
-		if (!this.hasAcceptedKeys(criteria, keys)) {
-			return ("DATA_KEYS_INVALID");
-		}
-		else if (!this.hasRequiredKeys(criteria, keys)) {
+
+		if (keys.length < requiredKeys.size) {
 			return ("DATA_KEYS_MISSING");
 		}
 
-		for (let i = 0; i < keys.length; i++) {
+		let requiredMiss = requiredKeys.size;
+		for (let i = keys.length - 1; i >= 0; i--) {
 			const key = keys[i];
+
+			if (!acceptedKeys.has(key)) {
+				return ("DATA_KEYS_INVALID");
+			}
+
+			if (requiredKeys.has(key)) {
+				requiredMiss--;
+			} else if (requiredMiss > i) {
+				return ("DATA_KEYS_MISSING");
+			}
+
 			chunk.push({
 				data: data[key],
 				node: criteria.struct[key]

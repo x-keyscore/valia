@@ -34,7 +34,7 @@ exports.UnionFormat = {
                 if (ctx.rejected === ctx.hooked) {
                     return ({
                         action: "REJECT",
-                        code: "DATA_UNSATISFIED_UNION"
+                        code: "DATA_UNION_MISMATCH"
                     });
                 }
                 return ({

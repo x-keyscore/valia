@@ -1,10 +1,10 @@
-import type { AtomicSetableCriteria, AtomicTypes } from "./types";
+import type { OmegaSetableCriteria, OmegaTypes } from "./types";
 import type { Format } from "../types";
 
-export const AtomicFormat: Format<AtomicSetableCriteria> = {
+export const OmegaFormat: Format<OmegaSetableCriteria> = {
 	defaultCriteria: {},
 	mount(chunk, criteria) {
-		const bitmap: Record<AtomicTypes, number> = {
+		const bitmap: Record<OmegaTypes, number> = {
 			"undefined": 1 << 0,
 			"unknown":   1 << 1,
 			"nullish":   1 << 2,
@@ -13,7 +13,7 @@ export const AtomicFormat: Format<AtomicSetableCriteria> = {
 		}
 
 		Object.assign(criteria, {
-			bitcode: bitmap[criteria.atomic]
+			bitcode: bitmap[criteria.omega]
 		});
 	},
 	check(chunk, criteria, value) {

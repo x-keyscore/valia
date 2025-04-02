@@ -8,7 +8,8 @@ export type {
     GuardedCriteria,
     FormatClassicTypes,
     FormatGenericTypes,
-    FormatNatives,
+    FormatGlobalNames,
+    FormatNativeNames,
     Format
 } from './types';
 
