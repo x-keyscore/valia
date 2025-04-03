@@ -1,13 +1,13 @@
 import type { BooleanClassicTypes, BooleanGenericTypes, BooleanSetableCriteria } from "./boolean/types";
-import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
-import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
-import type { StringClassicTypes, StringGenericTypes, StringSetableCriteria } from "./string/types";
-import type { StructClassicTypes, StructGenericTypes, StructSetableCriteria } from "./struct/types";
 import type { SymbolClassicTypes, SymbolGenericTypes, SymbolSetableCriteria } from "./symbol/types";
+import type { NumberClassicTypes, NumberGenericTypes, NumberSetableCriteria } from "./number/types";
+import type { StringClassicTypes, StringGenericTypes, StringSetableCriteria } from "./string/types";
+import type { SimpleClassicTypes, SimpleGenericTypes, SimpleSetableCriteria } from "./simple/types";
+import type { RecordClassicTypes, RecordGenericTypes, RecordSetableCriteria } from "./record/types";
+import type { StructClassicTypes, StructGenericTypes, StructSetableCriteria } from "./struct/types";
 import type { ArrayClassicTypes, ArrayGenericTypes, ArraySetableCriteria } from "./array/types";
 import type { TupleClassicTypes, TupleGenericTypes, TupleSetableCriteria } from "./tuple/types";
 import type { UnionClassicTypes, UnionGenericTypes, UnionSetableCriteria } from "./union/types";
-import type { OmegaClassicTypes, OmegaGenericTypes, OmegaSetableCriteria } from "./omega/types";
 import type { PathSegments, MountingChunk, CheckingChunk, CheckingReject } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
@@ -50,14 +50,14 @@ export interface ClassicTypesTemplate<
 }
 
 export interface FormatClassicTypes<T extends keyof FormatClassicTypes = any> {
-	array: ArrayClassicTypes<T>;
-	omega: OmegaClassicTypes;
 	boolean: BooleanClassicTypes;
-	number: NumberClassicTypes;
-	record: RecordClassicTypes<T>;
-	string: StringClassicTypes;
-	struct: StructClassicTypes<T>;
 	symbol: SymbolClassicTypes;
+	number: NumberClassicTypes;
+	string: StringClassicTypes;
+	simple: SimpleClassicTypes;
+	record: RecordClassicTypes<T>;
+	struct: StructClassicTypes<T>;
+	array: ArrayClassicTypes<T>;
 	tuple: TupleClassicTypes<T>;
 	union: UnionClassicTypes<T>;
 }
@@ -81,14 +81,14 @@ export interface GenericTypesTemplate<Mounted, Guarded> {
 }
 
 export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria> {
-	array: T extends ArraySetableCriteria ? ArrayGenericTypes<T> : never;
-	omega: T extends OmegaSetableCriteria ? OmegaGenericTypes<T> : never;
-	boolean: T extends BooleanSetableCriteria ? BooleanGenericTypes : never
-	number: T extends NumberSetableCriteria ? NumberGenericTypes<T> : never
-	record: T extends RecordSetableCriteria ? RecordGenericTypes<T> : never
-	string: T extends StringSetableCriteria ? StringGenericTypes<T> : never;
-	struct: T extends StructSetableCriteria ? StructGenericTypes<T> : never;
+	boolean: T extends BooleanSetableCriteria ? BooleanGenericTypes : never;
 	symbol: T extends SymbolSetableCriteria ? SymbolGenericTypes : never;
+	number: T extends NumberSetableCriteria ? NumberGenericTypes<T> : never
+	string: T extends StringSetableCriteria ? StringGenericTypes<T> : never;
+	simple: T extends SimpleSetableCriteria ? SimpleGenericTypes<T> : never;
+	record: T extends RecordSetableCriteria ? RecordGenericTypes<T> : never;
+	struct: T extends StructSetableCriteria ? StructGenericTypes<T> : never;
+	array: T extends ArraySetableCriteria ? ArrayGenericTypes<T> : never;
 	tuple: T extends TupleSetableCriteria ? TupleGenericTypes<T> : never;
 	union: T extends UnionSetableCriteria ? UnionGenericTypes<T> : never;
 }

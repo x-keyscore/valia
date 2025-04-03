@@ -1,19 +1,27 @@
-import type { OmegaSetableCriteria, OmegaTypes } from "./types";
+import type { SimpleSetableCriteria, SimpleTypes } from "./types";
 import type { Format } from "../types";
 
-export const OmegaFormat: Format<OmegaSetableCriteria> = {
+const bitmask = {
+    UNDEFINED: 1 << 0,
+    UNKNOWN:   1 << 1,
+    NULLISH:   1 << 2,
+    NULL:      1 << 3,
+    ANY:       1 << 4
+}
+
+export const SimpleFormat: Format<SimpleSetableCriteria> = {
 	defaultCriteria: {},
 	mount(chunk, criteria) {
-		const bitmap: Record<OmegaTypes, number> = {
-			"undefined": 1 << 0,
-			"unknown":   1 << 1,
-			"nullish":   1 << 2,
-			"null":      1 << 3,
-			"any":       1 << 4
+		const bitmap: Record<SimpleTypes, number> = {
+			"undefined": bitmask.UNDEFINED,
+			"unknown":   bitmask.UNKNOWN,
+			"nullish":   bitmask.NULLISH,
+			"null":      bitmask.NULL,
+			"any":       bitmask.ANY
 		}
 
 		Object.assign(criteria, {
-			bitcode: bitmap[criteria.omega]
+			bitcode: bitmap[criteria.simple]
 		});
 	},
 	check(chunk, criteria, value) {

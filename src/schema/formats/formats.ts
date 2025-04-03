@@ -1,13 +1,13 @@
 import type { Format, SetableCriteria, StaticDefaultCriteria } from "./types";
 import { BooleanFormat } from "./boolean/format";
 import { SymbolFormat } from "./symbol/format";
-import { StringFormat } from "./string/format";
 import { NumberFormat } from "./number/format";
-import { StructFormat } from "./struct/format";
+import { StringFormat } from "./string/format";
+import { SimpleFormat } from "./simple/format";
 import { RecordFormat } from "./record/format";
-import { TupleFormat } from "./tuple/format";
+import { StructFormat } from "./struct/format";
 import { ArrayFormat } from "./array/format";
-import { OmegaFormat } from "./omega/format";
+import { TupleFormat } from "./tuple/format";
 import { UnionFormat } from "./union/format";
 
 export const staticDefaultCriteria: StaticDefaultCriteria = {
@@ -18,12 +18,12 @@ export const staticDefaultCriteria: StaticDefaultCriteria = {
 export const formatNatives = {
 	boolean: BooleanFormat,
 	symbol: SymbolFormat,
-	string: StringFormat,
 	number: NumberFormat,
-	struct: StructFormat,
+	string: StringFormat,
+	simple: SimpleFormat,
 	record: RecordFormat,
-	tuple: TupleFormat,
+	struct: StructFormat,
 	array: ArrayFormat,
-	omega: OmegaFormat,
+	tuple: TupleFormat,
 	union: UnionFormat
 } satisfies Record<string, Format<SetableCriteria>>;

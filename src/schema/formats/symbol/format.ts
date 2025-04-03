@@ -3,11 +3,11 @@ import type { Format } from "../types";
 
 export const SymbolFormat: Format<SymbolSetableCriteria> = {
 	defaultCriteria: {},
-	check(queue, criteria, data) {
+	check(chunk, criteria, data) {
 		if (typeof data !== "symbol") {
 			return "TYPE_SYMBOL_REQUIRED";
 		}
-		else if (criteria.symbol !== undefined && data !== criteria.symbol) {
+		else if (criteria?.symbol && data !== criteria.symbol) {
 			return "DATA_SYMBOL_MISMATCH";
 		}
 
