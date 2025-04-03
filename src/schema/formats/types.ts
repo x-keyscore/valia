@@ -95,12 +95,12 @@ export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria>
 
 // SETABLE CRITERIA
 
-export type SetableCriteria<T extends keyof FormatClassicTypes = keyof FormatClassicTypes> =
+export type SetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> =
 	FormatClassicTypes<T>[T]['setableCriteria'];
 
 // DEFAULT CRITERIA
 
-export type DefaultCriteria<T extends keyof FormatClassicTypes = keyof FormatClassicTypes> =
+export type DefaultCriteria<T extends FormatGlobalNames = FormatGlobalNames> =
 	FormatClassicTypes<T>[T]['defaultCriteria']
 
 // MOUNTED CRITERIA

@@ -49,7 +49,7 @@ export const StructFormat: Format<StructSetableCriteria> = {
 			return ("DATA_KEYS_MISSING");
 		}
 
-		let requiredMiss = requiredKeys.size;
+		let requiredLeft = requiredKeys.size;
 		for (let i = keys.length - 1; i >= 0; i--) {
 			const key = keys[i];
 
@@ -58,8 +58,8 @@ export const StructFormat: Format<StructSetableCriteria> = {
 			}
 
 			if (requiredKeys.has(key)) {
-				requiredMiss--;
-			} else if (requiredMiss > i) {
+				requiredLeft--;
+			} else if (requiredLeft > i) {
 				return ("DATA_KEYS_MISSING");
 			}
 

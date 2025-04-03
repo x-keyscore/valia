@@ -15,7 +15,8 @@ export {
     GuardedCriteria,
 	FormatClassicTypes,
 	FormatGenericTypes,
-	FormatNatives,
+	FormatGlobalNames,
+	FormatNativeNames,
 	Format
 } from './schema/formats';
 

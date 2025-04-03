@@ -100,11 +100,11 @@ export interface CheckingReject {
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 
-	 * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_NOT_STRING`).
-	 * - `DATA`: Indicates an error related to the provided data (e.g., `DATA_MISSING_KEY`).
+	 * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_STRING_REQUIRED`).
+	 * - `DATA`: Indicates an error related to the provided data (e.g., `DATA_KEYS_MISSING`).
 	 * - `TEST`: Indicates an error related to a specific test or validation (e.g., `TEST_REGEX_FAILED`).
 	 * 
-	 * `<DETAIL>`: A specific description of the error, such as `NOT_STRING`, `MISSING_KEY`, etc.
+	 * `<DETAIL>`: A specific description of the error, such as `STRING_REQUIRED`, `KEYS_MISSING`, etc.
 	 */
 	code: string;
 	type: string;

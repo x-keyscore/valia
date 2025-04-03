@@ -1,6 +1,6 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, FormatClassicTypesKeys, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, FormatGlobalNames, SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
 type KeyCriteria = SetableCriteria<"string" | "symbol">;
-export interface RecordSetableCriteria<T extends FormatClassicTypesKeys = FormatClassicTypesKeys> extends SetableCriteriaTemplate<"record"> {
+export interface RecordSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"record"> {
     /** @default true */
     empty?: boolean;
     min?: number;
@@ -11,7 +11,7 @@ export interface RecordSetableCriteria<T extends FormatClassicTypesKeys = Format
 export interface RecordDefaultCriteria {
     empty: boolean;
 }
-export interface RecordClassicTypes<T extends FormatClassicTypesKeys> extends ClassicTypesTemplate<RecordSetableCriteria<T>, RecordDefaultCriteria> {
+export interface RecordClassicTypes<T extends FormatGlobalNames> extends ClassicTypesTemplate<RecordSetableCriteria<T>, RecordDefaultCriteria> {
 }
 export interface RecordMountedCriteria {
     key: MountedCriteria<KeyCriteria>;

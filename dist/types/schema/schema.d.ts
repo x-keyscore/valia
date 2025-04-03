@@ -1,9 +1,9 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNatives } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeNames } from "./formats";
 import { EventsManager, FormatsManager } from "./managers";
 /**
  * Represents a schema for data validation, including the validation criteria structure.
  */
-export declare class Schema<const T extends SetableCriteria = SetableCriteria<keyof FormatNatives>> {
+export declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
     private _criteria;
     protected managers: {
         formats: FormatsManager;

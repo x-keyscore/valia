@@ -38,7 +38,7 @@ export interface ClassicTypesTemplate<Setable extends SetableCriteriaTemplate<st
     setableCriteria: Setable;
     defaultCriteria: Default;
 }
-export interface FormatClassicTypes<T extends keyof FormatClassicTypes = keyof FormatClassicTypes<any>> {
+export interface FormatClassicTypes<T extends keyof FormatClassicTypes = any> {
     array: ArrayClassicTypes<T>;
     omega: OmegaClassicTypes;
     boolean: BooleanClassicTypes;
@@ -50,7 +50,7 @@ export interface FormatClassicTypes<T extends keyof FormatClassicTypes = keyof F
     tuple: TupleClassicTypes<T>;
     union: UnionClassicTypes<T>;
 }
-export type FormatClassicTypesKeys = keyof FormatClassicTypes;
+export type FormatGlobalNames = keyof FormatClassicTypes;
 /**
  * @template Mounted A type that takes a generic parameter extending
  * 'SetableCriteria'. It is used to determine the type validated
@@ -76,8 +76,8 @@ export interface FormatGenericTypes<T extends SetableCriteria = SetableCriteria>
     tuple: T extends TupleSetableCriteria ? TupleGenericTypes<T> : never;
     union: T extends UnionSetableCriteria ? UnionGenericTypes<T> : never;
 }
-export type SetableCriteria<T extends keyof FormatClassicTypes = keyof FormatClassicTypes> = FormatClassicTypes<T>[T]['setableCriteria'];
-export type DefaultCriteria<T extends keyof FormatClassicTypes = keyof FormatClassicTypes> = FormatClassicTypes<T>[T]['defaultCriteria'];
+export type SetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> = FormatClassicTypes<T>[T]['setableCriteria'];
+export type DefaultCriteria<T extends FormatGlobalNames = FormatGlobalNames> = FormatClassicTypes<T>[T]['defaultCriteria'];
 export interface StaticDefaultCriteria {
     nullable: boolean;
     undefinable: boolean;
@@ -100,4 +100,4 @@ export type Format<T extends SetableCriteria, U extends Record<string, any> = {}
     mount?(chunk: MountingChunk, criteria: T): void;
     check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): CheckingReject['code'] | null;
 } & U;
-export type FormatNatives = typeof formatNatives;
+export type FormatNativeNames = keyof (typeof formatNatives);

@@ -2,11 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnionFormat = void 0;
 exports.UnionFormat = {
-    defaultCriteria: {
-        empty: false
-    },
+    defaultCriteria: {},
     mount(chunk, criteria) {
-        for (let i = 0; i < criteria.union.length; i++) {
+        const unionLength = criteria.union.length;
+        for (let i = 0; i < unionLength; i++) {
             chunk.push({
                 node: criteria.union[i],
                 partPaths: {
@@ -18,7 +17,7 @@ exports.UnionFormat = {
     },
     check(chunk, criteria, data) {
         const unionLength = criteria.union.length;
-        const ctx = {
+        const total = {
             hooked: unionLength,
             rejected: 0
         };
@@ -30,8 +29,8 @@ exports.UnionFormat = {
                 });
             },
             onReject() {
-                ctx.rejected++;
-                if (ctx.rejected === ctx.hooked) {
+                total.rejected++;
+                if (total.rejected === total.hooked) {
                     return ({
                         action: "REJECT",
                         code: "DATA_UNION_MISMATCH"

@@ -41,16 +41,16 @@ exports.StructFormat = {
         if (keys.length < requiredKeys.size) {
             return ("DATA_KEYS_MISSING");
         }
-        let requiredMiss = requiredKeys.size;
+        let requiredLeft = requiredKeys.size;
         for (let i = keys.length - 1; i >= 0; i--) {
             const key = keys[i];
             if (!acceptedKeys.has(key)) {
                 return ("DATA_KEYS_INVALID");
             }
             if (requiredKeys.has(key)) {
-                requiredMiss--;
+                requiredLeft--;
             }
-            else if (requiredMiss > i) {
+            else if (requiredLeft > i) {
                 return ("DATA_KEYS_MISSING");
             }
             chunk.push({

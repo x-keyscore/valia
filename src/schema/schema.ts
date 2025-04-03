@@ -77,7 +77,7 @@ const struct = new Schema({
 	type: "struct",
 	optional: ["foo"],
 	struct: {
-		foo: { type: "string" },
+		foo: { type: "number" },
 		bar: { type: "string" }
 	}
 });
