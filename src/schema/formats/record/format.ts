@@ -3,6 +3,7 @@ import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
 
 export const RecordFormat: Format<RecordSetableCriteria> = {
+	type: "record",
 	defaultCriteria: {
 		empty: true
 	},
@@ -13,14 +14,14 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 				explicit: ["key"],
 				implicit: []
 			}
-		})
+		});
 		chunk.push({
 			node: criteria.value,
 			partPaths: {
 				explicit: ["value"],
 				implicit: ["%", "string", "symbol"]
 			}
-		})
+		});
 	},
 	check(chunk, criteria, data) {
 		if (!isPlainObject(data)) {
@@ -28,19 +29,19 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 		}
 
 		const keys = Reflect.ownKeys(data);
-		const totalKeys = keys.length;
+		const keysLength = keys.length;
 
-		if (totalKeys === 0) {
+		if (keysLength === 0) {
 			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
 		}
-		else if (criteria.min !== undefined && totalKeys < criteria.min) {
+		else if (criteria.min != null && keysLength < criteria.min) {
 			return ("DATA_SIZE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && totalKeys > criteria.max) {
+		else if (criteria.max != null && keysLength > criteria.max) {
 			return ("DATA_SIZE_SUPERIOR_MAX");
 		}
 
-		for (let i = 0; i < keys.length; i++) {
+		for (let i = 0; i < keysLength; i++) {
 			const key = keys[i];
 
 			chunk.push({

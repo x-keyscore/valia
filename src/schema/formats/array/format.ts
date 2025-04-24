@@ -2,7 +2,8 @@ import type { ArraySetableCriteria } from "./types";
 import type { Format } from "../types";
 import { isArray } from "../../../testers";
 
-export const ArrayFormat: Format< ArraySetableCriteria> = {
+export const ArrayFormat: Format<ArraySetableCriteria> = {
+	type: "array",
 	defaultCriteria: {
 		empty: true
 	},
@@ -25,10 +26,10 @@ export const ArrayFormat: Format< ArraySetableCriteria> = {
 		if (!dataLength) {
 			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
 		}
-		else if (criteria.min !== undefined && dataLength < criteria.min) {
+		else if (criteria.min != null && dataLength < criteria.min) {
 			return ("DATA_LENGTH_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && dataLength > criteria.max) {
+		else if (criteria.max != null && dataLength > criteria.max) {
 			return ("DATA_LENGTH_SUPERIOR_MAX");
 		}
 

@@ -1,9 +1,9 @@
 import type { CheckingChunkTask } from "../../services";
 import type { UnionSetableCriteria } from "./types";
 import type { Format } from "../types";
-import { Issue } from "../../../utils";
 
 export const UnionFormat: Format<UnionSetableCriteria> = {
+	type: "union",
 	defaultCriteria: {},
 	mount(chunk, criteria) {
 		const unionLength = criteria.union.length;

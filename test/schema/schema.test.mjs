@@ -113,44 +113,28 @@ describe("Schema Instance", () => {
 	});
 });
 
-describe("Schema Formats - (Global Parameter)", () => {
+describe("Schema Formats - (Basic Parameter)", () => {
 	describe("'nullable' parameter", () => {
-		let schema_nullable;
+		let nullable_true, nullable_false;
 
 		before(() => {
-			schema_nullable = new Schema({
+			nullable_true = new Schema({
 				type: "string",
 				nullable: true
 			});
-		});
 
-		it("should invalidate incorrect values", () => {
-			assert.strictEqual(schema_nullable.validate(0), false);
-			assert.strictEqual(schema_nullable.validate(undefined), false);
-		});
-
-		it("should validate correct values", () => {
-			assert.strictEqual(schema_nullable.validate(null), true);
-		});
-	});
-
-	describe("'undefinable' parameter", () => {
-		let schema_undefinable;
-
-		before(() => {
-			schema_undefinable = new Schema({
+			nullable_false = new Schema({
 				type: "string",
-				undefinable: true
+				nullable: false
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(schema_undefinable.validate(0), false);
-			assert.strictEqual(schema_undefinable.validate(null), false);
+			assert.strictEqual(nullable_false.validate(null), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(schema_undefinable.validate(undefined), true);
+			assert.strictEqual(nullable_true.validate(null), true);
 		});
 	});
 });

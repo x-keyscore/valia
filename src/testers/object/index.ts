@@ -7,4 +7,4 @@ export {
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction,
-} from './object'
+} from './object';

@@ -3,6 +3,7 @@ import type { Format } from "../types";
 import { isArray, isPlainObject, testers } from "../../../testers";
 
 export const StringFormat: Format<StringSetableCriteria> = {
+	type: "string",
 	defaultCriteria: {
 		empty: true
 	},
@@ -16,20 +17,20 @@ export const StringFormat: Format<StringSetableCriteria> = {
 		if (!dataLength) {
 			return (criteria.empty ? null : "DATA_EMPTY");
 		}
-		else if (criteria.min !== undefined && dataLength < criteria.min) {
+		else if (criteria.min != null && dataLength < criteria.min) {
 			return ("DATA_LENGTH_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && dataLength > criteria.max) {
+		else if (criteria.max != null && dataLength > criteria.max) {
 			return ("DATA_LENGTH_SUPERIOR_MAX");
 		}
-		else if (criteria.enum !== undefined) {
+		else if (criteria.enum != null) {
 			if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
 				return ("DATA_ENUM_MISMATCH");
 			} else if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(data)) {
 				return ("DATA_ENUM_MISMATCH");
 			}
 		}
-		else if (criteria.regex !== undefined && !criteria.regex.test(data)) {
+		else if (criteria.regex != null && !criteria.regex.test(data)) {
 			return ("TEST_REGEX_FAILED");
 		} else if (criteria.tester && !testers.string[criteria.tester.name](data, criteria.tester?.params as any)) {
 			return ("TEST_TESTER_FAILED");

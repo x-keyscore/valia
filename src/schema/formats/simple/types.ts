@@ -1,17 +1,17 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 
 export type SimpleTypes =
 	| "undefined"
-	| "unknown"
 	| "nullish"
 	| "null"
+	| "unknown"
 	| "any";
 
 export interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
 	simple: SimpleTypes;
 }
 
-export interface OmegaClassicTypes extends ClassicTypesTemplate<
+export interface SimpleSpecTypes extends SpecTypesTemplate<
 	SimpleSetableCriteria,
 	{}
 > {}
@@ -20,15 +20,15 @@ export interface SimpleMountedCriteria {
 	bitcode: number;
 }
 
-type SimpleGuardedCriteria<T extends SimpleSetableCriteria> = 
-    T["simple"] extends "undefined"   ? undefined :
-    T["simple"] extends "unknown"     ? unknown :
-    T["simple"] extends "nullish"     ? null | undefined :
-    T["simple"] extends "null"        ? null :
-    T["simple"] extends "any"         ? any :
+type SimpleGuardedCriteria<T extends SimpleSetableCriteria> =
+	T["simple"] extends "nullish"   ? undefined | null :
+	T["simple"] extends "undefined" ? undefined :
+	T["simple"] extends "null"      ? null :
+	T["simple"] extends "unknown"   ? unknown :
+    T["simple"] extends "any"       ? any :
     never;
 
-export interface SimpleGenericTypes<T extends SimpleSetableCriteria> extends GenericTypesTemplate<
+export interface SimpleFlowTypes<T extends SimpleSetableCriteria> extends FlowTypesTemplate<
 	SimpleMountedCriteria,
 	SimpleGuardedCriteria<T>
 > {}

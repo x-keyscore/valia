@@ -1,45 +1,40 @@
 import type { SimpleSetableCriteria, SimpleTypes } from "./types";
 import type { Format } from "../types";
 
-const bitmask = {
-    UNDEFINED: 1 << 0,
-    UNKNOWN:   1 << 1,
-    NULLISH:   1 << 2,
-    NULL:      1 << 3,
-    ANY:       1 << 4
+export interface CustomProperties {
+	bitflags: Record<SimpleTypes, number>
 }
 
-export const SimpleFormat: Format<SimpleSetableCriteria> = {
+export const SimpleFormat: Format<SimpleSetableCriteria, CustomProperties> = {
+	type: "simple",
 	defaultCriteria: {},
+	bitflags: {
+		undefined: 1 << 0,
+		nullish:   1 << 1,
+		null:      1 << 2,
+		unknown:   1 << 3,
+		any:       1 << 4
+	},
 	mount(chunk, criteria) {
-		const bitmap: Record<SimpleTypes, number> = {
-			"undefined": bitmask.UNDEFINED,
-			"unknown":   bitmask.UNKNOWN,
-			"nullish":   bitmask.NULLISH,
-			"null":      bitmask.NULL,
-			"any":       bitmask.ANY
-		}
-
 		Object.assign(criteria, {
-			bitcode: bitmap[criteria.simple]
+			bitcode: this.bitflags[criteria.simple]
 		});
 	},
 	check(chunk, criteria, value) {
-		const { bitcode } = criteria;
+		const { bitflags } = this, { bitcode } = criteria;
 
-		if (bitcode & ((1 << 1) | (1 << 4))) {
+		if (bitcode & (bitflags.any | bitflags.unknown)) {
 			return (null);
 		}
 
-		if (value === null) {
-			if (!(bitcode & ((1 << 3) | (1 << 2)))) {
-				return ("TYPE_NULL_DISALLOWED");
-			}
+		if (bitcode & bitflags.nullish && value != null) {
+			return ("TYPE_NULLISH_REQUIRED");
 		}
-		else if (value === undefined) {
-			if (!(bitcode & ((1 << 0) | (1 << 2)))) {
-				return ("TYPE_UNDEFINED_DISALLOWED");
-			}
+		else if (bitcode & bitflags.null && value !== null) {
+			return ("TYPE_NULL_REQUIRED");
+		}
+		else if ((bitcode & bitflags.undefined) && value !== undefined) {
+			return ("TYPE_UNDEFINED_REQUIRED");
 		}
 
 		return (null);

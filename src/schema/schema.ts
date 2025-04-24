@@ -3,10 +3,10 @@ import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
-import { SchemaInfer } from "./types";
 
 /**
- * Represents a schema for data validation, including the validation criteria structure.
+ * The `Schema` class is used to define and validate data structures,
+ * ensuring they conform to specified criteria.
  */
 export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
 	private _criteria: MountedCriteria<T> | undefined;
@@ -16,7 +16,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	}
 
 	protected initiate(definedCriteria: T) {
-		this.managers.formats.set(formatNatives);
+		this.managers.formats.add(formatNatives);
 		const clonedCriteria = cloner(definedCriteria);
 		this._criteria = mounter(this.managers, clonedCriteria);
 	}
@@ -62,8 +62,8 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * @param data - The data to be evaluated.
 	 * 
 	 * @returns An object containing:
-	 * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
-	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
+	 * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
+	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
 	 */
 	evaluate(data: unknown) {
 		const reject = checker(this.managers, this.criteria, data);
@@ -72,231 +72,3 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 		return ({ reject: null, data: data as GuardedCriteria<T> });
 	}
 }
-
-const struct = new Schema({
-	type: "struct",
-	optional: ["foo"],
-	struct: {
-		foo: { type: "number" },
-		bar: { type: "string" }
-	}
-});
-
-type test = SchemaInfer<typeof struct>
-let data: unknown = {};
-if (struct.validate(data)) {
-	data.foo
-}
-/*
-const test = new Schema({
-	type: "struct",
-	struct: {
-		foo: { type: "omega", omega: "any" }
-	}
-});
-
-type test = SchemaInfer<typeof test>;*/
-
-/*
-const schema = new Schema({
-	type: "struct",
-	label: "root",
-	struct: {
-		branch_1: {
-			type: "struct",
-			label: "branch_1",
-			struct: {
-				element: {
-					type: "struct",
-					label: "struct_b1",
-					struct: {
-						element: {
-							type: "struct",
-							label: "struct_b1",
-							struct: {
-								element: {
-									type: "string",
-									label: "string_b1"
-								}	
-							}
-						}
-					}
-				}
-			}
-		},
-		branch_2: {
-			type: "struct",
-			label: "branch_2",
-			struct: {
-				element: {
-					type: "struct",
-					label: "struct_b2",
-					struct: {
-						element: {
-							type: "struct",
-							label: "struct_b2",
-							struct: {
-								element: {
-									type: "string",
-									label: "string_b2"
-								}	
-							}
-						}
-					}
-				}
-			}
-		},
-		branch_3: {
-			type: "struct",
-			label: "branch_3",
-			struct: {
-				element: {
-					type: "struct",
-					label: "struct_b3",
-					struct: {
-						element: {
-							type: "struct",
-							label: "struct_b3",
-							struct: {
-								element: {
-									type: "string",
-									label: "string_b3"
-								}	
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-});
-
-schema.validate({
-	branch_1: {
-		element: {
-			element: {
-				element: "string_b1"
-			} 
-		}
-	},
-	branch_2: {
-		element: {
-			element: {
-				element: "string_b2"
-			} 
-		}
-	},
-	branch_3: {
-		element: {
-			element: {
-				element: "string_b3"
-			} 
-		}
-	},
-})
-*/
-/*
-const test = new Schema({
-	type: "union",
-	union: [{
-		type: "struct",
-		struct: {
-			foo: { type: "string" },
-			bar: {
-				type: "struct",
-				struct: {
-					foobar: {
-						foo: { type: "string" },
-						bar: {
-							type: "struct",
-							struct: {
-								foobar: { type: "string" }
-							}
-						}
-					}
-				}
-			}
-		}
-	}, {
-		type: "struct",
-		struct: {
-			foo: {
-				type: "struct",
-				struct: {
-					foobar: { type: "string" }
-				}
-			},
-			bar: { type: "string" }
-		}
-	}]
-});
-
-console.log(test.evaluate({
-	foo: "x",
-	bar: {
-		foobar: {
-			foo: "x",
-			bar: {
-				foobar: "x"
-			}
-		}
-	}
-}))*/
-/*
-const schema_union = new Schema({
-	type: "struct",
-	struct: {
-		foo: {
-			type: "union",
-			union: [
-				{
-					type: "struct",
-					struct: {
-						foo: {
-							type: "union",
-							union: [{
-								type: "struct",
-								struct: {
-									foo: { type: "number" },
-									bar: { type: "string" }
-								}
-							}, {
-								type: "string"
-							}]
-						},
-						bar: { type: "string" }
-					}
-				},
-				{
-					type: "struct",
-					struct: {
-						foo: { type: "string" }, 
-						bar: {
-							type: "union",
-							union: [{
-								type: "struct",
-								struct: {
-									foo: { type: "string" },
-									bar: { type: "number" }
-								}
-							}, {
-								type: "string"
-							}]
-						}
-					}
-				}
-			]
-		}
-	}
-});
-
-type schem = SchemaInfer<typeof schema_union>
-
-
-const ddata: unknown = { foo: { foo: { foo: "x", bar: "x" }, bar: "x" }};
-if (schema_union.validate(ddata)) {
-	if (typeof ddata.foo.foo !== "string") ddata.foo.foo.bar
-	
-	
-}	
-console.log();*/

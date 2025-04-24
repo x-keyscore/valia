@@ -1,18 +1,25 @@
 # Valia &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
 
-Runtime data validator witten in TypeScript.
+A powerful, type-safe validation library for modern TypeScript apps, built for both server and client.
 
-⚡ **Powerful and Smart Validation** – Seamlessly integrates into **server** and **client** environments.
+⚡ **Smart & Flexible**
+<br/>
+Seamlessly validate data in any environment. Designed to integrate naturally into your backend, frontend, or shared code.
 
-🧠 **Advanced Type Inference** – With advanced type inference, you can retrieve a type that strictly adheres to your schema definition. Combined with **Type Guards**,
-this ensures that the validated data’s type is **precisely inferred**, allowing you to handle your data **safely and reliably** across your application.
+🧠 **Type Inference That Just Works**
+<br/>
+Define your schema once, and instantly get strongly typed data. No need for redundant interfaces. Combined with type guards, you get safe, predictable data handling across your codebase.
 
-📦 **Built-in Validation** – Standard functions like `isEmail`, `isUuid`, and more to handle common validation needs effortlessly, while ensuring industry-standard compliance, saving you from writing tedious custom validators 🚀.
+📦 **Built-in Validators**
+<br/>
+Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, `isIp`, and more. Saving you time and boilerplate.
 
 ## Table of Contents
+- [Getting started](#getting-started)
 - [Schema](#schema)
   - [Instance](#instance)
-  - [Definition](#definition)
+  - [Formats](#formats)
+  - [Exemples](#exemples)
 - [Testers](#testers)
   - [String](#string-1)
   - [Object](#object)
@@ -24,7 +31,7 @@ this ensures that the validated data’s type is **precisely inferred**, allowin
 npm install valia
 ```
 ```ts
-import { Schema, SchemaInfer } from 'valia';
+import { Schema } from 'valia';
 
 const userSchema = new Schema({ 
   type: "struct",
@@ -32,25 +39,15 @@ const userSchema = new Schema({
     name: { type: "string" },
     role: {
         type: "string",
-        enum: ["ADMIN", "WORKER", "CUSTOMER"]
+        enum: ["WORKER", "CUSTOMER"]
     }
   }
 });
 
-type UserSchema = SchemaInfer<typeof userSchema>;
+let data: unknown = { name: "Tintin", role: "WORKER" };
 
-let data: unknown = { name: "Tintin", role: "ADMIN" };
-
-if (userSchema.validate(data)) {
-    /*
-    The data type is now:
-    data: {
-        name: string;
-        role: "ADMIN" | "WORKER" | "CUSTOMER";
-    }
-    */
-    console.log(data);
-}
+// Type safe
+if (userSchema.validate(data)) console.log(data.role);
 ```
 
 <br/><br/>
@@ -64,15 +61,17 @@ if (userSchema.validate(data)) {
 |`evaluate()`|Validates the provided data against the schema. An object is returned with the value passed as a parameter and the rejection status. If the reject status is null, then the returned value will have the type defined by your schema.|
 
 ```ts
-criteria: MountedCriteria<T>;
-validate(data: unknown): data is GuardedCriteria<T>;
-evaluate(data: unknown): { reject: SchemaReject, data: null } | { reject: null, data: GuardedCriteria<T> };
+interface SchemaInstance {
+  criteria: MountedCriteria;
+  validate(data: unknown): data is GuardedCriteria;
+  evaluate(data: unknown): { reject: SchemaReject, data: null } | { reject: null, data: GuardedCriteria };
+}
 ```
 ```ts
 interface SchemaReject {
   path: {
-    explicit: [],
-    implicit: []
+    explicit: [];
+    implicit: [];
   };
   code: string;
   type: string;
@@ -81,10 +80,291 @@ interface SchemaReject {
 };
 ```
 
-#### Exemple :
-> [!NOTE]
+## Formats
+
+[Simple](#simple) • [Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) • [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
+
+> The order in the property tables is the same order in which the checker executes the tests.
+
+### Global
+
+|Property|Default|Description|
+|--|--|--|
+|`label?`  ||String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
+|`message?`||String that will be returned in the reject object.|
+|`nullish?`||Allows `null` or `undefined`|
+
+```ts
+interface Global {
+  label?: string;
+  message?: string;
+  nullish?: boolean;
+}
+```
+
+### Simple
+
+|Property|Default|Description|
+|--|--|--|
+|`type`  ||Format name|
+|`simple`||Simple type|
+
+```ts
+interface Simple {
+  type: "simple",
+  simple: "undefined" | "nullish" | "null" | "unknown" | "any";
+}
+```
+
+```ts
+new Schema({
+  type: "simple",
+  simple: "UNDEFINED"
+});
+```
+
+### Number
+
+|Property|Default|Description|
+|--|--|--|
+|`type`   ||Format name|
+|`min?`   ||Minimum value accepted|
+|`max?`   ||Maximum value accepted|
+|`enum?`  ||Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`||Customized test function|
+
+```ts
+interface Number {
+  type: "number";
+  empty?: boolean;
+  min?: number;
+  max?: number;
+  enum?: string[] | Record<string |number, string>;
+  custom?: (x: string) => boolean;
+}
+```
+```ts
+new Schema({
+  type: "number",
+  min: 0,
+  max: 50,
+  custom(x) {
+    return (x % 2 === 0);
+  }
+});
+```
+
+### String
+
+|Property|Default|Description|
+|--|--|--|
+|`type`   |      |Format name|
+|`empty?` |`true`|If the string can be empty|
+|`min?`   |      |Minimum length accepted|
+|`max?`   |      |Maximum length accepted|
+|`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`regex?` |      |A native regex|
+|`tester?`|      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
+|`custom?`|      |Customized test function|
+
+```ts
+interface String {
+  type: "string";
+  empty?: boolean;
+  min?: number;
+  max?: number;
+  enum?: string[] | Record<string |number, string>;
+  regex?: RegExp;
+  tester?: { name: string, params: object }[];
+  custom?: (x: string) => boolean;
+}
+```
+```ts
+new Schema({
+  type: "string",
+  min: 0,
+  max: 6,
+  empty: false,
+  tester: { name: "isAscii" }
+});
+```
+
+### Boolean
+
+|Property|Default|Description|
+|--|--|--|
+|`type`||Format name|
+
+```ts
+interface Boolean {
+  type: "boolean";
+}
+```
+```ts
+new Schema({
+  type: "boolean"
+});
+```
+
+### Struct
+
+|Property|Default|Description|
+|--|--|--|
+|`type`     ||Format name|
+|`optional?`||Array of optional keys|
+|`struct`   ||The object keys represent the expected keys and the attributes represent the expected types. By default, all keys are mandatory.|
+
+```ts
+type SetableStruct = {
+  [key: string | symbol]: SetableCriteria | SetableStruct;
+}
+
+interface Struct {
+  type: "struct";
+  optional?: (string | symbol)[];
+  struct: SetableStruct;
+}
+```
+```ts
+new Schema({
+  type: "struct",
+  optional: ["description"],
+  struct: {
+    name: { type: "string", max: 20 },
+    price: { type: "number", min: 0.1 },
+    description: {
+      brand: { type: "string", max: 40 },
+      color: { type: "string", enum: ["BLACK", "WHITE"] }
+    }
+  }
+});
+```
+
+### Record
+
+|Property|Default|Description|
+|--|--|--|
+|`type`  |       |Format name|
+|`empty?`|`false`|If the object can be empty|
+|`min?`  |       |Minimum properties accepted|
+|`max?`  |       |Maximum properties accepted|
+|`key`   |       |Criteria of key|
+|`value` |       |Criteria of value|
+
+```ts
+interface Record {
+  type: "record";
+  empty?: boolean;
+  min?: number;
+  max?: number;
+  key: SetableCriteria<"string" | "symbol">;
+  value: SetableCriteria;
+}
+```
+```ts
+new Schema({
+  type: "record",
+  max: 10,
+  key: { type: "string" },
+  value: { type: "number" }
+});
+```
+
+### Tuple
+
+|Property|Default|Description|
+|--|--|--|
+|`type`  ||Format name|
+|`tuple` ||Criteria of the tuple items|
+
+```ts
+interface Tuple {
+  type: "tuple";
+  tuple: [SetableCriteria, ...SetableCriteria[]];
+}
+```
+```ts
+new Schema({
+  type: "tuple",
+  tuple: [{ type: "string" }, { type: "number" }]
+});
+```
+
+### Array
+
+|Property|Default|Description|
+|--|--|--|
+|`type`  |       |Format name|
+|`empty?`|`false`|If the array can be empty|
+|`min?`  |       |Minimum items accepted|
+|`max?`  |       |Maximum items accepted|
+|`item`  |       |Criteria of the array items|
+
+```ts
+interface Array {
+  type: "array";
+  empty?: boolean;
+  min?: number;
+  max?: number;
+  item: SetableCriteria;
+}
+```
+```ts
+new Schema({
+  type: "array",
+  empty: true,
+  tuple: [{ type: "string" }, { type: "number" }]
+});
+```
+
+### Union
+
+|Property|Default|Description|
+|--|--|--|
+|`type` ||Format name|
+|`union`||Array in which the possible criteria are listed|
+
+```ts
+interface Union {
+  type: "union";
+  simple?: [SetableCriteria, ...SetableCriteria[]];
+}
+```
+```ts
+new Schema({
+  type: "array",
+  item: { type: "union", union: [{ type: "string"}, { type: "number" }] }
+});
+```
+
+### Symbol
+
+|Property|Default|Description|
+|--|--|--|
+|`type`   ||Format name|
+|`symbol?`||Symbol to check|
+
+```ts
+interface Symbol {
+  type: "symbol";
+  symbol?: symbol;
+}
+```
+```ts
+const mySymbol = Symbol("my-symbol");
+
+new Schema({
+  type: "symbol",
+  symbol: mySymbol
+});
+```
+
+## Exemples
+
+
 > The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
 > This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.
+
 ```ts
 const nameFormat = new Schema({
   label: "NAME_FORMAT",
@@ -114,7 +394,6 @@ const { reject } = userSchema.evaluate(data);
 
 console.log(reject);
 ```
-
 ```
 {
   path: {
@@ -128,195 +407,8 @@ console.log(reject);
 }
 ```
 
-
-
-## Definition
-
-[Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) •
-[Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
-
-> [!NOTE]
-> The order of property definitions in the arrays is the same as when executing the tests by the checker.
-
-### Global
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`nullable?`   |`boolean`|`false`|Allows `null`|
-|`undefinable?`|`boolean`|`false`|Allows `undefined`|
-|`label?`      |`string` |       |String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
-|`message?`    |`string` |       |String that will be returned in the reject object.|
-
-```ts
-const schema = new Schema({
-  type: "string",
-  optional: true,
-  label: "OPTIONAL_STRING"
-});
-```
-
-### Number
-
-|Property<br/><img width="auto"/>|Type<br/><img width="310"/>|Description<br/><img width="auto"/>|
-|--|--|--|
-|`type`   |`"number"`                                |Type name|
-|`min?`   |`number`                                  |Minimum value accepted|
-|`max?`   |`number`                                  |Maximum value accepted|
-|`enum?`  |`number[]\|Record<string\|number, number>`|Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`|`(x: number) => boolean`                  |Customized test function|
-
-```ts
-const schema = new Schema({
-  type: "number",
-  min: 0,
-  max: 50,
-  custom(x) {
-    return (x % 2 === 0);
-  }
-});
-```
-
-### String
-
-|Property<br/><img width="auto"/>|Type<img width="320"/>|Default<br/><img width="auto"/>|Description<br/><img width="auto"/>|
-|--|--|--|--|
-|`type`   |`"string"`                                |      |Type name|
-|`empty?` |`boolean`                                 |`true`|If the string can be empty|
-|`min?`   |`number`                                  |      |Minimum length accepted|
-|`max?`   |`number`                                  |      |Maximum length accepted|
-|`enum?`  |`string[]\|Record<string\|number, string>`|      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`regex?` |`RegExp`                                  |      |A native regex|
-|`tester?`|`{ name: string, params: object}`         |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
-|`custom?`|`(x: string) => boolean`                  |      |Customized test function|
-
-```ts
-const schema = new Schema({
-  type: "string",
-  min: 0,
-  max: 6,
-  empty: false,
-  tester: { name: "isAscii" }
-});
-```
-
-### Boolean
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`|`"boolean"`||Type name|
-
-```ts
-const schema = new Schema({
-  type: "boolean"
-});
-```
-
-### Struct
-
-|Property|Type|Description|
-|--|--|--|
-|`type`         |`"struct"`                          |Type name|
-|`optional?`    |`Array<string \| symbol>`           |Array of optional keys|
-|`struct`       |`{`<br/>`    [key: string \| symbol]:`<br/>`        SetableCriteria \| SetableStruct;`<br/>`}`|The object's keys represent the expected keys<br/>and the attributes represent the expected types.<br/>By default, the keys are considered required.|
-
-```ts
-const schema = new Schema({
-  type: "struct",
-  optional: ["description"],
-  struct: {
-    name: { type: "string", max: 20 },
-    price: { type: "number", min: 0.1 },
-    description: {
-      brand: { type: "string", max: 40 },
-      color: { type: "string", enum: ["BLACK", "WHITE"] }
-    }
-  }
-});
-```
-
-### Record
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`  |`"record"`                  |       |Type name|
-|`empty?`|`boolean`                   |`false`|If the object can be empty|
-|`min?`  |`number`                    |       |Minimum properties accepted|
-|`max?`  |`number`                    |       |Maximum properties accepted|
-|`key`   |`Criteria<string \| symbol>`|       |Criteria of key|
-|`value` |`Criteria`                  |       |Criteria of value|
-
-```ts
-const schema = new Schema({
-  type: "record",
-  max: 10,
-  key: { type: "string" },
-  value: { type: "number" }
-});
-```
-
-### Tuple
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`  |`"tuple"`                  ||Type name|
-|`tuple` |`[Criteria, ...Criteria[]]`||Criteria of the tuple items|
-
-```ts
-const schema = new Schema({
-  type: "tuple",
-  tuple: [{ type: "string" }, { type: "number" }
-});
-```
-
-### Array
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`  |`"array"` |       |Type name|
-|`empty?`|`boolean` |`false`|If the array can be empty|
-|`min?`  |`number`  |       |Minimum items accepted|
-|`max?`  |`number`  |       |Maximum items accepted|
-|`item`  |`Criteria`|       |Criteria of the array items|
-
-```ts
-const schema = new Schema({
-  type: "array",
-  empty: true,
-  tuple: [{ type: "string" }, { type: "number" }]
-});
-```
-
-### Union
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`  |`"union"`                  ||Type name|
-|`union` |`[Criteria, ...Criteria[]]`||Array in which the possible criteria are listed|
-
-```ts
-const schema = new Schema({
-  type: "array",
-  item: { type: "union", union: [{ type: "string"}, { type: "number" }]
-});
-```
-
-### Symbol
-
-|Property|Type|Default|Description|
-|--|--|--|--|
-|`type`   |`"symbol"`||Type name|
-|`symbol?`|`symbol`  ||Symbol to check|
-
-```ts
-const mySymbol = Symbol("enjoy");
-
-const schema = new Schema({
-  type: "symbol",
-  symbol: mySymbol
-});
-```
-
 <br/><br/>
+
 # Testers
 
 ### String
@@ -382,16 +474,16 @@ isUuid(str: string, params?: IsUuidParams): boolean;
 |Function|Description|
 |--|--|
 |`isObject`                |Checks if it is an object.|
-|`isBasicObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`.|
-|`isPlainObject`           |Checks if it is an object, if it has a prototype of `Object.prototype` or `null`, and if it contains only keys of type `string` or `symbol`.|
+|`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`.|
 |`isArray`                 |Checks if it is an array.|
 |`isFunction`              |Checks if it is an function.|
-|`isBasicFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return false.|
+|`isBasicFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return `false`.|
 |`isAsyncFunction`         |Checks if it is an async function.|
 |`isGeneratorFunction`     |Checks if it is an generator function.|
 |`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
 
 <br/><br/>
+
 # Tools
 
 ### String
@@ -413,4 +505,5 @@ base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
 base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
 ```
 <br/><br/>
+
 Developed in France with passion 🇫🇷

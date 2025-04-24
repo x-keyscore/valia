@@ -3,6 +3,7 @@ import type { Format } from "../types";
 import { isArray } from "../../../testers";
 
 export const TupleFormat: Format<TupleSetableCriteria> = {
+	type: "tuple",
 	defaultCriteria: {
 		empty: false
 	},

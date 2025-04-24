@@ -1,4 +1,4 @@
-import type { Format, SetableCriteria, StaticDefaultCriteria } from "./types";
+import type { Format, SetableCriteria } from "./types";
 import { BooleanFormat } from "./boolean/format";
 import { SymbolFormat } from "./symbol/format";
 import { NumberFormat } from "./number/format";
@@ -9,12 +9,7 @@ import { StructFormat } from "./struct/format";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { UnionFormat } from "./union/format";
-
-export const staticDefaultCriteria: StaticDefaultCriteria = {
-	nullable: false,
-	undefinable: false
-}
-
+/*
 export const formatNatives = {
 	boolean: BooleanFormat,
 	symbol: SymbolFormat,
@@ -27,3 +22,16 @@ export const formatNatives = {
 	tuple: TupleFormat,
 	union: UnionFormat
 } satisfies Record<string, Format<SetableCriteria>>;
+*/
+export const formatNatives = [
+	BooleanFormat,
+	SymbolFormat,
+	NumberFormat,
+	StringFormat,
+	SimpleFormat,
+	RecordFormat,
+	StructFormat,
+	ArrayFormat,
+	TupleFormat,
+	UnionFormat
+];

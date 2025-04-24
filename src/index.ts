@@ -1,20 +1,24 @@
 export {
 	Schema,
-	SchemaInfer,
-	SchemaInstance,
-	SchemaPlugins,
-	AbstractPlugin
+	SchemaComposer,
 } from './schema';
 
-export {
-	ClassicTypesTemplate,
-	GenericTypesTemplate,
+export type {
+	SchemaInfer,
+	SchemaInstance,
+	SchemaParameters,
+	PluginRequirement
+} from './schema';
+
+export type {
+	SpecTypesTemplate,
+	FlowTypesTemplate,
 	SetableCriteriaTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-	FormatClassicTypes,
-	FormatGenericTypes,
+	FormatSpecTypes,
+	FormatFlowTypes,
 	FormatGlobalNames,
 	FormatNativeNames,
 	Format

@@ -1,12 +1,13 @@
-import type { StructSetableCriteria, StructDefinition } from "./types";
+import type { StructSetableCriteria, SetableStruct } from "./types";
 import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
 
-function isShorthandStruct(obj: object): obj is StructDefinition {
+function isShorthandStruct(obj: object): obj is SetableStruct {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 
 export const StructFormat: Format<StructSetableCriteria> = {
+	type: "struct",
 	defaultCriteria: {},
 	mount(chunk, criteria) {
 		const optionalKeys = criteria.optional;

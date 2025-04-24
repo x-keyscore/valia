@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
 	min?: number;
@@ -7,7 +7,7 @@ export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number">
 	custom?: (input: number) => boolean;
 }
 
-export interface NumberClassicTypes extends ClassicTypesTemplate<
+export interface NumberSpecTypes extends SpecTypesTemplate<
 	NumberSetableCriteria,
 	{}
 > {}
@@ -16,10 +16,10 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> =
 	T['enum'] extends number[]
 		? T['enum'][number]
 		: T['enum'] extends Record<string | number, number>
-			? { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']]
+			? T['enum'][keyof T['enum']]
 			: number;
 
-export interface NumberGenericTypes<T extends NumberSetableCriteria> extends GenericTypesTemplate<
+export interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<
 	{},
 	NumberGuardedCriteria<T>
 > {}

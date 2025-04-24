@@ -1,7 +1,6 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { MountingTask, MountingChunk } from "./types";
 import type { SchemaInstance } from "../types";
-import { staticDefaultCriteria } from "../formats";
 
 export const nodeSymbol = Symbol('internal');
 
@@ -9,27 +8,29 @@ export function hasNodeSymbol(obj: object): obj is MountedCriteria {
 	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
 }
 
-export class MountingStack extends Array<MountingTask> {
-	constructor(rootNode: SetableCriteria | MountedCriteria) { 
-		super();
+export class MountingStack {
+	tasks: MountingTask[] = [];
 
-		this.push({
+	constructor(
+		rootNode: SetableCriteria | MountedCriteria
+	) {
+		this.tasks.push({
 			node: rootNode,
 			partPaths: { explicit: [], implicit: [] },
 			fullPaths: { explicit: [], implicit: [] }
 		})
 	}
 
-	addChunk(
-		owner: MountingTask,
+	pushChunk(
+		sourceTask: MountingTask,
 		chunk: MountingChunk
 	) {
-		const { fullPaths } = owner;
+		const { fullPaths } = sourceTask;
 
 		for (let i = 0; i < chunk.length; i++) {
 			const { node, partPaths } = chunk[i];
 
-			this.push({
+			this.tasks.push({
 				node,
 				partPaths,
 				fullPaths: {
@@ -48,8 +49,8 @@ export function mounter<T extends SetableCriteria>(
 	const { formats, events } = managers;
 	const stack = new MountingStack(rootNode);
 
-	while (stack.length) {
-		const currentTask = stack.pop()!;
+	while (stack.tasks.length) {
+		const currentTask = stack.tasks.pop()!;
 		const { node, partPaths, fullPaths } = currentTask;
 
 		if (hasNodeSymbol(node)) {
@@ -64,7 +65,6 @@ export function mounter<T extends SetableCriteria>(
 			format.mount?.(chunk, node);
 
 			Object.assign(node, {
-				...staticDefaultCriteria,
 				...format.defaultCriteria,
 				...node,
 				[nodeSymbol]: {
@@ -74,22 +74,13 @@ export function mounter<T extends SetableCriteria>(
 			});
 			Object.freeze(node);
 
-			if (chunk.length) {
-				stack.addChunk(currentTask, chunk);
-			}
+			if (chunk.length) stack.pushChunk(currentTask, chunk);
 
-			events.emit(
-				"NODE_MOUNTED",
-				node as MountedCriteria,
-				fullPaths
-			);
+			events.emit("NODE_MOUNTED", node as MountedCriteria, fullPaths);
 		}
 	}
 
-	events.emit(
-		"TREE_MOUNTED",
-		rootNode as MountedCriteria<T>
-	);
+	events.emit("TREE_MOUNTED", rootNode as MountedCriteria<T>);
 
 	return (rootNode as MountedCriteria<T>);
 };

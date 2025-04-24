@@ -3,7 +3,7 @@ import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
 
-function makeReject(
+function createReject(
 	task: CheckingTask,
 	code: string
 ): CheckingReject {
@@ -30,7 +30,7 @@ export class CheckingStack {
 		});
 	}
 
-	addChunk(
+	pushChunk(
 		sourceTask: CheckingTask,
 		chunk: CheckingChunk
 	) {
@@ -64,7 +64,7 @@ export class CheckingStack {
 		}
 	}
 
-	runHooks(
+	playHooks(
 		currentTask: CheckingTask,
 		reject: CheckingReject | null
 	) {
@@ -88,7 +88,7 @@ export class CheckingStack {
 					continue;
 				case "REJECT":
 					this.tasks.length = hooks.index.branch;
-					reject = makeReject(hooks.owner, claim.code);
+					reject = createReject(hooks.owner, claim.code);
 					continue;
 				case "IGNORE":
 					if (claim?.target === "CHUNK") {
@@ -118,20 +118,14 @@ export function checker(
 		const chunk: CheckingChunk = [];
 
 		let code = null;
-		if (data === null) {
-			if (!node.nullable) code = "TYPE_NULL";
-		}
-		else if (data === undefined) {
-			if (!node.undefinable) code = "TYPE_UNDEFINED";
-		}
-		else {
+		if (!(node.nullish && data == null)) {
 			const format = formats.get(node.type);
 			code = format.check(chunk, node, data);
 		}
 
-		if (code) reject = makeReject(currentTask, code);
-		else if (chunk.length) stack.addChunk(currentTask, chunk);
-		if (stackHooks) reject = stack.runHooks(currentTask, reject);
+		if (code) reject = createReject(currentTask, code);
+		else if (chunk.length) stack.pushChunk(currentTask, chunk);
+		if (stackHooks) reject = stack.playHooks(currentTask, reject);
 
 		if (reject) break;
 	}

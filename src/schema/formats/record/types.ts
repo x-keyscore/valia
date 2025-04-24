@@ -1,14 +1,14 @@
 import type {
 	SetableCriteriaTemplate,
-	ClassicTypesTemplate,
-	GenericTypesTemplate,
+	SpecTypesTemplate,
+	FlowTypesTemplate,
 	FormatGlobalNames,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria
 } from "../types";
 
-type KeyCriteria = SetableCriteria<"string" | "symbol">;
+type SetableKey = SetableCriteria<"string" | "symbol">;
 
 export interface RecordSetableCriteria<
 	T extends FormatGlobalNames = FormatGlobalNames
@@ -17,7 +17,7 @@ export interface RecordSetableCriteria<
 	empty?: boolean
 	min?: number;
 	max?: number;
-	key: KeyCriteria;
+	key: SetableKey;
 	value: SetableCriteria<T>;
 }
 
@@ -25,29 +25,24 @@ export interface RecordDefaultCriteria {
 	empty: boolean;
 }
 
-export interface RecordClassicTypes<T extends FormatGlobalNames> extends ClassicTypesTemplate<
+export interface RecordSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
 	RecordSetableCriteria<T>,
 	RecordDefaultCriteria
 > {}
 
-export interface RecordMountedCriteria {
-	key: MountedCriteria<KeyCriteria>;
-	value: MountedCriteria;
+export interface RecordMountedCriteria<T extends RecordSetableCriteria> {
+	key: MountedCriteria<T['key']>;
+	value: MountedCriteria<T['value']>;
 }
 
 type RecordGuardedCriteria<T extends RecordSetableCriteria> =
 	GuardedCriteria<T['key']> extends infer U
 		? U extends PropertyKey
-			? { [P in U]?: GuardedCriteria<T['value']> }
+			? { [P in U]: GuardedCriteria<T['value']> }
 			: never
 		: never;
 
-export interface RecordGenericTypes<T extends RecordSetableCriteria> extends GenericTypesTemplate<
-	RecordMountedCriteria,
+export interface RecordFlowTypes<T extends RecordSetableCriteria> extends FlowTypesTemplate<
+	RecordMountedCriteria<T>,
 	RecordGuardedCriteria<T>
 > {}
-
-
-
-const text = "poule"
-text[4]
