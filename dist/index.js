@@ -206,7 +206,7 @@ function checker(managers, rootNode, rootData) {
         const { data, node, stackHooks } = currentTask;
         const chunk = [];
         let code = null;
-        if (!(node.nullable && data === null)) {
+        if (!(node.nullish && data == null)) {
             const format = formats.get(node.type);
             code = format.check(chunk, node, data);
         }
@@ -1012,11 +1012,11 @@ const SimpleFormat = {
     type: "simple",
     defaultCriteria: {},
     bitflags: {
-        UNDEFINED: 1 << 0,
-        NULLISH: 1 << 1,
-        NULL: 1 << 2,
-        UNKNOWN: 1 << 3,
-        ANY: 1 << 4
+        undefined: 1 << 0,
+        nullish: 1 << 1,
+        null: 1 << 2,
+        unknown: 1 << 3,
+        any: 1 << 4
     },
     mount(chunk, criteria) {
         Object.assign(criteria, {
@@ -1025,16 +1025,16 @@ const SimpleFormat = {
     },
     check(chunk, criteria, value) {
         const { bitflags } = this, { bitcode } = criteria;
-        if (bitcode & (bitflags.ANY | bitflags.UNKNOWN)) {
+        if (bitcode & (bitflags.any | bitflags.unknown)) {
             return (null);
         }
-        if (bitcode & bitflags.NULLISH && value != null) {
+        if (bitcode & bitflags.nullish && value != null) {
             return ("TYPE_NULLISH_REQUIRED");
         }
-        else if (bitcode & bitflags.NULL && value !== null) {
+        else if (bitcode & bitflags.null && value !== null) {
             return ("TYPE_NULL_REQUIRED");
         }
-        else if ((bitcode & bitflags.UNDEFINED) && value !== undefined) {
+        else if ((bitcode & bitflags.undefined) && value !== undefined) {
             return ("TYPE_UNDEFINED_REQUIRED");
         }
         return (null);
@@ -1364,8 +1364,8 @@ class Schema {
     evaluate(data) {
         const reject = checker(this.managers, this.criteria, data);
         if (reject)
-            return ({ reject, data: null });
-        return ({ reject: null, data: data });
+            return ({ reject });
+        return ({ data: data });
     }
 }
 

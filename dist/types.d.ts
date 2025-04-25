@@ -308,7 +308,7 @@ type StringGuardedCriteria<T extends StringSetableCriteria> = T['enum'] extends 
 interface StringFlowTypes<T extends StringSetableCriteria> extends FlowTypesTemplate<{}, StringGuardedCriteria<T>> {
 }
 
-type SimpleTypes = "UNDEFINED" | "NULLISH" | "NULL" | "UNKNOWN" | "ANY";
+type SimpleTypes = "undefined" | "nullish" | "null" | "unknown" | "any";
 interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
     simple: SimpleTypes;
 }
@@ -317,7 +317,7 @@ interface SimpleSpecTypes extends SpecTypesTemplate<SimpleSetableCriteria, {}> {
 interface SimpleMountedCriteria {
     bitcode: number;
 }
-type SimpleGuardedCriteria<T extends SimpleSetableCriteria> = T["simple"] extends "NULLISH" ? undefined | null : T["simple"] extends "UNDEFINED" ? undefined : T["simple"] extends "NULL" ? null : T["simple"] extends "UNKNOWN" ? unknown : T["simple"] extends "ANY" ? any : never;
+type SimpleGuardedCriteria<T extends SimpleSetableCriteria> = T["simple"] extends "nullish" ? undefined | null : T["simple"] extends "undefined" ? undefined : T["simple"] extends "null" ? null : T["simple"] extends "unknown" ? unknown : T["simple"] extends "any" ? any : never;
 interface SimpleFlowTypes<T extends SimpleSetableCriteria> extends FlowTypesTemplate<SimpleMountedCriteria, SimpleGuardedCriteria<T>> {
 }
 
@@ -536,7 +536,7 @@ interface CheckingReject {
 declare const nodeSymbol: unique symbol;
 
 interface CustomProperties {
-    bitflags: Record<Uppercase<SimpleTypes>, number>;
+    bitflags: Record<SimpleTypes, number>;
 }
 
 declare const formatNatives: ({
@@ -595,7 +595,7 @@ interface SetableCriteriaTemplate<T extends string> {
     type: T;
     label?: string;
     message?: string;
-    nullable?: boolean;
+    nullish?: boolean;
 }
 /**
  * @template T Extended interface of `SetableCriteriaTemplate` that
@@ -654,7 +654,7 @@ interface StaticMountedCriteria {
     };
 }
 type MountedCriteria<T extends SetableCriteria = SetableCriteria> = T extends any ? FormatSpecTypes[T['type']]['defaultCriteria'] & Omit<T, keyof FormatFlowTypes<T>[T['type']]['mountedCriteria']> & FormatFlowTypes<T>[T['type']]['mountedCriteria'] & StaticMountedCriteria : never;
-type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = FormatFlowTypes<T>[T['type']]['guardedCriteria'];
+type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = T['nullish'] extends true ? FormatFlowTypes<T>[T['type']]['guardedCriteria'] | undefined | null : FormatFlowTypes<T>[T['type']]['guardedCriteria'];
 /**
  * @template T Extended interface of `SettableCriteriaTemplate` that
  * defines the format criteria users must or can specify.
@@ -732,10 +732,10 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      */
     evaluate(data: unknown): {
         reject: CheckingReject;
-        data: null;
+        data?: undefined;
     } | {
-        reject: null;
         data: GuardedCriteria<T>;
+        reject?: undefined;
     };
 }
 

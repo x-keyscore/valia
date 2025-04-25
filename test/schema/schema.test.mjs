@@ -98,15 +98,13 @@ describe("Schema Instance", () => {
 					},
 					label: "TEST_LABEL",
 					message: "TEST_MESSAGE"
-				},
-				data: null
+				}
 			});
 		});
 
 		it("should return a correct acceptance", () => {
 			const candidate = { foo: "x", bar: "x" };
 			assert.deepStrictEqual(main_schema.evaluate(candidate), {
-				reject: null,
 				data: candidate
 			});
 		});
@@ -114,27 +112,27 @@ describe("Schema Instance", () => {
 });
 
 describe("Schema Formats - (Basic Parameter)", () => {
-	describe("'nullable' parameter", () => {
-		let nullable_true, nullable_false;
+	describe("'nullish' parameter", () => {
+		let nullish_true, nullish_false;
 
 		before(() => {
-			nullable_true = new Schema({
+			nullish_true = new Schema({
 				type: "string",
-				nullable: true
+				nullish: true
 			});
 
-			nullable_false = new Schema({
+			nullish_false = new Schema({
 				type: "string",
-				nullable: false
+				nullish: false
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(nullable_false.validate(null), false);
+			assert.strictEqual(nullish_false.validate(null), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(nullable_true.validate(null), true);
+			assert.strictEqual(nullish_true.validate(null), true);
 		});
 	});
 });

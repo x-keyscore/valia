@@ -117,8 +117,7 @@ describe("Schema Formats - Struct", () => {
 						},
 						label: undefined,
 						message: undefined
-					},
-					data: null
+					}
 				});
 		});
 	});

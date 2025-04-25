@@ -68,7 +68,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	evaluate(data: unknown) {
 		const reject = checker(this.managers, this.criteria, data);
 
-		if (reject) return ({ reject, data: null });
-		return ({ reject: null, data: data as GuardedCriteria<T> });
+		if (reject) return ({ reject });
+		return ({ data: data as GuardedCriteria<T> });
 	}
 }

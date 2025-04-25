@@ -28,7 +28,7 @@ Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, 
 
 ## Getting started
 ```
-npm install valia
+> npm install valia
 ```
 ```ts
 import { Schema } from 'valia';
@@ -64,7 +64,7 @@ if (userSchema.validate(data)) console.log(data.role);
 interface SchemaInstance {
   criteria: MountedCriteria;
   validate(data: unknown): data is GuardedCriteria;
-  evaluate(data: unknown): { reject: SchemaReject, data: null } | { reject: null, data: GuardedCriteria };
+  evaluate(data: unknown): { reject: SchemaReject } | { data: GuardedCriteria };
 }
 ```
 ```ts
@@ -92,10 +92,10 @@ interface SchemaReject {
 |--|--|--|
 |`label?`  ||String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
 |`message?`||String that will be returned in the reject object.|
-|`nullish?`||Allows `null` or `undefined`|
+|`nullish?`||Allows `null` and `undefined`|
 
 ```ts
-interface Global {
+interface Criteria {
   label?: string;
   message?: string;
   nullish?: boolean;
@@ -110,16 +110,16 @@ interface Global {
 |`simple`||Simple type|
 
 ```ts
-interface Simple {
+interface Criteria {
   type: "simple",
-  simple: "undefined" | "nullish" | "null" | "unknown" | "any";
+  simple: "null" | "undefined" | "nullish"  | "unknown" | "any";
 }
 ```
 
 ```ts
 new Schema({
   type: "simple",
-  simple: "UNDEFINED"
+  simple: "undefined"
 });
 ```
 
@@ -134,12 +134,12 @@ new Schema({
 |`custom?`||Customized test function|
 
 ```ts
-interface Number {
+interface Criteria {
   type: "number";
   empty?: boolean;
   min?: number;
   max?: number;
-  enum?: string[] | Record<string |number, string>;
+  enum?: string[] | Record<string | number, string>;
   custom?: (x: string) => boolean;
 }
 ```
@@ -168,12 +168,12 @@ new Schema({
 |`custom?`|      |Customized test function|
 
 ```ts
-interface String {
+interface Criteria {
   type: "string";
   empty?: boolean;
   min?: number;
   max?: number;
-  enum?: string[] | Record<string |number, string>;
+  enum?: string[] | Record<string | number, string>;
   regex?: RegExp;
   tester?: { name: string, params: object }[];
   custom?: (x: string) => boolean;
@@ -196,7 +196,7 @@ new Schema({
 |`type`||Format name|
 
 ```ts
-interface Boolean {
+interface Criteria {
   type: "boolean";
 }
 ```
@@ -219,7 +219,7 @@ type SetableStruct = {
   [key: string | symbol]: SetableCriteria | SetableStruct;
 }
 
-interface Struct {
+interface Criteria {
   type: "struct";
   optional?: (string | symbol)[];
   struct: SetableStruct;
@@ -252,7 +252,7 @@ new Schema({
 |`value` |       |Criteria of value|
 
 ```ts
-interface Record {
+interface Criteria {
   type: "record";
   empty?: boolean;
   min?: number;
@@ -278,7 +278,7 @@ new Schema({
 |`tuple` ||Criteria of the tuple items|
 
 ```ts
-interface Tuple {
+interface Criteria {
   type: "tuple";
   tuple: [SetableCriteria, ...SetableCriteria[]];
 }
@@ -301,7 +301,7 @@ new Schema({
 |`item`  |       |Criteria of the array items|
 
 ```ts
-interface Array {
+interface Criteria {
   type: "array";
   empty?: boolean;
   min?: number;
@@ -325,9 +325,9 @@ new Schema({
 |`union`||Array in which the possible criteria are listed|
 
 ```ts
-interface Union {
+interface Criteria {
   type: "union";
-  simple?: [SetableCriteria, ...SetableCriteria[]];
+  union?: [SetableCriteria, ...SetableCriteria[]];
 }
 ```
 ```ts
@@ -345,7 +345,7 @@ new Schema({
 |`symbol?`||Symbol to check|
 
 ```ts
-interface Symbol {
+interface Criteria {
   type: "symbol";
   symbol?: symbol;
 }
@@ -360,7 +360,6 @@ new Schema({
 ```
 
 ## Exemples
-
 
 > The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
 > This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.

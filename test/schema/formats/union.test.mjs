@@ -208,8 +208,7 @@ describe("Schema Formats - Union", () => {
 						type: 'union',
 						label: undefined,
 						message: undefined
-					},
-					data: null
+					}
 				}
 			);
 		});
