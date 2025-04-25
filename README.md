@@ -6,7 +6,7 @@ A powerful, type-safe validation library for modern TypeScript apps, built for b
 <br/>
 Seamlessly validate data in any environment. Designed to integrate naturally into your backend, frontend, or shared code.
 
-🧠 **Type Inference That Just Works**
+🧠 **Type Inference**
 <br/>
 Define your schema once, and instantly get strongly typed data. No need for redundant interfaces. Combined with type guards, you get safe, predictable data handling across your codebase.
 
