@@ -15,7 +15,6 @@ Define your schema once, and instantly get strongly typed data. No need for redu
 Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, `isIp`, and more. Saving you time and boilerplate.
 
 ## Table of Contents
-- [Getting started](#getting-started)
 - [Schema](#schema)
   - [Instance](#instance)
   - [Formats](#formats)
@@ -46,7 +45,6 @@ const userSchema = new Schema({
 
 let data: unknown = { name: "Tintin", role: "WORKER" };
 
-// Type safe
 if (userSchema.validate(data)) console.log(data.role);
 ```
 
