@@ -1,69 +1,86 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
+import type { MountingTask, MountingChunk } from "./types";
 import type { SchemaInstance } from "../types";
-import type { MountingTask } from "./types";
-import { staticDefaultCriteria } from "../formats";
 
-export const metadataSymbol = Symbol('matadata');
+export const nodeSymbol = Symbol('internal');
 
-export function isMountedCriteria(obj: object): obj is MountedCriteria {
-	return (typeof obj === "object" && Reflect.has(obj, metadataSymbol));
+export function hasNodeSymbol(obj: object): obj is MountedCriteria {
+	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
+}
+
+export class MountingStack {
+	tasks: MountingTask[] = [];
+
+	constructor(
+		rootNode: SetableCriteria | MountedCriteria
+	) {
+		this.tasks.push({
+			node: rootNode,
+			partPaths: { explicit: [], implicit: [] },
+			fullPaths: { explicit: [], implicit: [] }
+		})
+	}
+
+	pushChunk(
+		sourceTask: MountingTask,
+		chunk: MountingChunk
+	) {
+		const { fullPaths } = sourceTask;
+
+		for (let i = 0; i < chunk.length; i++) {
+			const { node, partPaths } = chunk[i];
+
+			this.tasks.push({
+				node,
+				partPaths,
+				fullPaths: {
+					explicit: fullPaths.explicit.concat(partPaths.explicit),
+					implicit: fullPaths.implicit.concat(partPaths.implicit)
+				}
+			});
+		}
+	}
 }
 
 export function mounter<T extends SetableCriteria>(
 	managers: SchemaInstance['managers'],
-	criteria: SetableCriteria & T
+	rootNode: SetableCriteria & T
 ): MountedCriteria<T> {
-	const registryManager = managers.registry;
-	const eventsManager = managers.events;
-	let queue: MountingTask[] = [{
-		prevNode: null,
-		prevPath: { explicit: [], implicit: [] },
-		currNode: criteria,
-		partPath: { explicit: [], implicit: [] },
-	}];
+	const { formats, events } = managers;
+	const stack = new MountingStack(rootNode);
 
-	while (queue.length > 0) {
-		const { prevNode, prevPath, currNode, partPath } = queue.pop()!;
+	while (stack.tasks.length) {
+		const currentTask = stack.tasks.pop()!;
+		const { node, partPaths, fullPaths } = currentTask;
 
-		const path = {
-			explicit: [...prevPath.explicit, ...partPath.explicit],
-			implicit: [...prevPath.implicit, ...partPath.implicit],
-		}
-
-		registryManager.set(prevNode, currNode, partPath);
-
-		if (isMountedCriteria(currNode)) {
-			registryManager.junction(currNode);
-		} else {
-			const format = managers.formats.get(currNode.type);
-
-			format.mounting?.(queue, path, currNode);
-
-			Object.assign(currNode, {
-				...staticDefaultCriteria,
-				...format.defaultCriteria,
-				...currNode
-			});
-		}
-
-		Object.assign(currNode, {
-			[metadataSymbol]: {
-				registry: registryManager.registry,
-				saveNode: currNode
+		if (hasNodeSymbol(node)) {
+			node[nodeSymbol] = {
+				...node[nodeSymbol],
+				partPaths
 			}
-		});
+		} else {
+			const format = formats.get(node.type);
+			const chunk: MountingChunk = [];
 
-		eventsManager.emit(
-			"ONE_NODE_MOUNTED",
-			currNode as MountedCriteria,
-			path
-		);
+			format.mount?.(chunk, node);
+
+			Object.assign(node, {
+				...format.defaultCriteria,
+				...node,
+				[nodeSymbol]: {
+					childNodes: chunk.map((task) => task.node),
+					partPaths
+				}
+			});
+			Object.freeze(node);
+
+			if (chunk.length) stack.pushChunk(currentTask, chunk);
+
+			events.emit("NODE_MOUNTED", node as MountedCriteria, fullPaths);
+		}
 	}
 
-	eventsManager.emit(
-		"END_OF_MOUNTING",
-		criteria as MountedCriteria<T>
-	);
+	events.emit("TREE_MOUNTED", rootNode as MountedCriteria<T>);
 
-	return (criteria as MountedCriteria<T>);
+	return (rootNode as MountedCriteria<T>);
 };

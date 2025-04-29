@@ -1,15 +1,15 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 
 export interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol"> {
 	symbol?: symbol;
 }
 
-export interface SymbolClassicTypes extends ClassicTypesTemplate<
+export interface SymbolSpecTypes extends SpecTypesTemplate<
 	SymbolSetableCriteria,
 	{}
 > {}
 
-export interface SymbolGenericTypes extends GenericTypesTemplate<
+export interface SymbolFlowTypes extends FlowTypesTemplate<
 	{},
 	symbol
 > {}

@@ -1,95 +1,136 @@
-import type { EventsManager, RegistryValue } from "../managers";
-import type { CheckingTask, Rejection } from "./types";
+import type { CheckingTask, CheckingChunk, CheckingReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
-import { Issue } from "../../utils";
+import { nodeSymbol } from "./mounter";
 
-function rejection(
-	eventsManager: EventsManager,
-	code: string,
-	node: MountedCriteria,
-	path: RegistryValue['partPaths']
-): Rejection {
-	const result = {
-		path,
-		code: code,
-		type: node.type,
-		label: node.label,
-		message: node.message
+function createReject(
+	task: CheckingTask,
+	code: string
+): CheckingReject {
+	return ({
+		code,
+		path: task.fullPaths,
+		type: task.node.type,
+		label: task.node.label,
+		message: task.node.message
+	});
+}
+
+export class CheckingStack {
+	tasks: CheckingTask[] = [];
+
+	constructor(
+		rootNode: MountedCriteria,
+		rootData: unknown
+	) {
+		this.tasks.push({
+			data: rootData,
+			node: rootNode,
+			fullPaths: { explicit: [], implicit: [] }
+		});
 	}
 
-	eventsManager.emit("END_OF_CHECKING", node, result);
+	pushChunk(
+		sourceTask: CheckingTask,
+		chunk: CheckingChunk
+	) {
+		for (let i = 0; i < chunk.length; i++) {
+			const currentTask = chunk[i];
+			const partPaths = currentTask.node[nodeSymbol].partPaths;
+			let stackHooks = sourceTask.stackHooks;
 
-	return (result);
+			if (currentTask.hooks) {
+				const hooks = {
+					owner: sourceTask,
+					index: {
+						chunk: this.tasks.length - i,
+						branch: this.tasks.length
+					},
+					...currentTask.hooks
+				}
+
+				stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
+			}
+
+			this.tasks.push({
+				data: currentTask.data,
+				node: currentTask.node,
+				fullPaths: {
+					explicit: sourceTask.fullPaths.explicit.concat(partPaths.explicit),
+					implicit: sourceTask.fullPaths.implicit.concat(partPaths.implicit)
+				},
+				stackHooks
+			});
+		}
+	}
+
+	playHooks(
+		currentTask: CheckingTask,
+		reject: CheckingReject | null
+	) {
+		const stackHooks = currentTask.stackHooks;
+		if (!stackHooks) return (null);
+
+		const lastHooks = stackHooks[stackHooks.length - 1];
+		if (!reject && lastHooks.index.branch !== this.tasks.length) {
+			return (null);
+		}
+
+		for (let i = stackHooks.length - 1; i >= 0; i--) {
+			const hooks = stackHooks[i];
+
+			const claim = reject ? hooks.onReject(reject) : hooks.onAccept();
+
+			switch (claim.action) {
+				case "DEFAULT":
+					this.tasks.length = hooks.index.branch;
+					if (!reject) return (null);
+					continue;
+				case "REJECT":
+					this.tasks.length = hooks.index.branch;
+					reject = createReject(hooks.owner, claim.code);
+					continue;
+				case "IGNORE":
+					if (claim?.target === "CHUNK") {
+						this.tasks.length = hooks.index.chunk;
+					} else {
+						this.tasks.length = hooks.index.branch;
+					}
+					return (null);
+			}
+		}
+		return (reject);
+	}
 }
 
 export function checker(
 	managers: SchemaInstance['managers'],
-	criteria: MountedCriteria,
-	value: unknown
-): Rejection | null {
-	const registryManager = managers.registry;
-	const eventsManager = managers.events;
-	let queue: CheckingTask[] = [{
-		prevPath: { explicit: [], implicit: [] },
-		currNode: criteria,
-		value
-	}];
+	rootNode: MountedCriteria,
+	rootData: unknown
+): CheckingReject | null {
+	const { formats, events } = managers;
+	const stack = new CheckingStack(rootNode, rootData);
 
-	while (queue.length > 0) {
-		const { prevPath, currNode, value, hooks } = queue.pop()!;
+	let reject = null;
+	while (stack.tasks.length) {
+		const currentTask = stack.tasks.pop()!;
+		const { data, node, stackHooks } = currentTask;
+		const chunk: CheckingChunk = [];
 
-		const partPath = registryManager.getPartPaths(currNode);
-		const path = {
-			explicit: [...prevPath.explicit, ...partPath.explicit],
-			implicit: [...prevPath.implicit, ...partPath.implicit],
+		let code = null;
+		if (!(node.nullish && data == null)) {
+			const format = formats.get(node.type);
+			code = format.check(chunk, node, data);
 		}
 
-		if (hooks) {
-			const response = hooks.beforeCheck(currNode);
-			if (response === false) continue;
-			if (typeof response === "string") {
-				return(rejection(
-					eventsManager,
-					response,
-					hooks.owner.node,
-					hooks.owner.path
-				));
-			}
-		}
+		if (code) reject = createReject(currentTask, code);
+		else if (chunk.length) stack.pushChunk(currentTask, chunk);
+		if (stackHooks) reject = stack.playHooks(currentTask, reject);
 
-		let reject = null;
-		if (value === null) {
-			if (currNode.nullable) reject = null;
-			else reject = "TYPE_NULL";
-		} else if (value === undefined) {
-			if (currNode.undefinable) reject = null;
-			else reject = "TYPE_UNDEFINED";
-		} else {
-			const format = managers.formats.get(currNode.type);
-
-			reject = format.checking(queue, path, currNode, value);
-		}
-
-		if (hooks) {
-			const response = hooks.afterCheck(currNode, reject);
-			if (response === false) continue;
-			if (typeof response === "string") {
-				return(rejection(
-					eventsManager,
-					response,
-					hooks.owner.node,
-					hooks.owner.path
-				));
-			}
-		}
-
-		if (reject) {
-			return (rejection(eventsManager, reject, currNode, path));
-		}
-
-		eventsManager.emit('ONE_NODE_CHECKED', currNode, path);
+		if (reject) break;
 	}
 
-	return (null);
+	events.emit("DATA_CHECKED", rootNode, rootData, reject);
+
+	return (reject);
 };

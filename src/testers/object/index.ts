@@ -1,6 +1,5 @@
 export {
 	isObject,
-	isBasicObject,
 	isPlainObject,
 	isArray,
 	isFunction,
@@ -8,4 +7,4 @@ export {
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction,
-} from './object'
+} from './object';

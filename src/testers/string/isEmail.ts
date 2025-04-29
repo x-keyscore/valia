@@ -18,7 +18,7 @@ const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
 const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
 
 const domainPartAddrLiteralRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
-const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
+const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 
 function splitEmail(str: string) {
 	const arrayLength = str.length;

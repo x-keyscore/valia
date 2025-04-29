@@ -1,62 +1,103 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema format: 'array'", () => {
-	it("basic", () => {
-		const schema = new Schema({
-			type: "array",
-			empty: true,
-			item: { type: "number" }
+describe("Schema Formats - Array", () => {
+	describe("Default", () => {
+		let array_default;
+
+		before(() => {
+			array_default = new Schema({
+				type: "array",
+				item: {
+					type: "struct",
+					struct: {
+						foo: { type: "string" }
+					}
+				}
+			});
 		});
 
-		assert.strictEqual(schema.validate({}), false);
-		assert.strictEqual(schema.validate(new Uint16Array()), false);
-		assert.strictEqual(schema.validate([]), true);
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(array_default.validate(0), false);
+			assert.strictEqual(array_default.validate([{}]), false);
+			assert.strictEqual(array_default.validate([{ foo: 0 }]), false);
+			assert.strictEqual(array_default.validate([{ foo: "x" }, { foo: 0 }]), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(array_default.validate([{ foo: "x" }]), true);
+			assert.strictEqual(array_default.validate([{ foo: "x" }, { foo: "x" }]), true);
+			assert.strictEqual(array_default.validate([]), true, "Should be valid because 'empty' parameter set on 'true' by default");
+		});
 	});
-	it("'min' parameter", () => {
-		const schema = new Schema({
-			type: "array",
-			min: 3,
-			item: { type: "number" }
+
+	describe("'empty' parameter", () => {
+		let array_empty_true, array_empty_false;
+
+		before(() => {
+			array_empty_true = new Schema({
+				type: "array",
+				empty: true,
+				item: { type: "string" }
+			});
+
+			array_empty_false = new Schema({
+				type: "array",
+				empty: false,
+				item: { type: "string" }
+			});
 		});
 
-		assert.strictEqual(schema.validate([1, 2]), false);
-		assert.strictEqual(schema.validate([1, 2, 3]), true);
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(array_empty_false.validate([]), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(array_empty_true.validate([]), true);
+			assert.strictEqual(array_empty_true.validate(["x"]), true);
+			assert.strictEqual(array_empty_false.validate(["x"]), true);
+		});
 	});
-	it("'max' parameter", () => {
-		const schema = new Schema({
-			type: "array",
-			max: 3,
-			item: { type: "number" }
+
+	describe("'min' parameter", () => {
+		let array_min;
+
+		before(() => {
+			array_min = new Schema({
+				type: "array",
+				min: 4,
+				item: { type: "string" }
+			});
 		});
 
-		assert.strictEqual(schema.validate([1, 2, 3, 4]), false);
-		assert.strictEqual(schema.validate([1, 2, 3]), true);
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(array_min.validate(["x", "x", "x"]), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(array_min.validate(["x", "x", "x", "x"]), true);
+		});
 	});
-	it("'empty' parameter", () => {
-		const schema_1 = new Schema({
-			type: "array",
-			empty: false,
-			item: { type: "number" }
-		});
-		const schema_2 = new Schema({
-			type: "array",
-			empty: true,
-			item: { type: "number" }
+
+	describe("'max' parameter", () => {
+		let array_max;
+
+		before(() => {
+			array_max = new Schema({
+				type: "array",
+				max: 4,
+				item: { type: "string" }
+			});
 		});
 
-		assert.strictEqual(schema_1.validate([]), false);
-		assert.strictEqual(schema_2.validate([]), true);
-	});
-	it("'array' parameter", () => {
-		const schema = new Schema({
-			type: "array",
-			item: { type: "number" }
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(array_max.validate(["x", "x", "x", "x", "x"]), false);
 		});
 
-		assert.strictEqual(schema.validate(["foo", "bar"]), false);
-		assert.strictEqual(schema.validate([667, 667]), true);
+		it("should validate correct values", () => {
+			assert.strictEqual(array_max.validate(["x", "x", "x", "x"]), true);
+		});
 	});
 });

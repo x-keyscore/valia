@@ -1,63 +1,55 @@
 import type { RecordSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
 
-export const RecordFormat: FormatTemplate<RecordSetableCriteria> = {
+export const RecordFormat: Format<RecordSetableCriteria> = {
+	type: "record",
 	defaultCriteria: {
-		empty: false
+		empty: true
 	},
-	mounting(queue, path, criteria) {
-		queue.push({
-			prevNode: criteria,
-			prevPath: path,
-			currNode: criteria.key,
-			partPath: {
+	mount(chunk, criteria) {
+		chunk.push({
+			node: criteria.key,
+			partPaths: {
 				explicit: ["key"],
 				implicit: []
 			}
-		}, {
-			prevNode: criteria,
-			prevPath: path,
-			currNode: criteria.value,
-			partPath: {
+		});
+		chunk.push({
+			node: criteria.value,
+			partPaths: {
 				explicit: ["value"],
 				implicit: ["%", "string", "symbol"]
 			}
 		});
 	},
-	checking(queue, path, criteria, value) {
-		if (!isPlainObject(value)) {
-			return ("TYPE_NOT_PLAIN_OBJECT");
+	check(chunk, criteria, data) {
+		if (!isPlainObject(data)) {
+			return ("TYPE_PLAIN_OBJECT_REQUIRED");
 		}
 
-		const keys = Object.keys(value);
-		const totalKeys = keys.length;
+		const keys = Reflect.ownKeys(data);
+		const keysLength = keys.length;
 
-		if (totalKeys === 0) {
-			return (criteria.empty ? null : "VALUE_EMPTY");
+		if (keysLength === 0) {
+			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
 		}
-		else if (criteria.min !== undefined && totalKeys < criteria.min) {
-			return ("VALUE_INFERIOR_MIN");
+		else if (criteria.min != null && keysLength < criteria.min) {
+			return ("DATA_SIZE_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && totalKeys > criteria.max) {
-			return ("VALUE_SUPERIOR_MAX");
+		else if (criteria.max != null && keysLength > criteria.max) {
+			return ("DATA_SIZE_SUPERIOR_MAX");
 		}
 
-		const criteriaKey = criteria.key;
-		const criteriaValue = criteria.value;
-		for (let i = 0; i < keys.length; i++) {
+		for (let i = 0; i < keysLength; i++) {
 			const key = keys[i];
 
-			queue.push({
-				prevPath: path,
-				currNode: criteriaKey,
-				value: key
-			});
-
-			queue.push({
-				prevPath: path,
-				currNode: criteriaValue,
-				value: value[key]
+			chunk.push({
+				data: key,
+				node: criteria.key
+			}, {
+				data: data[key],
+				node: criteria.value
 			});
 		}
 

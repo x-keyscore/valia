@@ -1,34 +1,36 @@
 export {
 	Schema,
-	SchemaInfer,
-	SchemaInstance,
-	SchemaPlugins,
-	AbstractPlugin
+	SchemaComposer,
 } from './schema';
 
-export {
-	ClassicTypesTemplate,
-	GenericTypesTemplate,
+export type {
+	SchemaInfer,
+	SchemaInstance,
+	SchemaParameters,
+	PluginRequirement
+} from './schema';
+
+export type {
+	SpecTypesTemplate,
+	FlowTypesTemplate,
 	SetableCriteriaTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-	FormatClassicTypes,
-	FormatGenericTypes,
-	FormatTemplate,
-	NativeFormats
+	FormatSpecTypes,
+	FormatFlowTypes,
+	FormatGlobalNames,
+	FormatNativeNames,
+	Format
 } from './schema/formats';
 
 export {
 	EventsManager,
-	RegistryManager,
-	RegistryKey,
-	RegistryValue
+	FormatsManager
 } from './schema/managers';
 
 export {
 	isObject,
-	isBasicObject,
 	isPlainObject,
 	isArray,
 	isFunction,

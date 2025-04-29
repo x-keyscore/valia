@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { isBase16, isBase32, isBase32Hex, isBase64, isBase64Url } from "../../dist/index.js";
 
-describe("Testers string 'isBase16' function", () => {
+describe("Testers String - 'isBase16' function", () => {
     it("basic", () => {
         assert.strictEqual(isBase16("*"), false);
         assert.strictEqual(isBase16("0"), false);

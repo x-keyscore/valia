@@ -1,31 +1,52 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate, KeyofFormatClassicTypes,
-	SetableCriteria, MountedCriteria, GuardedCriteria } from "../types";
+import type {
+	SetableCriteriaTemplate,
+	SpecTypesTemplate,
+	FlowTypesTemplate,
+	FormatGlobalNames,
+	SetableCriteria,
+	MountedCriteria,
+	GuardedCriteria
+} from "../types";
+
+type SetableTuple<T extends FormatGlobalNames = FormatGlobalNames> =
+	[SetableCriteria<T>, ...SetableCriteria<T>[]];
 
 export interface TupleSetableCriteria<
-	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+	T extends FormatGlobalNames = FormatGlobalNames
 > extends SetableCriteriaTemplate<"tuple"> {
-	tuple: [SetableCriteria<T>, ...SetableCriteria<T>[]];
+	tuple: SetableTuple<T>;
 }
 
-export interface TupleClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+export interface TupleSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
 	TupleSetableCriteria<T>,
 	{}
 > {}
 
-export interface TupleMountedCriteria {
-	tuple: [MountedCriteria<SetableCriteria>, ...MountedCriteria<SetableCriteria>[]];
+type MountedTuple<T extends SetableTuple> =
+	T extends infer U
+		? {
+			[I in keyof U]:
+				U[I] extends SetableCriteria
+					? MountedCriteria<U[I]>
+					: never;
+		}
+		: never;
+
+export interface TupleMountedCriteria<T extends TupleSetableCriteria> {
+	tuple: MountedTuple<T['tuple']>;
 }
 
 type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 	T['tuple'] extends infer U
 		? {
-			[I in keyof U]: U[I] extends SetableCriteria
-				? GuardedCriteria<U[I]>
-				: never;
+			[I in keyof U]:
+				U[I] extends SetableCriteria
+					? GuardedCriteria<U[I]>
+					: never;
 		}
 		: never;
 
-export interface TupleGenericTypes<T extends TupleSetableCriteria> extends GenericTypesTemplate<
-	TupleMountedCriteria,
+export interface TupleFlowTypes<T extends TupleSetableCriteria> extends FlowTypesTemplate<
+	TupleMountedCriteria<T>,
 	TupleGuardedCriteria<T>
 > {}

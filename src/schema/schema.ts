@@ -1,25 +1,24 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, NativeFormats } from "./formats";
-import { registryManager, eventsManager, formatsManager } from "./managers";
-import { mounter, checker, cloner } from "./services";
-import { nativeFormats } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeNames } from "./formats";
+import { EventsManager, FormatsManager } from "./managers";
+import { cloner, mounter, checker } from "./services";
+import { formatNatives } from "./formats";
 import { Issue } from "../utils";
 
 /**
- * Represents a schema for data validation, including the validation criteria structure.
+ * The `Schema` class is used to define and validate data structures,
+ * ensuring they conform to specified criteria.
  */
-export class Schema<const T extends SetableCriteria = SetableCriteria<keyof NativeFormats>> {
-	private mountedCriteria: MountedCriteria<T> | undefined;
+export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
+	private _criteria: MountedCriteria<T> | undefined;
 	protected managers = {
-		registry: registryManager(),
-		formats: formatsManager(),
-		events: eventsManager()
+		formats: new FormatsManager(),
+		events: new EventsManager()
 	}
 
 	protected initiate(definedCriteria: T) {
-		this.managers.formats.set(nativeFormats);
-
+		this.managers.formats.add(formatNatives);
 		const clonedCriteria = cloner(definedCriteria);
-		this.mountedCriteria = mounter(this.managers, clonedCriteria);
+		this._criteria = mounter(this.managers, clonedCriteria);
 	}
 
 	constructor(criteria: T) {
@@ -36,40 +35,40 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<keyof Nati
 	 * which can be used in other schemas.
 	 */
 	get criteria(): MountedCriteria<T> {
-		if (!this.mountedCriteria) {
+		if (!this._criteria) {
 			throw new Issue("Schema", "Criteria are not initialized.");
 		}
-		return (this.mountedCriteria);
+		return (this._criteria);
 	}
 
 	/**
 	 * Validates the provided data against the schema.
 	 * 
-	 * @param value - The data to be validated.
+	 * @param data - The data to be validated.
 	 * 
 	 * @returns `true` if the value is **valid**, otherwise `false`.  
 	 * This function acts as a **type guard**, ensuring that
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
-	validate(value: unknown): value is GuardedCriteria<T> {
-		const reject = checker(this.managers, this.criteria, value);
+	validate(data: unknown): data is GuardedCriteria<T> {
+		const reject = checker(this.managers, this.criteria, data);
+
 		return (!reject);
 	}
 
 	/**
 	 * Evaluates the provided data against the schema.
 	 *
-	 * @param value - The data to be evaluated.
+	 * @param data - The data to be evaluated.
 	 * 
 	 * @returns An object containing:
-	 * - `{ reject: SchemaReject, value: null }` if the data is **invalid**.
-	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **valid**.
+	 * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
+	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
 	 */
-	evaluate(value: unknown) {
-		const reject = checker(this.managers, this.criteria, value);
-		if (reject) {
-			return ({ reject, value: null });
-		}
-		return ({ reject: null, value }) as { reject: null, value: GuardedCriteria<T> };
+	evaluate(data: unknown) {
+		const reject = checker(this.managers, this.criteria, data);
+
+		if (reject) return ({ reject });
+		return ({ data: data as GuardedCriteria<T> });
 	}
 }

@@ -1,19 +1,18 @@
 export type {
-    ClassicTypesTemplate,
-    GenericTypesTemplate,
+    SpecTypesTemplate,
+    FlowTypesTemplate,
     SetableCriteriaTemplate,
-    SetableCriteriaBase,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-    FormatClassicTypes,
-    FormatGenericTypes,
-    FormatTemplate,
-    NativeFormats
+    FormatSpecTypes,
+    FormatFlowTypes,
+    FormatGlobalNames,
+    FormatNativeNames,
+    Format
 } from './types';
 
 export {
-    staticDefaultCriteria,
-    nativeFormats
+    formatNatives
 } from './formats';
 

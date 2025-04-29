@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 import { testers } from "../../../testers";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
@@ -14,10 +14,10 @@ type Testers = {
 }[keyof StringTesters];
 
 export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
-	min?: number;
-	max?: number;
 	/** @default true */
 	empty?: boolean;
+	min?: number;
+	max?: number;
 	enum?: string[] | Record<string | number, string>;
 	regex?: RegExp;
 	tester?: Testers;
@@ -28,7 +28,7 @@ export interface StringDefaultCriteria {
 	empty: boolean;
 }
 
-export interface StringClassicTypes extends ClassicTypesTemplate<
+export interface StringSpecTypes extends SpecTypesTemplate<
 	StringSetableCriteria,
 	StringDefaultCriteria
 > {}
@@ -44,7 +44,7 @@ type StringGuardedCriteria<T extends StringSetableCriteria> =
 				: { [K in keyof T['enum']]: T['enum'][K] }[keyof T['enum']]
 			: string;
 
-export interface StringGenericTypes<T extends StringSetableCriteria> extends GenericTypesTemplate<
+export interface StringFlowTypes<T extends StringSetableCriteria> extends FlowTypesTemplate<
 	{},
 	StringGuardedCriteria<T>
 > {}

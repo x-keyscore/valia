@@ -1,60 +1,138 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema format: 'string'", () => {
-	it("basic", () => {
-		const schema = new Schema({ type: "string" });
+describe("Schema Formats - String", () => {
+	describe("Default", () => {
+		let string_default;
 
-		assert.strictEqual(schema.validate(0), false);
-		assert.strictEqual(schema.validate('0'), true);
-	});
-	it("'empty' parameter", () => {
-		const schema_1 = new Schema({ type: "string", empty: false });
-		const schema_2 = new Schema({ type: "string", empty: true });
-
-		assert.strictEqual(schema_1.validate(""), false);
-		assert.strictEqual(schema_2.validate(""), true);
-	});
-	it("'min' parameter", () => {
-		const schema = new Schema({ type: "string", min: 3 });
-
-		assert.strictEqual(schema.validate("fo"), false);
-		assert.strictEqual(schema.validate("foo"), true);
-	});
-	it("'max' parameter", () => {
-		const schema = new Schema({ type: "string", max: 3 });
-
-		assert.strictEqual(schema.validate("fooo"), false);
-		assert.strictEqual(schema.validate("foo"), true);
-	});
-	it("'enum' parameter", () => {
-		const schema_enum_array = new Schema({ type: "string", enum: ["RED", "GREEN", "BLUE"]});
-		const schema_enum_object = new Schema({ type: "string", enum: { Red: "RED", Green: "GREEN", Blue: "BLUE" }});
-
-		assert.strictEqual(schema_enum_array.validate("YELLOW"), false);
-		assert.strictEqual(schema_enum_array.validate("BLUE"), true);
-		assert.strictEqual(schema_enum_object.validate("YELLOW"), false);
-		assert.strictEqual(schema_enum_object.validate("BLUE"), true);
-	});
-	it("'regex' parameter", () => {
-		const schema = new Schema({ 
-			type: "string",
-			regex: /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/
+		before(() => {
+			string_default = new Schema({ type: "string" });
+		});
+		
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_default.validate(0), false);
+			assert.strictEqual(string_default.validate({}), false);
 		});
 
-		assert.strictEqual(schema.validate("#0000000"), false);
-		assert.strictEqual(schema.validate("#000000"), true);
+		it("should validate correct values", () => {
+			assert.strictEqual(string_default.validate("x"), true);
+			assert.strictEqual(string_default.validate(""), true, "Should be valid because 'empty' parameter set on 'true' by default");
+		});
 	});
-	it("'custom' parameter", () => {
-		const schema = new Schema({ 
-			type: "string",
-			custom(x) { return (x.length <= 3);
-			}
+
+	describe("'empty' parameter", () => {
+		let string_empty_true, string_empty_false;
+
+		before(() => {
+			string_empty_true = new Schema({ type: "string", empty: true });
+			string_empty_false = new Schema({ type: "string", empty: false });
+		});
+		
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_empty_false.validate(""), false);
 		});
 
-		assert.strictEqual(schema.validate("fooo"), false);
-		assert.strictEqual(schema.validate("foo"), true);
+		it("should validate correct values", () => {
+			assert.strictEqual(string_empty_true.validate(""), true);
+			assert.strictEqual(string_empty_false.validate("x"), true);
+		});
+	});
+
+	describe("'min' parameter", () => {
+		let string_min;
+
+		before(() => {
+			string_min = new Schema({ type: "string", min: 8 });
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_min.validate("x"), false);
+			assert.strictEqual(string_min.validate("1234567"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_min.validate("12345678"), true);
+			assert.strictEqual(string_min.validate("123456789"), true);
+		});
+	});
+
+	describe("'max' parameter", () => {
+		let string_max;
+
+		before(() => {
+			string_max = new Schema({ type: "string", max: 8 });
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_max.validate("123456789"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_max.validate(""), true);
+			assert.strictEqual(string_max.validate("x"), true);
+			assert.strictEqual(string_max.validate("1234567"), true);
+			assert.strictEqual(string_max.validate("12345678"), true);
+		});
+	});
+
+	describe("'enum' parameter", () => {
+		let string_enum_array, string_enum_object;
+
+		before(() => {
+			string_enum_array = new Schema({ type: "string", enum: ["RED", "GREEN", "BLUE"]});
+			string_enum_object = new Schema({ type: "string", enum: { Red: "RED", Green: "GREEN", Blue: "BLUE" }});
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_enum_array.validate(0), false);
+			assert.strictEqual(string_enum_object.validate(0), false);
+			assert.strictEqual(string_enum_array.validate("x"), false);
+			assert.strictEqual(string_enum_object.validate("x"), false);
+			assert.strictEqual(string_enum_array.validate("YELLOW"), false);
+			assert.strictEqual(string_enum_object.validate("YELLOW"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_enum_array.validate("RED"), true);
+			assert.strictEqual(string_enum_object.validate("RED"), true);
+			assert.strictEqual(string_enum_array.validate("GREEN"), true);
+			assert.strictEqual(string_enum_object.validate("GREEN"), true);
+			assert.strictEqual(string_enum_array.validate("BLUE"), true);
+			assert.strictEqual(string_enum_object.validate("BLUE"), true);
+		});
+	});
+
+	describe("'regex' parameter", () => {
+		let string_regex;
+
+		before(() => {
+			string_regex = new Schema({ type: "string", regex: /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/ });
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_regex.validate("#0000000"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_regex.validate("#000000"), true);
+		});
+	});
+
+	describe("'custom' parameter", () => {
+		let string_custom;
+
+		before(() => {
+			string_custom = new Schema({ type: "string", custom: (x) => x.length <= 8 });
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_custom.validate("123456789"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_custom.validate("12345678"), true);
+		});
 	});
 });
