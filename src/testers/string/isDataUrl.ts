@@ -1,3 +1,16 @@
+/**
+ * DATA URL
+ * 
+ * Composition :
+ * * `ALPHA = %d65-%d90 / %d97-%d122` A-Z / a-z
+ * * `DIGIT = %x30-39` 0-9
+ * * `token = 1*(DIGIT )
+ * * `type = token`
+ * * `subtype = token / iana-token`
+ * * `parameter = attribute "=" value`
+ * * `mediatype = [type "/" subtype] *(";" parameter)`
+ * * `dataurl = "data:" [mediatype] [";base64"] "," data`
+ */
 import { LooseAutocomplete } from "../../types";
 import { lazy } from "../utils";
 
@@ -23,25 +36,21 @@ interface IsDataUrlConfig {
 	 */
 	subtype: string[];
 }
-//https://datatracker.ietf.org/doc/html/rfc9110#section-8.3.1
-
 
 /** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
 const tokenPattern = "[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
 
-/** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
-const xTokenPattern = `(?:X-|x-)${tokenPattern}`;
-
 /** https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
 const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
 
+/** https://datatracker.ietf.org/doc/html/rfc3986#appendix-A */
 const dataPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
 
 const quotedStringPattern = "\"[a-zA-Z0-9!#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~-]+\"";
 
 const dataRegex = new RegExp(`^${dataPattern}$`);
-const typeRegex = new RegExp(`^(?:${tokenPattern}|${xTokenPattern})$`);
-const subtypeRegex = new RegExp(`^(?:${tokenPattern}|${xTokenPattern}|${ianaTokenPattern})$`);
+const typeRegex = new RegExp(`^${tokenPattern}$`);
+const subtypeRegex = new RegExp(`^(?:${tokenPattern}|${ianaTokenPattern})$`);
 const parameterNameRegex = new RegExp(`^${tokenPattern}$`);
 const parameterValueRegex = new RegExp(`^(?:${tokenPattern}|${quotedStringPattern})$`);
 
@@ -56,36 +65,41 @@ function parseDataUrl(str: string): ParseDataUrlResult | null {
 	let i = 0;
 
 	if (!str.startsWith("data:")) return (null);
+	i = 5;
 
-	// EXTRACT TYPE
-	const startOfType = 5;
-	while (str[i] && str[i] !== "/") i++;
-	if (!str[i]) return (null);
-	const endOfType = i;
-	result.type = str.slice(startOfType, endOfType);
-	if (!typeRegex.test(result.type)) return (null);
+	if (str[i] !== "," && str[i] !== ";") {
+		// EXTRACT TYPE
+		const startOfType = i;
+		while (str[i] && str[i] !== "/") i++;
+		if (!str[i]) return (null);
+		const endOfType = i;
+		result.type = str.slice(startOfType, endOfType);
+		if (!typeRegex.test(result.type)) return (null);
 
-	// EXTRACT SUBTYPE
-	const startOfSubtype = ++i;
-	while (str[i] && str[i] !== ";" && str[i] !== ",") i++;
-	if (!str[i]) return (null);
-	const endOfSubtype = i;
-	result.subtype = str.slice(startOfSubtype, endOfSubtype);
-	if (!subtypeRegex.test(result.subtype)) return (null);
+		// EXTRACT SUBTYPE
+		const startOfSubtype = ++i;
+		while (str[i] && str[i] !== ";" && str[i] !== ",") i++;
+		if (!str[i]) return (null);
+		const endOfSubtype = i;
+		result.subtype = str.slice(startOfSubtype, endOfSubtype);
+		if (!subtypeRegex.test(result.subtype)) return (null);
+	}
 
-	// EXTRACT PARAMETERS
 	while (str[i] && str[i] === ";") {
+		// EXTRACT BASE64 FLAG
 		if (str.startsWith(";base64,", i)) {
 			result.isBase64 = true;
 			i += 8;
 			break;
 		}
 
+		// EXTRACT PARAMETER NAME
 		const startOfName = ++i;
 		while (str[i] && str[i] !== "=") i++;
 		if (!str[i]) return (null);
 		const endOfName = i;
 
+		// EXTRACT PARAMETER VALUE
 		const startOfValue = ++i;
 		if (str[startOfValue] === "\"") {
 			while (str[i] && !(str[i - 1] === "\"" && (str[i] === ";" || str[i] === ","))) i++;
@@ -115,7 +129,7 @@ function parseDataUrl(str: string): ParseDataUrlResult | null {
 	return (result);
 }
 
-console.log(parseDataUrl("data:test/subtest;attr=;base64,f"))
+console.log(parseDataUrl("data:test/subtest;attr=V;base64;base64,poule"))
 
 /**
  * **Standard :** RFC 2397

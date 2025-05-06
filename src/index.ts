@@ -33,7 +33,7 @@ export {
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
-} from './tests/object';
+} from './testers/object';
 
 export {
 	isAscii,
@@ -49,7 +49,7 @@ export {
 	isBase32Hex,
 	isBase64,
 	isBase64Url
-} from './tests/string';
+} from './testers/string';
 
 export {
 	base16ToBase64,

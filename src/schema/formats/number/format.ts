@@ -1,6 +1,6 @@
 import type { NumberSetableCriteria } from "./types";
 import type { Format } from "../types";
-import { isArray, isPlainObject } from "../../../tests";
+import { isArray, isPlainObject } from "../../../testers";
 
 export const NumberFormat: Format<NumberSetableCriteria> = {
 	type: "number",

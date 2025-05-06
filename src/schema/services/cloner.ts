@@ -1,5 +1,5 @@
 import type { SetableCriteria } from "../formats";
-import { isArray, isPlainObject } from "../../tests";
+import { isArray, isPlainObject } from "../../testers";
 import { hasNodeSymbol } from "./mounter";
 
 interface CloningTask {

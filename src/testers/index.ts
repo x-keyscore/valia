@@ -5,7 +5,7 @@ export type * from "./types";
 export * from './string';
 export * from './object';
 
-export const tests = {
+export const testers = {
 	object: objectTests,
 	string: stringTests
 };

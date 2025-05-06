@@ -1,10 +1,10 @@
 import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
-import { tests } from "../../../tests";
+import { testers } from "../../../testers";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
 	T extends (input: any, params: infer U) => any ? U : never;
 
-type StringTests = typeof tests.string;
+type StringTests = typeof testers.string;
 
 export type SetableTests = {
 	[K in keyof StringTests]: ExtractParams<StringTests[K]> | true;

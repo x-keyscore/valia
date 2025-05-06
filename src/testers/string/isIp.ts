@@ -20,6 +20,8 @@
  * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
  */
 
+//https://datatracker.ietf.org/doc/html/rfc9110#section-8.3.1 see for norming
+
 import { lazy } from "../utils";
 
 interface IsIpParams {

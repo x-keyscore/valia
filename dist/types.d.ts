@@ -92,9 +92,17 @@ declare function isDomain(str: string, params?: undefined): boolean;
 type LooseAutocomplete<T extends string> = T | Omit<string, T>;
 
 interface IsDataUrlConfig {
-    /** Specifies the type of media. */
+    /**
+     * Specifies the type of media.
+     *
+     * @see http://www.iana.org/assignments/media-types/
+     */
     type: LooseAutocomplete<"text" | "image" | "audio" | "video" | "application" | "message" | "multipart">[];
-    /** Specifies the sub-type of media. */
+    /**
+     * Specifies the sub-type of media.
+     *
+     * @see http://www.iana.org/assignments/media-types/
+     */
     subtype: string[];
 }
 /**
@@ -105,7 +113,7 @@ interface IsDataUrlConfig {
  * **Follows :**
  * `dataurl`
  *
- * @version 1.0.0-beta
+ * @version 2.0.0-beta
  */
 declare function isDataUrl(str: string, config?: IsDataUrlConfig): boolean;
 
@@ -274,13 +282,13 @@ declare namespace objectTests {
   };
 }
 
-declare const tests: {
+declare const testers: {
     object: typeof objectTests;
     string: typeof stringTests;
 };
 
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
-type StringTests = typeof tests.string;
+type StringTests = typeof testers.string;
 type SetableTests = {
     [K in keyof StringTests]: ExtractParams<StringTests[K]> | true;
 };
