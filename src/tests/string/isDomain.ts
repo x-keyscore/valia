@@ -1,9 +1,9 @@
 /**
  * Composition :
- * * "letter = %d65-%d90 / %d97-%d122" A-Z / a-z
- * * "digit = %x30-39" 0-9
- * * "label = letter [*(digit / letter / "-") digit / letter]"
- * * "domain = label *("." label)"
+ * * `letter = %d65-%d90 / %d97-%d122` A-Z / a-z
+ * * `digit = %x30-39` 0-9
+ * * `label = letter [*(digit / letter / "-") digit / letter]`
+ * * `domain = label *("." label)`
  */
 const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
 

@@ -1,6 +1,6 @@
 import type { RecordSetableCriteria } from "./types";
 import type { Format } from "../types";
-import { isPlainObject } from "../../../testers";
+import { isPlainObject } from "../../../tests";
 
 export const RecordFormat: Format<RecordSetableCriteria> = {
 	type: "record",

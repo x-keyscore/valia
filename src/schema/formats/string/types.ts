@@ -1,17 +1,14 @@
 import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
-import { testers } from "../../../testers";
+import { tests } from "../../../tests";
 
 type ExtractParams<T extends (input: any, params: any) => any> = 
 	T extends (input: any, params: infer U) => any ? U : never;
 
-type StringTesters = typeof testers.string;
+type StringTests = typeof tests.string;
 
-type Testers = {
-	[K in keyof StringTesters]: {
-		name: K;
-		params?: ExtractParams<StringTesters[K]>;
-	};
-}[keyof StringTesters];
+export type SetableTests = {
+	[K in keyof StringTests]: ExtractParams<StringTests[K]> | true;
+}
 
 export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 	/** @default true */
@@ -19,8 +16,8 @@ export interface StringSetableCriteria extends SetableCriteriaTemplate<"string">
 	min?: number;
 	max?: number;
 	enum?: string[] | Record<string | number, string>;
+	tests?: SetableTests;
 	regex?: RegExp;
-	tester?: Testers;
 	custom?: (value: string) => boolean;
 }
 

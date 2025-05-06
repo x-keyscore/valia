@@ -1,6 +1,10 @@
-import type { TupleSetableCriteria } from "./types";
+import type { SetableTuple, TupleSetableCriteria, } from "./types";
 import type { Format } from "../types";
-import { isArray } from "../../../testers";
+import { isArray } from "../../../tests";
+
+function isShorthandTuple(obj: {}): obj is SetableTuple {
+	return (isArray(obj));
+}
 
 export const TupleFormat: Format<TupleSetableCriteria> = {
 	type: "tuple",
@@ -9,8 +13,18 @@ export const TupleFormat: Format<TupleSetableCriteria> = {
 	},
 	mount(chunk, criteria) {
 		for (let i = 0; i < criteria.tuple.length; i++) {
+			let item = criteria.tuple[i];
+
+			if (isShorthandTuple(item)) {
+				item = {
+					type: "tuple",
+					tuple: item
+				}
+				criteria.tuple[i] = item;
+			}
+
 			chunk.push({
-				node:  criteria.tuple[i],
+				node: item,
 				partPaths: {
 					explicit: ["tuple", i],
 					implicit: ["&", i]

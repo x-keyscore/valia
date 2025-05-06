@@ -2,22 +2,22 @@ import type {
 	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	FormatGlobalNames,
 	SetableCriteria,
 	MountedCriteria,
-	GuardedCriteria
+	GuardedCriteria,
+	FormatNames
 } from "../types";
 
-type SetableTuple<T extends FormatGlobalNames = FormatGlobalNames> =
-	[SetableCriteria<T>, ...SetableCriteria<T>[]];
+export type SetableTuple<T extends FormatNames = FormatNames> =
+	[SetableCriteria<T> | SetableTuple, ...(SetableCriteria<T> | SetableTuple)[]];
 
 export interface TupleSetableCriteria<
-	T extends FormatGlobalNames = FormatGlobalNames
+	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"tuple"> {
 	tuple: SetableTuple<T>;
 }
 
-export interface TupleSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
+export interface TupleSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
 	TupleSetableCriteria<T>,
 	{}
 > {}
@@ -28,7 +28,9 @@ type MountedTuple<T extends SetableTuple> =
 			[I in keyof U]:
 				U[I] extends SetableCriteria
 					? MountedCriteria<U[I]>
-					: never;
+					: U[I] extends SetableTuple
+						? MountedCriteria<{ type: "tuple", tuple: U[I] }>
+						: never;
 		}
 		: never;
 
@@ -42,7 +44,9 @@ type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 			[I in keyof U]:
 				U[I] extends SetableCriteria
 					? GuardedCriteria<U[I]>
-					: never;
+					: U[I] extends SetableTuple
+						? GuardedCriteria<{ type: "tuple", tuple: U[I] }>
+						: never;
 		}
 		: never;
 

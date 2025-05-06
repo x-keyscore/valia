@@ -2,16 +2,16 @@ import type {
 	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	FormatGlobalNames,
 	SetableCriteria,
 	MountedCriteria,
-	GuardedCriteria
+	GuardedCriteria,
+	FormatNames
 } from "../types";
 
 type SetableKey = SetableCriteria<"string" | "symbol">;
 
 export interface RecordSetableCriteria<
-	T extends FormatGlobalNames = FormatGlobalNames
+	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"record"> {
 	/** @default true */
 	empty?: boolean
@@ -25,7 +25,7 @@ export interface RecordDefaultCriteria {
 	empty: boolean;
 }
 
-export interface RecordSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
+export interface RecordSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
 	RecordSetableCriteria<T>,
 	RecordDefaultCriteria
 > {}

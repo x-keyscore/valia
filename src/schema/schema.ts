@@ -2,7 +2,7 @@ import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeNam
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
-import { Issue } from "../utils";
+import { Issue, memory } from "../utils";
 
 /**
  * The `Schema` class is used to define and validate data structures,
@@ -72,3 +72,57 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 		return ({ data: data as GuardedCriteria<T> });
 	}
 }
+/*
+const data = { foo: { foo: 0, bar: "x" }, bar: "x" }
+const start = performance.now();
+
+for (let i = 0; i < 10000; i++) {
+
+	const instance = new Schema({
+		type: "union",
+		union: [
+			{
+				type: "struct",
+				struct: {
+					foo: { type: "string" },
+					bar: {
+						type: "union",
+						union: [{
+							type: "struct",
+							struct: {
+								foo: { type: "string" },
+								bar: { type: "number" }
+							}
+						}, {
+							type: "string"
+						}]
+					}
+				}
+			},
+			{
+				type: "struct",
+				struct: {
+					foo: {
+						type: "union",
+						union: [{
+							type: "struct",
+							struct: {
+								foo: { type: "number" },
+								bar: { type: "string" }
+							}
+						}, {
+							type: "string"
+						}]
+					},
+					bar: { type: "string" }
+				}
+			},
+		]
+	});
+
+	instance.validate(data);
+}
+
+const end = performance.now();
+memory();
+console.log(`Execution time: ${(end - start).toFixed(3)} ms`);*/

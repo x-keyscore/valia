@@ -1,6 +1,6 @@
-import type { StringSetableCriteria } from "./types";
+import type { StringSetableCriteria, SetableTests } from "./types";
 import type { Format } from "../types";
-import { isArray, isPlainObject, testers } from "../../../testers";
+import { isArray, tests } from "../../../tests";
 
 export const StringFormat: Format<StringSetableCriteria> = {
 	type: "string",
@@ -26,15 +26,23 @@ export const StringFormat: Format<StringSetableCriteria> = {
 		else if (criteria.enum != null) {
 			if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
 				return ("DATA_ENUM_MISMATCH");
-			} else if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(data)) {
+			} else if (!Object.values(criteria.enum).includes(data)) {
 				return ("DATA_ENUM_MISMATCH");
 			}
 		}
-		else if (criteria.regex != null && !criteria.regex.test(data)) {
+
+		if (criteria.tests) {
+			for (const key of Object.keys(criteria.tests) as (keyof SetableTests)[]) {
+				if (!(tests.string[key](data, criteria.tests[key] as any))) {
+					return ("TEST_STRING_FAILED");
+				}
+			}
+		}
+
+		if (criteria.regex != null && !criteria.regex.test(data)) {
 			return ("TEST_REGEX_FAILED");
-		} else if (criteria.tester && !testers.string[criteria.tester.name](data, criteria.tester?.params as any)) {
-			return ("TEST_TESTER_FAILED");
-		} else if (criteria.custom && !criteria.custom(data)) {
+		}
+		else if (criteria.custom && !criteria.custom(data)) {
 			return ("TEST_CUSTOM_FAILED");
 		}
 

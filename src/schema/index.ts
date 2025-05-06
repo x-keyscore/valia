@@ -2,7 +2,7 @@ export type {
     SchemaInfer,
     SchemaInstance,
     SchemaParameters,
-    PluginRequirement
+    SchemaPlugin
 } from "./types";
 
 export {
@@ -10,7 +10,7 @@ export {
 } from "./schema";
 
 export {
-    SchemaComposer,
+    SchemaFactory
 } from "./plugin";
 
 

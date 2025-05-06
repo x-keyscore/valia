@@ -1,6 +1,6 @@
 import type { ArraySetableCriteria } from "./types";
 import type { Format } from "../types";
-import { isArray } from "../../../testers";
+import { isArray } from "../../../tests";
 
 export const ArrayFormat: Format<ArraySetableCriteria> = {
 	type: "array",

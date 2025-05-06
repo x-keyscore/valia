@@ -56,7 +56,7 @@ class EventsManager {
     }
 }
 
-const nodeSymbol = Symbol('internal');
+const nodeSymbol = Symbol("node");
 function hasNodeSymbol(obj) {
     return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
 }
@@ -231,8 +231,8 @@ function checker(managers, rootNode, rootData) {
  *
  * Empty returns `false`.
  */
-function isAscii(str, params) {
-    if (params?.onlyPrintable)
+function isAscii(str, config) {
+    if (config?.onlyPrintable)
         return (RegExp("^[\\x20-\\x7E]+$").test(str));
     return (RegExp("^[\\x00-\\x7F]+$").test(str));
 }
@@ -278,10 +278,10 @@ function lazy(callback) {
 
 /**
  * Composition :
- * * "letter = %d65-%d90 / %d97-%d122" A-Z / a-z
- * * "digit = %x30-39" 0-9
- * * "label = letter [*(digit / letter / "-") digit / letter]"
- * * "domain = label *("." label)"
+ * * `letter = %d65-%d90 / %d97-%d122` A-Z / a-z
+ * * `digit = %x30-39` 0-9
+ * * `label = letter [*(digit / letter / "-") digit / letter]`
+ * * `domain = label *("." label)`
  */
 const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
 /**
@@ -377,9 +377,9 @@ function isIpV6(str, params) {
 }
 
 const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
-const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
+const quotedStringPattern$1 = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
 const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
-const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern$1})$`));
 const domainPartAddrLiteralRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
 const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 function splitEmail(str) {
@@ -447,13 +447,83 @@ function isEmail(str, params) {
     return (false);
 }
 
-/** @see https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
+const dataPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
+const tokenPattern = "[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
+const quotedStringPattern = "\"[a-zA-Z0-9!#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~-]+\"";
+/** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
+const xTokenPattern = "(?:X-|x-)[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
+/** https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2 */
+const ietfTokenPattern = "[a-zA-Z0-9!#$%&'*+-.^_`|~]+";
+/** https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
 const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
-const discreteTypePattern = "(?:text|image|application|audio|video|message|multipart)";
-const parameterPattern = "[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+=(?:[-!*+.0-9A-Z\\x23-\\x27\\x5E-\\x7E]+|\"(?:[^\\\"\\x13]|\\\\[\\x00-\\x7F])+\")";
-const mediatypePattern = `${discreteTypePattern}\\/${ianaTokenPattern}(?:;${parameterPattern})*`;
-const contentPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
-const dataUrlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${contentPattern}$`));
+const typePattern = `(?:${xTokenPattern}|${ietfTokenPattern})`;
+const subtypePattern = `(?:${xTokenPattern}|${ietfTokenPattern}|${ianaTokenPattern})`;
+const parameterPattern = `${tokenPattern}=(?:${tokenPattern}|${quotedStringPattern})`;
+const mediatypePattern = `${typePattern}\\/${subtypePattern}(?:;${parameterPattern})*`;
+const dataurlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${dataPattern}$`));
+function parseDataUrl(str) {
+    const result = {
+        data: "",
+        type: "",
+        subtype: "",
+        parameters: [],
+        isBase64: false
+    };
+    let i = 0;
+    if (!str.startsWith("data:"))
+        return (1);
+    // EXTRACT TYPE
+    const startOfType = 5;
+    while (str[i] && str[i] !== "/")
+        i++;
+    if (!str[i])
+        return (2);
+    const endOfType = i;
+    result.type = str.slice(startOfType, endOfType);
+    // EXTRACT SUBTYPE
+    const startOfSubtype = ++i;
+    while (str[i] && str[i] !== ";" && str[i] !== ",")
+        i++;
+    if (!str[i])
+        return (3);
+    const endOfSubtype = i;
+    result.subtype = str.slice(startOfSubtype, endOfSubtype);
+    // EXTRACT PARAMETERS
+    while (str[i] && str[i] === ";") {
+        if (str.startsWith(";base64,", i)) {
+            result.isBase64 = true;
+            i += 8;
+            break;
+        }
+        const startOfAttribute = ++i;
+        while (str[i] && str[i] !== "=")
+            i++;
+        if (!str[i])
+            return (4);
+        const endOfAttribute = i;
+        const startOfValue = ++i;
+        if (str[startOfValue] === "\"") {
+            while (str[i] && !(str[i - 1] === "\"" && (str[i] === ";" || str[i] === ",")))
+                i++;
+        }
+        else {
+            while (str[i] && str[i] !== ";" && str[i] !== ",")
+                i++;
+        }
+        if (!str[i])
+            return (5);
+        const endOfValue = i;
+        result.parameters.push({
+            attribute: str.slice(startOfAttribute, endOfAttribute),
+            value: str.slice(startOfValue, endOfValue)
+        });
+    }
+    if (!str[i])
+        return (6);
+    result.data = str.slice(i);
+    return (result);
+}
+console.log(parseDataUrl("data:test/subtest;attr=;base64,f"));
 /**
  * **Standard :** RFC 2397
  *
@@ -464,14 +534,14 @@ const dataUrlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;ba
  *
  * @version 1.0.0-beta
  */
-function isDataUrl(str, params) {
-    if (!dataUrlRegex().test(str))
+function isDataUrl(str, config) {
+    if (!dataurlRegex().test(str))
         return (false);
-    if (params?.type || params?.subtype) {
+    if (config?.type || config?.subtype) {
         const [_, type, subtype] = new RegExp("^data:(.*?)\/(.*?)[;|,]").exec(str);
-        if (params?.type && params.type !== type)
+        if (config?.type && !config?.type.includes(type))
             return (false);
-        if (params?.subtype && !params?.subtype.includes(subtype))
+        if (config?.subtype && !config?.subtype.includes(subtype))
             return (false);
     }
     return (true);
@@ -543,7 +613,12 @@ function isBase16(str, params) {
     return (str.length % 2 === 0 && base16Regex.test(str));
 }
 
-var stringTesters = /*#__PURE__*/Object.freeze({
+/**
+ * Helper:
+ * `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+ */
+
+var stringTests = /*#__PURE__*/Object.freeze({
     __proto__: null,
     isAscii: isAscii,
     isBase16: isBase16,
@@ -827,8 +902,8 @@ function isAsyncGeneratorFunction(x) {
     return (hasTag(x, "AsyncGeneratorFunction"));
 }
 
-const testers = {
-    string: stringTesters
+const tests = {
+    string: stringTests
 };
 
 /**
@@ -942,10 +1017,15 @@ const SymbolFormat = {
 
 const NumberFormat = {
     type: "number",
-    defaultCriteria: {},
+    defaultCriteria: {
+        empty: true
+    },
     check(chunk, criteria, value) {
         if (typeof value !== "number") {
             return ("TYPE_NUMBER_REQUIRED");
+        }
+        else if (value === 0) {
+            return (criteria.empty ? null : "DATA_EMPTY");
         }
         else if (criteria.min != null && value < criteria.min) {
             return ("DATA_INFERIOR_MIN");
@@ -991,15 +1071,19 @@ const StringFormat = {
             if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
                 return ("DATA_ENUM_MISMATCH");
             }
-            else if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(data)) {
+            else if (!Object.values(criteria.enum).includes(data)) {
                 return ("DATA_ENUM_MISMATCH");
             }
         }
-        else if (criteria.regex != null && !criteria.regex.test(data)) {
-            return ("TEST_REGEX_FAILED");
+        if (criteria.tests) {
+            for (const key of Object.keys(criteria.tests)) {
+                if (!(tests.string[key](data, criteria.tests[key]))) {
+                    return ("TEST_STRING_FAILED");
+                }
+            }
         }
-        else if (criteria.tester && !testers.string[criteria.tester.name](data, criteria.tester?.params)) {
-            return ("TEST_TESTER_FAILED");
+        if (criteria.regex != null && !criteria.regex.test(data)) {
+            return ("TEST_REGEX_FAILED");
         }
         else if (criteria.custom && !criteria.custom(data)) {
             return ("TEST_CUSTOM_FAILED");
@@ -1105,16 +1189,17 @@ const StructFormat = {
             acceptedKeys: new Set(acceptedKeys),
             requiredKeys: new Set(requiredKeys)
         });
-        for (let i = 0; i < acceptedKeys.length; i++) {
-            const key = acceptedKeys[i];
-            if (isShorthandStruct(criteria.struct[key])) {
-                criteria.struct[key] = {
+        for (const key of acceptedKeys) {
+            let value = criteria.struct[key];
+            if (isShorthandStruct(value)) {
+                value = {
                     type: "struct",
-                    struct: criteria.struct[key]
+                    struct: value
                 };
+                criteria.struct[key] = value;
             }
             chunk.push({
-                node: criteria.struct[key],
+                node: value,
                 partPaths: {
                     explicit: ["struct", key],
                     implicit: ["&", key]
@@ -1190,6 +1275,9 @@ const ArrayFormat = {
     }
 };
 
+function isShorthandTuple(obj) {
+    return (isArray(obj));
+}
 const TupleFormat = {
     type: "tuple",
     defaultCriteria: {
@@ -1197,8 +1285,16 @@ const TupleFormat = {
     },
     mount(chunk, criteria) {
         for (let i = 0; i < criteria.tuple.length; i++) {
+            let item = criteria.tuple[i];
+            if (isShorthandTuple(item)) {
+                item = {
+                    type: "tuple",
+                    tuple: item
+                };
+                criteria.tuple[i] = item;
+            }
             chunk.push({
-                node: criteria.tuple[i],
+                node: item,
                 partPaths: {
                     explicit: ["tuple", i],
                     implicit: ["&", i]
@@ -1280,20 +1376,6 @@ const UnionFormat = {
     }
 };
 
-/*
-export const formatNatives = {
-    boolean: BooleanFormat,
-    symbol: SymbolFormat,
-    number: NumberFormat,
-    string: StringFormat,
-    simple: SimpleFormat,
-    record: RecordFormat,
-    struct: StructFormat,
-    array: ArrayFormat,
-    tuple: TupleFormat,
-    union: UnionFormat
-} satisfies Record<string, Format<SetableCriteria>>;
-*/
 const formatNatives = [
     BooleanFormat,
     SymbolFormat,
@@ -1368,29 +1450,134 @@ class Schema {
         return ({ data: data });
     }
 }
+/*
+const data = { foo: { foo: 0, bar: "x" }, bar: "x" }
+const start = performance.now();
 
-function SchemaComposer(plugin1, plugin2, plugin3) {
-    return class SchemaComposed extends Schema {
+for (let i = 0; i < 10000; i++) {
+
+    const instance = new Schema({
+        type: "union",
+        union: [
+            {
+                type: "struct",
+                struct: {
+                    foo: { type: "string" },
+                    bar: {
+                        type: "union",
+                        union: [{
+                            type: "struct",
+                            struct: {
+                                foo: { type: "string" },
+                                bar: { type: "number" }
+                            }
+                        }, {
+                            type: "string"
+                        }]
+                    }
+                }
+            },
+            {
+                type: "struct",
+                struct: {
+                    foo: {
+                        type: "union",
+                        union: [{
+                            type: "struct",
+                            struct: {
+                                foo: { type: "number" },
+                                bar: { type: "string" }
+                            }
+                        }, {
+                            type: "string"
+                        }]
+                    },
+                    bar: { type: "string" }
+                }
+            },
+        ]
+    });
+
+    instance.validate(data);
+}
+
+const end = performance.now();
+memory();
+console.log(`Execution time: ${(end - start).toFixed(3)} ms`);*/
+
+function SchemaFactory(plugin1, plugin2, plugin3) {
+    return class extends Schema {
         constructor(criteria) {
             super(criteria);
-            const mixinPlugin = (plugin) => {
+            const assignPlugin = (plugin) => {
                 const { formats, ...members } = plugin;
                 for (const key in members) {
                     if (key in this)
-                        throw new Issue("Schema Composer", `Conflictual keys: '${key}'`);
+                        throw new Issue("Schema Factory", `Conflictual keys: '${key}'`);
                 }
-                this.managers.formats.add(formats);
                 Object.assign(this, members);
+                this.managers.formats.add(formats);
             };
-            mixinPlugin(plugin1.call(this, criteria));
+            assignPlugin(plugin1.call(this, criteria));
             if (plugin2)
-                mixinPlugin(plugin2.call(this, criteria));
+                assignPlugin(plugin2.call(this, criteria));
             if (plugin3)
-                mixinPlugin(plugin3.call(this, criteria));
+                assignPlugin(plugin3.call(this, criteria));
             this.initiate(criteria);
         }
     };
 }
+/*
+import type { SetableCriteriaTemplate, GuardedCriteria, Format } from "./formats";
+import { SpecTypesTemplate, FlowTypesTemplate } from "./formats/types";
+
+export interface MongoIdSetableCriteria extends SetableCriteriaTemplate<"mongoId"> {
+    mongoParam: boolean;
+}
+
+export interface MongoIdSpecTypes extends SpecTypesTemplate<
+    MongoIdSetableCriteria,
+    {}
+> {}
+
+export interface MongoIdFlowTypes extends FlowTypesTemplate<
+    {},
+    string
+> {}
+
+declare module './formats/types' {
+    interface FormatSpecTypes {
+        mongoId: MongoIdSpecTypes;
+    }
+    interface FormatFlowTypes<T extends SetableCriteria> {
+        mongoId: T extends MongoIdSetableCriteria ? MongoIdFlowTypes : never;
+    }
+}
+
+const MongoIdFormat: Format<MongoIdSetableCriteria> = {
+    type: "mongoId",
+    defaultCriteria: {},
+    mount(chunk, criteria) {
+        
+    },
+    check(chunk, criteria, value) {
+        return (null);
+    },
+}
+
+function plugin_A<T extends SetableCriteria>(this: SchemaInstance<T>, definedCriteria: T) {
+    return ({
+        formats: [MongoIdFormat],
+        mongo(data: GuardedCriteria<T>) {
+            
+        }
+    } satisfies SchemaPlugin);
+}
+
+const SchemaA = SchemaFactory(plugin_A);
+
+const InstanceA = new SchemaA({ type: "mongoId", mongoParam: true });
+*/
 /*
 import type { SetableCriteriaTemplate, GuardedCriteria, Format } from "./formats";
 import { SpecTypesTemplate, FlowTypesTemplate } from "./formats/types";
@@ -1487,5 +1674,5 @@ const t2cccccc = new Tessss({ type: "struct", struct: { test: { type: "string" }
 
 t2cccccc.plugin_B_1({ test: ""})*/
 
-export { EventsManager, FormatsManager, Issue, Schema, SchemaComposer, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isUuid };
+export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isUuid };
 //# sourceMappingURL=index.js.map

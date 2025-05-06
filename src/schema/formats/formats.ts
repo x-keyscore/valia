@@ -9,20 +9,7 @@ import { StructFormat } from "./struct/format";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
 import { UnionFormat } from "./union/format";
-/*
-export const formatNatives = {
-	boolean: BooleanFormat,
-	symbol: SymbolFormat,
-	number: NumberFormat,
-	string: StringFormat,
-	simple: SimpleFormat,
-	record: RecordFormat,
-	struct: StructFormat,
-	array: ArrayFormat,
-	tuple: TupleFormat,
-	union: UnionFormat
-} satisfies Record<string, Format<SetableCriteria>>;
-*/
+
 export const formatNatives = [
 	BooleanFormat,
 	SymbolFormat,

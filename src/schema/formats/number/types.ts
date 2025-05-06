@@ -1,15 +1,21 @@
 import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
+	/** @default true */
+	empty?: boolean;
 	min?: number;
 	max?: number;
 	enum?: number[] | Record<string | number, number>;
 	custom?: (input: number) => boolean;
 }
 
+export interface NumberDefaultCriteria {
+	empty: boolean;
+}
+
 export interface NumberSpecTypes extends SpecTypesTemplate<
 	NumberSetableCriteria,
-	{}
+	NumberDefaultCriteria
 > {}
 
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = 

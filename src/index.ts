@@ -1,33 +1,28 @@
-export {
-	Schema,
-	SchemaComposer,
-} from './schema';
-
 export type {
 	SchemaInfer,
 	SchemaInstance,
 	SchemaParameters,
-	PluginRequirement
+	SchemaPlugin
 } from './schema';
 
 export type {
+	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	SetableCriteriaTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
 	FormatSpecTypes,
 	FormatFlowTypes,
-	FormatGlobalNames,
-	FormatNativeNames,
-	Format
+	Format,
+	FormatNames,
+	FormatNativeNames
 } from './schema/formats';
 
 export {
-	EventsManager,
-	FormatsManager
-} from './schema/managers';
+	Schema,
+	SchemaFactory
+} from './schema';
 
 export {
 	isObject,
@@ -38,7 +33,7 @@ export {
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
-} from './testers/object';
+} from './tests/object';
 
 export {
 	isAscii,
@@ -54,7 +49,7 @@ export {
 	isBase32Hex,
 	isBase64,
 	isBase64Url
-} from './testers/string';
+} from './tests/string';
 
 export {
 	base16ToBase64,
