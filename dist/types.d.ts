@@ -14,18 +14,70 @@ interface SymbolFlowTypes extends FlowTypesTemplate<{}, symbol> {
 }
 
 interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
+    /** @default true */
+    empty?: boolean;
     min?: number;
     max?: number;
     enum?: number[] | Record<string | number, number>;
     custom?: (input: number) => boolean;
 }
-interface NumberSpecTypes extends SpecTypesTemplate<NumberSetableCriteria, {}> {
+interface NumberDefaultCriteria {
+    empty: boolean;
+}
+interface NumberSpecTypes extends SpecTypesTemplate<NumberSetableCriteria, NumberDefaultCriteria> {
 }
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = T['enum'] extends number[] ? T['enum'][number] : T['enum'] extends Record<string | number, number> ? T['enum'][keyof T['enum']] : number;
 interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<{}, NumberGuardedCriteria<T>> {
 }
 
-interface IsAscii {
+type PlainObject = Record<string | symbol, unknown>;
+type PlainFunction = (...args: unknown[]) => unknown;
+type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
+
+declare function isObject(x: unknown): x is object;
+/**
+ * A plain object is considered as follows:
+ * - It must be an object.
+ * - It must have a prototype of `Object.prototype` or `null`.
+*/
+declare function isPlainObject(x: unknown): x is PlainObject;
+declare function isArray(x: unknown): x is unknown[];
+declare function isTypedArray(x: unknown): x is unknown[];
+declare function isFunction(x: unknown): x is Function;
+/**
+ * A basic function is considered as follows:
+ * - It must be an function.
+ * - It must not be an `async`, `generator` or `async generator` function.
+*/
+declare function isBasicFunction(x: unknown): x is PlainFunction;
+declare function isAsyncFunction(x: unknown): x is AsyncFunction;
+declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
+declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
+
+declare const objectTesters_isArray: typeof isArray;
+declare const objectTesters_isAsyncFunction: typeof isAsyncFunction;
+declare const objectTesters_isAsyncGeneratorFunction: typeof isAsyncGeneratorFunction;
+declare const objectTesters_isBasicFunction: typeof isBasicFunction;
+declare const objectTesters_isFunction: typeof isFunction;
+declare const objectTesters_isGeneratorFunction: typeof isGeneratorFunction;
+declare const objectTesters_isObject: typeof isObject;
+declare const objectTesters_isPlainObject: typeof isPlainObject;
+declare const objectTesters_isTypedArray: typeof isTypedArray;
+declare namespace objectTesters {
+  export {
+    objectTesters_isArray as isArray,
+    objectTesters_isAsyncFunction as isAsyncFunction,
+    objectTesters_isAsyncGeneratorFunction as isAsyncGeneratorFunction,
+    objectTesters_isBasicFunction as isBasicFunction,
+    objectTesters_isFunction as isFunction,
+    objectTesters_isGeneratorFunction as isGeneratorFunction,
+    objectTesters_isObject as isObject,
+    objectTesters_isPlainObject as isPlainObject,
+    objectTesters_isTypedArray as isTypedArray,
+  };
+}
+
+interface AsciiConfig {
     /** **Default:** `false` */
     onlyPrintable?: boolean;
 }
@@ -37,129 +89,108 @@ interface IsAscii {
  *
  * Empty returns `false`.
  */
-declare function isAscii(str: string, params?: IsAscii): boolean;
+declare function isAscii(str: string, config?: AsciiConfig): boolean;
 
-interface IsUuidParams {
-    /** **Default:** All version validate */
+interface UuidParams {
+    /** **Default:** All versions are allowed */
     version?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 /**
  * **Standard :** RFC 9562
  *
- * @see https://datatracker.ietf.org/doc/html/rfc9562#section-4
- *
  * @version 1.0.0
  */
-declare function isUuid(str: string, params?: IsUuidParams): boolean;
+declare function isUuid(str: string, params?: UuidParams): boolean;
 
-interface IsEmailParams {
+interface EmailParams {
     /** **Default:** `false` */
     allowQuotedString?: boolean;
     /** **Default:** `false` */
-    allowAddressLiteral?: boolean;
+    allowIpAddress?: boolean;
     /** **Default:** `false` */
-    allowGeneralAddressLiteral?: boolean;
+    allowGeneralAddress?: boolean;
 }
 /**
  * **Standard :** RFC 5321
  *
- *  @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
- *
- * **Follows :**
- * `Mailbox`
- *
- * @version 1.1.0-beta
+ * @version 2.0.0
  */
-declare function isEmail(str: string, params?: IsEmailParams): boolean;
+declare function isEmail(str: string, params?: EmailParams): boolean;
 
 /**
  * **Standard :** RFC 1035
  *
- * @see https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
- *
- * **Follows :**
- * `<domain>`
- *
- * @version 1.0.0-beta
+ * @version 1.0.0
  */
 declare function isDomain(str: string, params?: undefined): boolean;
 
-type LooseAutocomplete<T extends string> = T | Omit<string, T>;
-
-interface IsDataUrlParams {
+interface DataUrlParams {
     /**
-     * Specifies the type of media, corresponding to the **image** type in the example.
+     * Specifies the type of media.
      *
-     * **Exemple:** data:**image**\/gif;base64,R0lGODdhMA
+     * @see http://www.iana.org/assignments/media-types/
      */
-    type?: LooseAutocomplete<"text" | "image" | "audio" | "video" | "application" | "message" | "multipart">;
+    type: string[];
     /**
-     * Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.
+     * Specifies the sub-type of media.
      *
-     * **Exemple:** data:image/**gif**;base64,R0lGODdhMA
+     * @see http://www.iana.org/assignments/media-types/
      */
-    subtype?: string[];
+    subtype: string[];
 }
 /**
- * **Standard :** RFC 2397
+ * **Standard :** RFC 2397 (RFC 2045, RFC 6838, RFC 3986)
  *
- *  @see https://datatracker.ietf.org/doc/html/rfc2397#section-3
- *
- * **Follows :**
- * `dataurl`
- *
- * @version 1.0.0-beta
+ * @version 2.0.0
  */
-declare function isDataUrl(str: string, params?: IsDataUrlParams): boolean;
+declare function isDataUrl(str: string, params?: DataUrlParams): boolean;
 
 /**
- * IPV4
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "dec-octet = 1*3DIGIT" Representing a decimal integer value in the range 0 through 255.
- * * "prefix = 1*2DIGIT" Representing a decimal integer value in the range 0 through 32.
- * * "IPv4 = dec-octet 3("." dec-octet) ["/" prefix]"
- *
- * IPV6
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "HEXDIG = DIGIT / A-F / a-f"
- * * "IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)"
- * * "IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]"
- * * "IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4"
- * * "IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4"
- * * "prefix = 1*3DIGIT" Representing a decimal integer value in the range 0 through 128.
- * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
- */
-interface IsIpParams {
+# IPV4
+
+Composition :
+    dec-octet = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 255
+    prefix    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
+    IPv4      = dec-octet 3("." dec-octet) ["/" prefix]
+
+# IPV6
+
+Composition :
+    HEXDIG      = DIGIT / A-F / a-f
+    IPv6-full   = 1*4HEXDIG 7(":" 1*4HEXDIG)
+    IPv6-comp   = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]
+    IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4
+    IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4
+    prefix      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
+    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]
+*/
+interface IpParams {
     /**
-     * Must have a prefix at the end of the IP address indicating the subnet mask
-     * (e.g., `192.168.0.1/22`).
+     * Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).
+     *
      *
      * **Default:** `false`
      */
-    prefix?: boolean;
+    allowPrefix?: boolean;
 }
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIp(str: string, params?: IsIpParams): boolean;
+declare function isIp(str: string, params?: IpParams): boolean;
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIpV4(str: string, params?: IsIpParams): boolean;
+declare function isIpV4(str: string, params?: IpParams): boolean;
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIpV6(str: string, params?: IsIpParams): boolean;
+declare function isIpV6(str: string, params?: IpParams): boolean;
 
 /**
  * **Standard :** RFC 4648
@@ -233,66 +264,24 @@ declare namespace stringTesters {
   };
 }
 
-type PlainObject = Record<string | symbol, unknown>;
-type PlainFunction = (...args: unknown[]) => unknown;
-type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
-
-declare function isObject(x: unknown): x is object;
-/**
- * A plain object is considered as follows:
- * - It must be an object.
- * - It must have a prototype of `Object.prototype` or `null`.
-*/
-declare function isPlainObject(x: unknown): x is PlainObject;
-declare function isArray(x: unknown): x is unknown[];
-declare function isFunction(x: unknown): x is Function;
-declare function isBasicFunction(x: unknown): x is PlainFunction;
-declare function isAsyncFunction(x: unknown): x is AsyncFunction;
-declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
-declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
-
-declare const objectTesters_isArray: typeof isArray;
-declare const objectTesters_isAsyncFunction: typeof isAsyncFunction;
-declare const objectTesters_isAsyncGeneratorFunction: typeof isAsyncGeneratorFunction;
-declare const objectTesters_isBasicFunction: typeof isBasicFunction;
-declare const objectTesters_isFunction: typeof isFunction;
-declare const objectTesters_isGeneratorFunction: typeof isGeneratorFunction;
-declare const objectTesters_isObject: typeof isObject;
-declare const objectTesters_isPlainObject: typeof isPlainObject;
-declare namespace objectTesters {
-  export {
-    objectTesters_isArray as isArray,
-    objectTesters_isAsyncFunction as isAsyncFunction,
-    objectTesters_isAsyncGeneratorFunction as isAsyncGeneratorFunction,
-    objectTesters_isBasicFunction as isBasicFunction,
-    objectTesters_isFunction as isFunction,
-    objectTesters_isGeneratorFunction as isGeneratorFunction,
-    objectTesters_isObject as isObject,
-    objectTesters_isPlainObject as isPlainObject,
-  };
-}
-
 declare const testers: {
     object: typeof objectTesters;
     string: typeof stringTesters;
 };
 
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
-type StringTesters = typeof testers.string;
-type Testers = {
-    [K in keyof StringTesters]: {
-        name: K;
-        params?: ExtractParams<StringTesters[K]>;
-    };
-}[keyof StringTesters];
+type StringTests = typeof testers.string;
+type SetableTests = {
+    [K in keyof StringTests]: ExtractParams<StringTests[K]> | true;
+};
 interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
     /** @default true */
     empty?: boolean;
     min?: number;
     max?: number;
     enum?: string[] | Record<string | number, string>;
+    tests?: SetableTests;
     regex?: RegExp;
-    tester?: Testers;
     custom?: (value: string) => boolean;
 }
 interface StringDefaultCriteria {
@@ -322,7 +311,7 @@ interface SimpleFlowTypes<T extends SimpleSetableCriteria> extends FlowTypesTemp
 }
 
 type SetableKey = SetableCriteria<"string" | "symbol">;
-interface RecordSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"record"> {
+interface RecordSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"record"> {
     /** @default true */
     empty?: boolean;
     min?: number;
@@ -333,7 +322,7 @@ interface RecordSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames>
 interface RecordDefaultCriteria {
     empty: boolean;
 }
-interface RecordSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<RecordSetableCriteria<T>, RecordDefaultCriteria> {
+interface RecordSpecTypes<T extends FormatNames> extends SpecTypesTemplate<RecordSetableCriteria<T>, RecordDefaultCriteria> {
 }
 interface RecordMountedCriteria<T extends RecordSetableCriteria> {
     key: MountedCriteria<T['key']>;
@@ -345,14 +334,14 @@ type RecordGuardedCriteria<T extends RecordSetableCriteria> = GuardedCriteria<T[
 interface RecordFlowTypes<T extends RecordSetableCriteria> extends FlowTypesTemplate<RecordMountedCriteria<T>, RecordGuardedCriteria<T>> {
 }
 
-type SetableStruct<T extends FormatGlobalNames = FormatGlobalNames> = {
+type SetableStruct<T extends FormatNames = FormatNames> = {
     [key: string | symbol]: SetableCriteria<T> | SetableStruct<T>;
 };
-interface StructSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"struct"> {
-    optional?: (string | symbol)[];
+interface StructSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"struct"> {
     struct: SetableStruct<T>;
+    optional?: (string | symbol)[];
 }
-interface StructSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<StructSetableCriteria<T>, {}> {
+interface StructSpecTypes<T extends FormatNames> extends SpecTypesTemplate<StructSetableCriteria<T>, {}> {
 }
 type MountedStruct<T extends SetableStruct> = {
     [K in keyof T]: T[K] extends SetableCriteria ? MountedCriteria<T[K]> : T[K] extends SetableStruct ? MountedCriteria<{
@@ -379,7 +368,7 @@ type StructGuardedCriteria<T extends StructSetableCriteria> = {
 interface StructFlowTypes<T extends StructSetableCriteria> extends FlowTypesTemplate<StructMountedCriteria<T>, StructGuardedCriteria<T>> {
 }
 
-interface ArraySetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"array"> {
+interface ArraySetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"array"> {
     /** @default true */
     empty?: boolean;
     min?: number;
@@ -389,7 +378,7 @@ interface ArraySetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> 
 interface ArrayDefaultCriteria {
     empty: boolean;
 }
-interface ArraySpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<ArraySetableCriteria<T>, ArrayDefaultCriteria> {
+interface ArraySpecTypes<T extends FormatNames> extends SpecTypesTemplate<ArraySetableCriteria<T>, ArrayDefaultCriteria> {
 }
 interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
     item: MountedCriteria<T['item']>;
@@ -398,36 +387,42 @@ type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['i
 interface ArrayFlowTypes<T extends ArraySetableCriteria> extends FlowTypesTemplate<ArrayMountedCriteria<T>, ArrayGuardedCriteria<T>> {
 }
 
-type SetableTuple<T extends FormatGlobalNames = FormatGlobalNames> = [
-    SetableCriteria<T>,
-    ...SetableCriteria<T>[]
+type SetableTuple<T extends FormatNames = FormatNames> = [
+    SetableCriteria<T> | SetableTuple,
+    ...(SetableCriteria<T> | SetableTuple)[]
 ];
-interface TupleSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"tuple"> {
+interface TupleSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"tuple"> {
     tuple: SetableTuple<T>;
 }
-interface TupleSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<TupleSetableCriteria<T>, {}> {
+interface TupleSpecTypes<T extends FormatNames> extends SpecTypesTemplate<TupleSetableCriteria<T>, {}> {
 }
 type MountedTuple<T extends SetableTuple> = T extends infer U ? {
-    [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : never;
+    [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : U[I] extends SetableTuple ? MountedCriteria<{
+        type: "tuple";
+        tuple: U[I];
+    }> : never;
 } : never;
 interface TupleMountedCriteria<T extends TupleSetableCriteria> {
     tuple: MountedTuple<T['tuple']>;
 }
 type TupleGuardedCriteria<T extends TupleSetableCriteria> = T['tuple'] extends infer U ? {
-    [I in keyof U]: U[I] extends SetableCriteria ? GuardedCriteria<U[I]> : never;
+    [I in keyof U]: U[I] extends SetableCriteria ? GuardedCriteria<U[I]> : U[I] extends SetableTuple ? GuardedCriteria<{
+        type: "tuple";
+        tuple: U[I];
+    }> : never;
 } : never;
 interface TupleFlowTypes<T extends TupleSetableCriteria> extends FlowTypesTemplate<TupleMountedCriteria<T>, TupleGuardedCriteria<T>> {
 }
 
-type SetableUnion<T extends FormatGlobalNames = FormatGlobalNames> = [
+type SetableUnion<T extends FormatNames = FormatNames> = [
     SetableCriteria<T>,
     SetableCriteria<T>,
     ...SetableCriteria<T>[]
 ];
-interface UnionSetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> extends SetableCriteriaTemplate<"union"> {
+interface UnionSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"union"> {
     union: SetableUnion<T>;
 }
-interface UnionSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<UnionSetableCriteria<T>, {}> {
+interface UnionSpecTypes<T extends FormatNames> extends SpecTypesTemplate<UnionSetableCriteria<T>, {}> {
 }
 type MountedUnion<T extends SetableUnion> = T extends infer U ? {
     [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : never;
@@ -441,39 +436,38 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> = T['union'] extends i
 interface UnionFlowTypes<T extends UnionSetableCriteria> extends FlowTypesTemplate<UnionMountedCriteria<T>, UnionGuardedCriteria<T>> {
 }
 
-type PathSegmentsImplicitSyntax = (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol);
-/**
- * **Composition of implicit path :**
- * ```py
- * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
- * static-key    = ["&", (string / number / symbol)]
- * segment       = dynamic-key / static-key
- * path          = [*(...segment)]
- * ```
- *
- * **Exemple :**
- * ```py
- * my-path = ["&", "products", "%", "number", "&", "price"]
- * my-path is products[0].price or products[1].price and continue
- * ```
-*/
-type PathSegmentsImplicit = PathSegmentsImplicitSyntax[];
-/**
- * **Composition of explicit path :**
- * ```py
- * segment = (string / number / symbol)
- * path    = [*(...segment)]
- * ```
- *
- * **Exemple :**
- *  ```py
- * my-path = ["struct", "products", "item", "price"]
- * ```
-*/
-type PathSegmentsExplicit = (string | number | symbol)[];
+type LooseAutocomplete<T extends string> = T | Omit<string, T>;
+
 interface PathSegments {
-    explicit: PathSegmentsExplicit;
-    implicit: PathSegmentsImplicit;
+    /**
+     * **Composition of explicit path :**
+     * ```py
+     * segment = (string / number / symbol)
+     * path    = [*(...segment)]
+     * ```
+     *
+     * **Exemple :**
+     *  ```py
+     * my-path = ["struct", "products", "item", "price"]
+     * ```
+    */
+    explicit: (string | number | symbol)[];
+    /**
+     * #### Composition of implicit path :
+     * ```py
+     * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
+     * static-key    = ["&", (string / number / symbol)]
+     * segment       = dynamic-key / static-key
+     * path          = [*(...segment)]
+     * ```
+     *
+     * #### Exemple :
+     * ```py
+     * my-path = ["&", "products", "%", "number", "&", "price"]
+     * my-path is products[0].price or products[1].price and continue
+     * ```
+    */
+    implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
 }
 type MountingChunk = {
     node: SetableCriteria | MountedCriteria;
@@ -551,9 +545,9 @@ declare const formatNatives: ({
     check(chunk: CheckingChunk, criteria: Omit<SymbolSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
 } | {
     type: "number";
-    defaultCriteria: {};
+    defaultCriteria: NumberDefaultCriteria;
     mount?(chunk: MountingChunk, criteria: NumberSetableCriteria): void;
-    check(chunk: CheckingChunk, criteria: Omit<NumberSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    check(chunk: CheckingChunk, criteria: NumberDefaultCriteria & Omit<NumberSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
 } | {
     type: "string";
     defaultCriteria: StringDefaultCriteria;
@@ -620,7 +614,7 @@ interface FormatSpecTypes<T extends keyof FormatSpecTypes = any> {
     tuple: TupleSpecTypes<T>;
     union: UnionSpecTypes<T>;
 }
-type FormatGlobalNames = keyof FormatSpecTypes;
+type FormatNames = keyof FormatSpecTypes;
 /**
  * @template Mounted A type that takes a generic parameter extending
  * 'SetableCriteria'. It is used to determine the type validated
@@ -646,7 +640,7 @@ interface FormatFlowTypes<T extends SetableCriteria = SetableCriteria> {
     tuple: T extends TupleSetableCriteria ? TupleFlowTypes<T> : never;
     union: T extends UnionSetableCriteria ? UnionFlowTypes<T> : never;
 }
-type SetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> = FormatSpecTypes<T>[T]['setableCriteria'];
+type SetableCriteria<T extends FormatNames = FormatNames> = FormatSpecTypes<T>[T]['setableCriteria'];
 interface StaticMountedCriteria {
     [nodeSymbol]: {
         partPaths: PathSegments;
@@ -671,13 +665,8 @@ type FormatNativeNames = (typeof formatNatives)[number]['type'];
 declare class FormatsManager {
     private store;
     constructor();
-    add(formats: Format<any>[]): void;
-    get(type: string): {
-        type: "string" | "number" | "boolean" | "symbol" | "simple" | "record" | "struct" | "array" | "tuple" | "union";
-        defaultCriteria: {} | StringDefaultCriteria | RecordDefaultCriteria | ArrayDefaultCriteria;
-        mount?(chunk: MountingChunk, criteria: StringSetableCriteria | NumberSetableCriteria | BooleanSetableCriteria | SymbolSetableCriteria | SimpleSetableCriteria | RecordSetableCriteria<keyof FormatSpecTypes<any>> | StructSetableCriteria<keyof FormatSpecTypes<any>> | ArraySetableCriteria<keyof FormatSpecTypes<any>> | TupleSetableCriteria<keyof FormatSpecTypes<any>> | UnionSetableCriteria<keyof FormatSpecTypes<any>>): void;
-        check(chunk: CheckingChunk, criteria: (StringDefaultCriteria & Omit<StringSetableCriteria, never> & StaticMountedCriteria) | (Omit<NumberSetableCriteria, never> & StaticMountedCriteria) | (Omit<BooleanSetableCriteria, never> & StaticMountedCriteria) | (Omit<SymbolSetableCriteria, never> & StaticMountedCriteria) | (Omit<SimpleSetableCriteria, "bitcode"> & SimpleMountedCriteria & StaticMountedCriteria) | (RecordDefaultCriteria & Omit<RecordSetableCriteria<keyof FormatSpecTypes<any>>, keyof RecordMountedCriteria<RecordSetableCriteria<keyof FormatSpecTypes<any>>>> & RecordMountedCriteria<RecordSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria) | (Omit<StructSetableCriteria<keyof FormatSpecTypes<any>>, keyof StructMountedCriteria<StructSetableCriteria<keyof FormatSpecTypes<any>>>> & StructMountedCriteria<StructSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria) | (ArrayDefaultCriteria & Omit<ArraySetableCriteria<keyof FormatSpecTypes<any>>, "item"> & ArrayMountedCriteria<ArraySetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria) | (Omit<TupleSetableCriteria<keyof FormatSpecTypes<any>>, "tuple"> & TupleMountedCriteria<TupleSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria) | (Omit<UnionSetableCriteria<keyof FormatSpecTypes<any>>, "union"> & UnionMountedCriteria<UnionSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria), value: unknown): CheckingReject["code"] | null;
-    };
+    add(formats: Format[]): void;
+    get(type: FormatNames): Format;
 }
 
 interface Events {
@@ -727,8 +716,8 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      * @param data - The data to be evaluated.
      *
      * @returns An object containing:
-     * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
-     * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
+     * - `{ reject: CheckingReject }` if the data is **rejected**.
+     * - `{ data: GuardedCriteria<T> }` if the data is **accepted**.
      */
     evaluate(data: unknown): {
         reject: CheckingReject;
@@ -739,18 +728,22 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
     };
 }
 
-interface PluginRequirement {
-    formats: Format[];
-    [key: PropertyKey]: any;
-}
 type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<U> : never;
 type SchemaInstance<T extends SetableCriteria = SetableCriteria> = InstanceType<typeof Schema<T>>;
 type SchemaParameters<T extends SetableCriteria = SetableCriteria> = ConstructorParameters<typeof Schema<T>>;
+interface SchemaPlugin {
+    formats: Format[];
+    [key: PropertyKey]: any;
+}
 
-type MixinPluginsCriteria<P1C, P1M extends PluginRequirement, P2C, P2M extends PluginRequirement, P3C, P3M extends PluginRequirement> = (P1C extends SetableCriteria ? P2C extends SetableCriteria ? P3C extends SetableCriteria ? SetableCriteria extends P3C ? P1C | P2C | P3C : SetableCriteria<(P1M['formats'] | P2M['formats'] | P3M['formats'])[number]['type'] | FormatNativeNames> : SetableCriteria extends P2C ? P1C | P2C : SetableCriteria<(P1M['formats'] | P2M['formats'])[number]['type'] | FormatNativeNames> : SetableCriteria extends P1C ? P1C : SetableCriteria<P1M['formats'][number]['type'] | FormatNativeNames> : never);
-type MixinPluginsMembers<P1C, P1M extends PluginRequirement, P2C, P2M extends PluginRequirement, P3C, P3M extends PluginRequirement> = P1C extends SetableCriteria ? P2C extends SetableCriteria ? P3C extends SetableCriteria ? SchemaInstance<P1C & P2C & P3C> & P1M & P2M & P3M : SchemaInstance<P1C & P2C> & P1M & P2M : SchemaInstance<P1C> & P1M : never;
-type MixinPlugins<P1C, P1M extends PluginRequirement, P2C, P2M extends PluginRequirement, P3C, P3M extends PluginRequirement> = new (...args: [MixinPluginsCriteria<P1C, P1M, P2C, P2M, P3C, P3M>]) => MixinPluginsMembers<P1C, P1M, P2C, P2M, P3C, P3M>;
-declare function SchemaComposer<P1C extends SetableCriteria, P1M extends PluginRequirement, P2C = unknown, P2M extends PluginRequirement = never, P3C = unknown, P3M extends PluginRequirement = never>(plugin1: (...args: [P1C]) => P1M, plugin2?: (...args: [P2C]) => P2M, plugin3?: (...args: [P3C]) => P3M): MixinPlugins<P1C, P1M, P2C, P2M, P3C, P3M>;
+type MixinPluginsCriteria<P1C, P1M extends SchemaPlugin, P2C, P2M extends SchemaPlugin, P3C, P3M extends SchemaPlugin> = (P1C extends SetableCriteria ? P2C extends SetableCriteria ? P3C extends SetableCriteria ? SetableCriteria extends P3C ? P1C | P2C | P3C : SetableCriteria<(P1M['formats'] | P2M['formats'] | P3M['formats'])[number]['type'] | FormatNativeNames> : SetableCriteria extends P2C ? P1C | P2C : SetableCriteria<(P1M['formats'] | P2M['formats'])[number]['type'] | FormatNativeNames> : SetableCriteria extends P1C ? P1C : SetableCriteria<P1M['formats'][number]['type'] | FormatNativeNames> : never);
+type MixinSchemaPlugin<P1C, P1M extends SchemaPlugin, P2C, P2M extends SchemaPlugin, P3C, P3M extends SchemaPlugin> = P1C extends SetableCriteria ? P2C extends SetableCriteria ? P3C extends SetableCriteria ? SchemaInstance<P1C & P2C & P3C> & P1M & P2M & P3M : SchemaInstance<P1C & P2C> & P1M & P2M : SchemaInstance<P1C> & P1M : never;
+type MixinPlugins<P1C, P1M extends SchemaPlugin, P2C, P2M extends SchemaPlugin, P3C, P3M extends SchemaPlugin> = new (...args: [MixinPluginsCriteria<P1C, P1M, P2C, P2M, P3C, P3M>]) => Omit<MixinSchemaPlugin<P1C, P1M, P2C, P2M, P3C, P3M>, "formats">;
+declare function SchemaFactory<P1C extends SetableCriteria, P1M extends SchemaPlugin, P2C = unknown, P2M extends SchemaPlugin = never, P3C = unknown, P3M extends SchemaPlugin = never>(plugin1: (...args: [P1C]) => P1M, plugin2?: (...args: [P2C]) => P2M, plugin3?: (...args: [P3C]) => P3M): MixinPlugins<P1C, P1M, P2C, P2M, P3C, P3M>;
+
+type StandardTags = "Undefined" | "Boolean" | "String" | "Function" | "Promise" | "Array" | "ArrayBuffer" | "SharedArrayBuffer" | "Int8Array" | "Int16Array" | "Int32Array" | "Uint8Array" | "Uint8ClampedArray" | "Uint16Array" | "Uint32Array" | "Float32Array" | "Float64Array" | "BigInt64Array" | "BigUint64Array" | "DataView" | "Map" | "Set" | "WeakMap" | "WeakSet" | "WeakRef" | "Proxy" | "RegExp" | "Error" | "Date" | "FinalizationRegistry" | "BigInt" | "Symbol" | "Iterator" | "AsyncFunction" | "GeneratorFunction" | "AsyncGeneratorFunction" | "Atomics" | "JSON" | "Math" | "Reflect" | "Null" | "Number" | "Generator" | "AsyncGenerator" | "Object" | "Intl.Collator" | "Intl.DateTimeFormat" | "Intl.ListFormat" | "Intl.NumberFormat" | "Intl.PluralRules" | "Intl.RelativeTimeFormat" | "Intl.Locale";
+
+declare function getInternalTag(target: unknown): LooseAutocomplete<StandardTags>;
 
 declare function base16ToBase64(input: string, to?: "B64" | "B64URL", padding?: boolean): string;
 declare function base16ToBase32(input: string, to?: "B16" | "B16HEX", padding?: boolean): string;
@@ -761,5 +754,5 @@ declare class Issue extends Error {
     constructor(context: string, message: string, plugin?: string);
 }
 
-export { EventsManager, FormatsManager, Issue, Schema, SchemaComposer, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isUuid };
-export type { FlowTypesTemplate, Format, FormatFlowTypes, FormatGlobalNames, FormatNativeNames, FormatSpecTypes, GuardedCriteria, MountedCriteria, PluginRequirement, SchemaInfer, SchemaInstance, SchemaParameters, SetableCriteria, SetableCriteriaTemplate, SpecTypesTemplate };
+export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
+export type { FlowTypesTemplate, Format, FormatFlowTypes, FormatNames, FormatNativeNames, FormatSpecTypes, GuardedCriteria, MountedCriteria, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, SetableCriteria, SetableCriteriaTemplate, SpecTypesTemplate };

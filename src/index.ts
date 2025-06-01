@@ -1,38 +1,38 @@
-export {
-	Schema,
-	SchemaComposer,
-} from './schema';
-
 export type {
 	SchemaInfer,
 	SchemaInstance,
 	SchemaParameters,
-	PluginRequirement
+	SchemaPlugin
 } from './schema';
 
 export type {
+	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	SetableCriteriaTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
 	FormatSpecTypes,
 	FormatFlowTypes,
-	FormatGlobalNames,
-	FormatNativeNames,
-	Format
+	Format,
+	FormatNames,
+	FormatNativeNames
 } from './schema/formats';
 
 export {
-	EventsManager,
-	FormatsManager
-} from './schema/managers';
+	Schema,
+	SchemaFactory
+} from './schema';
+
+export {
+	testers
+} from './testers';
 
 export {
 	isObject,
 	isPlainObject,
 	isArray,
+	isTypedArray,
 	isFunction,
 	isBasicFunction,
 	isAsyncFunction,
@@ -57,11 +57,12 @@ export {
 } from './testers/string';
 
 export {
+	getInternalTag,
 	base16ToBase64,
 	base16ToBase32,
 	base64ToBase16,
 	base32ToBase16
-} from './tools';
+} from './helpers';
 
 export {
 	Issue

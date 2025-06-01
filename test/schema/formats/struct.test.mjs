@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Struct", () => {
+describe("\nschema / formats / Struct", () => {
 	const xSymbol = Symbol("x");
 	const ySymbol = Symbol("y");
 
@@ -89,6 +89,7 @@ describe("Schema Formats - Struct", () => {
 
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(struct_shorthand.validate(0), false);
+			assert.strictEqual(struct_shorthand.validate([]), false);
 			assert.strictEqual(struct_shorthand.validate({}), false);
 			assert.strictEqual(struct_shorthand.validate({ foo: "x" }), false);
 			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "x" } }), false);

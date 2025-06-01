@@ -7,9 +7,9 @@ export type {
     GuardedCriteria,
     FormatSpecTypes,
     FormatFlowTypes,
-    FormatGlobalNames,
-    FormatNativeNames,
-    Format
+    Format,
+    FormatNames,
+    FormatNativeNames
 } from './types';
 
 export {

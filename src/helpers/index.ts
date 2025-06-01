@@ -1,5 +1,5 @@
 export {
-	hasTag
+	getInternalTag
 } from './object'
 
 export {

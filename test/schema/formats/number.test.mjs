@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Number", () => {
+describe("\nschema / formats / Number", () => {
 	describe("Default", () => {
 		let number_default;
 
@@ -20,6 +20,24 @@ describe("Schema Formats - Number", () => {
 			assert.strictEqual(number_default.validate(-10), true);
 			assert.strictEqual(number_default.validate(0), true);
 			assert.strictEqual(number_default.validate(+10), true);
+		});
+	});
+
+	describe("'empty' parameter", () => {
+		let number_empty_true, number_empty_false;
+
+		before(() => {
+			number_empty_true = new Schema({ type: "number", empty: true });
+			number_empty_false = new Schema({ type: "number", empty: false });
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(number_empty_false.validate(0), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(number_empty_true.validate(0), true);
+			assert.strictEqual(number_empty_false.validate(1), true);
 		});
 	});
 
@@ -68,8 +86,8 @@ describe("Schema Formats - Number", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(number_enum_array.validate("x"), false);
 			assert.strictEqual(number_enum_object.validate("x"), false);
-			assert.strictEqual(number_enum_array.validate(0), false);
-			assert.strictEqual(number_enum_object.validate(0), false);
+			assert.strictEqual(number_enum_array.validate(4), false);
+			assert.strictEqual(number_enum_object.validate(4), false);
 		});
 
 		it("should validate correct values", () => {

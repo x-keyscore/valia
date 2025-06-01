@@ -16,9 +16,9 @@ export class Issue extends Error {
 export function memory() {
 	const memoryUsage = process.memoryUsage();
 	console.log(
-		`Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB` +
-		`Heap Used: ${memoryUsage.heapUsed / 1024 / 1024} MB` +
-		`External: ${memoryUsage.external / 1024 / 1024} MB` +
+		`Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB\n` +
+		`Heap Used: ${memoryUsage.heapUsed / 1024 / 1024} MB\n` +
+		`External: ${memoryUsage.external / 1024 / 1024} MB\n` +
 		`RSS: ${memoryUsage.rss / 1024 / 1024} MB`
 	);
 }

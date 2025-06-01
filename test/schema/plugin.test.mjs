@@ -1,9 +1,9 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
-import { SchemaComposer } from "../../dist/index.js";
+import { SchemaFactory, Issue } from "../../dist/index.js";
 
-describe("Schema Plugin", () => {
+describe("\nschema / plugin", () => {
     describe("Mix of 1 plugin", () => {
         let plugin_1, schema_instance;
 
@@ -16,8 +16,8 @@ describe("Schema Plugin", () => {
                 });
             }
 
-            const Schema_composed = SchemaComposer(plugin_1);
-            schema_instance = new Schema_composed({ type: "string" });
+            const Schema_extended = SchemaFactory(plugin_1);
+            schema_instance = new Schema_extended({ type: "string" });
         });
 
         it("the properties and methods of the plugin must be accessible", () => {
@@ -48,10 +48,9 @@ describe("Schema Plugin", () => {
                 });
             }
 
-            const Schema_composed = SchemaComposer(plugin_1, plugin_2);
+            const Schema_extended = SchemaFactory(plugin_1, plugin_2);
 
-            schema_instance = new Schema_composed({ type: "string" });
-            console.log(schema_instance.foo_property)
+            schema_instance = new Schema_extended({ type: "string" });
         });
 
         it("the properties and methods of the plugins must be accessible", () => {
@@ -88,7 +87,8 @@ describe("Schema Plugin", () => {
 
         it("should return an error because the plugin has an identical key", () => {
             assert.throws(() => {
-                SchemaPlugins(plugin_1, plugin_2);
+                const Schema_extended = SchemaFactory(plugin_1, plugin_2);
+                new Schema_extended({ type: "string" });
             }, Error);
         });
     });

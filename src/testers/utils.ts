@@ -1,25 +1,23 @@
-export function lazy<O extends object>(callback: () => O): () => O {
-	let ref: WeakRef<O> | undefined | null = null, val: O | null = null;
 
-	// Test 'WeakRef' support
-	if (typeof WeakRef !== "undefined") {
-		ref = undefined;
-	}
+export function weak<O extends object>(callback: () => O): () => O {
+	let ref: WeakRef<O> | null = null;
 
-    return () => {
-		if (ref !== null) {
-			const temp = ref?.deref();
-			if (!temp) {
-				ref = new WeakRef(callback());
-				return (ref.deref()!);
-			}
-			return (temp);
+    return (() => {
+		if (!ref) {
+			const obj = callback();
+			ref = new WeakRef(obj);
+			return (obj);
 		}
-		else if (val === null) {
-			val = callback();
+		
+		const value = ref.deref();
+		if (!value) {
+			const obj = callback();
+			ref = new WeakRef(obj);
+			return (obj);
 		}
-        return (val);
-    };
+
+		return (value);
+    });
 }
 
 /**

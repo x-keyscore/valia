@@ -56,7 +56,7 @@ export interface FormatSpecTypes<T extends keyof FormatSpecTypes = any> {
 	union: UnionSpecTypes<T>;
 }
 
-export type FormatGlobalNames = keyof FormatSpecTypes;
+export type FormatNames = keyof FormatSpecTypes;
 
 // FORMATS POSTA TYPES | Transformed type representation (after schema usage)
 
@@ -89,12 +89,12 @@ export interface FormatFlowTypes<T extends SetableCriteria = SetableCriteria> {
 
 // SETABLE CRITERIA
 
-export type SetableCriteria<T extends FormatGlobalNames = FormatGlobalNames> =
+export type SetableCriteria<T extends FormatNames = FormatNames> =
 	FormatSpecTypes<T>[T]['setableCriteria'];
 
 // DEFAULT CRITERIA
 
-export type DefaultCriteria<T extends FormatGlobalNames = FormatGlobalNames> =
+export type DefaultCriteria<T extends FormatNames = FormatNames> =
 	FormatSpecTypes<T>[T]['defaultCriteria']
 
 // MOUNTED CRITERIA

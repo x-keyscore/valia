@@ -2,7 +2,7 @@ import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { MountingTask, MountingChunk } from "./types";
 import type { SchemaInstance } from "../types";
 
-export const nodeSymbol = Symbol('internal');
+export const nodeSymbol = Symbol("node");
 
 export function hasNodeSymbol(obj: object): obj is MountedCriteria {
 	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));

@@ -20,19 +20,22 @@ Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, 
   - [Formats](#formats)
   - [Exemples](#exemples)
 - [Testers](#testers)
-  - [String](#string-1)
   - [Object](#object)
-- [Tools](#tools)
+  - [String](#string-1)
+- [Helpers](#helpers)
+  - [Object](#object-1)
   - [String](#string-2)
 
 ## Getting started
 ```
 > npm install valia
 ```
+
+Schema definition 
 ```ts
 import { Schema } from 'valia';
 
-const userSchema = new Schema({ 
+const user = new Schema({ 
   type: "struct",
   struct: {
     name: { type: "string" },
@@ -42,17 +45,30 @@ const userSchema = new Schema({
     }
   }
 });
+```
 
-let data: unknown = { name: "Tintin", role: "WORKER" };
+Schema inference
+```ts
+type User = SchemaInfer<typeof user>;
+```
 
-if (userSchema.validate(data)) console.log(data.role);
+Data validation
+```ts
+let data: unknown = {
+  name: "Alice",
+  role: "WORKER"
+};
+
+if (user.validate(data)) {
+  console.log(data.name, data.role);
+}
 ```
 
 <br/><br/>
 # Schema
 
 ## Instance
-|Property / Method|Description|
+|Member|Description|
 |--|--|
 |`criteria`  |Property representing the mounted validation criteria.|
 |`validate()`|Validates the provided data against the schema. A boolean is returned. This function is a type guard, so if it returns true, the value passed as a parameter will be of the type defined by your schema.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
@@ -62,7 +78,11 @@ if (userSchema.validate(data)) console.log(data.role);
 interface SchemaInstance {
   criteria: MountedCriteria;
   validate(data: unknown): data is GuardedCriteria;
-  evaluate(data: unknown): { reject: SchemaReject } | { data: GuardedCriteria };
+  evaluate(data: unknown): {
+    reject: SchemaReject
+  } | {
+    data: GuardedCriteria
+  };
 }
 ```
 ```ts
@@ -82,7 +102,7 @@ interface SchemaReject {
 
 [Simple](#simple) • [Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) • [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
 
-> The order in the property tables is the same order in which the checker executes the tests.
+> The order in the property tables is the same order in which the checker performs validation.
 
 ### Global
 
@@ -125,11 +145,12 @@ new Schema({
 
 |Property|Default|Description|
 |--|--|--|
-|`type`   ||Format name|
-|`min?`   ||Minimum value accepted|
-|`max?`   ||Maximum value accepted|
-|`enum?`  ||Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`||Customized test function|
+|`type`   |      |Format name|
+|`empty?` |`true`|If the number can be zero|
+|`min?`   |      |Minimum value accepted|
+|`max?`   |      |Maximum value accepted|
+|`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`custom?`|      |Customized test function|
 
 ```ts
 interface Criteria {
@@ -161,8 +182,8 @@ new Schema({
 |`min?`   |      |Minimum length accepted|
 |`max?`   |      |Maximum length accepted|
 |`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`tests?` |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
 |`regex?` |      |A native regex|
-|`tester?`|      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
 |`custom?`|      |Customized test function|
 
 ```ts
@@ -173,7 +194,7 @@ interface Criteria {
   max?: number;
   enum?: string[] | Record<string | number, string>;
   regex?: RegExp;
-  tester?: { name: string, params: object }[];
+  tests?: { [key: TestNames]: true | TestConfigs };
   custom?: (x: string) => boolean;
 }
 ```
@@ -219,8 +240,8 @@ type SetableStruct = {
 
 interface Criteria {
   type: "struct";
-  optional?: (string | symbol)[];
   struct: SetableStruct;
+  optional?: (string | symbol)[];
 }
 ```
 ```ts
@@ -320,7 +341,7 @@ new Schema({
 |Property|Default|Description|
 |--|--|--|
 |`type` ||Format name|
-|`union`||Array in which the possible criteria are listed|
+|`union`||Table in which the possible criteria are specified|
 
 ```ts
 interface Criteria {
@@ -330,8 +351,11 @@ interface Criteria {
 ```
 ```ts
 new Schema({
-  type: "array",
-  item: { type: "union", union: [{ type: "string"}, { type: "number" }] }
+  type: "union",
+  union: [
+    { type: "string" },
+    { type: "number" }
+  ]
 });
 ```
 
@@ -340,7 +364,7 @@ new Schema({
 |Property|Default|Description|
 |--|--|--|
 |`type`   ||Format name|
-|`symbol?`||Symbol to check|
+|`symbol?`||Specific symbol|
 
 ```ts
 interface Criteria {
@@ -359,63 +383,163 @@ new Schema({
 
 ## Exemples
 
-> The `criteria` properties of schemas are mounted only once, even if you use them in another schema.
-> This can be useful if memory is an important consideration for you or if you plan to create many sub-schemas.
+### Simple schema
 
 ```ts
-const nameFormat = new Schema({
-  label: "NAME_FORMAT",
+const user = new Schema({ 
+  type: "struct",
+  struct: {
+    name: {
+      type: "string",
+      min: 3,
+      max: 32
+    },
+    role: {
+      type: "string",
+      enum: ["WORKER", "CUSTOMER"]
+    }
+  }
+});
+
+const data = {
+  name: "Alice",
+  role: "WORKER"
+};
+```
+
+### Composite schema
+
+```ts
+const name = new Schema({
   type: "string",
   min: 3,
   max: 32
 });
 
-const ageFormat = new Schema({
-  label: "AGE_FORMAT",
-  type: "number",
-  min: 13,
-  max: 128
+const role = new Schema({
+  type: "string",
+  enum: ["WORKER", "CUSTOMER"]
 });
 
-const userSchema = new Schema({ 
+const user = new Schema({ 
   type: "struct",
   struct: {
-    name: nameFormat.criteria,
-    age: ageFormat.criteria
+    name: name.criteria,
+    role: role.criteria
   }
 });
 
-let data = { name: "Waitron", age: 200 };
-
-const { reject } = userSchema.evaluate(data);
-
-console.log(reject);
+const data = {
+  name: "Bob",
+  role: "WORKER"
+};
 ```
+
+### Deep composite schema
+
+```ts
+const name = new Schema({
+  type: "string",
+  min: 3,
+  max: 32
+});
+
+const setting = new Schema({
+  type: "struct",
+  struct: {
+    theme: {
+      type: "string",
+      enum: ["DARK", "LIGHT"]
+    },
+    notification: {
+      type: "boolean"
+    }
+  }
+});
+
+const user = new Schema({ 
+  type: "struct",
+  struct: {
+    name: name.criteria,
+    theme: setting.criteria.struct.theme
+  }
+});
+
+const data = {
+  name: "Alice",
+  theme: "DARK"
+};
 ```
-{
-  path: {
-    explicit: ['struct', 'age'],
-    implicit: ['&', 'age']
-  },
-  code: 'DATA_SUPERIOR_MAX',
-  type: 'number',
-  label: 'AGE_FORMAT',
-  message: undefined
-}
+
+### Shorthand struct schema
+
+In this schema only direct keys of the struct property can be defined as optional
+
+```ts
+const user = new Schema({ 
+  type: "struct",
+  struct: {
+    name: {
+      first: { type: "string" },
+      last: { type: "string" }
+    },
+  }
+});
+
+const data = {
+  name: {
+    first: "Anders",
+    last: "Hejlsberg"
+  }
+};
+```
+
+### Shorthand tuple schema
+
+```ts
+const color = new Schema({ 
+  type: "tuple",
+  tuple: [
+    { type: "string" },
+    [
+      { type: "number" },
+      { type: "number" },
+      { type: "number" }
+    ]
+  ]
+});
+
+const data = ["red", [0, 100, 50]];
 ```
 
 <br/><br/>
 
 # Testers
 
+### Object
+
+|Function|Description|
+|--|--|
+|`isObject`                |Checks if it is an object|
+|`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`|
+|`isArray`                 |Checks if it is an array|
+|`isArray`                 |Checks if it is an typed array|
+|`isFunction`              |Checks if it is an function|
+|`isBasicFunction`         |Checks if it is an function and if it is not `async`, `generator` or `async generator`.|
+|`isAsyncFunction`         |Checks if it is an async function|
+|`isGeneratorFunction`     |Checks if it is an generator function|
+|`isAsyncGeneratorFunction`|Checks if it is an async generator function|
+
+<br/>
+
 ### String
 
 |Function|Description|
 |--|--|
-|`isAscii`    |Check if all characters of the string are in the ASCII table.|
-|`isIp`       |See **isIpV4** and **isIpV6**|
+|`isAscii`    |**Standard:** No standard|
 |`isIpV4`     |**Standard:** No standard|
 |`isIpV6`     |**Standard:** No standard|
+|`isIp`       |See **isIpV4** and **isIpV6**|
 |`isEmail`    |**Standard:** RFC 5321|
 |`isDomain`   |**Standard:** RFC 1035|
 |`isDataURL`  |**Standard:** RFC 2397|
@@ -429,68 +553,72 @@ console.log(reject);
 <br/>
 
 ```ts
-isIp(str:string, params: IsIpParams): boolean;
+isAscii(str: string, params: AsciiParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
-|`prefix?: boolean`|Must have a prefix at the end of the IP address indicating the subnet mask.<br/>(e.g., `192.168.0.1/22`)|
+|`onlyPrintable?: boolean`||
 
 <br/>
 
 ```ts
-isEmail(str:string, params: IsEmailParams): boolean;
+isIp(str: string, params: IpParams): boolean;
+```
+|Parameter|Description|
+|--|--|
+|`allowPrefix?: boolean`|Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).|
+
+<br/>
+
+```ts
+isEmail(str: string, params: EmailParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
 |`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
-|`allowAddressLiteral?: boolean`|Allows an IPv4 or IPv6 address in place of the domain name.|
+|`allowIpAddress?: boolean`      |Allows an IPv4 or IPv6 address in place of the domain name.|
+|`allowGeneralAddress?: boolean`|Allows an general address in place of the domain name.|
 
 <br/>
 
 ```ts
-isDataURL(str:string, params: IsDataUrlParams): boolean;
+isDataURL(str: string, params: DataUrlParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
-|`type?: string`   |Specifies the type of media, corresponding to the **image** type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
-|`subtype?: string[]`|Specifies the sub-type of media, corresponding to the **gif** sub-type in the example.<br/>(e.g., `data:image/gif;base64,R0lGODdhMA`)|
+|`type?: string`     |Specifies the type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
+|`subtype?: string[]`|Specifies the sub-type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
 
 <br/>
 
 ```ts
-isUuid(str: string, params?: IsUuidParams): boolean;
+isUuid(str: string, params?: UuidParams): boolean;
 ```
 |Parameter|Description|
 |--|--|
 |`version?: 1\|2\|3\|4\|5\|6\|7`|The version you wish to validate. By default, all versions are validated.|
 
-<br/>
+<br/><br/>
+
+# Helpers
 
 ### Object
 
 |Function|Description|
 |--|--|
-|`isObject`                |Checks if it is an object.|
-|`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`.|
-|`isArray`                 |Checks if it is an array.|
-|`isFunction`              |Checks if it is an function.|
-|`isBasicFunction`         |Checks if it is a function but not an async, generator or async generator function. For example, an function like `async () => void` will return `false`.|
-|`isAsyncFunction`         |Checks if it is an async function.|
-|`isGeneratorFunction`     |Checks if it is an generator function.|
-|`isAsyncGeneratorFunction`|Checks if it is an async generator function.|
+|`getInternalTag`|Extracts the internal type tag of a value (e.g. `"Array"`, `"Date"`).|
 
-<br/><br/>
 
-# Tools
+<br/>
 
 ### String
 
 |Function|Description|
 |--|--|
-|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.<br/>The input does not need to be in the standard, but the output will be.|
-|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.<br/>The input does not need to be in the standard, but the output will be.|
-|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
-|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.<br/>The input does not need to be in the standard, but the output will be.|
+|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.|
+|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.|
+|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.|
+|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.|
 
 ```ts
 base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
@@ -499,8 +627,8 @@ base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = t
 
 base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
 
-base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16") => string;
+base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16"): string;
 ```
 <br/><br/>
 
-Developed in France with passion 🇫🇷
+Developed with passion 🇫🇷

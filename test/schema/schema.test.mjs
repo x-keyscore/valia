@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../dist/index.js";
 
-describe("Schema Instance", () => {
+describe("\nschema / instance", () => {
 	describe("'criteria' property", () => {
 		let string_criteria, string_schema, tuple_criteria, tuple_schema, struct_schema, main_schema;
 
@@ -111,7 +111,7 @@ describe("Schema Instance", () => {
 	});
 });
 
-describe("Schema Formats - (Basic Parameter)", () => {
+describe("\nschema / formats / (Global parameters)", () => {
 	describe("'nullish' parameter", () => {
 		let nullish_true, nullish_false;
 

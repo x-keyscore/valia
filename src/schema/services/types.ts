@@ -1,42 +1,36 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
 
-type PathSegmentsImplicitSyntax = (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol);
-
-/**
- * **Composition of implicit path :**
- * ```py
- * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
- * static-key    = ["&", (string / number / symbol)]
- * segment       = dynamic-key / static-key
- * path          = [*(...segment)]
- * ```
- * 
- * **Exemple :**
- * ```py
- * my-path = ["&", "products", "%", "number", "&", "price"]
- * my-path is products[0].price or products[1].price and continue
- * ```
-*/
-type PathSegmentsImplicit = PathSegmentsImplicitSyntax[];
-
-/**
- * **Composition of explicit path :**
- * ```py
- * segment = (string / number / symbol)
- * path    = [*(...segment)]
- * ```
- * 
- * **Exemple :**
- *  ```py
- * my-path = ["struct", "products", "item", "price"]
- * ```
-*/
-type PathSegmentsExplicit = (string | number | symbol)[];
-
 export interface PathSegments {
-	explicit: PathSegmentsExplicit;
-	implicit: PathSegmentsImplicit;
+	/**
+	 * **Composition of explicit path :**
+	 * ```py
+	 * segment = (string / number / symbol)
+	 * path    = [*(...segment)]
+	 * ```
+	 * 
+	 * **Exemple :**
+	 *  ```py
+	 * my-path = ["struct", "products", "item", "price"]
+	 * ```
+	*/
+	explicit: (string | number | symbol)[];
+	/**
+	 * #### Composition of implicit path :
+	 * ```py
+	 * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
+	 * static-key    = ["&", (string / number / symbol)]
+	 * segment       = dynamic-key / static-key
+	 * path          = [*(...segment)]
+	 * ```
+	 * 
+	 * #### Exemple :
+	 * ```py
+	 * my-path = ["&", "products", "%", "number", "&", "price"]
+	 * my-path is products[0].price or products[1].price and continue
+	 * ```
+	*/
+	implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
 }
 
 // MOUNTER

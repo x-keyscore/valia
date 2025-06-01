@@ -4,10 +4,15 @@ import { isArray, isPlainObject } from "../../../testers";
 
 export const NumberFormat: Format<NumberSetableCriteria> = {
 	type: "number",
-	defaultCriteria: {},
+	defaultCriteria: {
+		empty: true
+	},
 	check(chunk, criteria, value) {
 		if (typeof value !== "number") {
 			return ("TYPE_NUMBER_REQUIRED");
+		}
+		else if (value === 0) {
+			return (criteria.empty ? null : "DATA_EMPTY");
 		}
 		else if (criteria.min != null && value < criteria.min) {
 			return ("DATA_INFERIOR_MIN");

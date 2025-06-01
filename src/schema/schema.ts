@@ -62,8 +62,8 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * @param data - The data to be evaluated.
 	 * 
 	 * @returns An object containing:
-	 * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
-	 * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
+	 * - `{ reject: CheckingReject }` if the data is **rejected**.
+	 * - `{ data: GuardedCriteria<T> }` if the data is **accepted**.
 	 */
 	evaluate(data: unknown) {
 		const reject = checker(this.managers, this.criteria, data);

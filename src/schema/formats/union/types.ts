@@ -2,22 +2,22 @@ import type {
 	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	FormatGlobalNames,
 	SetableCriteria,
 	MountedCriteria,
-	GuardedCriteria
+	GuardedCriteria,
+	FormatNames
 } from "../types";
 
-type SetableUnion<T extends FormatGlobalNames = FormatGlobalNames> =
+type SetableUnion<T extends FormatNames = FormatNames> =
 	[SetableCriteria<T>, SetableCriteria<T>, ...SetableCriteria<T>[]];
 
 export interface UnionSetableCriteria<
-	T extends FormatGlobalNames = FormatGlobalNames
+	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"union"> {
 	union: SetableUnion<T>;
 }
 
-export interface UnionSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
+export interface UnionSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
 	UnionSetableCriteria<T>,
 	{}
 > {}

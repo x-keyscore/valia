@@ -1,14 +1,9 @@
-import * as stringTesters from './string';
 import * as objectTesters from './object';
+import * as stringTesters from './string';
 
-export type {
-	PlainObject,
-	PlainFunction,
-	AsyncFunction
-} from "./types";
-
-export * from './string';
+export type * from "./types";
 export * from './object';
+export * from './string';
 
 export const testers = {
 	object: objectTesters,

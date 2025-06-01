@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Symbol", () => {
+describe("\nschema / formats / Symbol", () => {
 	const xSymbol = Symbol("x");
 	const ySymbol = Symbol("y");
 

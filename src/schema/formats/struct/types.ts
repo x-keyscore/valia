@@ -2,24 +2,24 @@ import type {
 	SetableCriteriaTemplate,
 	SpecTypesTemplate,
 	FlowTypesTemplate,
-	FormatGlobalNames,
 	SetableCriteria,
+	MountedCriteria,
 	GuardedCriteria,
-	MountedCriteria
+	FormatNames
 } from "../types";
 
-export type SetableStruct<T extends FormatGlobalNames = FormatGlobalNames> = {
+export type SetableStruct<T extends FormatNames = FormatNames> = {
     [key: string | symbol]: SetableCriteria<T> | SetableStruct<T>;
 };
 
 export interface StructSetableCriteria<
-	T extends FormatGlobalNames = FormatGlobalNames
+	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"struct"> {
-	optional?: (string | symbol)[];
 	struct: SetableStruct<T>;
+	optional?: (string | symbol)[];
 }
 
-export interface StructSpecTypes<T extends FormatGlobalNames> extends SpecTypesTemplate<
+export interface StructSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
 	StructSetableCriteria<T>,
 	{}
 > {}

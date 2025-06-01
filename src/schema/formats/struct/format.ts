@@ -2,7 +2,7 @@ import type { StructSetableCriteria, SetableStruct } from "./types";
 import type { Format } from "../types";
 import { isPlainObject } from "../../../testers";
 
-function isShorthandStruct(obj: object): obj is SetableStruct {
+function isShorthandStruct(obj: {}): obj is SetableStruct {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 
@@ -19,18 +19,19 @@ export const StructFormat: Format<StructSetableCriteria> = {
 			requiredKeys: new Set(requiredKeys)
 		});
 
-		for (let i = 0; i < acceptedKeys.length; i++) {
-			const key = acceptedKeys[i];
+		for (const key of acceptedKeys) {
+			let value = criteria.struct[key];
 
-			if (isShorthandStruct(criteria.struct[key])) {
-				criteria.struct[key] = {
+			if (isShorthandStruct(value)) {
+				value = {
 					type: "struct",
-					struct: criteria.struct[key]
+					struct: value
 				}
+				criteria.struct[key] = value;
 			}
 
 			chunk.push({
-				node: criteria.struct[key],
+				node: value,
 				partPaths: {
 					explicit: ["struct", key],
 					implicit: ["&", key]
