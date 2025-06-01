@@ -223,8 +223,442 @@ function checker(managers, rootNode, rootData) {
     return (reject);
 }
 
+<<<<<<< HEAD
 function getInternalTag(target) {
     return (Object.prototype.toString.call(target).slice(8, -1));
+=======
+/**
+ * Check if all characters of the string are in the ASCII table (%d0-%d127).
+ *
+ * If you enable `onlyPrintable` valid characters will be limited to
+ * printable characters from the ASCII table (%32-%d126).
+ *
+ * Empty returns `false`.
+ */
+function isAscii(str, config) {
+    if (config?.onlyPrintable)
+        return (RegExp("^[\\x20-\\x7E]+$").test(str));
+    return (RegExp("^[\\x00-\\x7F]+$").test(str));
+}
+
+const extractUuidVersionRegex = new RegExp("^[0-9A-F]{8}-[0-9A-F]{4}-([1-7])[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", "i");
+/**
+ * **Standard :** RFC 9562
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc9562#section-4
+ *
+ * @version 1.0.0
+ */
+function isUuid(str, params) {
+    const extracted = extractUuidVersionRegex.exec(str);
+    if (!extracted || !extracted[1])
+        return (false);
+    if (!params?.version || (extracted[1].codePointAt(0) - 48) === params?.version)
+        return (true);
+    return (false);
+}
+
+function lazy(callback) {
+    let ref = null, val = null;
+    // Test 'WeakRef' support
+    if (typeof WeakRef !== "undefined") {
+        ref = undefined;
+    }
+    return () => {
+        if (ref !== null) {
+            const temp = ref?.deref();
+            if (!temp) {
+                ref = new WeakRef(callback());
+                return (ref.deref());
+            }
+            return (temp);
+        }
+        else if (val === null) {
+            val = callback();
+        }
+        return (val);
+    };
+}
+
+/**
+ * Composition :
+ * * `letter = %d65-%d90 / %d97-%d122` A-Z / a-z
+ * * `digit = %x30-39` 0-9
+ * * `label = letter [*(digit / letter / "-") digit / letter]`
+ * * `domain = label *("." label)`
+ */
+const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
+/**
+ * **Standard :** RFC 1035
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
+ *
+ * **Follows :**
+ * `<domain>`
+ *
+ * @version 1.0.0-beta
+ */
+function isDomain(str, params) {
+    return (domainRegex.test(str));
+}
+
+/**
+ * IPV4
+ *
+ * Composition :
+ * * "DIGIT = %x30-39" 0-9.
+ * * "dec-octet = 1*3DIGIT" Representing a decimal integer value in the range 0 through 255.
+ * * "prefix = 1*2DIGIT" Representing a decimal integer value in the range 0 through 32.
+ * * "IPv4 = dec-octet 3("." dec-octet) ["/" prefix]"
+ *
+ * IPV6
+ *
+ * Composition :
+ * * "DIGIT = %x30-39" 0-9.
+ * * "HEXDIG = DIGIT / A-F / a-f"
+ * * "IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)"
+ * * "IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]"
+ * * "IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4"
+ * * "IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4"
+ * * "prefix = 1*3DIGIT" Representing a decimal integer value in the range 0 through 128.
+ * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
+ */
+const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
+const ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
+const ipV4SimpleRegex = new RegExp(`^${ipV4Pattern}$`);
+const ipV4PrefixRegex = lazy(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
+const IPv6Pattern = "(?:" +
+    `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){6}(?:${ipV4Pattern}|:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){5}(?::${ipV4Pattern}|(?::${ipV6Seg}){1,2}|:)|` +
+    `(?:${ipV6Seg}:){4}(?:(?::${ipV6Seg}){0,1}:${ipV4Pattern}|(?::${ipV6Seg}){1,3}|:)|` +
+    `(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
+    `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
+    `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
+    `(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
+const ipV6SimpleRegex = new RegExp(`^${IPv6Pattern}$`);
+const ipV6PrefixRegex = lazy(() => new RegExp(`^${IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIp(str, params) {
+    if (!params?.prefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.prefix && ipV4PrefixRegex().test(str))
+        return (true);
+    if (!params?.prefix && ipV6SimpleRegex.test(str))
+        return (true);
+    else if (params?.prefix && ipV6PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV4(str, params) {
+    if (!params?.prefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.prefix && ipV4PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV6(str, params) {
+    if (!params?.prefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.prefix && ipV4PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+
+const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
+const quotedStringPattern$1 = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
+const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
+const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern$1})$`));
+const domainPartAddrLiteralRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
+const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
+function splitEmail(str) {
+    const arrayLength = str.length;
+    // FIND SYMBOL INDEX
+    // /!\ Starts from the end because the local part allows "@" in quoted strings.
+    let i = arrayLength - 1;
+    while (i >= 0 && str[i] !== "@") {
+        i--;
+    }
+    // CHECK SYMBOL CHAR
+    if (str[i] !== "@")
+        return (null);
+    const symbolIndex = i;
+    // CHECK LOCAL LENGTH
+    if (!symbolIndex)
+        return (null);
+    // CHECK DOMAIN LENGTH
+    /** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.2 */
+    const domainLength = arrayLength - (symbolIndex + 1);
+    if (!domainLength || domainLength > 255)
+        return (null);
+    return {
+        local: str.slice(0, symbolIndex),
+        domain: str.slice(symbolIndex + 1, arrayLength)
+    };
+}
+function isValidLocalPart(str, params) {
+    if (localPartSimpleRegex.test(str)) {
+        return (true);
+    }
+    else if (params?.allowQuotedString && localPartQuotedRegex().test(str)) {
+        return (true);
+    }
+    return (false);
+}
+function isValidDomainPart(str, params) {
+    if (isDomain(str))
+        return (true);
+    if (params?.allowAddressLiteral
+        && domainPartAddrLiteralRegex().test(str))
+        return (true);
+    if (params?.allowGeneralAddressLiteral
+        && domainPartGeneralAddrLiteralRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard :** RFC 5321
+ *
+ *  @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
+ *
+ * **Follows :**
+ * `Mailbox`
+ *
+ * @version 1.1.0-beta
+ */
+function isEmail(str, params) {
+    const parts = splitEmail(str);
+    if (!parts)
+        return (false);
+    if (isValidLocalPart(parts.local, params)
+        && isValidDomainPart(parts.domain, params))
+        return (true);
+    return (false);
+}
+
+//https://datatracker.ietf.org/doc/html/rfc9110#section-8.3.1
+/** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
+const tokenPattern = "[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
+/** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
+const xTokenPattern = `(?:X-|x-)${tokenPattern}`;
+/** https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
+const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
+const dataPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
+const quotedStringPattern = "\"[a-zA-Z0-9!#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~-]+\"";
+const dataRegex = new RegExp(`^${dataPattern}$`);
+const typeRegex = new RegExp(`^(?:${tokenPattern}|${xTokenPattern})$`);
+const subtypeRegex = new RegExp(`^(?:${tokenPattern}|${xTokenPattern}|${ianaTokenPattern})$`);
+const parameterNameRegex = new RegExp(`^${tokenPattern}$`);
+const parameterValueRegex = new RegExp(`^(?:${tokenPattern}|${quotedStringPattern})$`);
+function parseDataUrl(str) {
+    const result = {
+        data: "",
+        type: "",
+        subtype: "",
+        parameters: [],
+        isBase64: false
+    };
+    let i = 0;
+    if (!str.startsWith("data:"))
+        return (null);
+    i = 5;
+    if (str[i] !== "," && str[i] !== ";") {
+        // EXTRACT TYPE
+        const startOfType = i;
+        while (str[i] && str[i] !== "/")
+            i++;
+        if (!str[i])
+            return (null);
+        const endOfType = i;
+        result.type = str.slice(startOfType, endOfType);
+        if (!typeRegex.test(result.type))
+            return (null);
+        // EXTRACT SUBTYPE
+        const startOfSubtype = ++i;
+        while (str[i] && str[i] !== ";" && str[i] !== ",")
+            i++;
+        if (!str[i])
+            return (null);
+        const endOfSubtype = i;
+        result.subtype = str.slice(startOfSubtype, endOfSubtype);
+        if (!subtypeRegex.test(result.subtype))
+            return (null);
+    }
+    while (str[i] && str[i] === ";") {
+        // EXTRACT BASE64 FLAG
+        if (str.startsWith(";base64,", i)) {
+            result.isBase64 = true;
+            i += 8;
+            break;
+        }
+        // EXTRACT PARAMETER NAME
+        const startOfName = ++i;
+        while (str[i] && str[i] !== "=")
+            i++;
+        if (!str[i])
+            return (null);
+        const endOfName = i;
+        // EXTRACT PARAMETER VALUE
+        const startOfValue = ++i;
+        if (str[startOfValue] === "\"") {
+            while (str[i] && !(str[i - 1] === "\"" && (str[i] === ";" || str[i] === ",")))
+                i++;
+        }
+        else {
+            while (str[i] && str[i] !== ";" && str[i] !== ",")
+                i++;
+        }
+        if (!str[i])
+            return (null);
+        const endOfValue = i;
+        const parameter = {
+            name: str.slice(startOfName, endOfName),
+            value: str.slice(startOfValue, endOfValue)
+        };
+        if (!parameterNameRegex.test(parameter.name))
+            return (null);
+        if (!parameterValueRegex.test(parameter.value))
+            return (null);
+        result.parameters.push(parameter);
+    }
+    if (!str[i])
+        return (null);
+    // EXTRACT DATA
+    result.data = str.slice(i);
+    if (!dataRegex.test(result.data))
+        return (null);
+    return (result);
+}
+console.log(parseDataUrl("data:test/subtest;attr=V;base64;base64,poule"));
+/**
+ * **Standard :** RFC 2397
+ *
+ *  @see https://datatracker.ietf.org/doc/html/rfc2397#section-3
+ *
+ * **Follows :**
+ * `dataurl`
+ *
+ * @version 2.0.0-beta
+ */
+function isDataUrl(str, config) {
+    /*
+    if (!dataurlRegex().test(str)) return (false);
+
+    if (config?.type || config?.subtype) {
+        const [_, type, subtype] = new RegExp("^data:(.*?)\/(.*?)[;|,]").exec(str) as unknown as [string, string, string];
+
+        if (config?.type && !config?.type.includes(type)) return (false);
+        if (config?.subtype && !config?.subtype.includes(subtype)) return (false);
+    }*/
+    return (true);
+}
+
+const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
+const base32Regex = new RegExp("^(?:[A-Z2-7]{8})*(?:[A-Z2-7]{2}[=]{6}|[A-Z2-7]{4}[=]{4}|[A-Z2-7]{5}[=]{3}|[A-Z2-7]{6}[=]{2}|[A-Z2-7]{7}[=]{1})?$");
+const base32HexRegex = lazy(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
+const base64Regex = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}[=]{2}|[A-Za-z0-9+/]{3}[=]{1})?$");
+const base64UrlRegex = lazy(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
+ *
+ * @version 1.0.0
+ */
+function isBase64(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 4 == 0 && base64Regex.test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
+ *
+ * @version 1.0.0
+ */
+function isBase64Url(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 4 === 0 && base64UrlRegex().test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-6
+ *
+ * @version 1.0.0
+ */
+function isBase32(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 8 === 0 && base32Regex.test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-7
+ *
+ * @version 1.0.0
+ */
+function isBase32Hex(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 8 === 0 && base32HexRegex().test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
+ *
+ * @version 1.0.0
+ */
+function isBase16(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 2 === 0 && base16Regex.test(str));
+}
+
+/**
+ * Helper:
+ * `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+ */
+
+var stringTests = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    isAscii: isAscii,
+    isBase16: isBase16,
+    isBase32: isBase32,
+    isBase32Hex: isBase32Hex,
+    isBase64: isBase64,
+    isBase64Url: isBase64Url,
+    isDataUrl: isDataUrl,
+    isDomain: isDomain,
+    isEmail: isEmail,
+    isIp: isIp,
+    isIpV4: isIpV4,
+    isIpV6: isIpV6,
+    isUuid: isUuid
+});
+
+function hasTag(target, tag) {
+    return (Object.prototype.toString.call(target).slice(8, -1) === tag);
+>>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
 }
 
 function convertBase16ToBase64(input, base64, padding) {
@@ -498,6 +932,7 @@ function isAsyncGeneratorFunction(x) {
     return (getInternalTag(x) === "AsyncGeneratorFunction");
 }
 
+<<<<<<< HEAD
 var objectTesters = /*#__PURE__*/Object.freeze({
     __proto__: null,
     isArray: isArray,
@@ -1009,6 +1444,10 @@ var stringTesters = /*#__PURE__*/Object.freeze({
 const testers = {
     object: objectTesters,
     string: stringTesters
+=======
+const testers = {
+    string: stringTests
+>>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
 };
 
 /**

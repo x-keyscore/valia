@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
 Composition :
     DIGIT    = %x30-39
@@ -21,6 +22,10 @@ Links :
 
 interface UuidParams {
 	/** **Default:** All versions are allowed */
+=======
+interface IsUuidParams {
+	/** **Default:** All version validate */
+>>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
 	version?: 1|2|3|4|5|6|7;
 }
 
@@ -33,7 +38,11 @@ const extractUuidVersionRegex = new RegExp("^[0-9A-F]{8}-[0-9A-F]{4}-([1-7])[0-9
  * 
  * @version 1.0.0
  */
+<<<<<<< HEAD
 export function isUuid(str: string, params?: UuidParams): boolean {
+=======
+export function isUuid(str: string, params?: IsUuidParams): boolean {
+>>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
 	const extracted = extractUuidVersionRegex.exec(str);
 	if (!extracted || !extracted[1]) return (false);
 	if (!params?.version || (extracted[1].codePointAt(0)! - 48) === params?.version) return (true);
