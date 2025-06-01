@@ -98,8 +98,6 @@ interface UuidParams {
 /**
  * **Standard :** RFC 9562
  *
- * @see https://datatracker.ietf.org/doc/html/rfc9562#section-4
- *
  * @version 1.0.0
  */
 declare function isUuid(str: string, params?: UuidParams): boolean;
@@ -126,23 +124,13 @@ declare function isEmail(str: string, params?: EmailParams): boolean;
  */
 declare function isDomain(str: string, params?: undefined): boolean;
 
-<<<<<<< HEAD
 interface DataUrlParams {
-=======
-type LooseAutocomplete<T extends string> = T | Omit<string, T>;
-
-interface IsDataUrlConfig {
->>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
     /**
      * Specifies the type of media.
      *
      * @see http://www.iana.org/assignments/media-types/
      */
-<<<<<<< HEAD
     type: string[];
-=======
-    type: LooseAutocomplete<"text" | "image" | "audio" | "video" | "application" | "message" | "multipart">[];
->>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
     /**
      * Specifies the sub-type of media.
      *
@@ -153,16 +141,7 @@ interface IsDataUrlConfig {
 /**
  * **Standard :** RFC 2397 (RFC 2045, RFC 6838, RFC 3986)
  *
-<<<<<<< HEAD
  * @version 2.0.0
-=======
- *  @see https://datatracker.ietf.org/doc/html/rfc2397#section-3
- *
- * **Follows :**
- * `dataurl`
- *
- * @version 2.0.0-beta
->>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
  */
 declare function isDataUrl(str: string, params?: DataUrlParams): boolean;
 
@@ -285,54 +264,9 @@ declare namespace stringTesters {
   };
 }
 
-<<<<<<< HEAD
 declare const testers: {
     object: typeof objectTesters;
     string: typeof stringTesters;
-=======
-type PlainObject = Record<string | symbol, unknown>;
-type PlainFunction = (...args: unknown[]) => unknown;
-type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
-
-declare function isObject(x: unknown): x is object;
-/**
- * A plain object is considered as follows:
- * - It must be an object.
- * - It must have a prototype of `Object.prototype` or `null`.
-*/
-declare function isPlainObject(x: unknown): x is PlainObject;
-declare function isArray(x: unknown): x is unknown[];
-declare function isFunction(x: unknown): x is Function;
-declare function isBasicFunction(x: unknown): x is PlainFunction;
-declare function isAsyncFunction(x: unknown): x is AsyncFunction;
-declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
-declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
-
-declare const objectTests_isArray: typeof isArray;
-declare const objectTests_isAsyncFunction: typeof isAsyncFunction;
-declare const objectTests_isAsyncGeneratorFunction: typeof isAsyncGeneratorFunction;
-declare const objectTests_isBasicFunction: typeof isBasicFunction;
-declare const objectTests_isFunction: typeof isFunction;
-declare const objectTests_isGeneratorFunction: typeof isGeneratorFunction;
-declare const objectTests_isObject: typeof isObject;
-declare const objectTests_isPlainObject: typeof isPlainObject;
-declare namespace objectTests {
-  export {
-    objectTests_isArray as isArray,
-    objectTests_isAsyncFunction as isAsyncFunction,
-    objectTests_isAsyncGeneratorFunction as isAsyncGeneratorFunction,
-    objectTests_isBasicFunction as isBasicFunction,
-    objectTests_isFunction as isFunction,
-    objectTests_isGeneratorFunction as isGeneratorFunction,
-    objectTests_isObject as isObject,
-    objectTests_isPlainObject as isPlainObject,
-  };
-}
-
-declare const testers: {
-    object: typeof objectTests;
-    string: typeof stringTests;
->>>>>>> 149b53cfcb46941fa9a61c16c4daabf1bad52060
 };
 
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
