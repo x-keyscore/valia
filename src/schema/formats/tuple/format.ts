@@ -1,6 +1,6 @@
 import type { SetableTuple, TupleSetableCriteria, } from "./types";
 import type { Format } from "../types";
-import { isArray } from "../../../tests";
+import { isArray } from "../../../testers";
 
 function isShorthandTuple(obj: {}): obj is SetableTuple {
 	return (isArray(obj));

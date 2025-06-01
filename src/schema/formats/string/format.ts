@@ -1,6 +1,6 @@
 import type { StringSetableCriteria, SetableTests } from "./types";
 import type { Format } from "../types";
-import { isArray, tests } from "../../../tests";
+import { isArray, testers } from "../../../testers";
 
 export const StringFormat: Format<StringSetableCriteria> = {
 	type: "string",
@@ -33,7 +33,7 @@ export const StringFormat: Format<StringSetableCriteria> = {
 
 		if (criteria.tests) {
 			for (const key of Object.keys(criteria.tests) as (keyof SetableTests)[]) {
-				if (!(tests.string[key](data, criteria.tests[key] as any))) {
+				if (!(testers.string[key](data, criteria.tests[key] as any))) {
 					return ("TEST_STRING_FAILED");
 				}
 			}

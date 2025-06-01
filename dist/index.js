@@ -223,420 +223,8 @@ function checker(managers, rootNode, rootData) {
     return (reject);
 }
 
-/**
- * Check if all characters of the string are in the ASCII table (%d0-%d127).
- *
- * If you enable `onlyPrintable` valid characters will be limited to
- * printable characters from the ASCII table (%32-%d126).
- *
- * Empty returns `false`.
- */
-function isAscii(str, config) {
-    if (config?.onlyPrintable)
-        return (RegExp("^[\\x20-\\x7E]+$").test(str));
-    return (RegExp("^[\\x00-\\x7F]+$").test(str));
-}
-
-const extractUuidVersionRegex = new RegExp("^[0-9A-F]{8}-[0-9A-F]{4}-([1-7])[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", "i");
-/**
- * **Standard :** RFC 9562
- *
- * @see https://datatracker.ietf.org/doc/html/rfc9562#section-4
- *
- * @version 1.0.0
- */
-function isUuid(str, params) {
-    const extracted = extractUuidVersionRegex.exec(str);
-    if (!extracted || !extracted[1])
-        return (false);
-    if (!params?.version || (extracted[1].codePointAt(0) - 48) === params?.version)
-        return (true);
-    return (false);
-}
-
-function lazy(callback) {
-    let ref = null, val = null;
-    // Test 'WeakRef' support
-    if (typeof WeakRef !== "undefined") {
-        ref = undefined;
-    }
-    return () => {
-        if (ref !== null) {
-            const temp = ref?.deref();
-            if (!temp) {
-                ref = new WeakRef(callback());
-                return (ref.deref());
-            }
-            return (temp);
-        }
-        else if (val === null) {
-            val = callback();
-        }
-        return (val);
-    };
-}
-
-/**
- * Composition :
- * * `letter = %d65-%d90 / %d97-%d122` A-Z / a-z
- * * `digit = %x30-39` 0-9
- * * `label = letter [*(digit / letter / "-") digit / letter]`
- * * `domain = label *("." label)`
- */
-const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
-/**
- * **Standard :** RFC 1035
- *
- * @see https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
- *
- * **Follows :**
- * `<domain>`
- *
- * @version 1.0.0-beta
- */
-function isDomain(str, params) {
-    return (domainRegex.test(str));
-}
-
-/**
- * IPV4
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "dec-octet = 1*3DIGIT" Representing a decimal integer value in the range 0 through 255.
- * * "prefix = 1*2DIGIT" Representing a decimal integer value in the range 0 through 32.
- * * "IPv4 = dec-octet 3("." dec-octet) ["/" prefix]"
- *
- * IPV6
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "HEXDIG = DIGIT / A-F / a-f"
- * * "IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)"
- * * "IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]"
- * * "IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4"
- * * "IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4"
- * * "prefix = 1*3DIGIT" Representing a decimal integer value in the range 0 through 128.
- * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
- */
-const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
-const ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
-const ipV4SimpleRegex = new RegExp(`^${ipV4Pattern}$`);
-const ipV4PrefixRegex = lazy(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
-const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
-const IPv6Pattern = "(?:" +
-    `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
-    `(?:${ipV6Seg}:){6}(?:${ipV4Pattern}|:${ipV6Seg}|:)|` +
-    `(?:${ipV6Seg}:){5}(?::${ipV4Pattern}|(?::${ipV6Seg}){1,2}|:)|` +
-    `(?:${ipV6Seg}:){4}(?:(?::${ipV6Seg}){0,1}:${ipV4Pattern}|(?::${ipV6Seg}){1,3}|:)|` +
-    `(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
-    `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
-    `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
-    `(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
-const ipV6SimpleRegex = new RegExp(`^${IPv6Pattern}$`);
-const ipV6PrefixRegex = lazy(() => new RegExp(`^${IPv6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
-/**
- * **Standard:** No standard
- *
- * @version 1.0.0
- */
-function isIp(str, params) {
-    if (!params?.prefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.prefix && ipV4PrefixRegex().test(str))
-        return (true);
-    if (!params?.prefix && ipV6SimpleRegex.test(str))
-        return (true);
-    else if (params?.prefix && ipV6PrefixRegex().test(str))
-        return (true);
-    return (false);
-}
-/**
- * **Standard:** No standard
- *
- * @version 1.0.0
- */
-function isIpV4(str, params) {
-    if (!params?.prefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.prefix && ipV4PrefixRegex().test(str))
-        return (true);
-    return (false);
-}
-/**
- * **Standard:** No standard
- *
- * @version 1.0.0
- */
-function isIpV6(str, params) {
-    if (!params?.prefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.prefix && ipV4PrefixRegex().test(str))
-        return (true);
-    return (false);
-}
-
-const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
-const quotedStringPattern$1 = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
-const localPartSimpleRegex = new RegExp(`^${dotStringPattern}$`);
-const localPartQuotedRegex = lazy(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern$1})$`));
-const domainPartAddrLiteralRegex = lazy(() => new RegExp(`^\\[(?:IPv6:${IPv6Pattern}|${ipV4Pattern})\\]$`));
-const domainPartGeneralAddrLiteralRegex = lazy(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
-function splitEmail(str) {
-    const arrayLength = str.length;
-    // FIND SYMBOL INDEX
-    // /!\ Starts from the end because the local part allows "@" in quoted strings.
-    let i = arrayLength - 1;
-    while (i >= 0 && str[i] !== "@") {
-        i--;
-    }
-    // CHECK SYMBOL CHAR
-    if (str[i] !== "@")
-        return (null);
-    const symbolIndex = i;
-    // CHECK LOCAL LENGTH
-    if (!symbolIndex)
-        return (null);
-    // CHECK DOMAIN LENGTH
-    /** @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.2 */
-    const domainLength = arrayLength - (symbolIndex + 1);
-    if (!domainLength || domainLength > 255)
-        return (null);
-    return {
-        local: str.slice(0, symbolIndex),
-        domain: str.slice(symbolIndex + 1, arrayLength)
-    };
-}
-function isValidLocalPart(str, params) {
-    if (localPartSimpleRegex.test(str)) {
-        return (true);
-    }
-    else if (params?.allowQuotedString && localPartQuotedRegex().test(str)) {
-        return (true);
-    }
-    return (false);
-}
-function isValidDomainPart(str, params) {
-    if (isDomain(str))
-        return (true);
-    if (params?.allowAddressLiteral
-        && domainPartAddrLiteralRegex().test(str))
-        return (true);
-    if (params?.allowGeneralAddressLiteral
-        && domainPartGeneralAddrLiteralRegex().test(str))
-        return (true);
-    return (false);
-}
-/**
- * **Standard :** RFC 5321
- *
- *  @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
- *
- * **Follows :**
- * `Mailbox`
- *
- * @version 1.1.0-beta
- */
-function isEmail(str, params) {
-    const parts = splitEmail(str);
-    if (!parts)
-        return (false);
-    if (isValidLocalPart(parts.local, params)
-        && isValidDomainPart(parts.domain, params))
-        return (true);
-    return (false);
-}
-
-const dataPattern = "(?:[a-zA-Z0-9-;/?:@&=+$,_.!~*'()]|%[a-zA-Z0-9]{2})*";
-const tokenPattern = "[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
-const quotedStringPattern = "\"[a-zA-Z0-9!#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~-]+\"";
-/** https://datatracker.ietf.org/doc/html/rfc2045#section-5.1 */
-const xTokenPattern = "(?:X-|x-)[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
-/** https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2 */
-const ietfTokenPattern = "[a-zA-Z0-9!#$%&'*+-.^_`|~]+";
-/** https://datatracker.ietf.org/doc/html/rfc6838#section-4.2 */
-const ianaTokenPattern = "(?:[a-zA-Z0-9](?:[+]?[a-zA-Z0-9!#$&^_-][.]?){0,126})";
-const typePattern = `(?:${xTokenPattern}|${ietfTokenPattern})`;
-const subtypePattern = `(?:${xTokenPattern}|${ietfTokenPattern}|${ianaTokenPattern})`;
-const parameterPattern = `${tokenPattern}=(?:${tokenPattern}|${quotedStringPattern})`;
-const mediatypePattern = `${typePattern}\\/${subtypePattern}(?:;${parameterPattern})*`;
-const dataurlRegex = lazy(() => new RegExp(`^data:(?:${mediatypePattern})?(?:;base64)?,${dataPattern}$`));
-function parseDataUrl(str) {
-    const result = {
-        data: "",
-        type: "",
-        subtype: "",
-        parameters: [],
-        isBase64: false
-    };
-    let i = 0;
-    if (!str.startsWith("data:"))
-        return (1);
-    // EXTRACT TYPE
-    const startOfType = 5;
-    while (str[i] && str[i] !== "/")
-        i++;
-    if (!str[i])
-        return (2);
-    const endOfType = i;
-    result.type = str.slice(startOfType, endOfType);
-    // EXTRACT SUBTYPE
-    const startOfSubtype = ++i;
-    while (str[i] && str[i] !== ";" && str[i] !== ",")
-        i++;
-    if (!str[i])
-        return (3);
-    const endOfSubtype = i;
-    result.subtype = str.slice(startOfSubtype, endOfSubtype);
-    // EXTRACT PARAMETERS
-    while (str[i] && str[i] === ";") {
-        if (str.startsWith(";base64,", i)) {
-            result.isBase64 = true;
-            i += 8;
-            break;
-        }
-        const startOfAttribute = ++i;
-        while (str[i] && str[i] !== "=")
-            i++;
-        if (!str[i])
-            return (4);
-        const endOfAttribute = i;
-        const startOfValue = ++i;
-        if (str[startOfValue] === "\"") {
-            while (str[i] && !(str[i - 1] === "\"" && (str[i] === ";" || str[i] === ",")))
-                i++;
-        }
-        else {
-            while (str[i] && str[i] !== ";" && str[i] !== ",")
-                i++;
-        }
-        if (!str[i])
-            return (5);
-        const endOfValue = i;
-        result.parameters.push({
-            attribute: str.slice(startOfAttribute, endOfAttribute),
-            value: str.slice(startOfValue, endOfValue)
-        });
-    }
-    if (!str[i])
-        return (6);
-    result.data = str.slice(i);
-    return (result);
-}
-console.log(parseDataUrl("data:test/subtest;attr=;base64,f"));
-/**
- * **Standard :** RFC 2397
- *
- *  @see https://datatracker.ietf.org/doc/html/rfc2397#section-3
- *
- * **Follows :**
- * `dataurl`
- *
- * @version 1.0.0-beta
- */
-function isDataUrl(str, config) {
-    if (!dataurlRegex().test(str))
-        return (false);
-    if (config?.type || config?.subtype) {
-        const [_, type, subtype] = new RegExp("^data:(.*?)\/(.*?)[;|,]").exec(str);
-        if (config?.type && !config?.type.includes(type))
-            return (false);
-        if (config?.subtype && !config?.subtype.includes(subtype))
-            return (false);
-    }
-    return (true);
-}
-
-const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
-const base32Regex = new RegExp("^(?:[A-Z2-7]{8})*(?:[A-Z2-7]{2}[=]{6}|[A-Z2-7]{4}[=]{4}|[A-Z2-7]{5}[=]{3}|[A-Z2-7]{6}[=]{2}|[A-Z2-7]{7}[=]{1})?$");
-const base32HexRegex = lazy(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
-const base64Regex = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}[=]{2}|[A-Za-z0-9+/]{3}[=]{1})?$");
-const base64UrlRegex = lazy(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
- *
- * @version 1.0.0
- */
-function isBase64(str, params) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 4 == 0 && base64Regex.test(str));
-}
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
- *
- * @version 1.0.0
- */
-function isBase64Url(str, params) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 4 === 0 && base64UrlRegex().test(str));
-}
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-6
- *
- * @version 1.0.0
- */
-function isBase32(str, params) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 8 === 0 && base32Regex.test(str));
-}
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-7
- *
- * @version 1.0.0
- */
-function isBase32Hex(str, params) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 8 === 0 && base32HexRegex().test(str));
-}
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
- *
- * @version 1.0.0
- */
-function isBase16(str, params) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 2 === 0 && base16Regex.test(str));
-}
-
-/**
- * Helper:
- * `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
- */
-
-var stringTests = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    isAscii: isAscii,
-    isBase16: isBase16,
-    isBase32: isBase32,
-    isBase32Hex: isBase32Hex,
-    isBase64: isBase64,
-    isBase64Url: isBase64Url,
-    isDataUrl: isDataUrl,
-    isDomain: isDomain,
-    isEmail: isEmail,
-    isIp: isIp,
-    isIpV4: isIpV4,
-    isIpV6: isIpV6,
-    isUuid: isUuid
-});
-
-function hasTag(target, tag) {
-    return (Object.prototype.toString.call(target).slice(8, -1) === tag);
+function getInternalTag(target) {
+    return (Object.prototype.toString.call(target).slice(8, -1));
 }
 
 function convertBase16ToBase64(input, base64, padding) {
@@ -885,25 +473,542 @@ function isPlainObject(x) {
 function isArray(x) {
     return (Array.isArray(x));
 }
+function isTypedArray(x) {
+    return (ArrayBuffer.isView(x) && !(x instanceof DataView));
+}
 // FUNCTION
 function isFunction(x) {
     return (typeof x === "function");
 }
+/**
+ * A basic function is considered as follows:
+ * - It must be an function.
+ * - It must not be an `async`, `generator` or `async generator` function.
+*/
 function isBasicFunction(x) {
-    return (hasTag(x, "Function"));
+    return (getInternalTag(x) === "Function");
 }
 function isAsyncFunction(x) {
-    return (hasTag(x, "AsyncFunction"));
+    return (getInternalTag(x) === "AsyncFunction");
 }
 function isGeneratorFunction(x) {
-    return (hasTag(x, "GeneratorFunction"));
+    return (getInternalTag(x) === "GeneratorFunction");
 }
 function isAsyncGeneratorFunction(x) {
-    return (hasTag(x, "AsyncGeneratorFunction"));
+    return (getInternalTag(x) === "AsyncGeneratorFunction");
 }
 
-const tests = {
-    string: stringTests
+var objectTesters = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    isArray: isArray,
+    isAsyncFunction: isAsyncFunction,
+    isAsyncGeneratorFunction: isAsyncGeneratorFunction,
+    isBasicFunction: isBasicFunction,
+    isFunction: isFunction,
+    isGeneratorFunction: isGeneratorFunction,
+    isObject: isObject,
+    isPlainObject: isPlainObject,
+    isTypedArray: isTypedArray
+});
+
+/**
+ * Check if all characters of the string are in the ASCII table (%d0-%d127).
+ *
+ * If you enable `onlyPrintable` valid characters will be limited to
+ * printable characters from the ASCII table (%32-%d126).
+ *
+ * Empty returns `false`.
+ */
+function isAscii(str, config) {
+    if (config?.onlyPrintable)
+        return (RegExp("^[\\x20-\\x7E]+$").test(str));
+    return (RegExp("^[\\x00-\\x7F]+$").test(str));
+}
+
+/*
+Composition :
+    DIGIT    = %x30-39
+    HEXDIG   = DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
+    hexOctet = HEXDIG HEXDIG
+    uuid     = 4*4hexOctet "-"
+               2*2hexOctet "-"
+               2*2hexOctet "-"
+               2*2hexOctet "-"
+               6*6hexOctet
+
+Sources :
+    RFC 9562 Section 4 : DIGIT
+                         HEXDIG
+                         hexOctet
+                         UUID -> uuid
+
+Links :
+    https://datatracker.ietf.org/doc/html/rfc9562#section-4
+*/
+const extractUuidVersionRegex = new RegExp("^[0-9A-F]{8}-[0-9A-F]{4}-([1-7])[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", "i");
+/**
+ * **Standard :** RFC 9562
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc9562#section-4
+ *
+ * @version 1.0.0
+ */
+function isUuid(str, params) {
+    const extracted = extractUuidVersionRegex.exec(str);
+    if (!extracted || !extracted[1])
+        return (false);
+    if (!params?.version || (extracted[1].codePointAt(0) - 48) === params?.version)
+        return (true);
+    return (false);
+}
+
+function weak(callback) {
+    let ref = null;
+    return (() => {
+        if (!ref) {
+            const obj = callback();
+            ref = new WeakRef(obj);
+            return (obj);
+        }
+        const value = ref.deref();
+        if (!value) {
+            const obj = callback();
+            ref = new WeakRef(obj);
+            return (obj);
+        }
+        return (value);
+    });
+}
+
+/*
+Composition :
+    letter = %d65-%d90 / %d97-%d122; A-Z / a-z
+    digit  = %x30-39; 0-9
+    label  = letter [*(digit / letter / "-") digit / letter]
+    domain = label *("." label)
+
+Links :
+    https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
+*/
+const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
+/**
+ * **Standard :** RFC 1035
+ *
+ * @version 1.0.0
+ */
+function isDomain(str, params) {
+    return (domainRegex.test(str));
+}
+
+/**
+# IPV4
+
+Composition :
+    dec-octet = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 255
+    prefix    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
+    IPv4      = dec-octet 3("." dec-octet) ["/" prefix]
+
+# IPV6
+
+Composition :
+    HEXDIG      = DIGIT / A-F / a-f
+    IPv6-full   = 1*4HEXDIG 7(":" 1*4HEXDIG)
+    IPv6-comp   = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]
+    IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4
+    IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4
+    prefix      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
+    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]
+*/
+const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
+const ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
+const ipV4SimpleRegex = new RegExp(`^${ipV4Pattern}$`);
+const ipV4PrefixRegex = weak(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
+const ipV6Pattern = "(?:" +
+    `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){6}(?:${ipV4Pattern}|:${ipV6Seg}|:)|` +
+    `(?:${ipV6Seg}:){5}(?::${ipV4Pattern}|(?::${ipV6Seg}){1,2}|:)|` +
+    `(?:${ipV6Seg}:){4}(?:(?::${ipV6Seg}){0,1}:${ipV4Pattern}|(?::${ipV6Seg}){1,3}|:)|` +
+    `(?:${ipV6Seg}:){3}(?:(?::${ipV6Seg}){0,2}:${ipV4Pattern}|(?::${ipV6Seg}){1,4}|:)|` +
+    `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
+    `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
+    `(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
+const ipV6SimpleRegex = new RegExp(`^${ipV6Pattern}$`);
+const ipV6PrefixRegex = weak(() => new RegExp(`^${ipV6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIp(str, params) {
+    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
+        return (true);
+    if (!params?.allowPrefix && ipV6SimpleRegex.test(str))
+        return (true);
+    else if (params?.allowPrefix && ipV6PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV4(str, params) {
+    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard:** No standard
+ *
+ * @version 1.0.0
+ */
+function isIpV6(str, params) {
+    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
+        return (true);
+    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
+        return (true);
+    return (false);
+}
+
+/*
+Composition :
+    atom            = 1*atext
+    dot-local       = atom *("."  atom)
+    quoted-local    = DQUOTE *QcontentSMTP DQUOTE
+    ip-address      = IPv4-address-literal / IPv6-address-literal
+    general-address = General-address-literal
+    local           = dot-local / quote-local
+    domain          = Domain
+    address         = ip-address / general-address
+    mailbox         = local "@" (domain / address)
+
+Sources :
+    RFC 5234 Appendix B.1   : DQUOTE
+    RFC 5322 Section  3.2.3 : atext
+    RFC 5321 Section  4.1.3 : IPv4-address-literal
+                              IPv6-address-literal
+                              General-address-literal
+    RFC 5321 Section  4.1.2 : QcontentSMTP
+                              Domain
+
+Links :
+    https://datatracker.ietf.org/doc/html/rfc5234#appendix-B.1
+    https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
+    https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.3
+    https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
+*/
+const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
+const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
+const dotLocalRegex = new RegExp(`^${dotStringPattern}$`);
+const dotOrQuoteLocalRegex = weak(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const ipAddressRegex = weak(() => new RegExp(`^\\[(?:IPv6:${ipV6Pattern}|${ipV4Pattern})\\]$`));
+const generalAddressRegex = weak(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
+function parseEmail(str) {
+    const length = str.length;
+    let i = 0;
+    // EXTRACT LOCAL
+    const localStart = i;
+    if (str[localStart] === "\"") {
+        while (++i < length) {
+            if (str[i] === "\\")
+                i++;
+            else if (str[i] === "\"") {
+                i++;
+                break;
+            }
+        }
+    }
+    else {
+        while (i < length && str[i] !== "@")
+            i++;
+    }
+    if (i === localStart || str[i] !== "@")
+        return (null);
+    const localEnd = i;
+    // EXTRACT DOMAIN
+    const domainStart = ++i;
+    const domainEnd = length;
+    if (domainStart === domainEnd)
+        return (null);
+    return ({
+        local: str.slice(localStart, localEnd),
+        domain: str.slice(domainStart, domainEnd)
+    });
+}
+function isValidLocal(str, params) {
+    if (dotLocalRegex.test(str))
+        return (true);
+    if (params?.allowQuotedString
+        && dotOrQuoteLocalRegex().test(str))
+        return (true);
+    return (false);
+}
+function isValidDomain(str, params) {
+    if (isDomain(str))
+        return (true);
+    if (params?.allowIpAddress
+        && ipAddressRegex().test(str))
+        return (true);
+    if (params?.allowGeneralAddress
+        && generalAddressRegex().test(str))
+        return (true);
+    return (false);
+}
+/**
+ * **Standard :** RFC 5321
+ *
+ * @version 2.0.0
+ */
+function isEmail(str, params) {
+    const email = parseEmail(str);
+    if (!email)
+        return (false);
+    // CHECK LOCAL
+    if (!isValidLocal(email.local, params))
+        return (false);
+    // CHECK DOMAIN
+    if (!isValidDomain(email.domain, params))
+        return (false);
+    // RFC 5321 4.5.3.1.2 : Length restriction
+    if (!email.domain.length || email.domain.length > 255)
+        return (false);
+    return (true);
+}
+
+/*
+Composition :
+    data      = pchar
+    value     = value
+    token     = restricted-name
+    mediatype = [token "/" token] *(";" token "=" value)
+    dataurl   = "data:" [mediatype] [";base64"] "," data
+
+Sources :
+    RFC 3986 Section 3.3 : pchar
+    RFC 2045 Section 5.1 : value
+    RFC 6838 Section 4.2 : restricted-name
+
+Links :
+    https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
+    https://datatracker.ietf.org/doc/html/rfc2045#section-5.1
+    https://datatracker.ietf.org/doc/html/rfc6838#section-4.2
+    https://datatracker.ietf.org/doc/html/rfc2397#section-3
+*/
+const paramTokenPattern = "[a-zA-Z0-9!#$%&'*+.^_`{|}~-]+";
+const paramTokenQuotePattern = "\"[a-zA-Z0-9!#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~-]+\"";
+const valueRegex = new RegExp(`^(?:${paramTokenPattern}|${paramTokenQuotePattern})$`);
+const tokenRegex = new RegExp(`^[a-zA-Z0-9](?:[a-zA-Z0-9!#$&^/_.+-]{0,125}[a-zA-Z0-9!#$&^/_.-])?$`);
+const dataRegex = new RegExp(`^(?:[a-zA-Z0-9._~!$&'()*+,;=:@-]|%[a-zA-Z0-9]{2})*$`);
+function parseDataUrl(str) {
+    const result = {
+        data: "",
+        type: "",
+        subtype: "",
+        parameters: [],
+        isBase64: false
+    };
+    let i = 0;
+    if (!str.startsWith("data:"))
+        return (null);
+    i += 5;
+    if (str[i] !== ";" && str[i] !== ",") {
+        // EXTRACT TYPE
+        const typeStart = i;
+        while (str[i] && str[i] !== "/")
+            i++;
+        if (!str[i] || typeStart === i)
+            return (null);
+        const typeEnd = i;
+        // EXTRACT SUBTYPE
+        const subtypeStart = ++i;
+        while (str[i] && str[i] !== ";" && str[i] !== ",")
+            i++;
+        if (!str[i] || subtypeStart === i)
+            return (null);
+        const subtypeEnd = i;
+        result.type = str.slice(typeStart, typeEnd);
+        result.subtype = str.slice(subtypeStart, subtypeEnd);
+    }
+    // EXTRACT PARAMETERS
+    while (str[i] && str[i] === ";") {
+        if (str.startsWith(";base64,", i)) {
+            result.isBase64 = true;
+            i += 7;
+            break;
+        }
+        const nameStart = ++i;
+        while (str[i] && str[i] !== "=")
+            i++;
+        if (!str[i] || nameStart === i)
+            return (null);
+        const nameEnd = i;
+        const valueStart = ++i;
+        if (str[valueStart] === "\"") {
+            while (str[i] && !(str[i - 1] === "\"" && (str[i] === ";" || str[i] === ",")))
+                i++;
+        }
+        else {
+            while (str[i] && str[i] !== ";" && str[i] !== ",")
+                i++;
+        }
+        if (!str[i] || valueStart === i)
+            return (null);
+        const valueEnd = i;
+        result.parameters.push({
+            name: str.slice(nameStart, nameEnd),
+            value: str.slice(valueStart, valueEnd)
+        });
+    }
+    if (str[i] !== ",")
+        return (null);
+    i += 1;
+    // EXTRACT DATA
+    if (str[i])
+        result.data = str.slice(i);
+    return (result);
+}
+/**
+ * **Standard :** RFC 2397 (RFC 2045, RFC 6838, RFC 3986)
+ *
+ * @version 2.0.0
+ */
+function isDataUrl(str, params) {
+    const dataUrl = parseDataUrl(str);
+    if (!dataUrl)
+        return (false);
+    if (dataUrl.type || dataUrl.subtype) {
+        // CHECK TYPE
+        if (!tokenRegex.test(dataUrl.type))
+            return (false);
+        // RFC 6838 4.2: Length restriction
+        if (dataUrl.type.length > 127)
+            return (false);
+        // CHECK SUBTYPE
+        if (!tokenRegex.test(dataUrl.subtype))
+            return (false);
+        // RFC 6838 4.2: Length restriction
+        if (dataUrl.subtype.length > 127)
+            return (false);
+    }
+    // CHECK PARAMETERS
+    for (let i = 0; i < dataUrl.parameters.length; i++) {
+        const parameter = dataUrl.parameters[i];
+        if (!tokenRegex.test(parameter.name))
+            return (false);
+        if (!valueRegex.test(parameter.value))
+            return (false);
+        // RFC 6838 4.3: Identical name restriction and case insensitive
+        if (dataUrl.parameters.some(({ name }, j) => j !== i && name.toLowerCase() === name.toLowerCase()))
+            return (false);
+    }
+    // CHECK DATA
+    if (!dataRegex.test(dataUrl.data))
+        return (false);
+    if (params?.type) {
+        const hasValidType = params.type.some(type => type.toLowerCase() === dataUrl.type.toLowerCase());
+        if (!hasValidType)
+            return (false);
+    }
+    if (params?.subtype) {
+        const hasValidSubtype = params.subtype.some(subtype => subtype.toLowerCase() === dataUrl.subtype.toLowerCase());
+        if (!hasValidSubtype)
+            return (false);
+    }
+    return (true);
+}
+
+const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
+const base32Regex = new RegExp("^(?:[A-Z2-7]{8})*(?:[A-Z2-7]{2}[=]{6}|[A-Z2-7]{4}[=]{4}|[A-Z2-7]{5}[=]{3}|[A-Z2-7]{6}[=]{2}|[A-Z2-7]{7}[=]{1})?$");
+const base32HexRegex = weak(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
+const base64Regex = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}[=]{2}|[A-Za-z0-9+/]{3}[=]{1})?$");
+const base64UrlRegex = weak(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
+ *
+ * @version 1.0.0
+ */
+function isBase64(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 4 == 0 && base64Regex.test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
+ *
+ * @version 1.0.0
+ */
+function isBase64Url(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 4 === 0 && base64UrlRegex().test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-6
+ *
+ * @version 1.0.0
+ */
+function isBase32(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 8 === 0 && base32Regex.test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-7
+ *
+ * @version 1.0.0
+ */
+function isBase32Hex(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 8 === 0 && base32HexRegex().test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
+ *
+ * @version 1.0.0
+ */
+function isBase16(str, params) {
+    if (typeof str !== "string")
+        new Issue("Parameters", "'str' must be of type string.");
+    return (str.length % 2 === 0 && base16Regex.test(str));
+}
+
+var stringTesters = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    isAscii: isAscii,
+    isBase16: isBase16,
+    isBase32: isBase32,
+    isBase32Hex: isBase32Hex,
+    isBase64: isBase64,
+    isBase64Url: isBase64Url,
+    isDataUrl: isDataUrl,
+    isDomain: isDomain,
+    isEmail: isEmail,
+    isIp: isIp,
+    isIpV4: isIpV4,
+    isIpV6: isIpV6,
+    isUuid: isUuid
+});
+
+const testers = {
+    object: objectTesters,
+    string: stringTesters
 };
 
 /**
@@ -1077,7 +1182,7 @@ const StringFormat = {
         }
         if (criteria.tests) {
             for (const key of Object.keys(criteria.tests)) {
-                if (!(tests.string[key](data, criteria.tests[key]))) {
+                if (!(testers.string[key](data, criteria.tests[key]))) {
                     return ("TEST_STRING_FAILED");
                 }
             }
@@ -1440,8 +1545,8 @@ class Schema {
      * @param data - The data to be evaluated.
      *
      * @returns An object containing:
-     * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
-     * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
+     * - `{ reject: CheckingReject }` if the data is **rejected**.
+     * - `{ data: GuardedCriteria<T> }` if the data is **accepted**.
      */
     evaluate(data) {
         const reject = checker(this.managers, this.criteria, data);
@@ -1450,60 +1555,6 @@ class Schema {
         return ({ data: data });
     }
 }
-/*
-const data = { foo: { foo: 0, bar: "x" }, bar: "x" }
-const start = performance.now();
-
-for (let i = 0; i < 10000; i++) {
-
-    const instance = new Schema({
-        type: "union",
-        union: [
-            {
-                type: "struct",
-                struct: {
-                    foo: { type: "string" },
-                    bar: {
-                        type: "union",
-                        union: [{
-                            type: "struct",
-                            struct: {
-                                foo: { type: "string" },
-                                bar: { type: "number" }
-                            }
-                        }, {
-                            type: "string"
-                        }]
-                    }
-                }
-            },
-            {
-                type: "struct",
-                struct: {
-                    foo: {
-                        type: "union",
-                        union: [{
-                            type: "struct",
-                            struct: {
-                                foo: { type: "number" },
-                                bar: { type: "string" }
-                            }
-                        }, {
-                            type: "string"
-                        }]
-                    },
-                    bar: { type: "string" }
-                }
-            },
-        ]
-    });
-
-    instance.validate(data);
-}
-
-const end = performance.now();
-memory();
-console.log(`Execution time: ${(end - start).toFixed(3)} ms`);*/
 
 function SchemaFactory(plugin1, plugin2, plugin3) {
     return class extends Schema {
@@ -1578,101 +1629,6 @@ const SchemaA = SchemaFactory(plugin_A);
 
 const InstanceA = new SchemaA({ type: "mongoId", mongoParam: true });
 */
-/*
-import type { SetableCriteriaTemplate, GuardedCriteria, Format } from "./formats";
-import { SpecTypesTemplate, FlowTypesTemplate } from "./formats/types";
 
-export interface MongoIdSetableCriteria extends SetableCriteriaTemplate<"mongoId"> {
-    mongoParam: boolean;
-}
-
-export interface MongoIdSpecTypes extends SpecTypesTemplate<
-    MongoIdSetableCriteria,
-    {}
-> {}
-
-export interface MongoIdFlowTypes extends FlowTypesTemplate<
-    {},
-    string
-> {}
-
-export interface MariaIdSetableCriteria extends SetableCriteriaTemplate<"mariaId"> {
-    mariaParam: boolean;
-}
-
-export interface MariaIdSpecTypes extends SpecTypesTemplate<
-    MariaIdSetableCriteria,
-    {}
-> {}
-
-export interface MariaIdFlowTypes extends FlowTypesTemplate<
-    {},
-    number
-> {}
-
-declare module './formats/types' {
-    interface FormatSpecTypes {
-        mongoId: MongoIdSpecTypes;
-        mariaId: MariaIdSpecTypes;
-    }
-    interface FormatFlowTypes<T extends SetableCriteria> {
-        mongoId: T extends MongoIdSetableCriteria ? MongoIdFlowTypes : never;
-        mariaId: T extends MariaIdSetableCriteria ? MariaIdFlowTypes : never;
-    }
-}
-
-const MongoIdFormat: Format<MongoIdSetableCriteria> = {
-    type: "mongoId",
-    defaultCriteria: {},
-    mount(chunk, criteria) {
-        
-    },
-    check(chunk, criteria, value) {
-        return (null);
-    },
-}
-
-const MariaIdFormat: Format<MariaIdSetableCriteria> = {
-    type: "mariaId",
-    defaultCriteria: {},
-    mount(chunk, criteria) {
-        
-    },
-    check(chunk, criteria, value) {
-        return (null);
-    },
-}
-
-function plugin_A<T extends SetableCriteria>(definedCriteria: T) {
-    return ({
-        formats: [MongoIdFormat],
-        foo(data: GuardedCriteria<T>) {
-            
-        },
-        bar(data: GuardedCriteria<T>) {
-        
-        }
-    } satisfies PluginRequirement);
-}
-
-function plugin_B<T extends SetableCriteria>(this: SchemaInstance<T>, criteria: T) {
-    const context = this;
-
-    return ({
-        formats: [MariaIdFormat],
-        plugin_B_1(data: GuardedCriteria<T>) {
-            return (context.criteria)
-        }
-    } satisfies PluginRequirement);
-}
-
-const Tessss = SchemaComposer(plugin_A, plugin_B);//, plugin_B//, plugin_B
-
-const t1cccccc = new Tessss({ type: "mongoId", mongoParam: true });
-
-const t2cccccc = new Tessss({ type: "struct", struct: { test: { type: "string" }} });
-
-t2cccccc.plugin_B_1({ test: ""})*/
-
-export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isUuid };
+export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
 //# sourceMappingURL=index.js.map

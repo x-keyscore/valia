@@ -25,15 +25,20 @@ export {
 } from './schema';
 
 export {
+	testers
+} from './testers';
+
+export {
 	isObject,
 	isPlainObject,
 	isArray,
+	isTypedArray,
 	isFunction,
 	isBasicFunction,
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
-} from './tests/object';
+} from './testers/object';
 
 export {
 	isAscii,
@@ -49,14 +54,15 @@ export {
 	isBase32Hex,
 	isBase64,
 	isBase64Url
-} from './tests/string';
+} from './testers/string';
 
 export {
+	getInternalTag,
 	base16ToBase64,
 	base16ToBase32,
 	base64ToBase16,
 	base32ToBase16
-} from './tools';
+} from './helpers';
 
 export {
 	Issue

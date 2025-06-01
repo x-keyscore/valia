@@ -15,8 +15,8 @@ export type SetableStruct<T extends FormatNames = FormatNames> = {
 export interface StructSetableCriteria<
 	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"struct"> {
-	optional?: (string | symbol)[];
 	struct: SetableStruct<T>;
+	optional?: (string | symbol)[];
 }
 
 export interface StructSpecTypes<T extends FormatNames> extends SpecTypesTemplate<

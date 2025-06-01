@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Simple", () => {
+describe("\nschema / formats / Simple", () => {
 	describe("Default", () => {
 		let simple_undefined, simple_nullish, simple_null, simple_unknown, simple_any;
 

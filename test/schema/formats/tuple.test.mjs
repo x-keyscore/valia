@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Tuple", () => {
+describe("\nschema / formats / Tuple", () => {
 	describe("Default", () => {
 		let tuple_item_0, tuple_item_1, tuple_item_2;
 

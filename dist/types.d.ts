@@ -30,7 +30,54 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> = T['enum'] extends 
 interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<{}, NumberGuardedCriteria<T>> {
 }
 
-interface IsAsciiConfig {
+type PlainObject = Record<string | symbol, unknown>;
+type PlainFunction = (...args: unknown[]) => unknown;
+type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
+
+declare function isObject(x: unknown): x is object;
+/**
+ * A plain object is considered as follows:
+ * - It must be an object.
+ * - It must have a prototype of `Object.prototype` or `null`.
+*/
+declare function isPlainObject(x: unknown): x is PlainObject;
+declare function isArray(x: unknown): x is unknown[];
+declare function isTypedArray(x: unknown): x is unknown[];
+declare function isFunction(x: unknown): x is Function;
+/**
+ * A basic function is considered as follows:
+ * - It must be an function.
+ * - It must not be an `async`, `generator` or `async generator` function.
+*/
+declare function isBasicFunction(x: unknown): x is PlainFunction;
+declare function isAsyncFunction(x: unknown): x is AsyncFunction;
+declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
+declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
+
+declare const objectTesters_isArray: typeof isArray;
+declare const objectTesters_isAsyncFunction: typeof isAsyncFunction;
+declare const objectTesters_isAsyncGeneratorFunction: typeof isAsyncGeneratorFunction;
+declare const objectTesters_isBasicFunction: typeof isBasicFunction;
+declare const objectTesters_isFunction: typeof isFunction;
+declare const objectTesters_isGeneratorFunction: typeof isGeneratorFunction;
+declare const objectTesters_isObject: typeof isObject;
+declare const objectTesters_isPlainObject: typeof isPlainObject;
+declare const objectTesters_isTypedArray: typeof isTypedArray;
+declare namespace objectTesters {
+  export {
+    objectTesters_isArray as isArray,
+    objectTesters_isAsyncFunction as isAsyncFunction,
+    objectTesters_isAsyncGeneratorFunction as isAsyncGeneratorFunction,
+    objectTesters_isBasicFunction as isBasicFunction,
+    objectTesters_isFunction as isFunction,
+    objectTesters_isGeneratorFunction as isGeneratorFunction,
+    objectTesters_isObject as isObject,
+    objectTesters_isPlainObject as isPlainObject,
+    objectTesters_isTypedArray as isTypedArray,
+  };
+}
+
+interface AsciiConfig {
     /** **Default:** `false` */
     onlyPrintable?: boolean;
 }
@@ -42,10 +89,10 @@ interface IsAsciiConfig {
  *
  * Empty returns `false`.
  */
-declare function isAscii(str: string, config?: IsAsciiConfig): boolean;
+declare function isAscii(str: string, config?: AsciiConfig): boolean;
 
-interface IsUuidParams {
-    /** **Default:** All version validate */
+interface UuidParams {
+    /** **Default:** All versions are allowed */
     version?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 /**
@@ -55,108 +102,97 @@ interface IsUuidParams {
  *
  * @version 1.0.0
  */
-declare function isUuid(str: string, params?: IsUuidParams): boolean;
+declare function isUuid(str: string, params?: UuidParams): boolean;
 
-interface IsEmailParams {
+interface EmailParams {
     /** **Default:** `false` */
     allowQuotedString?: boolean;
     /** **Default:** `false` */
-    allowAddressLiteral?: boolean;
+    allowIpAddress?: boolean;
     /** **Default:** `false` */
-    allowGeneralAddressLiteral?: boolean;
+    allowGeneralAddress?: boolean;
 }
 /**
  * **Standard :** RFC 5321
  *
- *  @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
- *
- * **Follows :**
- * `Mailbox`
- *
- * @version 1.1.0-beta
+ * @version 2.0.0
  */
-declare function isEmail(str: string, params?: IsEmailParams): boolean;
+declare function isEmail(str: string, params?: EmailParams): boolean;
 
 /**
  * **Standard :** RFC 1035
  *
- * @see https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
- *
- * **Follows :**
- * `<domain>`
- *
- * @version 1.0.0-beta
+ * @version 1.0.0
  */
 declare function isDomain(str: string, params?: undefined): boolean;
 
-type LooseAutocomplete<T extends string> = T | Omit<string, T>;
-
-interface IsDataUrlConfig {
-    /** Specifies the type of media. */
-    type: LooseAutocomplete<"text" | "image" | "audio" | "video" | "application" | "message" | "multipart">[];
-    /** Specifies the sub-type of media. */
+interface DataUrlParams {
+    /**
+     * Specifies the type of media.
+     *
+     * @see http://www.iana.org/assignments/media-types/
+     */
+    type: string[];
+    /**
+     * Specifies the sub-type of media.
+     *
+     * @see http://www.iana.org/assignments/media-types/
+     */
     subtype: string[];
 }
 /**
- * **Standard :** RFC 2397
+ * **Standard :** RFC 2397 (RFC 2045, RFC 6838, RFC 3986)
  *
- *  @see https://datatracker.ietf.org/doc/html/rfc2397#section-3
- *
- * **Follows :**
- * `dataurl`
- *
- * @version 1.0.0-beta
+ * @version 2.0.0
  */
-declare function isDataUrl(str: string, config?: IsDataUrlConfig): boolean;
+declare function isDataUrl(str: string, params?: DataUrlParams): boolean;
 
 /**
- * IPV4
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "dec-octet = 1*3DIGIT" Representing a decimal integer value in the range 0 through 255.
- * * "prefix = 1*2DIGIT" Representing a decimal integer value in the range 0 through 32.
- * * "IPv4 = dec-octet 3("." dec-octet) ["/" prefix]"
- *
- * IPV6
- *
- * Composition :
- * * "DIGIT = %x30-39" 0-9.
- * * "HEXDIG = DIGIT / A-F / a-f"
- * * "IPv6-full = 1*4HEXDIG 7(":" 1*4HEXDIG)"
- * * "IPv6-comp = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]"
- * * "IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4"
- * * "IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4"
- * * "prefix = 1*3DIGIT" Representing a decimal integer value in the range 0 through 128.
- * * "IPv6 = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]"
- */
-interface IsIpParams {
+# IPV4
+
+Composition :
+    dec-octet = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 255
+    prefix    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
+    IPv4      = dec-octet 3("." dec-octet) ["/" prefix]
+
+# IPV6
+
+Composition :
+    HEXDIG      = DIGIT / A-F / a-f
+    IPv6-full   = 1*4HEXDIG 7(":" 1*4HEXDIG)
+    IPv6-comp   = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]
+    IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4
+    IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4
+    prefix      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
+    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]
+*/
+interface IpParams {
     /**
-     * Must have a prefix at the end of the IP address indicating the subnet mask
-     * (e.g., `192.168.0.1/22`).
+     * Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).
+     *
      *
      * **Default:** `false`
      */
-    prefix?: boolean;
+    allowPrefix?: boolean;
 }
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIp(str: string, params?: IsIpParams): boolean;
+declare function isIp(str: string, params?: IpParams): boolean;
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIpV4(str: string, params?: IsIpParams): boolean;
+declare function isIpV4(str: string, params?: IpParams): boolean;
 /**
  * **Standard:** No standard
  *
  * @version 1.0.0
  */
-declare function isIpV6(str: string, params?: IsIpParams): boolean;
+declare function isIpV6(str: string, params?: IpParams): boolean;
 
 /**
  * **Standard :** RFC 4648
@@ -199,88 +235,44 @@ declare function isBase32Hex(str: string, params?: undefined): boolean;
  */
 declare function isBase16(str: string, params?: undefined): boolean;
 
-/**
- * Helper:
- * `!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
- */
-
-declare const stringTests_isAscii: typeof isAscii;
-declare const stringTests_isBase16: typeof isBase16;
-declare const stringTests_isBase32: typeof isBase32;
-declare const stringTests_isBase32Hex: typeof isBase32Hex;
-declare const stringTests_isBase64: typeof isBase64;
-declare const stringTests_isBase64Url: typeof isBase64Url;
-declare const stringTests_isDataUrl: typeof isDataUrl;
-declare const stringTests_isDomain: typeof isDomain;
-declare const stringTests_isEmail: typeof isEmail;
-declare const stringTests_isIp: typeof isIp;
-declare const stringTests_isIpV4: typeof isIpV4;
-declare const stringTests_isIpV6: typeof isIpV6;
-declare const stringTests_isUuid: typeof isUuid;
-declare namespace stringTests {
+declare const stringTesters_isAscii: typeof isAscii;
+declare const stringTesters_isBase16: typeof isBase16;
+declare const stringTesters_isBase32: typeof isBase32;
+declare const stringTesters_isBase32Hex: typeof isBase32Hex;
+declare const stringTesters_isBase64: typeof isBase64;
+declare const stringTesters_isBase64Url: typeof isBase64Url;
+declare const stringTesters_isDataUrl: typeof isDataUrl;
+declare const stringTesters_isDomain: typeof isDomain;
+declare const stringTesters_isEmail: typeof isEmail;
+declare const stringTesters_isIp: typeof isIp;
+declare const stringTesters_isIpV4: typeof isIpV4;
+declare const stringTesters_isIpV6: typeof isIpV6;
+declare const stringTesters_isUuid: typeof isUuid;
+declare namespace stringTesters {
   export {
-    stringTests_isAscii as isAscii,
-    stringTests_isBase16 as isBase16,
-    stringTests_isBase32 as isBase32,
-    stringTests_isBase32Hex as isBase32Hex,
-    stringTests_isBase64 as isBase64,
-    stringTests_isBase64Url as isBase64Url,
-    stringTests_isDataUrl as isDataUrl,
-    stringTests_isDomain as isDomain,
-    stringTests_isEmail as isEmail,
-    stringTests_isIp as isIp,
-    stringTests_isIpV4 as isIpV4,
-    stringTests_isIpV6 as isIpV6,
-    stringTests_isUuid as isUuid,
+    stringTesters_isAscii as isAscii,
+    stringTesters_isBase16 as isBase16,
+    stringTesters_isBase32 as isBase32,
+    stringTesters_isBase32Hex as isBase32Hex,
+    stringTesters_isBase64 as isBase64,
+    stringTesters_isBase64Url as isBase64Url,
+    stringTesters_isDataUrl as isDataUrl,
+    stringTesters_isDomain as isDomain,
+    stringTesters_isEmail as isEmail,
+    stringTesters_isIp as isIp,
+    stringTesters_isIpV4 as isIpV4,
+    stringTesters_isIpV6 as isIpV6,
+    stringTesters_isUuid as isUuid,
   };
 }
 
-type PlainObject = Record<string | symbol, unknown>;
-type PlainFunction = (...args: unknown[]) => unknown;
-type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
-
-declare function isObject(x: unknown): x is object;
-/**
- * A plain object is considered as follows:
- * - It must be an object.
- * - It must have a prototype of `Object.prototype` or `null`.
-*/
-declare function isPlainObject(x: unknown): x is PlainObject;
-declare function isArray(x: unknown): x is unknown[];
-declare function isFunction(x: unknown): x is Function;
-declare function isBasicFunction(x: unknown): x is PlainFunction;
-declare function isAsyncFunction(x: unknown): x is AsyncFunction;
-declare function isGeneratorFunction(x: unknown): x is GeneratorFunction;
-declare function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction;
-
-declare const objectTests_isArray: typeof isArray;
-declare const objectTests_isAsyncFunction: typeof isAsyncFunction;
-declare const objectTests_isAsyncGeneratorFunction: typeof isAsyncGeneratorFunction;
-declare const objectTests_isBasicFunction: typeof isBasicFunction;
-declare const objectTests_isFunction: typeof isFunction;
-declare const objectTests_isGeneratorFunction: typeof isGeneratorFunction;
-declare const objectTests_isObject: typeof isObject;
-declare const objectTests_isPlainObject: typeof isPlainObject;
-declare namespace objectTests {
-  export {
-    objectTests_isArray as isArray,
-    objectTests_isAsyncFunction as isAsyncFunction,
-    objectTests_isAsyncGeneratorFunction as isAsyncGeneratorFunction,
-    objectTests_isBasicFunction as isBasicFunction,
-    objectTests_isFunction as isFunction,
-    objectTests_isGeneratorFunction as isGeneratorFunction,
-    objectTests_isObject as isObject,
-    objectTests_isPlainObject as isPlainObject,
-  };
-}
-
-declare const tests: {
-    object: typeof objectTests;
-    string: typeof stringTests;
+declare const testers: {
+    object: typeof objectTesters;
+    string: typeof stringTesters;
 };
 
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
-type StringTests = typeof tests.string;
+type StringTests = typeof testers.string;
 type SetableTests = {
     [K in keyof StringTests]: ExtractParams<StringTests[K]> | true;
 };
@@ -348,8 +340,8 @@ type SetableStruct<T extends FormatNames = FormatNames> = {
     [key: string | symbol]: SetableCriteria<T> | SetableStruct<T>;
 };
 interface StructSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"struct"> {
-    optional?: (string | symbol)[];
     struct: SetableStruct<T>;
+    optional?: (string | symbol)[];
 }
 interface StructSpecTypes<T extends FormatNames> extends SpecTypesTemplate<StructSetableCriteria<T>, {}> {
 }
@@ -446,6 +438,8 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> = T['union'] extends i
 interface UnionFlowTypes<T extends UnionSetableCriteria> extends FlowTypesTemplate<UnionMountedCriteria<T>, UnionGuardedCriteria<T>> {
 }
 
+type LooseAutocomplete<T extends string> = T | Omit<string, T>;
+
 interface PathSegments {
     /**
      * **Composition of explicit path :**
@@ -461,7 +455,7 @@ interface PathSegments {
     */
     explicit: (string | number | symbol)[];
     /**
-     * **Composition of implicit path :**
+     * #### Composition of implicit path :
      * ```py
      * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
      * static-key    = ["&", (string / number / symbol)]
@@ -469,7 +463,7 @@ interface PathSegments {
      * path          = [*(...segment)]
      * ```
      *
-     * **Exemple :**
+     * #### Exemple :
      * ```py
      * my-path = ["&", "products", "%", "number", "&", "price"]
      * my-path is products[0].price or products[1].price and continue
@@ -724,8 +718,8 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      * @param data - The data to be evaluated.
      *
      * @returns An object containing:
-     * - `{ reject: CheckingReject, value: null }` if the data is **rejected**.
-     * - `{ reject: null, value: GuardedCriteria<T> }` if the data is **accepted**.
+     * - `{ reject: CheckingReject }` if the data is **rejected**.
+     * - `{ data: GuardedCriteria<T> }` if the data is **accepted**.
      */
     evaluate(data: unknown): {
         reject: CheckingReject;
@@ -749,6 +743,10 @@ type MixinSchemaPlugin<P1C, P1M extends SchemaPlugin, P2C, P2M extends SchemaPlu
 type MixinPlugins<P1C, P1M extends SchemaPlugin, P2C, P2M extends SchemaPlugin, P3C, P3M extends SchemaPlugin> = new (...args: [MixinPluginsCriteria<P1C, P1M, P2C, P2M, P3C, P3M>]) => Omit<MixinSchemaPlugin<P1C, P1M, P2C, P2M, P3C, P3M>, "formats">;
 declare function SchemaFactory<P1C extends SetableCriteria, P1M extends SchemaPlugin, P2C = unknown, P2M extends SchemaPlugin = never, P3C = unknown, P3M extends SchemaPlugin = never>(plugin1: (...args: [P1C]) => P1M, plugin2?: (...args: [P2C]) => P2M, plugin3?: (...args: [P3C]) => P3M): MixinPlugins<P1C, P1M, P2C, P2M, P3C, P3M>;
 
+type StandardTags = "Undefined" | "Boolean" | "String" | "Function" | "Promise" | "Array" | "ArrayBuffer" | "SharedArrayBuffer" | "Int8Array" | "Int16Array" | "Int32Array" | "Uint8Array" | "Uint8ClampedArray" | "Uint16Array" | "Uint32Array" | "Float32Array" | "Float64Array" | "BigInt64Array" | "BigUint64Array" | "DataView" | "Map" | "Set" | "WeakMap" | "WeakSet" | "WeakRef" | "Proxy" | "RegExp" | "Error" | "Date" | "FinalizationRegistry" | "BigInt" | "Symbol" | "Iterator" | "AsyncFunction" | "GeneratorFunction" | "AsyncGeneratorFunction" | "Atomics" | "JSON" | "Math" | "Reflect" | "Null" | "Number" | "Generator" | "AsyncGenerator" | "Object" | "Intl.Collator" | "Intl.DateTimeFormat" | "Intl.ListFormat" | "Intl.NumberFormat" | "Intl.PluralRules" | "Intl.RelativeTimeFormat" | "Intl.Locale";
+
+declare function getInternalTag(target: unknown): LooseAutocomplete<StandardTags>;
+
 declare function base16ToBase64(input: string, to?: "B64" | "B64URL", padding?: boolean): string;
 declare function base16ToBase32(input: string, to?: "B16" | "B16HEX", padding?: boolean): string;
 declare function base64ToBase16(input: string, from?: "B64" | "B64URL"): string;
@@ -758,5 +756,5 @@ declare class Issue extends Error {
     constructor(context: string, message: string, plugin?: string);
 }
 
-export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isUuid };
+export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
 export type { FlowTypesTemplate, Format, FormatFlowTypes, FormatNames, FormatNativeNames, FormatSpecTypes, GuardedCriteria, MountedCriteria, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, SetableCriteria, SetableCriteriaTemplate, SpecTypesTemplate };

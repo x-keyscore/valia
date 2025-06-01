@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Union", () => {
+describe("\nschema / formats / Union", () => {
 	describe("Default (Primitive Union)", () => {
 		let union_primitve;
 

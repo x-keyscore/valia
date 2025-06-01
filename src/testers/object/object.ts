@@ -1,5 +1,5 @@
 import type { PlainObject, PlainFunction, AsyncFunction } from "../types";
-import { hasTag } from "../../tools";
+import { getInternalTag } from "../../helpers";
 
 // OBJECT
 export function isObject(x: unknown): x is object {
@@ -25,23 +25,32 @@ export function isArray(x: unknown): x is unknown[] {
 	return (Array.isArray(x));
 }
 
+export function isTypedArray(x: unknown): x is unknown[] {
+	return (ArrayBuffer.isView(x) && !(x instanceof DataView));
+}
+
 // FUNCTION
 export function isFunction(x: unknown): x is Function {
 	return (typeof x === "function");
 }
 
+/**
+ * A basic function is considered as follows:
+ * - It must be an function.
+ * - It must not be an `async`, `generator` or `async generator` function.
+*/
 export function isBasicFunction(x: unknown): x is PlainFunction {
-	return (hasTag(x, "Function"));
+	return (getInternalTag(x) === "Function");
 }
 
 export function isAsyncFunction(x: unknown): x is AsyncFunction {
-	return (hasTag(x, "AsyncFunction"));
+	return (getInternalTag(x) === "AsyncFunction");
 }
 
 export function isGeneratorFunction(x: unknown): x is GeneratorFunction {
-	return (hasTag(x, "GeneratorFunction"));
+	return (getInternalTag(x) === "GeneratorFunction");
 }
 
 export function isAsyncGeneratorFunction(x: unknown): x is AsyncGeneratorFunction {
-	return (hasTag(x, "AsyncGeneratorFunction"));
+	return (getInternalTag(x) === "AsyncGeneratorFunction");
 }

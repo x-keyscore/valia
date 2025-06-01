@@ -16,7 +16,7 @@ export interface PathSegments {
 	*/
 	explicit: (string | number | symbol)[];
 	/**
-	 * **Composition of implicit path :**
+	 * #### Composition of implicit path :
 	 * ```py
 	 * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
 	 * static-key    = ["&", (string / number / symbol)]
@@ -24,7 +24,7 @@ export interface PathSegments {
 	 * path          = [*(...segment)]
 	 * ```
 	 * 
-	 * **Exemple :**
+	 * #### Exemple :
 	 * ```py
 	 * my-path = ["&", "products", "%", "number", "&", "price"]
 	 * my-path is products[0].price or products[1].price and continue

@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Array", () => {
+describe("\nschema / formats / Array", () => {
 	describe("Default", () => {
 		let array_default;
 

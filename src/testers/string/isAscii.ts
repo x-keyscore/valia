@@ -1,4 +1,4 @@
-interface IsAsciiConfig {
+interface AsciiConfig {
     /** **Default:** `false` */
 	onlyPrintable?: boolean;
 }
@@ -11,7 +11,7 @@ interface IsAsciiConfig {
  * 
  * Empty returns `false`.
  */
-export function isAscii(str: string, config?: IsAsciiConfig): boolean {
+export function isAscii(str: string, config?: AsciiConfig): boolean {
     if (config?.onlyPrintable) return (RegExp("^[\\x20-\\x7E]+$").test(str))
     return (RegExp("^[\\x00-\\x7F]+$").test(str));
 }

@@ -1,6 +1,6 @@
 import type { StructSetableCriteria, SetableStruct } from "./types";
 import type { Format } from "../types";
-import { isPlainObject } from "../../../tests";
+import { isPlainObject } from "../../../testers";
 
 function isShorthandStruct(obj: {}): obj is SetableStruct {
 	return (isPlainObject(obj) && typeof obj?.type !== "string");

@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - String", () => {
+describe("\nschema / formats / String", () => {
 	describe("Default", () => {
 		let string_default;
 

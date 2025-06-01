@@ -2,9 +2,8 @@ import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { SchemaFactory, Issue } from "../../dist/index.js";
-import { type } from "node:os";
 
-describe("Schema Plugin", () => {
+describe("\nschema / plugin", () => {
     describe("Mix of 1 plugin", () => {
         let plugin_1, schema_instance;
 

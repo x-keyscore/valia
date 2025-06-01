@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Boolean", () => {
+describe("\nschema / formats / Boolean", () => {
 	describe("Default", () => {
 		let boolean_default;
 

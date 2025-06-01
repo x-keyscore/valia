@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("Schema Formats - Record", () => {
+describe("\nschema / formats / Record", () => {
 	describe("Default", () => {
 		let record_default;
 
