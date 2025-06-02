@@ -177,14 +177,14 @@ new Schema({
 
 |Property|Default|Description|
 |--|--|--|
-|`type`   |      |Format name|
-|`empty?` |`true`|If the string can be empty|
-|`min?`   |      |Minimum length accepted|
-|`max?`   |      |Maximum length accepted|
-|`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`tests?` |      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
-|`regex?` |      |A native regex|
-|`custom?`|      |Customized test function|
+|`type`    |      |Format name|
+|`empty?`  |`true`|If the string can be empty|
+|`min?`    |      |Minimum length accepted|
+|`max?`    |      |Maximum length accepted|
+|`enum?`   |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
+|`regex?`  |      |A native regex|
+|`custom?` |      |Customized test function|
+|`testers?`|      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
 
 ```ts
 interface Criteria {
