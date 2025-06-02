@@ -5,7 +5,7 @@
 	"homepage": "https://github.com/x-keyscore/valia#readme",
 	"main": "./dist/index.js",
 	"module": "./dist/index.js",
-	"types": "./dist/types/index.d.ts",
+	"types": "./dist/types.d.ts",
 	"scripts": {
 		"start": "tsc && node dist",
 		"clean": "rm -rf ./dist",
