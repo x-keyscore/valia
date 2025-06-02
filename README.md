@@ -194,8 +194,8 @@ interface Criteria {
   max?: number;
   enum?: string[] | Record<string | number, string>;
   regex?: RegExp;
-  tests?: { [key: TestNames]: true | TestConfigs };
   custom?: (x: string) => boolean;
+  testers?: { [key: TesterNames]: true | TesterConfigs };
 }
 ```
 ```ts
