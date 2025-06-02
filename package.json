@@ -1,6 +1,6 @@
 {
 	"name": "valia",
-	"version": "2.1.1",
+	"version": "3.0.0",
 	"description": "A runtime data validator in TypeScript with advanced type inference, built-in validation functions, and seamless integration for server and client environments.",
 	"homepage": "https://github.com/x-keyscore/valia#readme",
 	"type": "module",
