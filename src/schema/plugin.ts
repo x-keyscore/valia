@@ -1,182 +1,139 @@
-import type { SetableCriteria, FormatTemplate, SetableCriteriaTemplate } from "./formats";
-import type { Constructor } from "../types";
-import type { SchemaType } from "./types";
+import type { SetableCriteria, FormatNativeNames } from "./formats";
+import type { SchemaPlugin, SchemaInstance } from "./types";
 import { Schema } from "./schema";
 import { Issue } from "../utils";
-import { ClassicTypesTemplate, GenericTypesTemplate } from "./formats/types";
 
-export abstract class AbstractPlugin<const T extends SetableCriteria> extends Schema<T> {
-	/**
-	 * This method is automatically called before the schema initialization.
-	 * 
-	 * This allows, for example, to subscribe to events that will occur
-	 * during the initialization.
-	 */
-	protected abstract beforeInitate(): void;
+type MixinPluginsCriteria<
+	P1C, P1M extends SchemaPlugin,
+	P2C, P2M extends SchemaPlugin,
+	P3C, P3M extends SchemaPlugin
+> = (
+	// CHECK THAT 'P1C' IS NOT UNDEFINED
+	P1C extends SetableCriteria
+		// CHECK THAT 'P2C' IS NOT UNDEFINED
+		? P2C extends SetableCriteria
+			// CHECK THAT 'P3C' IS NOT UNDEFINED
+			? P3C extends SetableCriteria
+				// EXTENDS NECESSARY BECAUSE 'P3C' MAY CONTAIN UNAVAILABLE CRITERIA
+				? SetableCriteria extends P3C
+					? P1C | P2C | P3C
+					: SetableCriteria<(P1M['formats'] | P2M['formats'] | P3M['formats'])[number]['type'] | FormatNativeNames>
+				// EXTENDS NECESSARY BECAUSE 'P2C' MAY CONTAIN UNAVAILABLE CRITERIA
+				: SetableCriteria extends P2C
+					? P1C | P2C
+					: SetableCriteria<(P1M['formats'] | P2M['formats'])[number]['type'] | FormatNativeNames>
+			// EXTENDS NECESSARY BECAUSE 'P1C' MAY CONTAIN UNAVAILABLE CRITERIA
+			: SetableCriteria extends P1C
+				? P1C
+				: SetableCriteria<P1M['formats'][number]['type'] | FormatNativeNames>
+		: never
+);
 
-	/**
-	 * This method is automatically called after the schema initialization.
-	 */
-	protected abstract afterInitate(): void;
+type MixinSchemaPlugin<
+	P1C, P1M extends SchemaPlugin,
+	P2C, P2M extends SchemaPlugin,
+	P3C, P3M extends SchemaPlugin
+> =
+	// CHECK THAT 'P1C' IS NOT UNDEFINED
+	P1C extends SetableCriteria
+		// CHECK THAT 'P2C' IS NOT UNDEFINED
+		? P2C extends SetableCriteria
+			// CHECK THAT 'P3C' IS NOT UNDEFINED
+			? P3C extends SetableCriteria
+				? SchemaInstance<P1C & P2C & P3C> & P1M & P2M & P3M
+				: SchemaInstance<P1C & P2C> & P1M & P2M
+			: SchemaInstance<P1C> & P1M
+		: never;
 
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
-		super(...args);
+type MixinPlugins<
+	P1C, P1M extends SchemaPlugin,
+	P2C, P2M extends SchemaPlugin,
+	P3C, P3M extends SchemaPlugin
+> = new (...args: [MixinPluginsCriteria<P1C, P1M, P2C, P2M, P3C, P3M>]) => Omit<MixinSchemaPlugin<P1C, P1M, P2C, P2M, P3C, P3M>, "formats">;
 
-		this.beforeInitate();
-		this.initiate(args[0]);
-		this.afterInitate();
-	}
-}
+export function SchemaFactory<
+	P1C extends SetableCriteria, P1M extends SchemaPlugin,
+	P2C = unknown, P2M extends SchemaPlugin = never,
+	P3C = unknown, P3M extends SchemaPlugin = never
+>(
+	plugin1: (...args: [P1C]) => P1M,
+	plugin2?: (...args: [P2C]) => P2M,
+	plugin3?: (...args: [P3C]) => P3M
+): MixinPlugins<P1C, P1M, P2C, P2M, P3C, P3M> {
+	return class <const T extends P1C & P2C & P3C> extends Schema<T> {
+		constructor(criteria: T) {
+			super(criteria);
 
-function assignProperties(
-	source: Constructor,
-	target: Constructor,
-	transformKey?: (key: string) => string | undefined
-) {
-	const srcPrototypeDescriptors = Object.getOwnPropertyDescriptors(source.prototype);
-	const srcDescriptors = Object.getOwnPropertyDescriptors(source);
+			const assignPlugin = (plugin: SchemaPlugin) => {
+				const { formats, ...members } = plugin;
 
-	for (const key in srcPrototypeDescriptors) {
-		if (key === "constructor") continue;
-
-		let newKey = transformKey?.(key) || key;
-		if (newKey in target.prototype) {
-			throw new Error(`Property key conflict in prototype properties.\nConflictual key: '${key}'`);
-		}
-
-		Object.defineProperty(target.prototype, newKey, srcPrototypeDescriptors[key]);
-	}
-
-	for (const key in srcDescriptors) {
-		if (["prototype", "length", "name"].includes(key)) continue;
-
-		let newKey = transformKey?.(key) || key;
-		if (newKey in target) {
-			throw Error(`Property key conflict in static properties.\nConflictual key: '${key}'`);
-		}
-
-		Object.defineProperty(target, newKey, srcPrototypeDescriptors[key]);
-	}
-}
-
-export function SchemaPlugins<T, U, V, W, X, Y>(
-	plugin_1: new (...args: T[]) => U,
-	plugin_2?: new (...args: V[]) => W,
-	plugin_3?: new (...args: X[]) => Y
-) {
-	try {
-		const plugins = [plugin_1, plugin_2, plugin_3];
-		const beforeInitKeys: string[] = [];
-		const afterInitKeys: string[] = [];
-
-		const pluggedSchema = class PluggedSchema<T extends SetableCriteria> extends Schema<T> {
-			constructor(criteria: T) {
-				super(criteria);
-
-				// METHODE CALL BEFORE INITIATION
-				for (const key of beforeInitKeys) {
-					(this[key as keyof typeof this] as () => any)();
+				for (const key in members) {
+					if (key in this) throw new Issue(
+						"Schema Factory",
+						`Conflictual keys: '${key}'`
+					);
 				}
+				Object.assign(this, members);
+				this.managers.formats.add(formats);
+			};
 
-				this.initiate(criteria);
+			assignPlugin(plugin1.call(this, criteria));
+			if (plugin2) assignPlugin(plugin2.call(this, criteria));
+			if (plugin3) assignPlugin(plugin3.call(this, criteria));
 
-				// METHODE CALL AFTER INITIATION
-				for (const key of afterInitKeys) {
-					(this[key as keyof typeof this] as () => any)();
-				}
-			}
+			this.initiate(criteria);
 		}
-
-		const transformKey = (key: string) => {
-			if (key === "beforeInitate") {
-				const newKey = "beforeInitate_" + beforeInitKeys.length;
-				beforeInitKeys.push(newKey);
-				return (newKey);
-			}
-			if (key === "afterInitate") {
-				const newKey = "afterInitate_" + afterInitKeys.length;
-				afterInitKeys.push(newKey);
-				return (newKey);
-			}
-		}
-
-		for (const plugin of plugins) {
-			if (!plugin) break;
-			assignProperties(plugin, pluggedSchema, transformKey);
-		}
-
-		return (pluggedSchema) as new (...args: T[] & V[] & X[]) => U & W & Y;
-	} catch (err) {
-		if (err instanceof Error) throw new Issue("Schema plugins", err.message);
-		throw err;
-	}
+	} as any;
 }
+
 /*
-export interface ObjectIdSetableCriteria extends SetableCriteriaTemplate<"objectId"> {
-	unique: boolean;
+import type { SetableCriteriaTemplate, GuardedCriteria, Format } from "./formats";
+import { SpecTypesTemplate, FlowTypesTemplate } from "./formats/types";
+
+export interface MongoIdSetableCriteria extends SetableCriteriaTemplate<"mongoId"> {
+	mongoParam: boolean;
 }
 
-export interface ObjectIdClassicTypes extends ClassicTypesTemplate<
-	ObjectIdSetableCriteria,
+export interface MongoIdSpecTypes extends SpecTypesTemplate<
+	MongoIdSetableCriteria,
 	{}
 > {}
 
-export interface ObjectIdGenericTypes extends GenericTypesTemplate<
+export interface MongoIdFlowTypes extends FlowTypesTemplate<
 	{},
-	{}
+	string
 > {}
 
 declare module './formats/types' {
-	interface FormatClassicTypes {
-		objectId:  ObjectIdClassicTypes;
+	interface FormatSpecTypes {
+		mongoId: MongoIdSpecTypes;
 	}
-	interface FormatGenericTypes<T extends SetableCriteria> {
-		objectId: T extends ObjectIdSetableCriteria ? ObjectIdGenericTypes : never;
+	interface FormatFlowTypes<T extends SetableCriteria> {
+		mongoId: T extends MongoIdSetableCriteria ? MongoIdFlowTypes : never;
 	}
 }
 
-const ObjectId: FormatTemplate<ObjectIdSetableCriteria> = {
+const MongoIdFormat: Format<MongoIdSetableCriteria> = {
+	type: "mongoId",
 	defaultCriteria: {},
-	mounting(queue, path, criteria) {
+	mount(chunk, criteria) {
 		
 	},
-	checking(queue, path, criteria, value) {
+	check(chunk, criteria, value) {
 		return (null);
-	}
+	},
 }
 
-class Mongo<T extends SetableCriteria> extends AbstractPlugin<T> {
-	protected beforeInitate(): void {
-		this.managers.formats.set({ objectId: ObjectId });
-	}
-
-	protected afterInitate(): void {
-
-	}
-
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
-		super(...args)
-	}
+function plugin_A<T extends SetableCriteria>(this: SchemaInstance<T>, definedCriteria: T) {
+	return ({
+		formats: [MongoIdFormat],
+		mongo(data: GuardedCriteria<T>) {
+			
+		}
+	} satisfies SchemaPlugin);
 }
 
-class Maria<T extends SetableCriteria> extends AbstractPlugin<T> {
-	protected beforeInitate(): void {
-		
-	}
+const SchemaA = SchemaFactory(plugin_A);
 
-	protected afterInitate(): void {
-		
-	}
-
-	constructor(...args: ConstructorParameters<SchemaType<T>>) {
-		super(...args)
-	}
-}
-
-const test = SchemaPlugins(Mongo, Maria)
-
-const eerer = new test({ type: "struct", struct: { test: { type: "objectId", unique: true }}})
-
-console.log(eerer.evaluate({ test: "df"}))
-
-//const lala = new Schema({ type: "struct", struct: { test: { type: 'boolean' }}})*/
+const InstanceA = new SchemaA({ type: "mongoId", mongoParam: true });
+*/

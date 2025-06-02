@@ -1,68 +1,61 @@
-import type { CheckingTaskHooks } from "../../services/types";
+import type { CheckingChunkTask } from "../../services";
 import type { UnionSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { Format } from "../types";
 
-interface HooksCustomProperties {
-	totalRejected: number;
-	totalHooked: number;
-	isFinished: boolean;
-}
+export const UnionFormat: Format<UnionSetableCriteria> = {
+	type: "union",
+	defaultCriteria: {},
+	mount(chunk, criteria) {
+		const unionLength = criteria.union.length;
 
-export const UnionFormat: FormatTemplate<UnionSetableCriteria> = {
-	defaultCriteria: {
-		empty: false
-	},
-	mounting(queue, path, criteria) {
-		for (let i = 0; i < criteria.union.length; i++) {
-
-			queue.push({
-				prevNode: criteria,
-				prevPath: path,
-				currNode: criteria.union[i],
-				partPath: {
+		for (let i = 0; i < unionLength; i++) {
+			chunk.push({
+				node: criteria.union[i],
+				partPaths: {
 					explicit: ["union", i],
 					implicit: []
 				}
 			});
 		}
 	},
-	checking(queue, path, criteria, value) {
+	check(chunk, criteria, data) {
 		const unionLength = criteria.union.length;
 
-		const hooks: CheckingTaskHooks<HooksCustomProperties> = {
-			owner: { node: criteria, path },
-			totalRejected: 0,
-			totalHooked: unionLength,
-			isFinished: false,
-			beforeCheck(criteria) {
-				if(this.isFinished) return (false);
-				return (true);
-			},
-			afterCheck(criteria, reject) {
-				if (reject) this.totalRejected++;
+		const total = {
+			hooked: unionLength,
+			rejected: 0
+		};
 
-				if (this.totalRejected === this.totalHooked) {
-					this.isFinished = true;
-					return ("VALUE_UNSATISFIED_UNION");
-				} else if (reject) {
-					return (false);
-				} else {
-					return (true);
+		const hooks: CheckingChunkTask['hooks'] = {
+			onAccept() {
+				return ({
+					action: "IGNORE",
+					target: "CHUNK"
+				});
+			},
+			onReject() {
+				total.rejected++;
+				if (total.rejected === total.hooked) {
+					return ({
+						action: "REJECT",
+						code: "DATA_UNION_MISMATCH"
+					});
 				}
+				return ({
+					action: "IGNORE",
+					target: "BRANCH"
+				});
 			}
 		};
 
 		for (let i = 0; i < unionLength; i++) {
-			queue.push({
-				prevPath: path,
-				currNode: criteria.union[i],
-				value,
-				hooks
+			chunk.push({
+				hooks,
+				data,
+				node: criteria.union[i]
 			});
 		}
 
 		return (null);
 	}
 }
-
-

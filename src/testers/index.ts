@@ -1,13 +1,11 @@
-import * as string from './string';
-import * as object from './object';
-import { hasTag } from './utils';
+import * as objectTesters from './object';
+import * as stringTesters from './string';
 
 export type * from "./types";
-export * from './string';
 export * from './object';
+export * from './string';
 
 export const testers = {
-	object,
-	string,
-	hasTag
+	object: objectTesters,
+	string: stringTesters
 };

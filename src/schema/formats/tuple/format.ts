@@ -1,43 +1,55 @@
-import type { TupleSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
+import type { SetableTuple, TupleSetableCriteria, } from "./types";
+import type { Format } from "../types";
 import { isArray } from "../../../testers";
 
-export const TupleFormat: FormatTemplate<TupleSetableCriteria> = {
+function isShorthandTuple(obj: {}): obj is SetableTuple {
+	return (isArray(obj));
+}
+
+export const TupleFormat: Format<TupleSetableCriteria> = {
+	type: "tuple",
 	defaultCriteria: {
 		empty: false
 	},
-	mounting(queue, path, criteria) {
+	mount(chunk, criteria) {
 		for (let i = 0; i < criteria.tuple.length; i++) {
-			queue.push({
-				prevNode: criteria,
-				prevPath: path,
-				currNode: criteria.tuple[i],
-				partPath: {
+			let item = criteria.tuple[i];
+
+			if (isShorthandTuple(item)) {
+				item = {
+					type: "tuple",
+					tuple: item
+				}
+				criteria.tuple[i] = item;
+			}
+
+			chunk.push({
+				node: item,
+				partPaths: {
 					explicit: ["tuple", i],
 					implicit: ["&", i]
 				}
 			});
 		}
 	},
-	checking(queue, path, criteria, value) {
-		if (!isArray(value)) {
-			return ("TYPE_NOT_ARRAY");
+	check(chunk, criteria, data) {
+		if (!isArray(data)) {
+			return ("TYPE_ARRAY_REQUIRED");
 		}
 
-		const valueLength = value.length 
+		const dataLength = data.length;
 
-		if (valueLength < criteria.tuple.length) {
-			return ("VALUE_INFERIOR_TUPLE");
+		if (dataLength < criteria.tuple.length) {
+			return ("DATA_LENGTH_INFERIOR_MIN");
 		}
-		else if (valueLength > criteria.tuple.length) {
-			return ("VALUE_SUPERIOR_TUPLE");
+		else if (dataLength > criteria.tuple.length) {
+			return ("DATA_LENGTH_SUPERIOR_MAX");
 		}
 
-		for (let i = 0; i < value.length; i++) {
-			queue.push({
-				prevPath: path,
-				currNode: criteria.tuple[i],
-				value: value[i]
+		for (let i = 0; i < dataLength; i++) {
+			chunk.push({
+				data: data[i],
+				node: criteria.tuple[i]
 			});
 		}
 

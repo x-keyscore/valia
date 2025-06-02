@@ -1,13 +1,13 @@
-import type { SetableCriteriaTemplate, ClassicTypesTemplate, GenericTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
 
 export interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {}
 
-export interface BooleanClassicTypes extends ClassicTypesTemplate<
+export interface BooleanSpecTypes extends SpecTypesTemplate<
 	BooleanSetableCriteria,
 	{}
 > {}
 
-export interface BooleanGenericTypes extends GenericTypesTemplate<
+export interface BooleanFlowTypes extends FlowTypesTemplate<
 	{},
 	boolean
 > {}

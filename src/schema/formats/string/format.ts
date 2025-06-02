@@ -1,39 +1,48 @@
-import type { StringSetableCriteria } from "./types";
-import type { FormatTemplate } from "../types";
-import { isArray, isPlainObject, testers } from "../../../testers";
+import type { StringSetableCriteria, SetableTests } from "./types";
+import type { Format } from "../types";
+import { isArray, testers } from "../../../testers";
 
-export const StringFormat: FormatTemplate<StringSetableCriteria> = {
+export const StringFormat: Format<StringSetableCriteria> = {
+	type: "string",
 	defaultCriteria: {
 		empty: true
 	},
-	checking(queue, path, criteria, value) {
-		if (typeof value !== "string") {
-			return ("TYPE_NOT_STRING");
+	check(chunk, criteria, data) {
+		if (typeof data !== "string") {
+			return ("TYPE_STRING_REQUIRED");
 		}
 
-		const valueLength = value.length;
+		const dataLength = data.length;
 
-		if (!valueLength) {
-			return (criteria.empty ? null : "VALUE_EMPTY");
+		if (!dataLength) {
+			return (criteria.empty ? null : "DATA_EMPTY");
 		}
-		else if (criteria.min !== undefined && valueLength < criteria.min) {
-			return ("VALUE_INFERIOR_MIN");
+		else if (criteria.min != null && dataLength < criteria.min) {
+			return ("DATA_LENGTH_INFERIOR_MIN");
 		}
-		else if (criteria.max !== undefined && valueLength > criteria.max) {
-			return ("VALUE_SUPERIOR_MAX");
+		else if (criteria.max != null && dataLength > criteria.max) {
+			return ("DATA_LENGTH_SUPERIOR_MAX");
 		}
-		else if (criteria.enum !== undefined) {
-			if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
-				return ("VALUE_NOT_IN_ENUM");
-			} else if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
-				return ("VALUE_NOT_IN_ENUM");
+		else if (criteria.enum != null) {
+			if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
+				return ("DATA_ENUM_MISMATCH");
+			} else if (!Object.values(criteria.enum).includes(data)) {
+				return ("DATA_ENUM_MISMATCH");
 			}
 		}
-		else if (criteria.regex !== undefined && !criteria.regex.test(value)) {
+
+		if (criteria.tests) {
+			for (const key of Object.keys(criteria.tests) as (keyof SetableTests)[]) {
+				if (!(testers.string[key](data, criteria.tests[key] as any))) {
+					return ("TEST_STRING_FAILED");
+				}
+			}
+		}
+
+		if (criteria.regex != null && !criteria.regex.test(data)) {
 			return ("TEST_REGEX_FAILED");
-		} else if (criteria.tester && !testers.string[criteria.tester.name](value, criteria.tester?.params as any)) {
-			return ("TEST_TESTER_FAILED");
-		} else if (criteria.custom && !criteria.custom(value)) {
+		}
+		else if (criteria.custom && !criteria.custom(data)) {
 			return ("TEST_CUSTOM_FAILED");
 		}
 

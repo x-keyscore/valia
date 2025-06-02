@@ -1,15 +1,15 @@
 import type {
 	SetableCriteriaTemplate,
-	ClassicTypesTemplate,
-	GenericTypesTemplate,
+	SpecTypesTemplate,
+	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	KeyofFormatClassicTypes
+	FormatNames
 } from "../types";
 
 export interface ArraySetableCriteria<
-	T extends KeyofFormatClassicTypes = KeyofFormatClassicTypes
+	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"array"> {
 	/** @default true */
 	empty?: boolean;
@@ -22,18 +22,18 @@ export interface ArrayDefaultCriteria {
 	empty: boolean;
 }
 
-export interface ArrayClassicTypes<T extends KeyofFormatClassicTypes> extends ClassicTypesTemplate<
+export interface ArraySpecTypes<T extends FormatNames> extends SpecTypesTemplate<
 	ArraySetableCriteria<T>,
 	ArrayDefaultCriteria
 > {}
 
-export interface ArrayMountedCriteria {
-	item: MountedCriteria;
+export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
+	item: MountedCriteria<T['item']>;
 }
 
-type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['item']>[];
+export type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['item']>[];
 
-export interface ArrayGenericTypes<T extends ArraySetableCriteria> extends GenericTypesTemplate<
-	ArrayMountedCriteria,
+export interface ArrayFlowTypes<T extends ArraySetableCriteria> extends FlowTypesTemplate<
+	ArrayMountedCriteria<T>,
 	ArrayGuardedCriteria<T>
 > {}

@@ -1,59 +1,104 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { RegistryValue } from "../managers";
+import type { LooseAutocomplete } from "../../types";
+
+export interface PathSegments {
+	/**
+	 * **Composition of explicit path :**
+	 * ```py
+	 * segment = (string / number / symbol)
+	 * path    = [*(...segment)]
+	 * ```
+	 * 
+	 * **Exemple :**
+	 *  ```py
+	 * my-path = ["struct", "products", "item", "price"]
+	 * ```
+	*/
+	explicit: (string | number | symbol)[];
+	/**
+	 * #### Composition of implicit path :
+	 * ```py
+	 * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
+	 * static-key    = ["&", (string / number / symbol)]
+	 * segment       = dynamic-key / static-key
+	 * path          = [*(...segment)]
+	 * ```
+	 * 
+	 * #### Exemple :
+	 * ```py
+	 * my-path = ["&", "products", "%", "number", "&", "price"]
+	 * my-path is products[0].price or products[1].price and continue
+	 * ```
+	*/
+	implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
+}
+
+// MOUNTER
 
 export interface MountingTask {
-	prevNode: SetableCriteria | MountedCriteria | null;
-	prevPath: RegistryValue['partPaths'];
-	currNode: SetableCriteria | MountedCriteria;
-	partPath: RegistryValue['partPaths'];
+	node: SetableCriteria | MountedCriteria;
+	partPaths: PathSegments;
+	fullPaths: PathSegments;
 }
 
-/**
- * @template U Custom members you want to add to the object.
- */
-export type CheckingTaskHooks<U extends Record<string, any> = { [key: string]: any; }> = {
-	/**
-	 * Criteria responsible for managing the hooks. 
-	 * This information will be included in the rejection reasons 
-	 * if a hook returns a rejection code.
-	 */
-	owner: {
-		node: MountedCriteria;
-		path: RegistryValue['partPaths'];
-	}
-	/**
-	 * Hook executed just before the verification process.
-	 * - Returns `true`: Proceeds with the verification.
-	 * - Returns `false`: Cancels the verification.
-	 * - Returns a rejection code: Terminates the entire verification process.
-	 */
-	beforeCheck(criteria: MountedCriteria): boolean | string;
-	/**
-	 * Hook executed immediately after the verification process.
-	 * - Returns `true`: Proceed to the other verification.
-	 * - Returns `false`: Bypasses the rejection.
-	 * - Returns a rejection code: Terminates the entire verification process.
-	 */
-	afterCheck(criteria: MountedCriteria, reject: string | null): boolean | string;
-} & U;
+export type MountingChunk = {
+	node: SetableCriteria | MountedCriteria;
+	partPaths: PathSegments;
+}[];
 
-export type CheckingTask = {
-	prevPath: RegistryValue['partPaths'];
-	currNode: MountedCriteria;
-	value: unknown;
-	hooks?: CheckingTaskHooks;
+// CHECKER
+
+export interface CheckingHooks {
+	owner: CheckingTask;
+	index: {
+		chunk: number;
+		branch: number;
+	};
+	onAccept(): {
+		action: "DEFAULT"
+	} | {
+		action: "IGNORE";
+		target: "CHUNK";
+	} | {
+		action: "REJECT";
+		code: string;
+	};
+	onReject(reject: CheckingReject): {
+		action: "DEFAULT"
+	} | {
+		action: "IGNORE";
+		target: "CHUNK" | "BRANCH";
+	} | {
+		action: "REJECT";
+		code: string;
+	};
 }
 
-export interface Rejection {
-	path: RegistryValue['partPaths'];
+export interface CheckingTask {
+	data: unknown;
+	node: MountedCriteria;
+	fullPaths: PathSegments;
+	stackHooks?: CheckingHooks[];
+}
+
+export interface CheckingChunkTask {
+	data: CheckingTask['data'];
+	node: CheckingTask['node'];
+	hooks?: Omit<CheckingHooks, "owner" | "index">;
+};
+
+export type CheckingChunk = CheckingChunkTask[];
+
+export interface CheckingReject {
+	path: PathSegments;
 	/**
 	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
 	 * 
-	 * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_NOT_STRING`).
-	 * - `VALUE`: Indicates an error related to the provided value (e.g., `VALUE_MISSING_KEY`).
+	 * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_STRING_REQUIRED`).
+	 * - `DATA`: Indicates an error related to the provided data (e.g., `DATA_KEYS_MISSING`).
 	 * - `TEST`: Indicates an error related to a specific test or validation (e.g., `TEST_REGEX_FAILED`).
 	 * 
-	 * `<DETAIL>`: A specific description of the error, such as `NOT_STRING`, `MISSING_KEY`, etc.
+	 * `<DETAIL>`: A specific description of the error, such as `STRING_REQUIRED`, `KEYS_MISSING`, etc.
 	 */
 	code: string;
 	type: string;

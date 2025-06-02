@@ -1,7 +1,8 @@
 export type {
-    SchemaInstance,
     SchemaInfer,
-    SchemaType
+    SchemaInstance,
+    SchemaParameters,
+    SchemaPlugin
 } from "./types";
 
 export {
@@ -9,8 +10,7 @@ export {
 } from "./schema";
 
 export {
-    SchemaPlugins,
-    AbstractPlugin
+    SchemaFactory
 } from "./plugin";
 
 
