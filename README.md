@@ -254,13 +254,6 @@ interface Criteria {
 }
 ```
 
-#### Rejection codes
-
-|Code|Description|
-|--|--|
-|**TYPE.PLAIN_OBJECT.NOT_SATISFIED**||
-|**TUPLE.ITEMS.NOT_SATISFIED**      ||
-
 ### Array
 
 |Property|Default|Description|
