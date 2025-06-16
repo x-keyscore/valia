@@ -1,6 +1,5 @@
 import type {
 	SetableCriteriaTemplate,
-	SpecTypesTemplate,
 	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
@@ -16,11 +15,6 @@ export interface UnionSetableCriteria<
 > extends SetableCriteriaTemplate<"union"> {
 	union: SetableUnion<T>;
 }
-
-export interface UnionSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
-	UnionSetableCriteria<T>,
-	{}
-> {}
 
 type MountedUnion<T extends SetableUnion> =
 	T extends infer U
@@ -45,13 +39,6 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> =
 					: never;
 		}[any]
 		: never;
-/*
-type UnionGuardedCriteria<T extends UnionSetableCriteria> = {
-	[I in keyof T['union']]:
-		T['union'][I] extends SetableCriteria
-			? GuardedCriteria<T['union'][I]>
-			: never;
-}[keyof T['union']];*/
 
 export interface UnionFlowTypes<T extends UnionSetableCriteria> extends FlowTypesTemplate<
 	UnionMountedCriteria<T>,

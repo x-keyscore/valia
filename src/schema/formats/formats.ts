@@ -1,4 +1,3 @@
-import type { Format, SetableCriteria } from "./types";
 import { BooleanFormat } from "./boolean/format";
 import { SymbolFormat } from "./symbol/format";
 import { NumberFormat } from "./number/format";

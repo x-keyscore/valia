@@ -4,10 +4,11 @@ import { isArray } from "../../../testers";
 
 export const ArrayFormat: Format<ArraySetableCriteria> = {
 	type: "array",
-	defaultCriteria: {
-		empty: true
-	},
 	mount(chunk, criteria) {
+		Object.assign(criteria, {
+			empty: criteria.empty ?? true
+		});
+
 		chunk.push({
 			node: criteria.item,
 			partPaths: {
@@ -18,19 +19,19 @@ export const ArrayFormat: Format<ArraySetableCriteria> = {
 	},
 	check(chunk, criteria, data) {
 		if (!isArray(data)) {
-			return ("TYPE_ARRAY_REQUIRED");
+			return ("TYPE.ARRAY.NOT_SATISFIED");
 		}
 
 		const dataLength = data.length;
 		
 		if (!dataLength) {
-			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
+			return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
 		}
 		else if (criteria.min != null && dataLength < criteria.min) {
-			return ("DATA_LENGTH_INFERIOR_MIN");
+			return ("MIN.LENGTH.NOT_SATISFIED");
 		}
 		else if (criteria.max != null && dataLength > criteria.max) {
-			return ("DATA_LENGTH_SUPERIOR_MAX");
+			return ("MAX.LENGTH.NOT_SATISFIED");
 		}
 
 		for (let i = 0; i < dataLength; i++) {

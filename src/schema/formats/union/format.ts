@@ -4,7 +4,6 @@ import type { Format } from "../types";
 
 export const UnionFormat: Format<UnionSetableCriteria> = {
 	type: "union",
-	defaultCriteria: {},
 	mount(chunk, criteria) {
 		const unionLength = criteria.union.length;
 
@@ -38,7 +37,7 @@ export const UnionFormat: Format<UnionSetableCriteria> = {
 				if (total.rejected === total.hooked) {
 					return ({
 						action: "REJECT",
-						code: "DATA_UNION_MISMATCH"
+						code: "UNION.NOT_SATISFIED"
 					});
 				}
 				return ({

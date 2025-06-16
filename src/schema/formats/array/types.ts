@@ -1,6 +1,5 @@
 import type {
 	SetableCriteriaTemplate,
-	SpecTypesTemplate,
 	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
@@ -18,17 +17,14 @@ export interface ArraySetableCriteria<
 	item: SetableCriteria<T>;
 }
 
-export interface ArrayDefaultCriteria {
-	empty: boolean;
-}
-
-export interface ArraySpecTypes<T extends FormatNames> extends SpecTypesTemplate<
-	ArraySetableCriteria<T>,
-	ArrayDefaultCriteria
-> {}
-
 export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
 	item: MountedCriteria<T['item']>;
+	empty:
+		unknown extends T['empty']
+			? true
+			: ArraySetableCriteria['empty'] extends T['empty']
+				? boolean
+				: T['empty'];
 }
 
 export type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['item']>[];

@@ -134,13 +134,6 @@ interface Criteria {
 }
 ```
 
-```ts
-new Schema({
-  type: "simple",
-  simple: "undefined"
-});
-```
-
 ### Number
 
 |Property|Default|Description|
@@ -161,16 +154,6 @@ interface Criteria {
   enum?: string[] | Record<string | number, string>;
   custom?: (x: string) => boolean;
 }
-```
-```ts
-new Schema({
-  type: "number",
-  min: 0,
-  max: 50,
-  custom(x) {
-    return (x % 2 === 0);
-  }
-});
 ```
 
 ### String
@@ -198,15 +181,6 @@ interface Criteria {
   testers?: { [key: TesterNames]: true | TesterConfigs };
 }
 ```
-```ts
-new Schema({
-  type: "string",
-  min: 0,
-  max: 6,
-  empty: false,
-  tester: { name: "isAscii" }
-});
-```
 
 ### Boolean
 
@@ -219,19 +193,15 @@ interface Criteria {
   type: "boolean";
 }
 ```
-```ts
-new Schema({
-  type: "boolean"
-});
-```
 
 ### Struct
 
 |Property|Default|Description|
 |--|--|--|
-|`type`     ||Format name|
-|`optional?`||Array of optional keys|
-|`struct`   ||The object keys represent the expected keys and the attributes represent the expected types. By default, all keys are mandatory.|
+|`type`       |       |Format name|
+|`struct`     |       |Object mapping expected keys to their respective formats.|
+|`optional?`  |`false`|Array of optional keys or boolean|
+|`additional?`|`false`|Record of additional properties or boolean|
 
 ```ts
 type SetableStruct = {
@@ -241,22 +211,9 @@ type SetableStruct = {
 interface Criteria {
   type: "struct";
   struct: SetableStruct;
-  optional?: (string | symbol)[];
+  optional?: (string | symbol)[] | boolean;
+  additional?: SetableCriteria<"record"> | boolean;
 }
-```
-```ts
-new Schema({
-  type: "struct",
-  optional: ["description"],
-  struct: {
-    name: { type: "string", max: 20 },
-    price: { type: "number", min: 0.1 },
-    description: {
-      brand: { type: "string", max: 40 },
-      color: { type: "string", enum: ["BLACK", "WHITE"] }
-    }
-  }
-});
 ```
 
 ### Record
@@ -280,34 +237,29 @@ interface Criteria {
   value: SetableCriteria;
 }
 ```
-```ts
-new Schema({
-  type: "record",
-  max: 10,
-  key: { type: "string" },
-  value: { type: "number" }
-});
-```
 
 ### Tuple
 
 |Property|Default|Description|
 |--|--|--|
-|`type`  ||Format name|
-|`tuple` ||Criteria of the tuple items|
+|`type`       |       |Format name|
+|`tuple`      |       |Array mapping expected items to their respective formats.|
+|`additional?`|`false`|Array of additional item or boolean|
 
 ```ts
 interface Criteria {
   type: "tuple";
   tuple: [SetableCriteria, ...SetableCriteria[]];
+  additional?: SetableCriteria<"array"> | boolean;
 }
 ```
-```ts
-new Schema({
-  type: "tuple",
-  tuple: [{ type: "string" }, { type: "number" }]
-});
-```
+
+#### Rejection codes
+
+|Code|Description|
+|--|--|
+|**TYPE.PLAIN_OBJECT.NOT_SATISFIED**||
+|**TUPLE.ITEMS.NOT_SATISFIED**      ||
 
 ### Array
 
@@ -328,13 +280,6 @@ interface Criteria {
   item: SetableCriteria;
 }
 ```
-```ts
-new Schema({
-  type: "array",
-  empty: true,
-  tuple: [{ type: "string" }, { type: "number" }]
-});
-```
 
 ### Union
 
@@ -349,15 +294,6 @@ interface Criteria {
   union?: [SetableCriteria, ...SetableCriteria[]];
 }
 ```
-```ts
-new Schema({
-  type: "union",
-  union: [
-    { type: "string" },
-    { type: "number" }
-  ]
-});
-```
 
 ### Symbol
 
@@ -371,14 +307,6 @@ interface Criteria {
   type: "symbol";
   symbol?: symbol;
 }
-```
-```ts
-const mySymbol = Symbol("my-symbol");
-
-new Schema({
-  type: "symbol",
-  symbol: mySymbol
-});
 ```
 
 ## Exemples
@@ -523,7 +451,7 @@ const data = ["red", [0, 100, 50]];
 |`isObject`                |Checks if it is an object|
 |`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`|
 |`isArray`                 |Checks if it is an array|
-|`isArray`                 |Checks if it is an typed array|
+|`isTypedArray`            |Checks if it is an typed array|
 |`isFunction`              |Checks if it is an function|
 |`isBasicFunction`         |Checks if it is an function and if it is not `async`, `generator` or `async generator`.|
 |`isAsyncFunction`         |Checks if it is an async function|

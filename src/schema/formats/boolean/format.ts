@@ -3,10 +3,9 @@ import type { Format } from "../types";
 
 export const BooleanFormat: Format<BooleanSetableCriteria> = {
 	type: "boolean",
-	defaultCriteria: {},
-	check(chunk, criteria, data) {
-		if (typeof data !== "boolean") {
-			return ("TYPE_BOOLEAN_REQUIRED");
+	check(chunk, criteria, value) {
+		if (typeof value !== "boolean") {
+			return ("TYPE.BOOLEAN.NOT_SATISFIED");
 		}
 
 		return (null);

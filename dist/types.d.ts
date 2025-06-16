@@ -1,14 +1,103 @@
-interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {
+type LooseAutocomplete<T extends string> = T | Omit<string, T>;
+
+interface PathSegments {
+    /**
+     * **Composition of explicit path :**
+     * ```py
+     * segment = (string / number / symbol)
+     * path    = [*(...segment)]
+     * ```
+     *
+     * **Exemple :**
+     *  ```py
+     * my-path = ["struct", "products", "item", "price"]
+     * ```
+    */
+    explicit: (string | number | symbol)[];
+    /**
+     * #### Composition of implicit path :
+     * ```py
+     * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
+     * static-key    = ["&", (string / number / symbol)]
+     * segment       = dynamic-key / static-key
+     * path          = [*(...segment)]
+     * ```
+     *
+     * #### Exemple :
+     * ```py
+     * my-path = ["&", "products", "%", "number", "&", "price"]
+     * my-path is products[0].price or products[1].price and continue
+     * ```
+    */
+    implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
 }
-interface BooleanSpecTypes extends SpecTypesTemplate<BooleanSetableCriteria, {}> {
+type MountingChunk = {
+    node: SetableCriteria | MountedCriteria;
+    partPaths: PathSegments;
+}[];
+interface CheckingHooks {
+    owner: CheckingTask;
+    index: {
+        chunk: number;
+        branch: number;
+    };
+    onAccept(): {
+        action: "DEFAULT";
+    } | {
+        action: "IGNORE";
+        target: "CHUNK";
+    } | {
+        action: "REJECT";
+        code: string;
+    };
+    onReject(reject: CheckingReject): {
+        action: "DEFAULT";
+    } | {
+        action: "IGNORE";
+        target: "CHUNK" | "BRANCH";
+    } | {
+        action: "REJECT";
+        code: string;
+    };
+}
+interface CheckingTask {
+    data: unknown;
+    node: MountedCriteria;
+    fullPaths: PathSegments;
+    stackHooks?: CheckingHooks[];
+}
+interface CheckingChunkTask {
+    data: CheckingTask['data'];
+    node: CheckingTask['node'];
+    hooks?: Omit<CheckingHooks, "owner" | "index">;
+}
+type CheckingChunk = CheckingChunkTask[];
+interface CheckingReject {
+    path: PathSegments;
+    /**
+     * Syntax: `<FORMAT>.<RULE>[.<DETAIL>].<REASON>`
+     *
+     * Components:
+     * - `<FORMAT>`    : The format involved (e.g. NUMBER, STRING, STRUCT)
+     * - `<RULE>`      : The criterion involved (e.g. EMPTY, MIN, ENUM)
+     * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
+     * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
+     */
+    code: string;
+    type: string;
+    label: string | undefined;
+    message: string | undefined;
+}
+
+declare const nodeSymbol: unique symbol;
+
+interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {
 }
 interface BooleanFlowTypes extends FlowTypesTemplate<{}, boolean> {
 }
 
 interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol"> {
     symbol?: symbol;
-}
-interface SymbolSpecTypes extends SpecTypesTemplate<SymbolSetableCriteria, {}> {
 }
 interface SymbolFlowTypes extends FlowTypesTemplate<{}, symbol> {
 }
@@ -21,13 +110,11 @@ interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
     enum?: number[] | Record<string | number, number>;
     custom?: (input: number) => boolean;
 }
-interface NumberDefaultCriteria {
-    empty: boolean;
-}
-interface NumberSpecTypes extends SpecTypesTemplate<NumberSetableCriteria, NumberDefaultCriteria> {
+interface NumberMountedCriteria<T extends NumberSetableCriteria> {
+    empty: unknown extends T['empty'] ? true : NumberSetableCriteria['empty'] extends T['empty'] ? boolean : T['empty'];
 }
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = T['enum'] extends number[] ? T['enum'][number] : T['enum'] extends Record<string | number, number> ? T['enum'][keyof T['enum']] : number;
-interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<{}, NumberGuardedCriteria<T>> {
+interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<NumberMountedCriteria<T>, NumberGuardedCriteria<T>> {
 }
 
 type PlainObject = Record<string | symbol, unknown>;
@@ -270,9 +357,9 @@ declare const testers: {
 };
 
 type ExtractParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
-type StringTests = typeof testers.string;
-type SetableTests = {
-    [K in keyof StringTests]: ExtractParams<StringTests[K]> | true;
+type StringTesters = typeof testers.string;
+type SetableTesters = {
+    [K in keyof StringTesters]: ExtractParams<StringTesters[K]> | true;
 };
 interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
     /** @default true */
@@ -280,33 +367,26 @@ interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
     min?: number;
     max?: number;
     enum?: string[] | Record<string | number, string>;
-    tests?: SetableTests;
     regex?: RegExp;
+    testers?: SetableTesters;
     custom?: (value: string) => boolean;
 }
-interface StringDefaultCriteria {
-    empty: boolean;
+interface StringMountedCriteria<T extends StringSetableCriteria> {
+    empty: unknown extends T['empty'] ? true : StringSetableCriteria['empty'] extends T['empty'] ? boolean : T['empty'];
 }
-interface StringSpecTypes extends SpecTypesTemplate<StringSetableCriteria, StringDefaultCriteria> {
-}
-type StringGuardedCriteria<T extends StringSetableCriteria> = T['enum'] extends string[] ? T['empty'] extends true ? T['enum'][number] | "" : T['enum'][number] : T['enum'] extends Record<string | number, string> ? T['empty'] extends true ? {
-    [K in keyof T['enum']]: T['enum'][K];
-}[keyof T['enum']] | "" : {
-    [K in keyof T['enum']]: T['enum'][K];
-}[keyof T['enum']] : string;
-interface StringFlowTypes<T extends StringSetableCriteria> extends FlowTypesTemplate<{}, StringGuardedCriteria<T>> {
+type EnumValues<T extends StringSetableCriteria> = T['enum'] extends Record<string | number, string> ? T['enum'][keyof T['enum']] : T['enum'] extends string[] ? T['enum'][number] : never;
+type StringGuardedCriteria<T extends StringSetableCriteria> = T['enum'] extends (string[] | Record<string | number, string>) ? (EnumValues<T> | (T['empty'] extends true ? "" : never)) : string;
+interface StringFlowTypes<T extends StringSetableCriteria> extends FlowTypesTemplate<StringMountedCriteria<T>, StringGuardedCriteria<T>> {
 }
 
-type SimpleTypes = "undefined" | "nullish" | "null" | "unknown" | "any";
+type SimpleTypes = "null" | "undefined" | "nullish" | "unknown";
 interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
     simple: SimpleTypes;
-}
-interface SimpleSpecTypes extends SpecTypesTemplate<SimpleSetableCriteria, {}> {
 }
 interface SimpleMountedCriteria {
     bitcode: number;
 }
-type SimpleGuardedCriteria<T extends SimpleSetableCriteria> = T["simple"] extends "nullish" ? undefined | null : T["simple"] extends "undefined" ? undefined : T["simple"] extends "null" ? null : T["simple"] extends "unknown" ? unknown : T["simple"] extends "any" ? any : never;
+type SimpleGuardedCriteria<T extends SimpleSetableCriteria> = T["simple"] extends "null" ? null : T["simple"] extends "undefined" ? undefined : T["simple"] extends "nullish" ? undefined | null : T["simple"] extends "unknown" ? unknown : never;
 interface SimpleFlowTypes<T extends SimpleSetableCriteria> extends FlowTypesTemplate<SimpleMountedCriteria, SimpleGuardedCriteria<T>> {
 }
 
@@ -319,18 +399,14 @@ interface RecordSetableCriteria<T extends FormatNames = FormatNames> extends Set
     key: SetableKey;
     value: SetableCriteria<T>;
 }
-interface RecordDefaultCriteria {
-    empty: boolean;
-}
-interface RecordSpecTypes<T extends FormatNames> extends SpecTypesTemplate<RecordSetableCriteria<T>, RecordDefaultCriteria> {
-}
 interface RecordMountedCriteria<T extends RecordSetableCriteria> {
     key: MountedCriteria<T['key']>;
     value: MountedCriteria<T['value']>;
+    empty: unknown extends T['empty'] ? true : RecordSetableCriteria['empty'] extends T['empty'] ? boolean : T['empty'];
 }
-type RecordGuardedCriteria<T extends RecordSetableCriteria> = GuardedCriteria<T['key']> extends infer U ? U extends PropertyKey ? {
-    [P in U]: GuardedCriteria<T['value']>;
-} : never : never;
+type RecordGuardedCriteria<T extends RecordSetableCriteria> = GuardedCriteria<T['key']> extends infer U ? {
+    [P in U as U extends (string | symbol) ? U : never]: GuardedCriteria<T['value']>;
+} : never;
 interface RecordFlowTypes<T extends RecordSetableCriteria> extends FlowTypesTemplate<RecordMountedCriteria<T>, RecordGuardedCriteria<T>> {
 }
 
@@ -339,9 +415,8 @@ type SetableStruct<T extends FormatNames = FormatNames> = {
 };
 interface StructSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"struct"> {
     struct: SetableStruct<T>;
-    optional?: (string | symbol)[];
-}
-interface StructSpecTypes<T extends FormatNames> extends SpecTypesTemplate<StructSetableCriteria<T>, {}> {
+    optional?: (string | symbol)[] | boolean;
+    additional?: SetableCriteriaMap<T>['record'] | boolean;
 }
 type MountedStruct<T extends SetableStruct> = {
     [K in keyof T]: T[K] extends SetableCriteria ? MountedCriteria<T[K]> : T[K] extends SetableStruct ? MountedCriteria<{
@@ -351,20 +426,33 @@ type MountedStruct<T extends SetableStruct> = {
 };
 interface StructMountedCriteria<T extends StructSetableCriteria> {
     struct: MountedStruct<T['struct']>;
+    optional: unknown extends T['optional'] ? false : StructSetableCriteria['optional'] extends T['optional'] ? (string | symbol)[] | boolean : T['optional'];
+    additional: unknown extends T['additional'] ? false : StructSetableCriteria['additional'] extends T['additional'] ? MountedCriteria<RecordSetableCriteria> | boolean : T['additional'] extends RecordSetableCriteria ? MountedCriteria<T['additional']> : T['additional'];
     acceptedKeys: Set<string | symbol>;
     requiredKeys: Set<string | symbol>;
 }
-type OptionalizeKeys<T, K extends PropertyKey[] | undefined> = K extends PropertyKey[] ? {
-    [P in keyof T as P extends K[number] ? P : never]+?: T[P];
+type DynamicProperties<U extends RecordSetableCriteria | boolean | undefined> = [
+    U
+] extends [RecordSetableCriteria] ? GuardedCriteria<U> : [U] extends [false] ? {} : {
+    [key: string | symbol]: unknown;
+};
+type OptionalizeKeys<T, U extends (string | symbol)[] | boolean | undefined> = [
+    U
+] extends [(string | symbol)[]] ? {
+    [K in keyof T as K extends U[number] ? K : never]+?: T[K];
 } & {
-    [P in keyof T as P extends K[number] ? never : P]-?: T[P];
-} : T;
-type StructGuardedCriteria<T extends StructSetableCriteria> = {
-    -readonly [K in keyof OptionalizeKeys<T['struct'], T['optional']>]: T['struct'][K] extends SetableCriteria ? GuardedCriteria<T['struct'][K]> : T['struct'][K] extends SetableStruct ? GuardedCriteria<{
-        type: "struct";
-        struct: T['struct'][K];
-    }> : never;
-} extends infer R ? R : never;
+    [K in keyof T as K extends U[number] ? never : K]-?: T[K];
+} : [U] extends [false] ? {
+    [P in keyof T]-?: T[P];
+} : {
+    [P in keyof T]+?: T[P];
+};
+type StaticProperties<T extends StructSetableCriteria> = {
+    -readonly [K in keyof OptionalizeKeys<T['struct'], T['optional']>]: T['struct'][K] extends SetableCriteria ? GuardedCriteria<T['struct'][K]> : never;
+};
+type StructGuardedCriteria<T extends StructSetableCriteria> = DynamicProperties<T['additional']> extends infer U ? StaticProperties<T> extends infer V ? {
+    [K in keyof (U & V)]: K extends keyof V ? V[K] : K extends keyof U ? U[K] : never;
+} : never : never;
 interface StructFlowTypes<T extends StructSetableCriteria> extends FlowTypesTemplate<StructMountedCriteria<T>, StructGuardedCriteria<T>> {
 }
 
@@ -375,13 +463,9 @@ interface ArraySetableCriteria<T extends FormatNames = FormatNames> extends Seta
     max?: number;
     item: SetableCriteria<T>;
 }
-interface ArrayDefaultCriteria {
-    empty: boolean;
-}
-interface ArraySpecTypes<T extends FormatNames> extends SpecTypesTemplate<ArraySetableCriteria<T>, ArrayDefaultCriteria> {
-}
 interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
     item: MountedCriteria<T['item']>;
+    empty: unknown extends T['empty'] ? true : ArraySetableCriteria['empty'] extends T['empty'] ? boolean : T['empty'];
 }
 type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedCriteria<T['item']>[];
 interface ArrayFlowTypes<T extends ArraySetableCriteria> extends FlowTypesTemplate<ArrayMountedCriteria<T>, ArrayGuardedCriteria<T>> {
@@ -393,8 +477,7 @@ type SetableTuple<T extends FormatNames = FormatNames> = [
 ];
 interface TupleSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"tuple"> {
     tuple: SetableTuple<T>;
-}
-interface TupleSpecTypes<T extends FormatNames> extends SpecTypesTemplate<TupleSetableCriteria<T>, {}> {
+    additional?: SetableCriteriaMap<T>['array'] | boolean;
 }
 type MountedTuple<T extends SetableTuple> = T extends infer U ? {
     [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : U[I] extends SetableTuple ? MountedCriteria<{
@@ -404,13 +487,18 @@ type MountedTuple<T extends SetableTuple> = T extends infer U ? {
 } : never;
 interface TupleMountedCriteria<T extends TupleSetableCriteria> {
     tuple: MountedTuple<T['tuple']>;
+    additional: unknown extends T['additional'] ? false : TupleSetableCriteria['additional'] extends T['additional'] ? MountedCriteria<ArraySetableCriteria> | boolean : T['additional'] extends ArraySetableCriteria ? MountedCriteria<T['additional']> : T['additional'];
 }
-type TupleGuardedCriteria<T extends TupleSetableCriteria> = T['tuple'] extends infer U ? {
+type DynamicItems<U extends ArraySetableCriteria | boolean | undefined> = [
+    U
+] extends [ArraySetableCriteria] ? GuardedCriteria<U> : [U] extends [false] ? [] : unknown[];
+type StaticItems<T extends TupleSetableCriteria> = T['tuple'] extends infer U ? {
     [I in keyof U]: U[I] extends SetableCriteria ? GuardedCriteria<U[I]> : U[I] extends SetableTuple ? GuardedCriteria<{
         type: "tuple";
         tuple: U[I];
     }> : never;
 } : never;
+type TupleGuardedCriteria<T extends TupleSetableCriteria> = DynamicItems<T['additional']> extends infer U ? StaticItems<T> extends infer V ? U extends any[] ? V extends any[] ? [...V, ...U] : never : never : never : never;
 interface TupleFlowTypes<T extends TupleSetableCriteria> extends FlowTypesTemplate<TupleMountedCriteria<T>, TupleGuardedCriteria<T>> {
 }
 
@@ -421,8 +509,6 @@ type SetableUnion<T extends FormatNames = FormatNames> = [
 ];
 interface UnionSetableCriteria<T extends FormatNames = FormatNames> extends SetableCriteriaTemplate<"union"> {
     union: SetableUnion<T>;
-}
-interface UnionSpecTypes<T extends FormatNames> extends SpecTypesTemplate<UnionSetableCriteria<T>, {}> {
 }
 type MountedUnion<T extends SetableUnion> = T extends infer U ? {
     [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : never;
@@ -436,148 +522,46 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> = T['union'] extends i
 interface UnionFlowTypes<T extends UnionSetableCriteria> extends FlowTypesTemplate<UnionMountedCriteria<T>, UnionGuardedCriteria<T>> {
 }
 
-type LooseAutocomplete<T extends string> = T | Omit<string, T>;
-
-interface PathSegments {
-    /**
-     * **Composition of explicit path :**
-     * ```py
-     * segment = (string / number / symbol)
-     * path    = [*(...segment)]
-     * ```
-     *
-     * **Exemple :**
-     *  ```py
-     * my-path = ["struct", "products", "item", "price"]
-     * ```
-    */
-    explicit: (string | number | symbol)[];
-    /**
-     * #### Composition of implicit path :
-     * ```py
-     * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
-     * static-key    = ["&", (string / number / symbol)]
-     * segment       = dynamic-key / static-key
-     * path          = [*(...segment)]
-     * ```
-     *
-     * #### Exemple :
-     * ```py
-     * my-path = ["&", "products", "%", "number", "&", "price"]
-     * my-path is products[0].price or products[1].price and continue
-     * ```
-    */
-    implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
-}
-type MountingChunk = {
-    node: SetableCriteria | MountedCriteria;
-    partPaths: PathSegments;
-}[];
-interface CheckingHooks {
-    owner: CheckingTask;
-    index: {
-        chunk: number;
-        branch: number;
-    };
-    onAccept(): {
-        action: "DEFAULT";
-    } | {
-        action: "IGNORE";
-        target: "CHUNK";
-    } | {
-        action: "REJECT";
-        code: string;
-    };
-    onReject(reject: CheckingReject): {
-        action: "DEFAULT";
-    } | {
-        action: "IGNORE";
-        target: "CHUNK" | "BRANCH";
-    } | {
-        action: "REJECT";
-        code: string;
-    };
-}
-interface CheckingTask {
-    data: unknown;
-    node: MountedCriteria;
-    fullPaths: PathSegments;
-    stackHooks?: CheckingHooks[];
-}
-interface CheckingChunkTask {
-    data: CheckingTask['data'];
-    node: CheckingTask['node'];
-    hooks?: Omit<CheckingHooks, "owner" | "index">;
-}
-type CheckingChunk = CheckingChunkTask[];
-interface CheckingReject {
-    path: PathSegments;
-    /**
-     * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
-     *
-     * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_STRING_REQUIRED`).
-     * - `DATA`: Indicates an error related to the provided data (e.g., `DATA_KEYS_MISSING`).
-     * - `TEST`: Indicates an error related to a specific test or validation (e.g., `TEST_REGEX_FAILED`).
-     *
-     * `<DETAIL>`: A specific description of the error, such as `STRING_REQUIRED`, `KEYS_MISSING`, etc.
-     */
-    code: string;
-    type: string;
-    label: string | undefined;
-    message: string | undefined;
-}
-
-declare const nodeSymbol: unique symbol;
-
 interface CustomProperties {
     bitflags: Record<SimpleTypes, number>;
 }
 
 declare const formatNatives: ({
     type: "boolean";
-    defaultCriteria: {};
     mount?(chunk: MountingChunk, criteria: BooleanSetableCriteria): void;
-    check(chunk: CheckingChunk, criteria: Omit<BooleanSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    check(chunk: CheckingChunk, criteria: Omit<BooleanSetableCriteria, never> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "symbol";
-    defaultCriteria: {};
     mount?(chunk: MountingChunk, criteria: SymbolSetableCriteria): void;
-    check(chunk: CheckingChunk, criteria: Omit<SymbolSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    check(chunk: CheckingChunk, criteria: Omit<SymbolSetableCriteria, never> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "number";
-    defaultCriteria: NumberDefaultCriteria;
     mount?(chunk: MountingChunk, criteria: NumberSetableCriteria): void;
-    check(chunk: CheckingChunk, criteria: NumberDefaultCriteria & Omit<NumberSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    check(chunk: CheckingChunk, criteria: Omit<NumberSetableCriteria, "empty"> & NumberMountedCriteria<NumberSetableCriteria> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "string";
-    defaultCriteria: StringDefaultCriteria;
     mount?(chunk: MountingChunk, criteria: StringSetableCriteria): void;
-    check(chunk: CheckingChunk, criteria: StringDefaultCriteria & Omit<StringSetableCriteria, never> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    check(chunk: CheckingChunk, criteria: Omit<StringSetableCriteria, "empty"> & StringMountedCriteria<StringSetableCriteria> & GlobalMountedCriteria, value: unknown): string | null;
 } | Format<SimpleSetableCriteria, CustomProperties> | {
     type: "record";
-    defaultCriteria: RecordDefaultCriteria;
-    mount?(chunk: MountingChunk, criteria: RecordSetableCriteria<keyof FormatSpecTypes<any>>): void;
-    check(chunk: CheckingChunk, criteria: RecordDefaultCriteria & Omit<RecordSetableCriteria<keyof FormatSpecTypes<any>>, keyof RecordMountedCriteria<RecordSetableCriteria<keyof FormatSpecTypes<any>>>> & RecordMountedCriteria<RecordSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    mount?(chunk: MountingChunk, criteria: RecordSetableCriteria<keyof SetableCriteriaMap<any>>): void;
+    check(chunk: CheckingChunk, criteria: Omit<RecordSetableCriteria<keyof SetableCriteriaMap<any>>, keyof RecordMountedCriteria<RecordSetableCriteria<keyof SetableCriteriaMap<any>>>> & RecordMountedCriteria<RecordSetableCriteria<keyof SetableCriteriaMap<any>>> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "struct";
-    defaultCriteria: {};
-    mount?(chunk: MountingChunk, criteria: StructSetableCriteria<keyof FormatSpecTypes<any>>): void;
-    check(chunk: CheckingChunk, criteria: Omit<StructSetableCriteria<keyof FormatSpecTypes<any>>, keyof StructMountedCriteria<StructSetableCriteria<keyof FormatSpecTypes<any>>>> & StructMountedCriteria<StructSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    mount?(chunk: MountingChunk, criteria: StructSetableCriteria<keyof SetableCriteriaMap<any>>): void;
+    check(chunk: CheckingChunk, criteria: Omit<StructSetableCriteria<keyof SetableCriteriaMap<any>>, keyof StructMountedCriteria<StructSetableCriteria<keyof SetableCriteriaMap<any>>>> & StructMountedCriteria<StructSetableCriteria<keyof SetableCriteriaMap<any>>> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "array";
-    defaultCriteria: ArrayDefaultCriteria;
-    mount?(chunk: MountingChunk, criteria: ArraySetableCriteria<keyof FormatSpecTypes<any>>): void;
-    check(chunk: CheckingChunk, criteria: ArrayDefaultCriteria & Omit<ArraySetableCriteria<keyof FormatSpecTypes<any>>, "item"> & ArrayMountedCriteria<ArraySetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    mount?(chunk: MountingChunk, criteria: ArraySetableCriteria<keyof SetableCriteriaMap<any>>): void;
+    check(chunk: CheckingChunk, criteria: Omit<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, keyof ArrayMountedCriteria<ArraySetableCriteria<keyof SetableCriteriaMap<any>>>> & ArrayMountedCriteria<ArraySetableCriteria<keyof SetableCriteriaMap<any>>> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "tuple";
-    defaultCriteria: {};
-    mount?(chunk: MountingChunk, criteria: TupleSetableCriteria<keyof FormatSpecTypes<any>>): void;
-    check(chunk: CheckingChunk, criteria: Omit<TupleSetableCriteria<keyof FormatSpecTypes<any>>, "tuple"> & TupleMountedCriteria<TupleSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    mount?(chunk: MountingChunk, criteria: TupleSetableCriteria<keyof SetableCriteriaMap<any>>): void;
+    check(chunk: CheckingChunk, criteria: Omit<TupleSetableCriteria<keyof SetableCriteriaMap<any>>, keyof TupleMountedCriteria<TupleSetableCriteria<keyof SetableCriteriaMap<any>>>> & TupleMountedCriteria<TupleSetableCriteria<keyof SetableCriteriaMap<any>>> & GlobalMountedCriteria, value: unknown): string | null;
 } | {
     type: "union";
-    defaultCriteria: {};
-    mount?(chunk: MountingChunk, criteria: UnionSetableCriteria<keyof FormatSpecTypes<any>>): void;
-    check(chunk: CheckingChunk, criteria: Omit<UnionSetableCriteria<keyof FormatSpecTypes<any>>, "union"> & UnionMountedCriteria<UnionSetableCriteria<keyof FormatSpecTypes<any>>> & StaticMountedCriteria, value: unknown): CheckingReject["code"] | null;
+    mount?(chunk: MountingChunk, criteria: UnionSetableCriteria<keyof SetableCriteriaMap<any>>): void;
+    check(chunk: CheckingChunk, criteria: Omit<UnionSetableCriteria<keyof SetableCriteriaMap<any>>, "union"> & UnionMountedCriteria<UnionSetableCriteria<keyof SetableCriteriaMap<any>>> & GlobalMountedCriteria, value: unknown): string | null;
 })[];
 
 /**
@@ -591,30 +575,19 @@ interface SetableCriteriaTemplate<T extends string> {
     message?: string;
     nullish?: boolean;
 }
-/**
- * @template T Extended interface of `SetableCriteriaTemplate` that
- * defines the format criteria users must or can specify.
- *
- * @template U Default properties for those defined in `T` that must
- * be specified in the superclass reference within the format class.
- */
-interface SpecTypesTemplate<Setable extends SetableCriteriaTemplate<string>, Default extends Partial<Setable>> {
-    setableCriteria: Setable;
-    defaultCriteria: Default;
+interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
+    boolean: BooleanSetableCriteria;
+    symbol: SymbolSetableCriteria;
+    number: NumberSetableCriteria;
+    string: StringSetableCriteria;
+    simple: SimpleSetableCriteria;
+    record: RecordSetableCriteria<T>;
+    struct: StructSetableCriteria<T>;
+    array: ArraySetableCriteria<T>;
+    tuple: TupleSetableCriteria<T>;
+    union: UnionSetableCriteria<T>;
 }
-interface FormatSpecTypes<T extends keyof FormatSpecTypes = any> {
-    boolean: BooleanSpecTypes;
-    symbol: SymbolSpecTypes;
-    number: NumberSpecTypes;
-    string: StringSpecTypes;
-    simple: SimpleSpecTypes;
-    record: RecordSpecTypes<T>;
-    struct: StructSpecTypes<T>;
-    array: ArraySpecTypes<T>;
-    tuple: TupleSpecTypes<T>;
-    union: UnionSpecTypes<T>;
-}
-type FormatNames = keyof FormatSpecTypes;
+type FormatNames = keyof SetableCriteriaMap;
 /**
  * @template Mounted A type that takes a generic parameter extending
  * 'SetableCriteria'. It is used to determine the type validated
@@ -640,14 +613,16 @@ interface FormatFlowTypes<T extends SetableCriteria = SetableCriteria> {
     tuple: T extends TupleSetableCriteria ? TupleFlowTypes<T> : never;
     union: T extends UnionSetableCriteria ? UnionFlowTypes<T> : never;
 }
-type SetableCriteria<T extends FormatNames = FormatNames> = FormatSpecTypes<T>[T]['setableCriteria'];
-interface StaticMountedCriteria {
+type SetableCriteria<T extends FormatNames = FormatNames> = SetableCriteriaMap<T>[T];
+interface GlobalMountedCriteria {
     [nodeSymbol]: {
         partPaths: PathSegments;
         childNodes: Set<MountedCriteria>;
     };
 }
-type MountedCriteria<T extends SetableCriteria = SetableCriteria> = T extends any ? FormatSpecTypes[T['type']]['defaultCriteria'] & Omit<T, keyof FormatFlowTypes<T>[T['type']]['mountedCriteria']> & FormatFlowTypes<T>[T['type']]['mountedCriteria'] & StaticMountedCriteria : never;
+type MountedCriteria<T extends SetableCriteria = SetableCriteria> = T extends any ? T extends {
+    [nodeSymbol]: any;
+} ? T : (Omit<T, keyof FormatFlowTypes<T>[T['type']]['mountedCriteria']> & FormatFlowTypes<T>[T['type']]['mountedCriteria'] & GlobalMountedCriteria) : never;
 type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = T['nullish'] extends true ? FormatFlowTypes<T>[T['type']]['guardedCriteria'] | undefined | null : FormatFlowTypes<T>[T['type']]['guardedCriteria'];
 /**
  * @template T Extended interface of `SettableCriteriaTemplate` that
@@ -656,9 +631,8 @@ type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = T['nullish']
  */
 type Format<T extends SetableCriteria = SetableCriteria, U extends Record<string, any> = {}> = {
     type: T['type'];
-    defaultCriteria: FormatSpecTypes[T['type']]['defaultCriteria'];
     mount?(chunk: MountingChunk, criteria: T): void;
-    check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): CheckingReject['code'] | null;
+    check(chunk: CheckingChunk, criteria: MountedCriteria<T>, value: unknown): string | null;
 } & U;
 type FormatNativeNames = (typeof formatNatives)[number]['type'];
 
@@ -688,12 +662,12 @@ declare class EventsManager {
  * ensuring they conform to specified criteria.
  */
 declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
-    private _criteria;
+    private mountedCriteria;
     protected managers: {
         formats: FormatsManager;
         events: EventsManager;
     };
-    protected initiate(definedCriteria: T): void;
+    protected initiate(criteria: T): void;
     constructor(criteria: T);
     /**
      * Properties representing the root of the mounted criteria,
@@ -709,7 +683,7 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      * This function acts as a **type guard**, ensuring that
      * the validated data conforms to `GuardedCriteria<T>`.
      */
-    validate(data: unknown): data is GuardedCriteria<T>;
+    validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>>;
     /**
      * Evaluates the provided data against the schema.
      *
@@ -728,7 +702,7 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
     };
 }
 
-type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<U> : never;
+type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<MountedCriteria<U>> : never;
 type SchemaInstance<T extends SetableCriteria = SetableCriteria> = InstanceType<typeof Schema<T>>;
 type SchemaParameters<T extends SetableCriteria = SetableCriteria> = ConstructorParameters<typeof Schema<T>>;
 interface SchemaPlugin {
@@ -755,4 +729,4 @@ declare class Issue extends Error {
 }
 
 export { Issue, Schema, SchemaFactory, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isBasicFunction, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
-export type { FlowTypesTemplate, Format, FormatFlowTypes, FormatNames, FormatNativeNames, FormatSpecTypes, GuardedCriteria, MountedCriteria, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, SetableCriteria, SetableCriteriaTemplate, SpecTypesTemplate };
+export type { FlowTypesTemplate, Format, FormatFlowTypes, FormatNames, FormatNativeNames, GuardedCriteria, MountedCriteria, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, SetableCriteria, SetableCriteriaTemplate };
