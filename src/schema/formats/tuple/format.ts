@@ -8,10 +8,13 @@ function isShorthandTuple(obj: {}): obj is SetableTuple {
 
 export const TupleFormat: Format<TupleSetableCriteria> = {
 	type: "tuple",
-	defaultCriteria: {
-		empty: false
-	},
 	mount(chunk, criteria) {
+		const additional = criteria.additional ?? false;
+
+		Object.assign(criteria, {
+			additional: additional
+		});
+
 		for (let i = 0; i < criteria.tuple.length; i++) {
 			let item = criteria.tuple[i];
 
@@ -31,25 +34,44 @@ export const TupleFormat: Format<TupleSetableCriteria> = {
 				}
 			});
 		}
+
+		if (typeof additional !== "boolean") {
+			chunk.push({
+				node: additional,
+				partPaths: {
+					explicit: ["additional"],
+					implicit: []
+				}
+			});
+		}
 	},
 	check(chunk, criteria, data) {
 		if (!isArray(data)) {
-			return ("TYPE_ARRAY_REQUIRED");
+			return ("TYPE.ARRAY.NOT_SATISFIED");
 		}
 
-		const dataLength = data.length;
+		const { tuple, additional } = criteria;
+		const dataLength = data.length,
+			tupleLength = tuple.length;
 
-		if (dataLength < criteria.tuple.length) {
-			return ("DATA_LENGTH_INFERIOR_MIN");
+		if (dataLength < tupleLength) {
+			return ("TUPLE.ITEMS.NOT_SATISFIED");
 		}
-		else if (dataLength > criteria.tuple.length) {
-			return ("DATA_LENGTH_SUPERIOR_MAX");
+		else if (!additional && dataLength > tupleLength) {
+			return ("TUPLE.ITEMS.NOT_SATISFIED");
 		}
 
-		for (let i = 0; i < dataLength; i++) {
+		for (let i = 0; i < tupleLength; i++) {
 			chunk.push({
 				data: data[i],
-				node: criteria.tuple[i]
+				node: tuple[i]
+			});
+		}
+
+		if (dataLength > tupleLength && typeof additional !== "boolean") {
+			chunk.push({
+				data: data.slice(tupleLength),
+				node: additional
 			});
 		}
 

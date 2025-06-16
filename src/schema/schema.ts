@@ -3,31 +3,31 @@ import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
+import { SchemaInfer } from "./types";
 
 /**
  * The `Schema` class is used to define and validate data structures,
  * ensuring they conform to specified criteria.
  */
 export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
-	private _criteria: MountedCriteria<T> | undefined;
+	private mountedCriteria: MountedCriteria<T> | undefined;
+
 	protected managers = {
 		formats: new FormatsManager(),
 		events: new EventsManager()
 	}
 
-	protected initiate(definedCriteria: T) {
+	protected initiate(criteria: T) {
 		this.managers.formats.add(formatNatives);
-		const clonedCriteria = cloner(definedCriteria);
-		this._criteria = mounter(this.managers, clonedCriteria);
+		const clonedCriteria = cloner(criteria);
+		this.mountedCriteria = mounter(this.managers, clonedCriteria);
 	}
 
 	constructor(criteria: T) {
 		// Deferred initiation of criteria if not called directly,
 		// as plugins (or custom extensions) may set up specific
 		// rules and actions for the preparation of the criteria.
-		if (new.target === Schema) {
-			this.initiate(criteria);
-		}
+		if (new.target === Schema) this.initiate(criteria);
 	}
 
 	/**
@@ -35,10 +35,10 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * which can be used in other schemas.
 	 */
 	get criteria(): MountedCriteria<T> {
-		if (!this._criteria) {
+		if (!this.mountedCriteria) {
 			throw new Issue("Schema", "Criteria are not initialized.");
 		}
-		return (this._criteria);
+		return (this.mountedCriteria);
 	}
 
 	/**
@@ -50,7 +50,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * This function acts as a **type guard**, ensuring that
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
-	validate(data: unknown): data is GuardedCriteria<T> {
+	validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>> {
 		const reject = checker(this.managers, this.criteria, data);
 
 		return (!reject);

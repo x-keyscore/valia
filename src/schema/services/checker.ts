@@ -64,7 +64,7 @@ export class CheckingStack {
 		}
 	}
 
-	playHooks(
+	callHooks(
 		currentTask: CheckingTask,
 		reject: CheckingReject | null
 	) {
@@ -125,7 +125,7 @@ export function checker(
 
 		if (code) reject = createReject(currentTask, code);
 		else if (chunk.length) stack.pushChunk(currentTask, chunk);
-		if (stackHooks) reject = stack.playHooks(currentTask, reject);
+		if (stackHooks) reject = stack.callHooks(currentTask, reject);
 
 		if (reject) break;
 	}

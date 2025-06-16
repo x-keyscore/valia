@@ -26,9 +26,9 @@ Links :
     https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
 */
 
-import { weak } from "../utils";
-import { isDomain } from "./isDomain";
 import { ipV4Pattern, ipV6Pattern } from "./isIp";
+import { isDomain } from "./isDomain";
+import { weak } from "../utils";
 
 interface EmailObject {
 	local: string;

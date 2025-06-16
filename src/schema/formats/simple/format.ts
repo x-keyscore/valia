@@ -7,13 +7,11 @@ export interface CustomProperties {
 
 export const SimpleFormat: Format<SimpleSetableCriteria, CustomProperties> = {
 	type: "simple",
-	defaultCriteria: {},
 	bitflags: {
-		undefined: 1 << 0,
-		nullish:   1 << 1,
-		null:      1 << 2,
-		unknown:   1 << 3,
-		any:       1 << 4
+		null:      1 << 0,
+		undefined: 1 << 1,
+		nullish:   1 << 2,
+		unknown:   1 << 3
 	},
 	mount(chunk, criteria) {
 		Object.assign(criteria, {
@@ -23,18 +21,18 @@ export const SimpleFormat: Format<SimpleSetableCriteria, CustomProperties> = {
 	check(chunk, criteria, value) {
 		const { bitflags } = this, { bitcode } = criteria;
 
-		if (bitcode & (bitflags.any | bitflags.unknown)) {
+		if (bitcode & bitflags.unknown) {
 			return (null);
 		}
 
 		if (bitcode & bitflags.nullish && value != null) {
-			return ("TYPE_NULLISH_REQUIRED");
+			return ("TYPE.NULLISH.NOT_SATISFIED");
 		}
 		else if (bitcode & bitflags.null && value !== null) {
-			return ("TYPE_NULL_REQUIRED");
+			return ("TYPE.NULL.NOT_SATISFIED");
 		}
 		else if ((bitcode & bitflags.undefined) && value !== undefined) {
-			return ("TYPE_UNDEFINED_REQUIRED");
+			return ("TYPE.UNDEFINED.NOT_SATISFIED");
 		}
 
 		return (null);

@@ -1,4 +1,4 @@
-import type { SetableCriteria, MountedCriteria } from "../formats";
+import type { SetableCriteria, MountedCriteria, formatNatives } from "../formats";
 import type { LooseAutocomplete } from "../../types";
 
 export interface PathSegments {
@@ -92,13 +92,13 @@ export type CheckingChunk = CheckingChunkTask[];
 export interface CheckingReject {
 	path: PathSegments;
 	/**
-	 * Error code structured as `<CATEGORY>_<DETAIL>`, where `<CATEGORY>` can be:
-	 * 
-	 * - `TYPE`: Indicates an error related to a data type (e.g., `TYPE_STRING_REQUIRED`).
-	 * - `DATA`: Indicates an error related to the provided data (e.g., `DATA_KEYS_MISSING`).
-	 * - `TEST`: Indicates an error related to a specific test or validation (e.g., `TEST_REGEX_FAILED`).
-	 * 
-	 * `<DETAIL>`: A specific description of the error, such as `STRING_REQUIRED`, `KEYS_MISSING`, etc.
+	 * Syntax: `<FORMAT>.<RULE>[.<DETAIL>].<REASON>`
+	 *
+	 * Components:
+	 * - `<FORMAT>`    : The format involved (e.g. NUMBER, STRING, STRUCT)
+	 * - `<RULE>`      : The criterion involved (e.g. EMPTY, MIN, ENUM)
+	 * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
+	 * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
 	 */
 	code: string;
 	type: string;

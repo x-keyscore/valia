@@ -12,9 +12,9 @@
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && rollup -c",
 		"test": "npm run build && node --test",
-		"clean:win32": "rmdir /s /q ./dist",
-		"build:win32": "npm run clean:win32 && rollup -c",
-		"test:win32": "npm run build:win32 && node --test"
+		"clean:unix": "rmdir /s /q ./dist",
+		"build:unix": "npm run clean:unix && rollup -c",
+		"test:unix": "npm run build:unix && node --test"
 	},
 	"keywords": [
 		"validator",
@@ -35,7 +35,6 @@
 		"@types/node": "^22.10.5",
 		"rollup": "^4.39.0",
 		"rollup-plugin-dts": "^6.2.1",
-		"tslib": "^2.8.1",
 		"typescript": "^5.8.3"
 	}
 }

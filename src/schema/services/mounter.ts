@@ -65,7 +65,6 @@ export function mounter<T extends SetableCriteria>(
 			format.mount?.(chunk, node);
 
 			Object.assign(node, {
-				...format.defaultCriteria,
 				...node,
 				[nodeSymbol]: {
 					childNodes: chunk.map((task) => task.node),

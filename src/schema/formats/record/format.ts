@@ -4,10 +4,11 @@ import { isPlainObject } from "../../../testers";
 
 export const RecordFormat: Format<RecordSetableCriteria> = {
 	type: "record",
-	defaultCriteria: {
-		empty: true
-	},
 	mount(chunk, criteria) {
+		Object.assign(criteria, {
+			empty: criteria.empty ?? true
+		});
+
 		chunk.push({
 			node: criteria.key,
 			partPaths: {
@@ -15,6 +16,7 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 				implicit: []
 			}
 		});
+
 		chunk.push({
 			node: criteria.value,
 			partPaths: {
@@ -25,20 +27,20 @@ export const RecordFormat: Format<RecordSetableCriteria> = {
 	},
 	check(chunk, criteria, data) {
 		if (!isPlainObject(data)) {
-			return ("TYPE_PLAIN_OBJECT_REQUIRED");
+			return ("TYPE.PLAIN_OBJECT.NOT_SATISFIED");
 		}
 
 		const keys = Reflect.ownKeys(data);
 		const keysLength = keys.length;
 
 		if (keysLength === 0) {
-			return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
+			return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
 		}
 		else if (criteria.min != null && keysLength < criteria.min) {
-			return ("DATA_SIZE_INFERIOR_MIN");
+			return ("MIN.KEYS.NOT_SATISFIED");
 		}
 		else if (criteria.max != null && keysLength > criteria.max) {
-			return ("DATA_SIZE_SUPERIOR_MAX");
+			return ("MAX.KEYS.NOT_SATISFIED");
 		}
 
 		for (let i = 0; i < keysLength; i++) {

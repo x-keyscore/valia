@@ -101,7 +101,6 @@ function mounter(managers, rootNode) {
             const chunk = [];
             format.mount?.(chunk, node);
             Object.assign(node, {
-                ...format.defaultCriteria,
                 ...node,
                 [nodeSymbol]: {
                     childNodes: chunk.map((task) => task.node),
@@ -163,7 +162,7 @@ class CheckingStack {
             });
         }
     }
-    playHooks(currentTask, reject) {
+    callHooks(currentTask, reject) {
         const stackHooks = currentTask.stackHooks;
         if (!stackHooks)
             return (null);
@@ -215,7 +214,7 @@ function checker(managers, rootNode, rootData) {
         else if (chunk.length)
             stack.pushChunk(currentTask, chunk);
         if (stackHooks)
-            reject = stack.playHooks(currentTask, reject);
+            reject = stack.callHooks(currentTask, reject);
         if (reject)
             break;
     }
@@ -578,26 +577,6 @@ function weak(callback) {
     });
 }
 
-/*
-Composition :
-    letter = %d65-%d90 / %d97-%d122; A-Z / a-z
-    digit  = %x30-39; 0-9
-    label  = letter [*(digit / letter / "-") digit / letter]
-    domain = label *("." label)
-
-Links :
-    https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
-*/
-const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
-/**
- * **Standard :** RFC 1035
- *
- * @version 1.0.0
- */
-function isDomain(str, params) {
-    return (domainRegex.test(str));
-}
-
 /**
 # IPV4
 
@@ -672,6 +651,26 @@ function isIpV6(str, params) {
     else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
         return (true);
     return (false);
+}
+
+/*
+Composition :
+    letter = %d65-%d90 / %d97-%d122; A-Z / a-z
+    digit  = %x30-39; 0-9
+    label  = letter [*(digit / letter / "-") digit / letter]
+    domain = label *("." label)
+
+Links :
+    https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.1
+*/
+const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*$");
+/**
+ * **Standard :** RFC 1035
+ *
+ * @version 1.0.0
+ */
+function isDomain(str, params) {
+    return (domainRegex.test(str));
 }
 
 /*
@@ -1095,10 +1094,9 @@ function cloner(rootSrc) {
 
 const BooleanFormat = {
     type: "boolean",
-    defaultCriteria: {},
-    check(chunk, criteria, data) {
-        if (typeof data !== "boolean") {
-            return ("TYPE_BOOLEAN_REQUIRED");
+    check(chunk, criteria, value) {
+        if (typeof value !== "boolean") {
+            return ("TYPE.BOOLEAN.NOT_SATISFIED");
         }
         return (null);
     },
@@ -1106,13 +1104,12 @@ const BooleanFormat = {
 
 const SymbolFormat = {
     type: "symbol",
-    defaultCriteria: {},
-    check(chunk, criteria, data) {
-        if (typeof data !== "symbol") {
-            return "TYPE_SYMBOL_REQUIRED";
+    check(chunk, criteria, value) {
+        if (typeof value !== "symbol") {
+            return "TYPE.SYMBOL.NOT_SATISFIED";
         }
-        else if (criteria.symbol && data !== criteria.symbol) {
-            return "DATA_SYMBOL_MISMATCH";
+        else if (criteria.symbol && value !== criteria.symbol) {
+            return "SYMBOL.NOT_ALLOWED";
         }
         return (null);
     }
@@ -1120,32 +1117,34 @@ const SymbolFormat = {
 
 const NumberFormat = {
     type: "number",
-    defaultCriteria: {
-        empty: true
+    mount(chunk, criteria) {
+        Object.assign(criteria, {
+            empty: criteria.empty ?? true
+        });
     },
     check(chunk, criteria, value) {
         if (typeof value !== "number") {
-            return ("TYPE_NUMBER_REQUIRED");
+            return ("TYPE.NUMBER.NOT_SATISFIED");
         }
         else if (value === 0) {
-            return (criteria.empty ? null : "DATA_EMPTY");
+            return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
         }
         else if (criteria.min != null && value < criteria.min) {
-            return ("DATA_INFERIOR_MIN");
+            return ("MIN.NOT_SATISFIED");
         }
         else if (criteria.max != null && value > criteria.max) {
-            return ("DATA_SUPERIOR_MAX");
+            return ("MAX.NOT_SATISFIED");
         }
         else if (criteria.enum != null) {
             if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
-                return ("DATA_ENUM_MISMATCH");
+                return ("ENUM.NOT_SATISFIED");
             }
             else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
-                return ("DATA_ENUM_MISMATCH");
+                return ("ENUM.NOT_SATISFIED");
             }
         }
         else if (criteria.custom && !criteria.custom(value)) {
-            return ("TEST_CUSTOM_FAILED");
+            return ("CUSTOM.NOT_SATISFIED");
         }
         return (null);
     }
@@ -1153,43 +1152,45 @@ const NumberFormat = {
 
 const StringFormat = {
     type: "string",
-    defaultCriteria: {
-        empty: true
+    mount(chunk, criteria) {
+        Object.assign(criteria, {
+            empty: criteria.empty ?? true
+        });
     },
-    check(chunk, criteria, data) {
-        if (typeof data !== "string") {
-            return ("TYPE_STRING_REQUIRED");
+    check(chunk, criteria, value) {
+        if (typeof value !== "string") {
+            return ("TYPE.STRING.NOT_SATISFIED");
         }
-        const dataLength = data.length;
-        if (!dataLength) {
-            return (criteria.empty ? null : "DATA_EMPTY");
+        const valueLength = value.length;
+        if (!valueLength) {
+            return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
         }
-        else if (criteria.min != null && dataLength < criteria.min) {
-            return ("DATA_LENGTH_INFERIOR_MIN");
+        else if (criteria.min != null && valueLength < criteria.min) {
+            return ("MIN.LENGTH.NOT_SATISFIED");
         }
-        else if (criteria.max != null && dataLength > criteria.max) {
-            return ("DATA_LENGTH_SUPERIOR_MAX");
+        else if (criteria.max != null && valueLength > criteria.max) {
+            return ("MAX.LENGTH.NOT_SATISFIED");
         }
         else if (criteria.enum != null) {
-            if (isArray(criteria.enum) && !criteria.enum.includes(data)) {
-                return ("DATA_ENUM_MISMATCH");
+            if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
+                return ("ENUM.NOT_SATISFIED");
             }
-            else if (!Object.values(criteria.enum).includes(data)) {
-                return ("DATA_ENUM_MISMATCH");
+            else if (!Object.values(criteria.enum).includes(value)) {
+                return ("ENUM.NOT_SATISFIED");
             }
         }
-        if (criteria.tests) {
-            for (const key of Object.keys(criteria.tests)) {
-                if (!(testers.string[key](data, criteria.tests[key]))) {
-                    return ("TEST_STRING_FAILED");
+        else if (criteria.regex != null && !criteria.regex.test(value)) {
+            return ("REGEX.NOT_SATISFIED");
+        }
+        else if (criteria.testers) {
+            for (const key of Object.keys(criteria.testers)) {
+                if (!(testers.string[key](value, criteria.testers[key]))) {
+                    return ("TESTER.NOT_SATISFIED");
                 }
             }
         }
-        if (criteria.regex != null && !criteria.regex.test(data)) {
-            return ("TEST_REGEX_FAILED");
-        }
-        else if (criteria.custom && !criteria.custom(data)) {
-            return ("TEST_CUSTOM_FAILED");
+        else if (criteria.custom && !criteria.custom(value)) {
+            return ("CUSTOM.NOT_SATISFIED");
         }
         return (null);
     }
@@ -1197,13 +1198,11 @@ const StringFormat = {
 
 const SimpleFormat = {
     type: "simple",
-    defaultCriteria: {},
     bitflags: {
-        undefined: 1 << 0,
-        nullish: 1 << 1,
-        null: 1 << 2,
-        unknown: 1 << 3,
-        any: 1 << 4
+        null: 1 << 0,
+        undefined: 1 << 1,
+        nullish: 1 << 2,
+        unknown: 1 << 3
     },
     mount(chunk, criteria) {
         Object.assign(criteria, {
@@ -1212,17 +1211,17 @@ const SimpleFormat = {
     },
     check(chunk, criteria, value) {
         const { bitflags } = this, { bitcode } = criteria;
-        if (bitcode & (bitflags.any | bitflags.unknown)) {
+        if (bitcode & bitflags.unknown) {
             return (null);
         }
         if (bitcode & bitflags.nullish && value != null) {
-            return ("TYPE_NULLISH_REQUIRED");
+            return ("TYPE.NULLISH.NOT_SATISFIED");
         }
         else if (bitcode & bitflags.null && value !== null) {
-            return ("TYPE_NULL_REQUIRED");
+            return ("TYPE.NULL.NOT_SATISFIED");
         }
         else if ((bitcode & bitflags.undefined) && value !== undefined) {
-            return ("TYPE_UNDEFINED_REQUIRED");
+            return ("TYPE.UNDEFINED.NOT_SATISFIED");
         }
         return (null);
     }
@@ -1230,10 +1229,10 @@ const SimpleFormat = {
 
 const RecordFormat = {
     type: "record",
-    defaultCriteria: {
-        empty: true
-    },
     mount(chunk, criteria) {
+        Object.assign(criteria, {
+            empty: criteria.empty ?? true
+        });
         chunk.push({
             node: criteria.key,
             partPaths: {
@@ -1251,18 +1250,18 @@ const RecordFormat = {
     },
     check(chunk, criteria, data) {
         if (!isPlainObject(data)) {
-            return ("TYPE_PLAIN_OBJECT_REQUIRED");
+            return ("TYPE.PLAIN_OBJECT.NOT_SATISFIED");
         }
         const keys = Reflect.ownKeys(data);
         const keysLength = keys.length;
         if (keysLength === 0) {
-            return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
+            return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
         }
         else if (criteria.min != null && keysLength < criteria.min) {
-            return ("DATA_SIZE_INFERIOR_MIN");
+            return ("MIN.KEYS.NOT_SATISFIED");
         }
         else if (criteria.max != null && keysLength > criteria.max) {
-            return ("DATA_SIZE_SUPERIOR_MAX");
+            return ("MAX.KEYS.NOT_SATISFIED");
         }
         for (let i = 0; i < keysLength; i++) {
             const key = keys[i];
@@ -1278,17 +1277,26 @@ const RecordFormat = {
     }
 };
 
+function getRequiredKeys(optional, acceptedKeys) {
+    if (optional === true)
+        return ([]);
+    if (optional === false)
+        return ([...acceptedKeys]);
+    return (acceptedKeys.filter(key => !optional.includes(key)));
+}
 function isShorthandStruct(obj) {
     return (isPlainObject(obj) && typeof obj?.type !== "string");
 }
 const StructFormat = {
     type: "struct",
-    defaultCriteria: {},
     mount(chunk, criteria) {
-        const optionalKeys = criteria.optional;
+        const optional = criteria.optional ?? false;
+        const additional = criteria.additional ?? false;
         const acceptedKeys = Reflect.ownKeys(criteria.struct);
-        const requiredKeys = acceptedKeys.filter(key => !optionalKeys?.includes(key));
+        const requiredKeys = getRequiredKeys(optional, acceptedKeys);
         Object.assign(criteria, {
+            optional: optional,
+            additional: additional,
             acceptedKeys: new Set(acceptedKeys),
             requiredKeys: new Set(requiredKeys)
         });
@@ -1309,31 +1317,59 @@ const StructFormat = {
                 }
             });
         }
+        if (typeof additional !== "boolean") {
+            chunk.push({
+                node: additional,
+                partPaths: {
+                    explicit: ["additional"],
+                    implicit: []
+                }
+            });
+        }
     },
     check(chunk, criteria, data) {
         if (!isPlainObject(data)) {
-            return ("TYPE_PLAIN_OBJECT_REQUIRED");
+            return ("TYPE.PLAIN_OBJECT.NOT_SATISFIED");
         }
-        const { acceptedKeys, requiredKeys } = criteria;
-        const keys = Reflect.ownKeys(data);
-        if (keys.length < requiredKeys.size) {
-            return ("DATA_KEYS_MISSING");
+        const { acceptedKeys, requiredKeys, additional } = criteria;
+        const definedKeys = Reflect.ownKeys(data), excessedKeys = [];
+        if (definedKeys.length < requiredKeys.size) {
+            return ("STRUCT.KEYS.NOT_SATISFIED");
         }
-        let requiredLeft = requiredKeys.size;
-        for (let i = keys.length - 1; i >= 0; i--) {
-            const key = keys[i];
-            if (!acceptedKeys.has(key)) {
-                return ("DATA_KEYS_INVALID");
-            }
+        let remainingRequiredKeys = requiredKeys.size;
+        for (let i = definedKeys.length - 1; i >= 0; i--) {
+            const key = definedKeys[i];
             if (requiredKeys.has(key)) {
-                requiredLeft--;
+                remainingRequiredKeys--;
             }
-            else if (requiredLeft > i) {
-                return ("DATA_KEYS_MISSING");
+            else if (remainingRequiredKeys > i) {
+                return ("STRUCT.KEYS.NOT_SATISFIED");
+            }
+            else if (!acceptedKeys.has(key)) {
+                if (additional) {
+                    excessedKeys.push(key);
+                    continue;
+                }
+                else {
+                    return ("STRUCT.KEYS.NOT_SATISFIED");
+                }
             }
             chunk.push({
                 data: data[key],
                 node: criteria.struct[key]
+            });
+        }
+        if (remainingRequiredKeys)
+            return ("STRUCT.KEYS.NOT_SATISFIED");
+        if (excessedKeys.length && typeof additional !== "boolean") {
+            const excessedProperties = {};
+            for (let i = 0; i < excessedKeys.length; i++) {
+                const key = excessedKeys[i];
+                excessedProperties[key] = data[key];
+            }
+            chunk.push({
+                data: excessedProperties,
+                node: additional
             });
         }
         return (null);
@@ -1342,10 +1378,10 @@ const StructFormat = {
 
 const ArrayFormat = {
     type: "array",
-    defaultCriteria: {
-        empty: true
-    },
     mount(chunk, criteria) {
+        Object.assign(criteria, {
+            empty: criteria.empty ?? true
+        });
         chunk.push({
             node: criteria.item,
             partPaths: {
@@ -1356,17 +1392,17 @@ const ArrayFormat = {
     },
     check(chunk, criteria, data) {
         if (!isArray(data)) {
-            return ("TYPE_ARRAY_REQUIRED");
+            return ("TYPE.ARRAY.NOT_SATISFIED");
         }
         const dataLength = data.length;
         if (!dataLength) {
-            return (criteria.empty ? null : "DATA_EMPTY_DISALLOWED");
+            return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
         }
         else if (criteria.min != null && dataLength < criteria.min) {
-            return ("DATA_LENGTH_INFERIOR_MIN");
+            return ("MIN.LENGTH.NOT_SATISFIED");
         }
         else if (criteria.max != null && dataLength > criteria.max) {
-            return ("DATA_LENGTH_SUPERIOR_MAX");
+            return ("MAX.LENGTH.NOT_SATISFIED");
         }
         for (let i = 0; i < dataLength; i++) {
             chunk.push({
@@ -1383,10 +1419,11 @@ function isShorthandTuple(obj) {
 }
 const TupleFormat = {
     type: "tuple",
-    defaultCriteria: {
-        empty: false
-    },
     mount(chunk, criteria) {
+        const additional = criteria.additional ?? false;
+        Object.assign(criteria, {
+            additional: additional
+        });
         for (let i = 0; i < criteria.tuple.length; i++) {
             let item = criteria.tuple[i];
             if (isShorthandTuple(item)) {
@@ -1404,22 +1441,38 @@ const TupleFormat = {
                 }
             });
         }
+        if (typeof additional !== "boolean") {
+            chunk.push({
+                node: additional,
+                partPaths: {
+                    explicit: ["additional"],
+                    implicit: []
+                }
+            });
+        }
     },
     check(chunk, criteria, data) {
         if (!isArray(data)) {
-            return ("TYPE_ARRAY_REQUIRED");
+            return ("TYPE.ARRAY.NOT_SATISFIED");
         }
-        const dataLength = data.length;
-        if (dataLength < criteria.tuple.length) {
-            return ("DATA_LENGTH_INFERIOR_MIN");
+        const { tuple, additional } = criteria;
+        const dataLength = data.length, tupleLength = tuple.length;
+        if (dataLength < tupleLength) {
+            return ("TUPLE.ITEMS.NOT_SATISFIED");
         }
-        else if (dataLength > criteria.tuple.length) {
-            return ("DATA_LENGTH_SUPERIOR_MAX");
+        else if (!additional && dataLength > tupleLength) {
+            return ("TUPLE.ITEMS.NOT_SATISFIED");
         }
-        for (let i = 0; i < dataLength; i++) {
+        for (let i = 0; i < tupleLength; i++) {
             chunk.push({
                 data: data[i],
-                node: criteria.tuple[i]
+                node: tuple[i]
+            });
+        }
+        if (dataLength > tupleLength && typeof additional !== "boolean") {
+            chunk.push({
+                data: data.slice(tupleLength),
+                node: additional
             });
         }
         return (null);
@@ -1428,7 +1481,6 @@ const TupleFormat = {
 
 const UnionFormat = {
     type: "union",
-    defaultCriteria: {},
     mount(chunk, criteria) {
         const unionLength = criteria.union.length;
         for (let i = 0; i < unionLength; i++) {
@@ -1459,7 +1511,7 @@ const UnionFormat = {
                 if (total.rejected === total.hooked) {
                     return ({
                         action: "REJECT",
-                        code: "DATA_UNION_MISMATCH"
+                        code: "UNION.NOT_SATISFIED"
                     });
                 }
                 return ({
@@ -1497,10 +1549,10 @@ const formatNatives = [
  * ensuring they conform to specified criteria.
  */
 class Schema {
-    initiate(definedCriteria) {
+    initiate(criteria) {
         this.managers.formats.add(formatNatives);
-        const clonedCriteria = cloner(definedCriteria);
-        this._criteria = mounter(this.managers, clonedCriteria);
+        const clonedCriteria = cloner(criteria);
+        this.mountedCriteria = mounter(this.managers, clonedCriteria);
     }
     constructor(criteria) {
         this.managers = {
@@ -1510,19 +1562,18 @@ class Schema {
         // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
         // rules and actions for the preparation of the criteria.
-        if (new.target === Schema) {
+        if (new.target === Schema)
             this.initiate(criteria);
-        }
     }
     /**
      * Properties representing the root of the mounted criteria,
      * which can be used in other schemas.
      */
     get criteria() {
-        if (!this._criteria) {
+        if (!this.mountedCriteria) {
             throw new Issue("Schema", "Criteria are not initialized.");
         }
-        return (this._criteria);
+        return (this.mountedCriteria);
     }
     /**
      * Validates the provided data against the schema.

@@ -90,7 +90,7 @@ describe("\nschema / instance", () => {
 		it("should return a correct rejection", () => {
 			assert.deepStrictEqual(main_schema.evaluate({ foo: "x", bar: 0 }), {
 				reject: {
-					code: "TYPE_STRING_REQUIRED",
+					code: "TYPE.STRING.NOT_SATISFIED",
 					type: "string",
 					path: {
 						explicit: ["struct", "bar"],
