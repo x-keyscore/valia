@@ -1,11 +1,9 @@
 export type {
-    SpecTypesTemplate,
-    FlowTypesTemplate,
     SetableCriteriaTemplate,
+    FlowTypesTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-    FormatSpecTypes,
     FormatFlowTypes,
     Format,
     FormatNames,

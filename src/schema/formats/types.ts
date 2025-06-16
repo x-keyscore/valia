@@ -1,14 +1,14 @@
-import type { BooleanSpecTypes, BooleanFlowTypes, BooleanSetableCriteria } from "./boolean/types";
-import type { SymbolSpecTypes, SymbolFlowTypes, SymbolSetableCriteria } from "./symbol/types";
-import type { NumberSpecTypes, NumberFlowTypes, NumberSetableCriteria } from "./number/types";
-import type { StringSpecTypes, StringFlowTypes, StringSetableCriteria } from "./string/types";
-import type { SimpleSpecTypes, SimpleFlowTypes, SimpleSetableCriteria } from "./simple/types";
-import type { RecordSpecTypes, RecordFlowTypes, RecordSetableCriteria } from "./record/types";
-import type { StructSpecTypes, StructFlowTypes, StructSetableCriteria } from "./struct/types";
-import type { ArraySpecTypes, ArrayFlowTypes, ArraySetableCriteria } from "./array/types";
-import type { TupleSpecTypes, TupleFlowTypes, TupleSetableCriteria } from "./tuple/types";
-import type { UnionSpecTypes, UnionFlowTypes, UnionSetableCriteria } from "./union/types";
-import type { PathSegments, MountingChunk, CheckingChunk, CheckingReject } from "../services";
+import type { PathSegments, MountingChunk, CheckingChunk } from "../services";
+import type { BooleanSetableCriteria, BooleanFlowTypes } from "./boolean/types";
+import type { SymbolSetableCriteria, SymbolFlowTypes } from "./symbol/types";
+import type { NumberSetableCriteria, NumberFlowTypes } from "./number/types";
+import type { StringSetableCriteria, StringFlowTypes } from "./string/types";
+import type { SimpleSetableCriteria, SimpleFlowTypes } from "./simple/types";
+import type { RecordSetableCriteria, RecordFlowTypes } from "./record/types";
+import type { StructSetableCriteria, StructFlowTypes } from "./struct/types";
+import type { ArraySetableCriteria,  ArrayFlowTypes } from "./array/types";
+import type { TupleSetableCriteria, TupleFlowTypes } from "./tuple/types";
+import type { UnionSetableCriteria, UnionFlowTypes } from "./union/types";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
 
@@ -43,22 +43,22 @@ export interface SpecTypesTemplate<
 	defaultCriteria: Default;
 }
 
-export interface FormatSpecTypes<T extends keyof FormatSpecTypes = any> {
-	boolean: BooleanSpecTypes;
-	symbol: SymbolSpecTypes;
-	number: NumberSpecTypes;
-	string: StringSpecTypes;
-	simple: SimpleSpecTypes;
-	record: RecordSpecTypes<T>;
-	struct: StructSpecTypes<T>;
-	array: ArraySpecTypes<T>;
-	tuple: TupleSpecTypes<T>;
-	union: UnionSpecTypes<T>;
+export interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
+	boolean: BooleanSetableCriteria;
+	symbol: SymbolSetableCriteria;
+	number: NumberSetableCriteria;
+	string: StringSetableCriteria;
+	simple: SimpleSetableCriteria;
+	record: RecordSetableCriteria<T>;
+	struct: StructSetableCriteria<T>;
+	array: ArraySetableCriteria<T>;
+	tuple: TupleSetableCriteria<T>;
+	union: UnionSetableCriteria<T>;
 }
 
-export type FormatNames = keyof FormatSpecTypes;
+export type FormatNames = keyof SetableCriteriaMap;
 
-// FORMATS POSTA TYPES | Transformed type representation (after schema usage)
+// FORMATS FLOW TYPES
 
 /**
  * @template Mounted A type that takes a generic parameter extending
@@ -79,7 +79,7 @@ export interface FormatFlowTypes<T extends SetableCriteria = SetableCriteria> {
 	symbol: T extends SymbolSetableCriteria ? SymbolFlowTypes : never;
 	number: T extends NumberSetableCriteria ? NumberFlowTypes<T> : never
 	string: T extends StringSetableCriteria ? StringFlowTypes<T> : never;
-	simple: T extends SimpleSetableCriteria ? SimpleFlowTypes<T> : never;
+	simple: T extends SimpleSetableCriteria? SimpleFlowTypes<T> : never;
 	record: T extends RecordSetableCriteria ? RecordFlowTypes<T> : never;
 	struct: T extends StructSetableCriteria ? StructFlowTypes<T> : never;
 	array: T extends ArraySetableCriteria ? ArrayFlowTypes<T> : never;
@@ -90,16 +90,11 @@ export interface FormatFlowTypes<T extends SetableCriteria = SetableCriteria> {
 // SETABLE CRITERIA
 
 export type SetableCriteria<T extends FormatNames = FormatNames> =
-	FormatSpecTypes<T>[T]['setableCriteria'];
-
-// DEFAULT CRITERIA
-
-export type DefaultCriteria<T extends FormatNames = FormatNames> =
-	FormatSpecTypes<T>[T]['defaultCriteria']
+	SetableCriteriaMap<T>[T];
 
 // MOUNTED CRITERIA
 
-export interface StaticMountedCriteria {
+export interface GlobalMountedCriteria {
 	[nodeSymbol]: {
 		partPaths: PathSegments;
 		childNodes: Set<MountedCriteria>;
@@ -107,12 +102,15 @@ export interface StaticMountedCriteria {
 }
 
 export type MountedCriteria<T extends SetableCriteria = SetableCriteria> = 
-	T extends any ?
-		& FormatSpecTypes[T['type']]['defaultCriteria']
-		& Omit<T, keyof FormatFlowTypes<T>[T['type']]['mountedCriteria']>
-		& FormatFlowTypes<T>[T['type']]['mountedCriteria']
-		& StaticMountedCriteria
-	: never;
+	T extends any
+		? T extends { [nodeSymbol]: any }
+			? T
+			: (
+				& Omit<T, keyof FormatFlowTypes<T>[T['type']]['mountedCriteria']>
+				& FormatFlowTypes<T>[T['type']]['mountedCriteria']
+				& GlobalMountedCriteria
+			)
+		: never;
 
 // GUARDED CRITERIA
 
@@ -130,10 +128,9 @@ export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> =
  */
 export type Format<
 	T extends SetableCriteria = SetableCriteria,
-	U extends Record<string, any> = {},
+	U extends Record<string, any> = {}
 > = {
 	type: T['type'];
-	defaultCriteria: FormatSpecTypes[T['type']]['defaultCriteria'];
 	mount?(
 		chunk: MountingChunk,
 		criteria: T
@@ -142,7 +139,7 @@ export type Format<
 		chunk: CheckingChunk,
         criteria: MountedCriteria<T>,
         value: unknown
-    ): CheckingReject['code'] | null;
+    ): string | null;
 } & U;
 
 export type FormatNativeNames = (typeof formatNatives)[number]['type'];

@@ -1,7 +1,7 @@
-import type { SetableCriteria, GuardedCriteria, Format } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, Format } from "./formats";
 import { Schema } from "./schema";
 
-export type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<U> : never;
+export type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<MountedCriteria<U>> : never;
 
 export type SchemaInstance<T extends SetableCriteria = SetableCriteria> = InstanceType<typeof Schema<T>>;
 

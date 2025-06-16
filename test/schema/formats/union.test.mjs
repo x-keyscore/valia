@@ -203,7 +203,7 @@ describe("\nschema / formats / Union", () => {
 				union_nested.evaluate({ foo: { foo: "x", bar: "x" }, bar: "x" }),
 				{
 					reject: {
-						code: 'DATA_UNION_MISMATCH',
+						code: 'UNION.NOT_SATISFIED',
 						path: { explicit: [], implicit: [] },
 						type: 'union',
 						label: undefined,

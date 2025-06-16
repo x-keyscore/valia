@@ -4,31 +4,33 @@ import { isArray, isPlainObject } from "../../../testers";
 
 export const NumberFormat: Format<NumberSetableCriteria> = {
 	type: "number",
-	defaultCriteria: {
-		empty: true
+	mount(chunk, criteria) {
+		Object.assign(criteria, {
+			empty: criteria.empty ?? true
+		});
 	},
 	check(chunk, criteria, value) {
 		if (typeof value !== "number") {
-			return ("TYPE_NUMBER_REQUIRED");
+			return ("TYPE.NUMBER.NOT_SATISFIED");
 		}
 		else if (value === 0) {
-			return (criteria.empty ? null : "DATA_EMPTY");
+			return (criteria.empty ? null : "EMPTY.NOT_ALLOWED");
 		}
 		else if (criteria.min != null && value < criteria.min) {
-			return ("DATA_INFERIOR_MIN");
+			return ("MIN.NOT_SATISFIED");
 		}
 		else if (criteria.max != null && value > criteria.max) {
-			return ("DATA_SUPERIOR_MAX");
+			return ("MAX.NOT_SATISFIED");
 		}
 		else if (criteria.enum != null) {
 			if (isPlainObject(criteria.enum) && !Object.values(criteria.enum).includes(value)) {
-				return ("DATA_ENUM_MISMATCH");
+				return ("ENUM.NOT_SATISFIED");
 			} else if (isArray(criteria.enum) && !criteria.enum.includes(value)) {
-				return ("DATA_ENUM_MISMATCH");
+				return ("ENUM.NOT_SATISFIED");
 			}
 		}
 		else if (criteria.custom && !criteria.custom(value)) {
-			return ("TEST_CUSTOM_FAILED");
+			return ("CUSTOM.NOT_SATISFIED");
 		}
 
 		return (null);

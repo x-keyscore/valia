@@ -3,13 +3,12 @@ import type { Format } from "../types";
 
 export const SymbolFormat: Format<SymbolSetableCriteria> = {
 	type: "symbol",
-	defaultCriteria: {},
-	check(chunk, criteria, data) {
-		if (typeof data !== "symbol") {
-			return "TYPE_SYMBOL_REQUIRED";
+	check(chunk, criteria, value) {
+		if (typeof value !== "symbol") {
+			return "TYPE.SYMBOL.NOT_SATISFIED";
 		}
-		else if (criteria.symbol && data !== criteria.symbol) {
-			return "DATA_SYMBOL_MISMATCH";
+		else if (criteria.symbol && value !== criteria.symbol) {
+			return "SYMBOL.NOT_ALLOWED";
 		}
 
 		return (null);

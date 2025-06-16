@@ -1,11 +1,12 @@
+import type { ArraySetableCriteria } from "../array/types";
 import type {
 	SetableCriteriaTemplate,
-	SpecTypesTemplate,
+	SetableCriteriaMap,
 	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	FormatNames
+	FormatNames,
 } from "../types";
 
 export type SetableTuple<T extends FormatNames = FormatNames> =
@@ -15,12 +16,8 @@ export interface TupleSetableCriteria<
 	T extends FormatNames = FormatNames
 > extends SetableCriteriaTemplate<"tuple"> {
 	tuple: SetableTuple<T>;
+	additional?: SetableCriteriaMap<T>['array'] | boolean;
 }
-
-export interface TupleSpecTypes<T extends FormatNames> extends SpecTypesTemplate<
-	TupleSetableCriteria<T>,
-	{}
-> {}
 
 type MountedTuple<T extends SetableTuple> =
 	T extends infer U
@@ -36,9 +33,24 @@ type MountedTuple<T extends SetableTuple> =
 
 export interface TupleMountedCriteria<T extends TupleSetableCriteria> {
 	tuple: MountedTuple<T['tuple']>;
+	additional:
+		unknown extends T['additional']
+			? false
+			: TupleSetableCriteria['additional'] extends T['additional']
+				? MountedCriteria<ArraySetableCriteria> | boolean
+				: T['additional'] extends ArraySetableCriteria
+					? MountedCriteria<T['additional']>
+					: T['additional']
 }
 
-type TupleGuardedCriteria<T extends TupleSetableCriteria> =
+type DynamicItems<U extends ArraySetableCriteria | boolean | undefined> =
+	[U] extends [ArraySetableCriteria]
+		? GuardedCriteria<U>
+		: [U] extends [false]
+			? []
+			: unknown[];
+
+type StaticItems<T extends TupleSetableCriteria> =
 	T['tuple'] extends infer U
 		? {
 			[I in keyof U]:
@@ -48,6 +60,17 @@ type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 						? GuardedCriteria<{ type: "tuple", tuple: U[I] }>
 						: never;
 		}
+		: never;
+
+type TupleGuardedCriteria<T extends TupleSetableCriteria> =
+	DynamicItems<T['additional']> extends infer U
+		? StaticItems<T> extends infer V
+			? U extends any[]
+				? V extends any[]
+					? [...V, ...U]
+					: never
+				: never
+			: never
 		: never;
 
 export interface TupleFlowTypes<T extends TupleSetableCriteria> extends FlowTypesTemplate<

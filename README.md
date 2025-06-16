@@ -229,9 +229,10 @@ new Schema({
 
 |Property|Default|Description|
 |--|--|--|
-|`type`     ||Format name|
-|`optional?`||Array of optional keys|
-|`struct`   ||The object keys represent the expected keys and the attributes represent the expected types. By default, all keys are mandatory.|
+|`type`       |       |Format name|
+|`struct`     |       |The object keys represent the expected keys and the attributes represent the expected types.|
+|`optional?`  |`false`|Array of optional keys or boolean|
+|`additional?`|`false`|Record of additional properties or boolean|
 
 ```ts
 type SetableStruct = {
@@ -241,22 +242,9 @@ type SetableStruct = {
 interface Criteria {
   type: "struct";
   struct: SetableStruct;
-  optional?: (string | symbol)[];
+  optional?: (string | symbol)[] | boolean;
+  additional?: SetableCriteria<"record"> | boolean;
 }
-```
-```ts
-new Schema({
-  type: "struct",
-  optional: ["description"],
-  struct: {
-    name: { type: "string", max: 20 },
-    price: { type: "number", min: 0.1 },
-    description: {
-      brand: { type: "string", max: 40 },
-      color: { type: "string", enum: ["BLACK", "WHITE"] }
-    }
-  }
-});
 ```
 
 ### Record
@@ -293,13 +281,15 @@ new Schema({
 
 |Property|Default|Description|
 |--|--|--|
-|`type`  ||Format name|
-|`tuple` ||Criteria of the tuple items|
+|`type`       |       |Format name|
+|`tuple`      |       |Criteria of the tuple items|
+|`additional?`|`false`|Array of additional item or boolean|
 
 ```ts
 interface Criteria {
   type: "tuple";
   tuple: [SetableCriteria, ...SetableCriteria[]];
+  additional?: SetableCriteria<"array"> | boolean;
 }
 ```
 ```ts
@@ -308,6 +298,13 @@ new Schema({
   tuple: [{ type: "string" }, { type: "number" }]
 });
 ```
+
+#### Rejection codes
+
+|Code|Description|
+|--|--|
+|**TYPE.PLAIN_OBJECT.NOT_SATISFIED**||
+|**TUPLE.ITEMS.NOT_SATISFIED**      ||
 
 ### Array
 

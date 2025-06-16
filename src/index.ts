@@ -7,12 +7,10 @@ export type {
 
 export type {
 	SetableCriteriaTemplate,
-	SpecTypesTemplate,
 	FlowTypesTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-	FormatSpecTypes,
 	FormatFlowTypes,
 	Format,
 	FormatNames,
@@ -42,9 +40,9 @@ export {
 
 export {
 	isAscii,
-	isIp,
 	isIpV4,
 	isIpV6,
+	isIp,
 	isEmail,
 	isDomain,
 	isDataUrl,

@@ -1,4 +1,4 @@
-import type { SetableCriteriaTemplate, SpecTypesTemplate, FlowTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, FlowTypesTemplate } from "../types";
 
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
 	/** @default true */
@@ -13,10 +13,14 @@ export interface NumberDefaultCriteria {
 	empty: boolean;
 }
 
-export interface NumberSpecTypes extends SpecTypesTemplate<
-	NumberSetableCriteria,
-	NumberDefaultCriteria
-> {}
+export interface NumberMountedCriteria<T extends NumberSetableCriteria> {
+	empty:
+		unknown extends T['empty']
+			? true
+			: NumberSetableCriteria['empty'] extends T['empty']
+				? boolean
+				: T['empty'];
+}
 
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = 
 	T['enum'] extends number[]
@@ -26,6 +30,6 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> =
 			: number;
 
 export interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<
-	{},
+	NumberMountedCriteria<T>,
 	NumberGuardedCriteria<T>
 > {}
