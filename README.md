@@ -1,4 +1,4 @@
-# Valia &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
+# ![logo-valia-h64-v2](https://github.com/user-attachments/assets/ea937a53-9b80-43d7-93ac-81538d9526f8) &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
 
 A powerful, type-safe validation library for modern TypeScript apps, built for both server and client.
 
