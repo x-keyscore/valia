@@ -1,38 +1,65 @@
-import type { SimpleSetableCriteria, SimpleTypes } from "./types";
+import type { SimpleSetableCriteria, SimpleErrors, SimpleRejects, SimpleMembers } from "./types";
 import type { Format } from "../types";
+import { isFunction, isAsyncFunction } from "../../../testers";
 
-export interface CustomProperties {
-	bitflags: Record<SimpleTypes, number>
-}
-
-export const SimpleFormat: Format<SimpleSetableCriteria, CustomProperties> = {
+export const SimpleFormat: Format<SimpleSetableCriteria, SimpleErrors, SimpleRejects, SimpleMembers> = {
 	type: "simple",
+	errors: {
+		SIMPLE_PROPERTY_REQUIRED:
+            "The 'simple' property must be defined.",
+        SIMPLE_PROPERTY_MALFORMED:
+            "The 'simple' property must be of type String.",
+		SIMPLE_PROPERTY_STRING_MISCONFIGURED:
+            "The 'simple' property must be a recognized string."
+	},
 	bitflags: {
-		null:      1 << 0,
-		undefined: 1 << 1,
-		nullish:   1 << 2,
-		unknown:   1 << 3
+		null:			1 << 0,
+		undefined:		1 << 1,
+		nullish:		1 << 2,
+		unknown:		1 << 3,
+		basicFunction:	1 << 4,
+		asyncFunction:	1 << 5
 	},
 	mount(chunk, criteria) {
-		Object.assign(criteria, {
-			bitcode: this.bitflags[criteria.simple]
-		});
+		const { simple } = criteria;
+
+		if (!("simple" in criteria)) {
+			return ("SIMPLE_PROPERTY_REQUIRED");
+		}
+		if (typeof simple !== "string") {
+			return ("SIMPLE_PROPERTY_MALFORMED");
+		}
+
+		const bitcode = this.bitflags[simple];
+		if (bitcode === undefined) {
+			return ("SIMPLE_PROPERTY_STRING_MISCONFIGURED");
+		}
+
+		Object.assign(criteria, { bitcode });
+
+		return (null);
 	},
 	check(chunk, criteria, value) {
-		const { bitflags } = this, { bitcode } = criteria;
-
+		const { bitcode } = criteria;
+		const { bitflags } = this;
+	
 		if (bitcode & bitflags.unknown) {
 			return (null);
 		}
-
 		if (bitcode & bitflags.nullish && value != null) {
-			return ("TYPE.NULLISH.NOT_SATISFIED");
+			return ("SIMPLE_NULLISH_UNSATISFIED");
 		}
-		else if (bitcode & bitflags.null && value !== null) {
-			return ("TYPE.NULL.NOT_SATISFIED");
+		if (bitcode & bitflags.null && value !== null) {
+			return ("SIMPLE_NULL_UNSATISFIED");
 		}
-		else if ((bitcode & bitflags.undefined) && value !== undefined) {
-			return ("TYPE.UNDEFINED.NOT_SATISFIED");
+		if ((bitcode & bitflags.undefined) && value !== undefined) {
+			return ("SIMPLE_UNDEFINED_UNSATISFIED");
+		}
+		if ((bitcode & bitflags.basicFunction) && !isFunction(value)) {
+			return ("SIMPLE_FUNCTION_UNSATISFIED");
+		}
+		if ((bitcode & bitflags.asyncFunction) && !isAsyncFunction(value)) {
+			return ("SIMPLE_ASYNC_FUNCTION_UNSATISFIED");
 		}
 
 		return (null);

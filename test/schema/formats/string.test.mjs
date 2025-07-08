@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("\nschema / formats / String", () => {
+describe("\nschema > formats > String", () => {
 	describe("Default", () => {
 		let string_default;
 
@@ -14,11 +14,16 @@ describe("\nschema / formats / String", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(string_default.validate(0), false);
 			assert.strictEqual(string_default.validate({}), false);
+			assert.strictEqual(string_default.validate([]), false);
 		});
 
 		it("should validate correct values", () => {
+			assert.strictEqual(
+				string_default.validate(""),
+				true,
+				"Should be valid because 'empty' parameter set on 'true' by default"
+			);
 			assert.strictEqual(string_default.validate("x"), true);
-			assert.strictEqual(string_default.validate(""), true, "Should be valid because 'empty' parameter set on 'true' by default");
 		});
 	});
 
@@ -117,6 +122,57 @@ describe("\nschema / formats / String", () => {
 
 		it("should validate correct values", () => {
 			assert.strictEqual(string_regex.validate("#000000"), true);
+		});
+	});
+
+	describe("'testers' parameter (One tester)", () => {
+		let string_testers;
+
+		before(() => {
+			string_testers = new Schema({
+				type: "string",
+				empty: false,
+				testers: {
+					isIp: true
+				}
+			});
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_testers.validate(""), false);
+			assert.strictEqual(string_testers.validate("x"), false);
+			assert.strictEqual(string_testers.validate("182.168.0.1/24"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_testers.validate("182.168.0.1"), true);
+			assert.strictEqual(string_testers.validate("8d7a:df3e:f118:c612:cc66:8653:6431:8d43"), true);
+		});
+	});
+
+	describe("'testers' parameter (Two testers)", () => {
+		let string_testers;
+
+		before(() => {
+			string_testers = new Schema({
+				type: "string",
+				empty: false,
+				testers: {
+					isIp: true,
+					isIpV4: true,
+				}
+			});
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(string_testers.validate(""), false);
+			assert.strictEqual(string_testers.validate("x"), false);
+			assert.strictEqual(string_testers.validate("182.168.0.1/24"), false);
+			assert.strictEqual(string_testers.validate("8d7a:df3e:f118:c612:cc66:8653:6431:8d43"), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(string_testers.validate("182.168.0.1"), true);
 		});
 	});
 

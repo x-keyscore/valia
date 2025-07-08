@@ -1,18 +1,16 @@
 import type {
 	SetableCriteriaTemplate,
-	FlowTypesTemplate,
+	DerivedCriteriaTemplate,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	FormatNames
+	FormatTypes
 } from "../types";
 
-type SetableUnion<T extends FormatNames = FormatNames> =
+type SetableUnion<T extends FormatTypes = FormatTypes> =
 	[SetableCriteria<T>, SetableCriteria<T>, ...SetableCriteria<T>[]];
 
-export interface UnionSetableCriteria<
-	T extends FormatNames = FormatNames
-> extends SetableCriteriaTemplate<"union"> {
+export interface UnionSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"union"> {
 	union: SetableUnion<T>;
 }
 
@@ -40,7 +38,15 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> =
 		}[any]
 		: never;
 
-export interface UnionFlowTypes<T extends UnionSetableCriteria> extends FlowTypesTemplate<
+export interface UnionDerivedCriteria<T extends UnionSetableCriteria> extends DerivedCriteriaTemplate<
 	UnionMountedCriteria<T>,
 	UnionGuardedCriteria<T>
 > {}
+
+export type UnionErrors = 
+	| "UNION_PROPERTY_REQUIRED"
+	| "UNION_PROPERTY_MALFORMED"
+	| "UNION_PROPERTY_ARRAY_ITEM_MALFORMED";
+
+export type UnionRejects = 
+	| "UNION_UNSATISFIED";

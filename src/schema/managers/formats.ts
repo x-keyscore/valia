@@ -1,4 +1,4 @@
-import type { SetableCriteria, Format, FormatNames } from '../formats';
+import type { SetableCriteria, Format, FormatTypes } from '../formats';
 import { Issue } from '../../utils';
 
 export class FormatsManager {
@@ -12,11 +12,11 @@ export class FormatsManager {
         }
     }
 
-    get(type: FormatNames): Format {
+    get(type: FormatTypes): Format {
         const format = this.store.get(type);
         if (!format) throw new Issue(
-            "Formats Manager",
-            "The format of type '" + type + "' is unknown."
+            "FORMATS MANAGER",
+            "The type is unknown"
         );
 
         return (format);

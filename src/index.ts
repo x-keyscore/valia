@@ -1,3 +1,9 @@
+export {
+	Schema,
+	SchemaFactory,
+	SchemaNodeError
+} from './schema';
+
 export type {
 	SchemaInfer,
 	SchemaInstance,
@@ -7,23 +13,26 @@ export type {
 
 export type {
 	SetableCriteriaTemplate,
-	FlowTypesTemplate,
     SetableCriteria,
+	DerivedCriteriaTemplate,
     MountedCriteria,
     GuardedCriteria,
-	FormatFlowTypes,
 	Format,
-	FormatNames,
-	FormatNativeNames
+	FormatTypes,
+	FormatNativeTypes
 } from './schema/formats';
 
 export {
-	Schema,
-	SchemaFactory
-} from './schema';
-
-export {
 	testers
+} from './testers';
+
+export type {
+	BasicObject,
+	PlainObject,
+	BasicArray,
+	TypedArray,
+	BasicFunction,
+	AsyncFunction
 } from './testers';
 
 export {
@@ -32,7 +41,6 @@ export {
 	isArray,
 	isTypedArray,
 	isFunction,
-	isBasicFunction,
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
@@ -55,12 +63,23 @@ export {
 } from './testers/string';
 
 export {
+	helpers
+} from './helpers';
+
+export type {
+	InternalTags
+} from './helpers';
+
+export {
 	getInternalTag,
+} from './helpers/object';
+
+export {
 	base16ToBase64,
 	base16ToBase32,
 	base64ToBase16,
 	base32ToBase16
-} from './helpers';
+} from './helpers/string';
 
 export {
 	Issue

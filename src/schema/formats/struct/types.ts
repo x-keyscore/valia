@@ -1,24 +1,23 @@
-import type { RecordSetableCriteria } from "../record/types";
+import type { ObjectSetableCriteria } from "../object/types";
 import type {
 	SetableCriteriaTemplate,
+	DerivedCriteriaTemplate,
 	SetableCriteriaMap,
-	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	FormatNames
+	FormatTypes
 } from "../types";
 
-export type SetableStruct<T extends FormatNames = FormatNames> = {
+export type SetableStruct<T extends FormatTypes = FormatTypes> = {
 	[key: string | symbol]: SetableCriteria<T> | SetableStruct<T>;
 };
 
-export interface StructSetableCriteria<
-	T extends FormatNames = FormatNames
-> extends SetableCriteriaTemplate<"struct"> {
+export interface StructSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"struct"> {
 	struct: SetableStruct<T>;
+	strict?: boolean;
 	optional?: (string | symbol)[] | boolean;
-	additional?: SetableCriteriaMap<T>['record'] | boolean;
+	additional?: SetableCriteriaMap<T>['object'] | boolean;
 }
 
 type MountedStruct<T extends SetableStruct> = {
@@ -32,6 +31,12 @@ type MountedStruct<T extends SetableStruct> = {
 
 export interface StructMountedCriteria<T extends StructSetableCriteria> {
 	struct: MountedStruct<T['struct']>;
+	strict:
+		unknown extends T['strict']
+			? true
+			: ObjectSetableCriteria['strict'] extends T['strict']
+				? boolean
+				: T['strict'];
 	optional:
 		unknown extends T['optional']
 			? false
@@ -42,28 +47,29 @@ export interface StructMountedCriteria<T extends StructSetableCriteria> {
 		unknown extends T['additional']
 			? false
 			: StructSetableCriteria['additional'] extends T['additional']
-    			? MountedCriteria<RecordSetableCriteria> | boolean
-				: T['additional'] extends RecordSetableCriteria
+    			? MountedCriteria<ObjectSetableCriteria> | boolean
+				: T['additional'] extends ObjectSetableCriteria
 					? MountedCriteria<T['additional']>
 					: T['additional']
-	acceptedKeys: Set<string | symbol>;
-	requiredKeys: Set<string | symbol>;
+	includedKeySet: Set<string | symbol>;
+	unforcedKeySet: Set<string | symbol>;
+	requiredKeySet: Set<string | symbol>;
 }
 
-type DynamicProperties<U extends RecordSetableCriteria | boolean | undefined> =
-	[U] extends [RecordSetableCriteria]
+type DynamicProperties<U extends ObjectSetableCriteria | boolean | undefined> =
+	[U] extends [ObjectSetableCriteria]
 		? GuardedCriteria<U>
-		: [U] extends [false]
-			? {}
-			: { [key: string | symbol]: unknown; };
+		: [U] extends [true]// changed before false
+			? { [key: string | symbol]: unknown; }
+			: {};
 
 type OptionalizeKeys<T, U extends (string | symbol)[] | boolean | undefined> =
  	[U] extends [(string | symbol)[]]
 		? { [K in keyof T as K extends U[number] ? K : never]+?: T[K]; }
 		& { [K in keyof T as K extends U[number] ? never : K]-?: T[K]; }
-		: [U] extends [false]
-			? { [P in keyof T]-?: T[P]; }
-			: { [P in keyof T]+?: T[P]; };
+		: [U] extends [true]// changed before false
+			? { [P in keyof T]+?: T[P]; }
+			: { [P in keyof T]-?: T[P]; };
 
 type StaticProperties<T extends StructSetableCriteria> = {
 		-readonly [K in keyof OptionalizeKeys<T['struct'], T['optional']>]:
@@ -86,10 +92,35 @@ type StructGuardedCriteria<T extends StructSetableCriteria> =
 			: never
 		: never;
 
-export interface StructFlowTypes<T extends StructSetableCriteria> extends FlowTypesTemplate<
+export interface StructDerivedCriteria<T extends StructSetableCriteria> extends DerivedCriteriaTemplate<
 	StructMountedCriteria<T>,
 	StructGuardedCriteria<T>
 > {}
 
+export type StructErrors =
+	| "STRUCT_PROPERTY_REQUIRED"
+    | "STRUCT_PROPERTY_MALFORMED"
+    | "STRUCT_PROPERTY_OBJECT_VALUE_MALFORMED"
+	| "STRICT_PROPERTY_MALFORMED"
+    | "OPTIONAL_PROPERTY_MALFORMED"
+    | "OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED"
+    | "ADDITIONAL_PROPERTY_MALFORMED"
+    | "ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED";
 
+export type StringRejects =
+ 	| "TYPE_PLAIN_OBJECT_UNSATISFIED"
+	| "TYPE_OBJECT_UNSATISFIED"
+	| "STRUCT_UNSATISFIED"
+	| "ADDITIONAL_UNALLOWED";
 
+export interface StructMembers {
+	getUnforcedKeys: (
+		optional: boolean | (string | symbol)[],
+		includedKeys: (string | symbol)[]
+	) => (string | symbol)[];
+	getRequiredKeys: (
+		optional: boolean | (string | symbol)[],
+		includedKeys: (string | symbol)[]
+	) => (string | symbol)[];
+	isShorthandStruct(obj: {}): obj is SetableStruct;
+}

@@ -1,25 +1,10 @@
-import type { SetableCriteriaTemplate, FlowTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
 
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
-	/** @default true */
-	empty?: boolean;
 	min?: number;
 	max?: number;
 	enum?: number[] | Record<string | number, number>;
 	custom?: (input: number) => boolean;
-}
-
-export interface NumberDefaultCriteria {
-	empty: boolean;
-}
-
-export interface NumberMountedCriteria<T extends NumberSetableCriteria> {
-	empty:
-		unknown extends T['empty']
-			? true
-			: NumberSetableCriteria['empty'] extends T['empty']
-				? boolean
-				: T['empty'];
 }
 
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = 
@@ -29,7 +14,24 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> =
 			? T['enum'][keyof T['enum']]
 			: number;
 
-export interface NumberFlowTypes<T extends NumberSetableCriteria> extends FlowTypesTemplate<
-	NumberMountedCriteria<T>,
+export interface NumberDerivedCriteria<T extends NumberSetableCriteria> extends DerivedCriteriaTemplate<
+	{},
 	NumberGuardedCriteria<T>
 > {}
+
+export type NumberErrors =
+	| "MIN_PROPERTY_MALFORMED"
+    | "MAX_PROPERTY_MALFORMED"
+    | "MIN_AND_MAX_PROPERTIES_MISCONFIGURED"
+    | "ENUM_PROPERTY_MALFORMED"
+    | "ENUM_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "ENUM_PROPERTY_OBJECT_KEY_MALFORMED"
+    | "ENUM_PROPERTY_OBJECT_VALUE_MALFORMED"
+    | "CUSTOM_PROPERTY_MALFORMED";
+
+export type NumberRejects =
+	| "TYPE_NUMBER_UNSATISFIED"
+	| "MIN_UNSATISFIED"
+	| "MAX_UNSATISFIED"
+	| "ENUM_UNSATISFIED"
+	| "CUSTOM_UNSATISFIED";

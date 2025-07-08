@@ -1,8 +1,11 @@
-import type { SetableCriteriaTemplate, FlowTypesTemplate } from "../types";
+import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
 
 export interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {}
 
-export interface BooleanFlowTypes extends FlowTypesTemplate<
+export interface BooleanDerivedCriteria extends DerivedCriteriaTemplate<
 	{},
 	boolean
 > {}
+
+export type BooleanRejects = 
+	| "TYPE_BOOLEAN_UNSATISFIED";

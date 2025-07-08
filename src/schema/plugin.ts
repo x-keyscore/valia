@@ -1,4 +1,4 @@
-import type { SetableCriteria, FormatNativeNames } from "./formats";
+import type { SetableCriteria, FormatNativeTypes } from "./formats";
 import type { SchemaPlugin, SchemaInstance } from "./types";
 import { Schema } from "./schema";
 import { Issue } from "../utils";
@@ -17,15 +17,15 @@ type MixinPluginsCriteria<
 				// EXTENDS NECESSARY BECAUSE 'P3C' MAY CONTAIN UNAVAILABLE CRITERIA
 				? SetableCriteria extends P3C
 					? P1C | P2C | P3C
-					: SetableCriteria<(P1M['formats'] | P2M['formats'] | P3M['formats'])[number]['type'] | FormatNativeNames>
+					: SetableCriteria<(P1M['formats'] | P2M['formats'] | P3M['formats'])[number]['type'] | FormatNativeTypes>
 				// EXTENDS NECESSARY BECAUSE 'P2C' MAY CONTAIN UNAVAILABLE CRITERIA
 				: SetableCriteria extends P2C
 					? P1C | P2C
-					: SetableCriteria<(P1M['formats'] | P2M['formats'])[number]['type'] | FormatNativeNames>
+					: SetableCriteria<(P1M['formats'] | P2M['formats'])[number]['type'] | FormatNativeTypes>
 			// EXTENDS NECESSARY BECAUSE 'P1C' MAY CONTAIN UNAVAILABLE CRITERIA
 			: SetableCriteria extends P1C
 				? P1C
-				: SetableCriteria<P1M['formats'][number]['type'] | FormatNativeNames>
+				: SetableCriteria<P1M['formats'][number]['type'] | FormatNativeTypes>
 		: never
 );
 

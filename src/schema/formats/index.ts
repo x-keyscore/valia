@@ -1,13 +1,12 @@
 export type {
     SetableCriteriaTemplate,
-    FlowTypesTemplate,
+    DerivedCriteriaTemplate,
     SetableCriteria,
     MountedCriteria,
     GuardedCriteria,
-    FormatFlowTypes,
     Format,
-    FormatNames,
-    FormatNativeNames
+    FormatTypes,
+    FormatNativeTypes
 } from './types';
 
 export {

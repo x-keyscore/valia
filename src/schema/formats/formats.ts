@@ -3,7 +3,7 @@ import { SymbolFormat } from "./symbol/format";
 import { NumberFormat } from "./number/format";
 import { StringFormat } from "./string/format";
 import { SimpleFormat } from "./simple/format";
-import { RecordFormat } from "./record/format";
+import { ObjectFormat } from "./object/format";
 import { StructFormat } from "./struct/format";
 import { ArrayFormat } from "./array/format";
 import { TupleFormat } from "./tuple/format";
@@ -15,7 +15,7 @@ export const formatNatives = [
 	NumberFormat,
 	StringFormat,
 	SimpleFormat,
-	RecordFormat,
+	ObjectFormat,
 	StructFormat,
 	ArrayFormat,
 	TupleFormat,

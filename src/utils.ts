@@ -1,5 +1,10 @@
 export class Issue extends Error {
-	constructor(context: string, message: string, plugin?: string) {
+	constructor(
+		context: string,
+		message: string,
+		stack?: string,
+		plugin?: string
+	) {
 		super(message);
 
 		const red = "\x1b[31m", cyan = "\x1b[36m", gray = "\x1b[90m", reset = "\x1b[0m";
@@ -11,9 +16,14 @@ export class Issue extends Error {
 			`\nContext: ${context}` +
 			`\nMessage: ${message}`;
 	}
+
+	toString() {
+
+   		return `[Error] [Valia] ${new Date().toISOString()}\nContext: test`;
+  	}	
 }
 
-export function memory() {
+export function printMemory() {
 	const memoryUsage = process.memoryUsage();
 	console.log(
 		`Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB\n` +

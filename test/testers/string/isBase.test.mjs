@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { isBase16, isBase32, isBase32Hex, isBase64, isBase64Url } from "../../../dist/index.js";
 
-describe("\ntesters / string / isBase16", () => {
+describe("\ntesters > string > isBase16", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase16("*"), false);
@@ -22,7 +22,7 @@ describe("\ntesters / string / isBase16", () => {
 	});
 });
 
-describe("\ntesters / string / isBase32", () => {
+describe("\ntesters > string > isBase32", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase32("*"), false);
@@ -46,7 +46,7 @@ describe("\ntesters / string / isBase32", () => {
 	});
 });
 
-describe("\ntesters / string / isBase32Hex", () => {
+describe("\ntesters > string > isBase32Hex", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase32Hex("*"), false);
@@ -70,7 +70,7 @@ describe("\ntesters / string / isBase32Hex", () => {
 	});
 });
 
-describe("\ntesters / string / isBase64", () => {
+describe("\ntesters > string > isBase64", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase64("*"), false);
@@ -95,7 +95,7 @@ describe("\ntesters / string / isBase64", () => {
 	});
 });
 
-describe("\ntesters / string / isBase64Url", () => {
+describe("\ntesters > string > isBase64Url", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase64Url("*"), false);

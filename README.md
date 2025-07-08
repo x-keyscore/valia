@@ -139,7 +139,6 @@ interface Criteria {
 |Property|Default|Description|
 |--|--|--|
 |`type`   |      |Format name|
-|`empty?` |`true`|If the number can be zero|
 |`min?`   |      |Minimum value accepted|
 |`max?`   |      |Maximum value accepted|
 |`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
@@ -148,7 +147,6 @@ interface Criteria {
 ```ts
 interface Criteria {
   type: "number";
-  empty?: boolean;
   min?: number;
   max?: number;
   enum?: string[] | Record<string | number, string>;
@@ -258,11 +256,11 @@ interface Criteria {
 
 |Property|Default|Description|
 |--|--|--|
-|`type`  |       |Format name|
-|`empty?`|`false`|If the array can be empty|
-|`min?`  |       |Minimum items accepted|
-|`max?`  |       |Maximum items accepted|
-|`item`  |       |Criteria of the array items|
+|`type`  |      |Format name|
+|`empty?`|`true`|If the array can be empty|
+|`min?`  |      |Minimum items accepted|
+|`max?`  |      |Maximum items accepted|
+|`item`  |      |Criteria of the array items|
 
 ```ts
 interface Criteria {

@@ -1,12 +1,12 @@
-import type { CheckingTask, CheckingChunk, CheckingReject } from "./types";
+import type { CheckerTask, CheckerChunk, CheckerReject } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
 
 function createReject(
-	task: CheckingTask,
+	task: CheckerTask,
 	code: string
-): CheckingReject {
+): CheckerReject {
 	return ({
 		code,
 		path: task.fullPaths,
@@ -16,8 +16,8 @@ function createReject(
 	});
 }
 
-export class CheckingStack {
-	tasks: CheckingTask[] = [];
+export class CheckerStack {
+	tasks: CheckerTask[] = [];
 
 	constructor(
 		rootNode: MountedCriteria,
@@ -31,8 +31,8 @@ export class CheckingStack {
 	}
 
 	pushChunk(
-		sourceTask: CheckingTask,
-		chunk: CheckingChunk
+		sourceTask: CheckerTask,
+		chunk: CheckerChunk
 	) {
 		for (let i = 0; i < chunk.length; i++) {
 			const currentTask = chunk[i];
@@ -65,9 +65,9 @@ export class CheckingStack {
 	}
 
 	callHooks(
-		currentTask: CheckingTask,
-		reject: CheckingReject | null
-	) {
+		currentTask: CheckerTask,
+		reject: CheckerReject | null
+	): CheckerReject | null {
 		const stackHooks = currentTask.stackHooks;
 		if (!stackHooks) return (null);
 
@@ -76,7 +76,7 @@ export class CheckingStack {
 			return (null);
 		}
 
-		for (let i = stackHooks.length - 1; i >= 0; i--) {
+		loop: for (let i = stackHooks.length - 1; i >= 0; i--) {
 			const hooks = stackHooks[i];
 
 			const claim = reject ? hooks.onReject(reject) : hooks.onAccept();
@@ -84,7 +84,10 @@ export class CheckingStack {
 			switch (claim.action) {
 				case "DEFAULT":
 					this.tasks.length = hooks.index.branch;
-					if (!reject) return (null);
+					if (!reject) {
+						reject = null;
+						break loop;
+					}
 					continue;
 				case "REJECT":
 					this.tasks.length = hooks.index.branch;
@@ -96,9 +99,11 @@ export class CheckingStack {
 					} else {
 						this.tasks.length = hooks.index.branch;
 					}
-					return (null);
+					reject = null;
+					break loop;
 			}
 		}
+
 		return (reject);
 	}
 }
@@ -107,15 +112,15 @@ export function checker(
 	managers: SchemaInstance['managers'],
 	rootNode: MountedCriteria,
 	rootData: unknown
-): CheckingReject | null {
+): CheckerReject | null {
 	const { formats, events } = managers;
-	const stack = new CheckingStack(rootNode, rootData);
+	const stack = new CheckerStack(rootNode, rootData);
 
-	let reject = null;
+	let reject: CheckerReject | null = null;
 	while (stack.tasks.length) {
 		const currentTask = stack.tasks.pop()!;
 		const { data, node, stackHooks } = currentTask;
-		const chunk: CheckingChunk = [];
+		const chunk: CheckerChunk = [];
 
 		let code = null;
 		if (!(node.nullish && data == null)) {

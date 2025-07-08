@@ -1,9 +1,9 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
-import { Schema } from "../../dist/index.js";
+import { Schema, Issue } from "../../dist/index.js";
 
-describe("\nschema / instance", () => {
+describe("\nschema > instance", () => {
 	describe("'criteria' property", () => {
 		let string_criteria, string_schema, tuple_criteria, tuple_schema, struct_schema, main_schema;
 
@@ -88,30 +88,38 @@ describe("\nschema / instance", () => {
 		});
 
 		it("should return a correct rejection", () => {
-			assert.deepStrictEqual(main_schema.evaluate({ foo: "x", bar: 0 }), {
-				reject: {
-					code: "TYPE.STRING.NOT_SATISFIED",
-					type: "string",
-					path: {
-						explicit: ["struct", "bar"],
-						implicit: ["&", "bar"]
+			assert.deepStrictEqual(
+				main_schema.evaluate({ foo: "x", bar: 0 }),
+				{
+					reject: {
+						code: "TYPE_STRING_UNSATISFIED",
+						type: "string",
+						path: {
+							explicit: ["struct", "bar"],
+							implicit: ["&", "bar"]
+						},
+						label: "TEST_LABEL",
+						message: "TEST_MESSAGE"
 					},
-					label: "TEST_LABEL",
-					message: "TEST_MESSAGE"
+					data: null
 				}
-			});
+			);
 		});
 
 		it("should return a correct acceptance", () => {
 			const candidate = { foo: "x", bar: "x" };
-			assert.deepStrictEqual(main_schema.evaluate(candidate), {
-				data: candidate
-			});
+			assert.deepStrictEqual(
+				main_schema.evaluate(candidate),
+				{
+					reject: null,
+					data: candidate
+				}
+			);
 		});
 	});
 });
 
-describe("\nschema / formats / (Global parameters)", () => {
+describe("\nschema > formats > (Global parameters)", () => {
 	describe("'nullish' parameter", () => {
 		let nullish_true, nullish_false;
 
@@ -125,6 +133,12 @@ describe("\nschema / formats / (Global parameters)", () => {
 				type: "string",
 				nullish: false
 			});
+		});
+
+		it("throws if 'type' is invalid", () => {
+			assert.throws(() => {
+                new Schema({ type: "unexpected" });
+            }, Issue);
 		});
 
 		it("should invalidate incorrect values", () => {

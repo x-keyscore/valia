@@ -6,13 +6,12 @@ import {
 	isPlainObject,
 	isArray,
 	isFunction,
-	isBasicFunction,
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
 } from "../../../dist/index.js";
 
-describe("\ntesters / object / isObject", () => {
+describe("\ntesters > object > isObject", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isObject(0), false);
@@ -27,7 +26,7 @@ describe("\ntesters / object / isObject", () => {
 	});
 });
 
-describe("\ntesters / object / isPlainObject", () => {
+describe("\ntesters > object > isPlainObject", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isPlainObject(0), false);
@@ -45,7 +44,7 @@ describe("\ntesters / object / isPlainObject", () => {
 	});
 });
 
-describe("\ntesters / object / isArray", () => {
+describe("\ntesters > object > isArray", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isArray(0), false);
@@ -60,7 +59,8 @@ describe("\ntesters / object / isArray", () => {
 	});
 });
 
-describe("\ntesters / object / isFunction", () => {
+/*
+describe("\ntesters > object > isFunction", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isFunction(0), false);
@@ -76,25 +76,26 @@ describe("\ntesters / object / isFunction", () => {
 		});
 	});
 });
+*/
 
-describe("\ntesters / object / isBasicFunction", () => {
+describe("\ntesters > object > isFunction", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(isBasicFunction(0), false);
-			assert.strictEqual(isBasicFunction(""), false);
-			assert.strictEqual(isBasicFunction({}), false);
-			assert.strictEqual(isBasicFunction(async () => {}), false);
-			assert.strictEqual(isBasicFunction(function* () {}), false);
-			assert.strictEqual(isBasicFunction(async function* () {}), false);
+			assert.strictEqual(isFunction(0), false);
+			assert.strictEqual(isFunction(""), false);
+			assert.strictEqual(isFunction({}), false);
+			assert.strictEqual(isFunction(async () => {}), false);
+			assert.strictEqual(isFunction(function* () {}), false);
+			assert.strictEqual(isFunction(async function* () {}), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(isBasicFunction(() => {}), true);
+			assert.strictEqual(isFunction(() => {}), true);
 		});
 	});
 });
 
-describe("\ntesters / object / isAsyncFunction", () => {
+describe("\ntesters > object > isAsyncFunction", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isAsyncFunction(0), false);
@@ -111,7 +112,7 @@ describe("\ntesters / object / isAsyncFunction", () => {
 	});
 });
 
-describe("\ntesters / object / isGeneratorFunction", () => {
+describe("\ntesters > object > isGeneratorFunction", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isGeneratorFunction(0), false);
@@ -128,7 +129,7 @@ describe("\ntesters / object / isGeneratorFunction", () => {
 	});
 });
 
-describe("\ntesters / object / isAsyncGeneratorFunction", () => {
+describe("\ntesters > object > isAsyncGeneratorFunction", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isAsyncGeneratorFunction(0), false);

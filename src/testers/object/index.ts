@@ -4,8 +4,7 @@ export {
 	isArray,
 	isTypedArray,
 	isFunction,
-	isBasicFunction,
 	isAsyncFunction,
 	isGeneratorFunction,
-	isAsyncGeneratorFunction,
+	isAsyncGeneratorFunction
 } from './object';

@@ -1,6 +1,7 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { MountingTask, MountingChunk } from "./types";
+import type { MounterTask, MounterChunk } from "./types";
 import type { SchemaInstance } from "../types";
+import { SchemaNodeError } from "../utils";
 
 export const nodeSymbol = Symbol("node");
 
@@ -8,8 +9,8 @@ export function hasNodeSymbol(obj: object): obj is MountedCriteria {
 	return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
 }
 
-export class MountingStack {
-	tasks: MountingTask[] = [];
+export class MounterStack {
+	tasks: MounterTask[] = [];
 
 	constructor(
 		rootNode: SetableCriteria | MountedCriteria
@@ -22,8 +23,8 @@ export class MountingStack {
 	}
 
 	pushChunk(
-		sourceTask: MountingTask,
-		chunk: MountingChunk
+		sourceTask: MounterTask,
+		chunk: MounterChunk
 	) {
 		const { fullPaths } = sourceTask;
 
@@ -47,7 +48,7 @@ export function mounter<T extends SetableCriteria>(
 	rootNode: SetableCriteria & T
 ): MountedCriteria<T> {
 	const { formats, events } = managers;
-	const stack = new MountingStack(rootNode);
+	const stack = new MounterStack(rootNode);
 
 	while (stack.tasks.length) {
 		const currentTask = stack.tasks.pop()!;
@@ -60,22 +61,37 @@ export function mounter<T extends SetableCriteria>(
 			}
 		} else {
 			const format = formats.get(node.type);
-			const chunk: MountingChunk = [];
+			const chunk: MounterChunk = [];
 
-			format.mount?.(chunk, node);
+			const error = format.mount?.(chunk, node);
+
+			if (error) {
+				throw new SchemaNodeError({
+					node: node,
+					path: fullPaths,
+					type: format.type,
+					code: error,
+					message: format.errors[error]
+				});
+			}
 
 			Object.assign(node, {
-				...node,
 				[nodeSymbol]: {
-					childNodes: chunk.map((task) => task.node),
-					partPaths
+					partPaths,
+					childNodes: chunk.map((task) => task.node)
 				}
 			});
 			Object.freeze(node);
 
-			if (chunk.length) stack.pushChunk(currentTask, chunk);
+			if (chunk.length) {
+				stack.pushChunk(currentTask, chunk);
+			}
 
-			events.emit("NODE_MOUNTED", node as MountedCriteria, fullPaths);
+			events.emit(
+				"NODE_MOUNTED",
+				node as MountedCriteria,
+				fullPaths
+			);
 		}
 	}
 

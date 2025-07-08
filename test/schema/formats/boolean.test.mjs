@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("\nschema / formats / Boolean", () => {
+describe("\nschema > formats > Boolean", () => {
 	describe("Default", () => {
 		let boolean_default;
 
@@ -13,6 +13,9 @@ describe("\nschema / formats / Boolean", () => {
 
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(boolean_default.validate(0), false);
+			assert.strictEqual(boolean_default.validate(""), false);
+			assert.strictEqual(boolean_default.validate({}), false);
+			assert.strictEqual(boolean_default.validate([]), false);
 		});
 
 		it("should validate correct values", () => {

@@ -1,15 +1,15 @@
-import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeNames } from "./formats";
+import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeTypes } from "./formats";
+import type { SchemaEvaluate, SchemaInfer } from "./types";
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
-import { SchemaInfer } from "./types";
 
 /**
  * The `Schema` class is used to define and validate data structures,
  * ensuring they conform to specified criteria.
  */
-export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeNames>> {
+export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeTypes>> {
 	private mountedCriteria: MountedCriteria<T> | undefined;
 
 	protected managers = {
@@ -36,7 +36,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 */
 	get criteria(): MountedCriteria<T> {
 		if (!this.mountedCriteria) {
-			throw new Issue("Schema", "Criteria are not initialized.");
+			throw new Issue("SCHEMA", "Criteria are not initialized.");
 		}
 		return (this.mountedCriteria);
 	}
@@ -60,15 +60,37 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * Evaluates the provided data against the schema.
 	 *
 	 * @param data - The data to be evaluated.
-	 * 
-	 * @returns An object containing:
-	 * - `{ reject: CheckingReject }` if the data is **rejected**.
-	 * - `{ data: GuardedCriteria<T> }` if the data is **accepted**.
 	 */
-	evaluate(data: unknown) {
+	evaluate(data: unknown): SchemaEvaluate<T> {
 		const reject = checker(this.managers, this.criteria, data);
+		if (reject) return ({ reject, data: null });
 
-		if (reject) return ({ reject });
-		return ({ data: data as GuardedCriteria<T> });
+		return ({ reject: null, data });
 	}
 }
+
+function testdd(): (MountedCriteria<SetableCriteria<"string" | "symbol"> >) {
+	return {} as any;
+}
+
+const test = new Schema({ type: "array" });
+
+type Test = SchemaInfer<typeof test>;
+
+
+// Fetcher
+
+// const struct_additional_true = new Schema({ type: 'number', enum: { one: 1, two: 2, three: 3 } });
+
+//struct_additional_true.validate({ foo: "", bar: 1, baz: 2 })
+/*
+const struct_optional_true = new Schema({
+	type: "struct",
+	optional: true,
+	struct: {
+		foo: { type: "string" },
+		bar: { type: "number" }
+	}
+});
+
+console.log(struct_optional_true.validate({ bar: 0 }));*/

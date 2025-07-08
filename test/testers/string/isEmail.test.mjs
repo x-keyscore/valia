@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { isEmail } from "../../../dist/index.js";
 
-describe("\ntesters / string / isEmail", () => {
+describe("\ntesters > string > isEmail", () => {
 	describe("Default", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isEmail(""), false);

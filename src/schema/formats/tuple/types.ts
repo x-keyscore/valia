@@ -1,20 +1,18 @@
 import type { ArraySetableCriteria } from "../array/types";
 import type {
 	SetableCriteriaTemplate,
+	DerivedCriteriaTemplate,
 	SetableCriteriaMap,
-	FlowTypesTemplate,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	FormatNames,
+	FormatTypes,
 } from "../types";
 
-export type SetableTuple<T extends FormatNames = FormatNames> =
+export type SetableTuple<T extends FormatTypes = FormatTypes> =
 	[SetableCriteria<T> | SetableTuple, ...(SetableCriteria<T> | SetableTuple)[]];
 
-export interface TupleSetableCriteria<
-	T extends FormatNames = FormatNames
-> extends SetableCriteriaTemplate<"tuple"> {
+export interface TupleSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"tuple"> {
 	tuple: SetableTuple<T>;
 	additional?: SetableCriteriaMap<T>['array'] | boolean;
 }
@@ -73,7 +71,23 @@ type TupleGuardedCriteria<T extends TupleSetableCriteria> =
 			: never
 		: never;
 
-export interface TupleFlowTypes<T extends TupleSetableCriteria> extends FlowTypesTemplate<
+export interface TupleDerivedCriteria<T extends TupleSetableCriteria> extends DerivedCriteriaTemplate<
 	TupleMountedCriteria<T>,
 	TupleGuardedCriteria<T>
 > {}
+
+export type TupleErrors =
+	| "TUPLE_PROPERTY_REQUIRED"
+	| "TUPLE_PROPERTY_MALFORMED"
+	| "TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "ADDITIONAL_PROPERTY_MALFORMED"
+	| "ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED";
+
+export type TupleRejects =
+	| "TYPE_ARRAY_UNSATISFIED"
+	| "TUPLE_UNSATISFIED"
+	| "ADDITIONAL_UNALLOWED";
+
+export interface TupleMembers {
+	isShorthandTuple(obj: {}): obj is SetableTuple;
+}

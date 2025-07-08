@@ -13,4 +13,8 @@ export {
     SchemaFactory
 } from "./plugin";
 
+export {
+    SchemaNodeError
+} from "./utils";
+
 

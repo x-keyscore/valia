@@ -1,7 +1,7 @@
-import type { SetableCriteria, MountedCriteria, formatNatives } from "../formats";
+import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
 
-export interface PathSegments {
+export interface NodePaths {
 	/**
 	 * **Composition of explicit path :**
 	 * ```py
@@ -35,25 +35,22 @@ export interface PathSegments {
 
 // MOUNTER
 
-export interface MountingTask {
+export interface MounterTask {
 	node: SetableCriteria | MountedCriteria;
-	partPaths: PathSegments;
-	fullPaths: PathSegments;
+	partPaths: NodePaths;
+	fullPaths: NodePaths;
 }
 
-export type MountingChunk = {
+export interface MounterChunkTask {
 	node: SetableCriteria | MountedCriteria;
-	partPaths: PathSegments;
-}[];
+	partPaths: NodePaths;
+};
+
+export type MounterChunk = MounterChunkTask[];
 
 // CHECKER
 
-export interface CheckingHooks {
-	owner: CheckingTask;
-	index: {
-		chunk: number;
-		branch: number;
-	};
+export interface CheckerHooks<R extends string = string,> {
 	onAccept(): {
 		action: "DEFAULT"
 	} | {
@@ -61,42 +58,50 @@ export interface CheckingHooks {
 		target: "CHUNK";
 	} | {
 		action: "REJECT";
-		code: string;
+		code: R;
 	};
-	onReject(reject: CheckingReject): {
+	onReject(reject: CheckerReject): {
 		action: "DEFAULT"
 	} | {
 		action: "IGNORE";
 		target: "CHUNK" | "BRANCH";
 	} | {
 		action: "REJECT";
-		code: string;
+		code: R;
 	};
 }
 
-export interface CheckingTask {
-	data: unknown;
-	node: MountedCriteria;
-	fullPaths: PathSegments;
-	stackHooks?: CheckingHooks[];
+export interface CheckerStackItemHooks extends CheckerHooks {
+	owner: CheckerTask;
+	index: {
+		chunk: number;
+		branch: number;
+	};
 }
 
-export interface CheckingChunkTask {
-	data: CheckingTask['data'];
-	node: CheckingTask['node'];
-	hooks?: Omit<CheckingHooks, "owner" | "index">;
+export interface CheckerTask {
+	data: unknown;
+	node: MountedCriteria;
+	fullPaths: NodePaths;
+	stackHooks?: CheckerStackItemHooks[];
+}
+
+export interface CheckerChunkTask {
+	data: CheckerTask['data'];
+	node: CheckerTask['node'];
+	hooks?: CheckerHooks;
 };
 
-export type CheckingChunk = CheckingChunkTask[];
+export type CheckerChunk = CheckerChunkTask[];
 
-export interface CheckingReject {
-	path: PathSegments;
+export interface CheckerReject {
+	path: NodePaths;
 	/**
 	 * Syntax: `<FORMAT>.<RULE>[.<DETAIL>].<REASON>`
 	 *
 	 * Components:
 	 * - `<FORMAT>`    : The format involved (e.g. NUMBER, STRING, STRUCT)
-	 * - `<RULE>`      : The criterion involved (e.g. EMPTY, MIN, ENUM)
+	 * - `<MEMBER>`      : The criterion involved (e.g. EMPTY, MIN, ENUM)
 	 * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
 	 * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
 	 */

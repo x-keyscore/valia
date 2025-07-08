@@ -3,35 +3,42 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("\nschema / formats / Struct", () => {
+describe("\nschema > formats > Struct", () => {
 	const xSymbol = Symbol("x");
 	const ySymbol = Symbol("y");
 
 	describe("Default", () => {
-		let struct_prop_0, struct_prop_1, struct_prop_2, struct_prop_symbol;
+		let struct_default, struct_0, struct_1, struct_2, struct_symbol;
 
 		before(() => {
-			struct_prop_0 = new Schema({
-				type: "struct",
-				struct: {}
-			});
-
-			struct_prop_1 = new Schema({
+			struct_default = new Schema({
 				type: "struct",
 				struct: {
 					foo: { type: "string" }
 				}
 			});
 
-			struct_prop_2 = new Schema({
+			struct_0 = new Schema({
+				type: "struct",
+				struct: {}
+			});
+
+			struct_1 = new Schema({
 				type: "struct",
 				struct: {
-					foo: { type: "string" },
-					bar: { type: "string" }
+					foo: { type: "string" }
 				}
 			});
 
-			struct_prop_symbol = new Schema({
+			struct_2 = new Schema({
+				type: "struct",
+				struct: {
+					foo: { type: "string" },
+					bar: { type: "number" }
+				}
+			});
+
+			struct_symbol = new Schema({
 				type: "struct",
 				struct: {
 					foo: { type: "string" },
@@ -41,35 +48,55 @@ describe("\nschema / formats / Struct", () => {
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_prop_0.validate(0), false);
-			assert.strictEqual(struct_prop_0.validate([]), false);
-			assert.strictEqual(struct_prop_0.validate({ x: "x" }), false);
+			assert.strictEqual(struct_default.validate(0), false);
+			assert.strictEqual(struct_default.validate(""), false);
+			assert.strictEqual(struct_default.validate([]), false);
+			assert.strictEqual(
+				struct_default.validate({}),
+				false,
+				"Should be invalid because 'optional' parameter set on 'false' by default"
+			);
+			assert.strictEqual(
+				struct_default.validate({ foo: "x", x: "x" }),
+				false,
+				"Should be invalid because 'additional' parameter set on 'false' by default"
+			);
 
-			assert.strictEqual(struct_prop_1.validate(0), false);
-			assert.strictEqual(struct_prop_1.validate({}), false);
-			assert.strictEqual(struct_prop_1.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_0.validate({ x: "" }), false);
 
-			assert.strictEqual(struct_prop_2.validate(0), false);
-			assert.strictEqual(struct_prop_2.validate({}), false);
-			assert.strictEqual(struct_prop_2.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_prop_2.validate({ foo: "x" }), false);
-			assert.strictEqual(struct_prop_2.validate({ foo: "x", bar: 0 }), false);
+			assert.strictEqual(struct_1.validate({}), false);
+			assert.strictEqual(struct_1.validate({ x: "" }), false);
+			assert.strictEqual(struct_1.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_1.validate({ foo: "", baz: 0 }), false);
 
-			assert.strictEqual(struct_prop_symbol.validate(0), false);
-			assert.strictEqual(struct_prop_symbol.validate({}), false);
-			assert.strictEqual(struct_prop_symbol.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_prop_symbol.validate({ foo: "x" }), false);
-			assert.strictEqual(struct_prop_symbol.validate({ foo: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_2.validate({}), false);
+			assert.strictEqual(struct_2.validate({ x: "" }), false);
+			assert.strictEqual(struct_2.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_2.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_2.validate({ foo: "" }), false);
+			assert.strictEqual(struct_2.validate({ bar: "" }), false);
+			assert.strictEqual(struct_2.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_2.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_2.validate({ foo: "", bar: "" }), false);
+			assert.strictEqual(struct_2.validate({ foo: "", bar: 0, baz: 0 }), false);
+
+			assert.strictEqual(struct_symbol.validate({}), false);
+			assert.strictEqual(struct_symbol.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_symbol.validate({ foo: "" }), false);
+			assert.strictEqual(struct_symbol.validate({ [ySymbol]: "" }), false);
+			assert.strictEqual(struct_symbol.validate({ foo: "", [ySymbol]: "" }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(struct_prop_0.validate({}), true);
+			assert.strictEqual(struct_default.validate({ foo: "" }), true);
 
-			assert.strictEqual(struct_prop_1.validate({ foo: "x" }), true);
+			assert.strictEqual(struct_0.validate({}), true);
 
-			assert.strictEqual(struct_prop_2.validate({ foo: "x", bar: "x" }), true);
+			assert.strictEqual(struct_1.validate({ foo: "" }), true);
 
-			assert.strictEqual(struct_prop_symbol.validate({ foo: "x", [xSymbol]: "x" }), true);
+			assert.strictEqual(struct_2.validate({ foo: "", bar: 0 }), true);
+
+			assert.strictEqual(struct_symbol.validate({ foo: "", [xSymbol]: "" }), true);
 		});
 	});
 	describe("Default (Shorthand Struct)", () => {
@@ -80,46 +107,42 @@ describe("\nschema / formats / Struct", () => {
 				type: "struct",
 				struct: {
 					foo: {
-						foo: { type: "string" },
-						[xSymbol]: { type: "string" }
+						foo: { type: "string" }
 					}
 				}
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_shorthand.validate(0), false);
-			assert.strictEqual(struct_shorthand.validate([]), false);
 			assert.strictEqual(struct_shorthand.validate({}), false);
-			assert.strictEqual(struct_shorthand.validate({ foo: "x" }), false);
-			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "x" } }), false);
-			assert.strictEqual(struct_shorthand.validate({ y: { foo: "x", [xSymbol]: "x" } }), false);
-			assert.strictEqual(struct_shorthand.validate({ foo: { y: "x", [xSymbol]: "x" } }), false);
-			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "x", [ySymbol]: "x" } }), false);
+			assert.strictEqual(struct_shorthand.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_shorthand.validate({ foo: "" }), false);
+			assert.strictEqual(struct_shorthand.validate({ foo: { foo: 0 } }), false);
+			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "" }, baz: 0 }), false);
+			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "", baz: 0 } }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "x", [xSymbol]: "x" } }), true);
+			assert.strictEqual(struct_shorthand.validate({ foo: { foo: "" } }), true);
 		});
 
 		it("should return the correct rejection", () => {
-			assert.deepStrictEqual(struct_shorthand.evaluate({ 
-					foo: {
-						foo: "x",
-						[xSymbol]: 0
-					}
-				}), {
+			assert.deepStrictEqual(
+				struct_shorthand.evaluate({ foo: { foo: 0 } }), 
+				{
 					reject: {
-						code: "TYPE.STRING.NOT_SATISFIED",
+						code: "TYPE_STRING_UNSATISFIED",
 						type: "string",
 						path: {
-							explicit: ['struct', 'foo', 'struct', xSymbol],
-							implicit: ['&', 'foo', '&', xSymbol]
+							explicit: ["struct", "foo", "struct", "foo"],
+							implicit: ["&", "foo", "&", "foo"]
 						},
 						label: undefined,
 						message: undefined
-					}
-				});
+					},
+					data: null
+				}
+			);
 		});
 	});
 
@@ -132,8 +155,7 @@ describe("\nschema / formats / Struct", () => {
 				optional: true,
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
-					[xSymbol]: { type: "string" }
+					bar: { type: "number" }
 				}
 			});
 
@@ -142,36 +164,37 @@ describe("\nschema / formats / Struct", () => {
 				optional: false,
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
-					[xSymbol]: { type: "string" }
+					bar: { type: "number" }
 				}
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_optional_true.validate(0), false);
-			assert.strictEqual(struct_optional_true.validate([]), false);
 			assert.strictEqual(struct_optional_true.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_optional_true.validate({ y: "x", bar: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x", y: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x", bar: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_optional_true.validate({ bar: "" }), false);
+			assert.strictEqual(struct_optional_true.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_optional_true.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_optional_true.validate({ foo: "", bar: "" }), false);
 
-			assert.strictEqual(struct_optional_false.validate(0), false);
-			assert.strictEqual(struct_optional_false.validate([]), false);
 			assert.strictEqual(struct_optional_false.validate({}), false);
-			assert.strictEqual(struct_optional_false.validate({ foo: "x" }), false);
-			assert.strictEqual(struct_optional_false.validate({ foo: "x", bar: "x" }), false);
-			assert.strictEqual(struct_optional_false.validate({ foo: "x", [xSymbol]: "x" }), false);
+			assert.strictEqual(struct_optional_false.validate({ x: "" }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_optional_false.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: "" }), false);
+			assert.strictEqual(struct_optional_false.validate({ bar: "" }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: "", bar: "" }), false);
+			assert.strictEqual(struct_optional_false.validate({ foo: "", bar: 0, baz: 0 }), false);
 		});
 
 		it("should validate correct values", () => {
 			assert.strictEqual(struct_optional_true.validate({}), true);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x" }), true);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x", bar: "x" }), true);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x", [xSymbol]: "x" }), true);
-			assert.strictEqual(struct_optional_true.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
+			assert.strictEqual(struct_optional_true.validate({ bar: 0 }), true);
+			assert.strictEqual(struct_optional_true.validate({ foo: "" }), true);
+			assert.strictEqual(struct_optional_true.validate({ foo: "", bar: 0 }), true);
 
-			assert.strictEqual(struct_optional_false.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
+			assert.strictEqual(struct_optional_false.validate({ foo: "", bar: 0 }), true);
 		});
 	});
 
@@ -184,30 +207,31 @@ describe("\nschema / formats / Struct", () => {
 				optional: ["bar", xSymbol],
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
+					bar: { type: "number" },
 					[xSymbol]: { type: "string" }
 				}
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_optional_array.validate(0), false);
-			assert.strictEqual(struct_optional_array.validate([]), false);
 			assert.strictEqual(struct_optional_array.validate({}), false);
 			assert.strictEqual(struct_optional_array.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_optional_array.validate({ bar: "x" }), false);
-			assert.strictEqual(struct_optional_array.validate({ [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_array.validate({ bar: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_array.validate({ y: "x", bar: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_array.validate({ foo: "x", y: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_optional_array.validate({ foo: "x", bar: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_optional_array.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_optional_array.validate({ bar: "" }), false);
+			assert.strictEqual(struct_optional_array.validate({ [xSymbol]: 0 }), false);
+			assert.strictEqual(struct_optional_array.validate({ [xSymbol]: "" }), false);
+			assert.strictEqual(struct_optional_array.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_optional_array.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_optional_array.validate({ foo: "", bar: "" }), false);
+			assert.strictEqual(struct_optional_array.validate({ foo: 0, bar: 0, [xSymbol]: "" }), false);
+			assert.strictEqual(struct_optional_array.validate({ foo: "", bar: 0, [xSymbol]: 0 }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(struct_optional_array.validate({ foo: "x" }), true);
-			assert.strictEqual(struct_optional_array.validate({ foo: "x", bar: "x" }), true);
-			assert.strictEqual(struct_optional_array.validate({ foo: "x", [xSymbol]: "x" }), true);
-			assert.strictEqual(struct_optional_array.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
+			assert.strictEqual(struct_optional_array.validate({ foo: "" }), true);
+			assert.strictEqual(struct_optional_array.validate({ foo: "", bar: 0 }), true);
+			assert.strictEqual(struct_optional_array.validate({ foo: "", [xSymbol]: "" }), true);
+			assert.strictEqual(struct_optional_array.validate({ foo: "", bar: 0, [xSymbol]: "" }), true);
 		});
 	});
 
@@ -220,8 +244,7 @@ describe("\nschema / formats / Struct", () => {
 				additional: true,
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
-					[xSymbol]: { type: "string" }
+					bar: { type: "number" }
 				}
 			});
 
@@ -230,38 +253,45 @@ describe("\nschema / formats / Struct", () => {
 				additional: false,
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
-					[xSymbol]: { type: "string" }
+					bar: { type: "number" }
 				}
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_additional_true.validate(0), false);
-			assert.strictEqual(struct_additional_true.validate([]), false);
 			assert.strictEqual(struct_additional_true.validate({}), false);
 			assert.strictEqual(struct_additional_true.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_additional_true.validate({ y: "x", bar: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", y: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", bar: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_additional_true.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_additional_true.validate({ foo: "" }), false);
+			assert.strictEqual(struct_additional_true.validate({ bar: "" }), false);
+			assert.strictEqual(struct_additional_true.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_additional_true.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: "" }), false);
 
-			assert.strictEqual(struct_additional_false.validate(0), false);
-			assert.strictEqual(struct_additional_false.validate([]), false);
 			assert.strictEqual(struct_additional_false.validate({}), false);
-			assert.strictEqual(struct_additional_false.validate({ foo: "x" }), false);
-			assert.strictEqual(struct_additional_false.validate({ foo: "x", bar: "x" }), false);
-			assert.strictEqual(struct_additional_false.validate({ foo: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_false.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: "x" }), false);
-			assert.strictEqual(struct_additional_false.validate({ foo: "x", bar: "x", [xSymbol]: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: 0 }), false);
+			assert.strictEqual(struct_additional_false.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: "" }), false);
+			assert.strictEqual(struct_additional_false.validate({ bar: "" }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: "", bar: "" }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: "", bar: "", baz: "" }), false);
+			assert.strictEqual(struct_additional_false.validate({ foo: "", bar: "", baz: "", qux: "" }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: "x" }), true);
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", bar: "x", [xSymbol]: "x", [ySymbol]: "x" }), true);
-			assert.strictEqual(struct_additional_true.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: "x", [ySymbol]: "x" }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: 0 }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: 0, qux: 0 }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: "" }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: "", qux: "" }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: [] }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: [], qux: [] }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: {} }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: {}, qux: {} }), true);
+			assert.strictEqual(struct_additional_true.validate({ foo: "", bar: 0, baz: 0, qux: "", qvx: [], qwx: {}, qxx: Symbol() }), true);
 
-			assert.strictEqual(struct_additional_false.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
+			assert.strictEqual(struct_additional_false.validate({ foo: "", bar: 0 }), true);
 		});
 	});
 
@@ -278,29 +308,27 @@ describe("\nschema / formats / Struct", () => {
 				},
 				struct: {
 					foo: { type: "string" },
-					bar: { type: "string" },
-					[xSymbol]: { type: "string" }
+					bar: { type: "number" }
 				}
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(struct_additional_record.validate(0), false);
-			assert.strictEqual(struct_additional_record.validate([]), false);
 			assert.strictEqual(struct_additional_record.validate({}), false);
 			assert.strictEqual(struct_additional_record.validate({ foo: 0 }), false);
-			assert.strictEqual(struct_additional_record.validate({ y: "x", bar: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", y: "x", [xSymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [ySymbol]: "x" }), false);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: 0 }), false);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x", [ySymbol]: 0 }), false);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x", [ySymbol]: "x" }), false);
+			assert.strictEqual(struct_additional_record.validate({ bar: 0 }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: "" }), false);
+			assert.strictEqual(struct_additional_record.validate({ bar: "" }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: 0, bar: 0 }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: 0, bar: "" }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: "", bar: "" }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: "", bar: 0, baz: 0 }), false);
+			assert.strictEqual(struct_additional_record.validate({ foo: "", bar: 0, baz: "", qux: 0 }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x" }), true);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: "x" }), true);
-			assert.strictEqual(struct_additional_record.validate({ foo: "x", bar: "x", [xSymbol]: "x", y: "x", z: "x" }), true);
+			assert.strictEqual(struct_additional_record.validate({ foo: "", bar: 0, baz: "" }), true);
+			assert.strictEqual(struct_additional_record.validate({ foo: "", bar: 0, baz: "", qux: "" }), true);
 		});
 	});
 });
