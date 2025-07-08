@@ -69,15 +69,59 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	}
 }
 
-function testdd(): (MountedCriteria<SetableCriteria<"string" | "symbol"> >) {
+/*
+const test = new Schema({
+	type: "object",
+	strict: false,
+	static: {
+		optional: ["foo"],
+		min: 0,
+		max: 0,
+		shape: {
+			foo: { type: "string" }
+		}
+	},
+	dynamic: {
+		empty: true,
+		min: 0,
+		max: 0,
+		key: { type: "string" },
+		value: { type: "string" }
+	}
+});
+
+const test = new Schema({
+	type: "object",
+	strict: false,
+	shape: {
+		foo: { type: "string" }
+	},
+	optional: ["foo"],
+	additional: {
+		min: 0,
+		max: 0,
+		key: { type: "string" },
+		value: { type: "string" }
+	}
+});
+*/
+
+function testdd(): (MountedCriteria<SetableCriteria<"string" | "symbol">>) {
 	return {} as any;
 }
 
-const test = new Schema({ type: "array" });
+const test = new Schema({
+	type: "object",
+	shape: {},
+	grain: {
+		key: { type: "string" },
+		value: { type: "string" }
+	}
+});
 
 type Test = SchemaInfer<typeof test>;
 
-
+type Debug = Test['additional']
 // Fetcher
 
 // const struct_additional_true = new Schema({ type: 'number', enum: { one: 1, two: 2, three: 3 } });

@@ -1,4 +1,3 @@
-import { StringSetableCriteria } from "../string/types";
 import type {
 	SetableCriteriaTemplate,
 	DerivedCriteriaTemplate,
@@ -8,49 +7,122 @@ import type {
 	FormatTypes
 } from "../types";
 
-type SetableKey = SetableCriteria<"string" | "symbol">;
+export type SetableShape<T extends FormatTypes = FormatTypes> = {
+	[key: string | symbol | number]: SetableCriteria<T> | SetableShape<T>;
+};
 
-export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
-	key?: SetableKey;
-	value?: SetableCriteria<T>;
-	strict?: boolean;
+type SetableKey = SetableCriteria<"string" | "symbol">;
+type SetableValue<T extends FormatTypes = FormatTypes> = SetableCriteria<T>
+
+interface SetableAdditionalRecord {
 	empty?: boolean;
 	min?: number;
 	max?: number;
+	key?: SetableKey;
+	value?: SetableValue;
+};
+
+export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
+	shape: SetableShape<T>;
+	strict?: boolean;
+	optional?: (string | symbol)[] | boolean;
+	additional?: SetableAdditionalRecord | boolean;
 }
 
-export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
+type MountedShape<T extends SetableShape> = {
+	[K in keyof T]:
+		T[K] extends SetableCriteria
+			? MountedCriteria<T[K]>
+			: T[K] extends SetableShape
+				? MountedCriteria<{ type: "object", shape: T[K] }>
+				: never;
+};
+
+interface MountedAdditionalRecord<T extends SetableAdditionalRecord> {
+	empty:
+		undefined extends T['empty']
+			? true
+			: SetableAdditionalRecord['empty'] extends T['empty']
+				? boolean
+				: T['empty'];
 	key:
 		unknown extends T['key']
 			? undefined
-			: ObjectSetableCriteria['key'] extends T['key']
+			: SetableAdditionalRecord['key'] extends T['key']
 				? MountedCriteria<SetableKey> | undefined
 				: T['key'] extends SetableKey
 					? MountedCriteria<T['key']>
 					: T['key'];
-		
 	value:
 		unknown extends T['value']
 			? undefined
-			: ObjectSetableCriteria['value'] extends T['value']
+			: SetableAdditionalRecord['value'] extends T['value']
 				? MountedCriteria<SetableCriteria> | undefined
 				: T['value'] extends SetableCriteria
 					? MountedCriteria<T['value']>
 					: T['value'];
+}
+
+export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
+	shape: MountedShape<T['shape']>;
 	strict:
 		unknown extends T['strict']
 			? true
 			: ObjectSetableCriteria['strict'] extends T['strict']
 				? boolean
 				: T['strict'];
-	empty:
-		unknown extends T['empty']
-			? true
-			: ObjectSetableCriteria['empty'] extends T['empty']
-				? boolean
-				: T['empty'];
+	additional:
+		unknown extends T['additional']
+			? false
+			: ObjectSetableCriteria['additional'] extends T['additional']
+				? MountedAdditionalRecord<SetableAdditionalRecord> | boolean
+				: T['additional'] extends SetableAdditionalRecord
+					? MountedAdditionalRecord<T['additional']>
+					: T['additional'];
 }
+/*
+empty:
+	unknown extends T['empty']
+		? true
+		: ObjectSetableCriteria['empty'] extends T['empty']
+			? boolean
+			: T['empty'];
+*/
 
+type GuardedDynamic<T extends ObjectSetableCriteria['additional']> =
+	[T] extends [SetableAdditionalRecord]
+		? T['key'] extends SetableKey
+			? T['value'] extends SetableCriteria
+				? GuardedCriteria<T['key']> extends infer U
+					? { [P in U as U extends (string | symbol) ? U : never]: GuardedCriteria<T['value']> }
+					: never
+				: GuardedCriteria<T['key']> extends infer U
+					? { [P in U as U extends (string | symbol) ? U : never]: unknown }
+					: never
+			: T['value'] extends SetableCriteria
+				? { [key: string | symbol | number]: GuardedCriteria<T['value']> }
+				: { [key: string | symbol | number]: unknown }
+		: [T] extends [true]
+			? { [key: string | symbol]: unknown; }
+			: {};
+
+type GuardedStatic<T extends ObjectSetableCriteria> = {};
+
+type ObjectGuardedCriteria<T extends ObjectSetableCriteria> =
+	GuardedDynamic<T['additional']> extends infer D
+		? GuardedStatic<T> extends infer S
+			? {
+				[K in keyof (D & S)]: 
+					K extends keyof S
+						? S[K]
+						: K extends keyof D
+							? D[K]
+							: never;
+			}
+			: never
+		: never;
+
+/*
 type ObjectGuardedCriteria<T extends ObjectSetableCriteria> =
 	T['key'] extends SetableKey
 		? T['value'] extends SetableCriteria
@@ -62,7 +134,7 @@ type ObjectGuardedCriteria<T extends ObjectSetableCriteria> =
 				: never
 		: T['value'] extends SetableCriteria
 			? { [key: string | symbol | number]: GuardedCriteria<T['value']> }
-			: { [key: string | symbol | number]: unknown };
+			: { [key: string | symbol | number]: unknown };*/
 
 export interface ObjectDerivedCriteria<T extends ObjectSetableCriteria> extends DerivedCriteriaTemplate<
 	ObjectMountedCriteria<T>,
