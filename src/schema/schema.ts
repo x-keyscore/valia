@@ -112,16 +112,25 @@ function testdd(): (MountedCriteria<SetableCriteria<"string" | "symbol">>) {
 
 const test = new Schema({
 	type: "object",
-	shape: {},
-	grain: {
+	shape: {
+		foo: {
+			type: "string"
+		},
+		bar: {
+			type: "number"
+		}
+	},
+	omittable: true,
+	expandable: {
 		key: { type: "string" },
-		value: { type: "string" }
+		value: { type: "symbol" }
 	}
 });
 
+
 type Test = SchemaInfer<typeof test>;
 
-type Debug = Test['additional']
+//type Debug = Test['additional']
 // Fetcher
 
 // const struct_additional_true = new Schema({ type: 'number', enum: { one: 1, two: 2, three: 3 } });

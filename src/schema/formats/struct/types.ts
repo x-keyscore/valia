@@ -59,7 +59,7 @@ export interface StructMountedCriteria<T extends StructSetableCriteria> {
 type DynamicProperties<U extends ObjectSetableCriteria | boolean | undefined> =
 	[U] extends [ObjectSetableCriteria]
 		? GuardedCriteria<U>
-		: [U] extends [true]// changed before false
+		: [U] extends [true]
 			? { [key: string | symbol]: unknown; }
 			: {};
 
@@ -67,7 +67,7 @@ type OptionalizeKeys<T, U extends (string | symbol)[] | boolean | undefined> =
  	[U] extends [(string | symbol)[]]
 		? { [K in keyof T as K extends U[number] ? K : never]+?: T[K]; }
 		& { [K in keyof T as K extends U[number] ? never : K]-?: T[K]; }
-		: [U] extends [true]// changed before false
+		: [U] extends [true]
 			? { [P in keyof T]+?: T[P]; }
 			: { [P in keyof T]-?: T[P]; };
 

@@ -2,7 +2,7 @@ export interface BasicObject {
     [key: string | symbol | number]: unknown
 };
 
-export interface PlainObject {
+export type PlainObject = {
     [key: string | symbol]: unknown
 };
 

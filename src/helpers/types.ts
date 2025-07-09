@@ -53,7 +53,7 @@ export type InternalTags =
 	| "Intl.PluralRules"
 	| "Intl.RelativeTimeFormat"
 	| "Intl.Locale";
-Proxy
+
 export type InternalObjects =
 	| Object
 	| Function
