@@ -1,40 +1,97 @@
 import type {
 	SetableCriteriaTemplate,
 	DerivedCriteriaTemplate,
+	SetableCriteriaMap,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
-	FormatTypes
+	FormatTypes,
 } from "../types";
 
-export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
-	item?: SetableCriteria<T>;
-	empty?: boolean;
+export type SetableShape<T extends FormatTypes = FormatTypes> = [
+	SetableCriteria<T> | SetableShape,
+	...(SetableCriteria<T> | SetableShape)[]
+];
+
+type SetableItem<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
+
+interface SetableExpandableRecord<T extends FormatTypes = FormatTypes> {
 	min?: number;
 	max?: number;
+	item?: SetableItem<T>;
+};
+
+export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
+	shape: SetableShape<T>;
+	expandable?: SetableExpandableRecord<T> | boolean;
 }
 
-export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
+type MountedShape<T extends SetableShape> =
+	T extends infer U
+		? {
+			[I in keyof U]:
+				U[I] extends SetableCriteria
+					? MountedCriteria<U[I]>
+					: U[I] extends SetableShape
+						? MountedCriteria<{ type: "array", shape: U[I] }>
+						: never;
+		}
+		: never;
+
+interface MountedExpandableRecord<T extends SetableExpandableRecord> {
+	min?: number;
+	max?: number;
 	item:
 		unknown extends T['item']
 			? undefined
-			: ArraySetableCriteria['item'] extends T['item']
-				? MountedCriteria<SetableCriteria> | undefined
-				: T['item'] extends SetableCriteria
+			: SetableExpandableRecord['item'] extends T['item']
+				? MountedCriteria<SetableItem> | undefined
+				: T['item'] extends SetableItem
 					? MountedCriteria<T['item']>
 					: T['item'];
-	empty:
-		unknown extends T['empty']
-			? true
-			: ArraySetableCriteria['empty'] extends T['empty']
-				? boolean
-				: T['empty'];
 }
 
-export type ArrayGuardedCriteria<T extends ArraySetableCriteria> = 
-	T['item'] extends SetableCriteria
-		? GuardedCriteria<T['item']>[]
-		: unknown[];
+export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
+	shape: MountedShape<T['shape']>;
+	expandable:
+		unknown extends T['expandable']
+			? false
+			: ArraySetableCriteria['expandable'] extends T['expandable']
+				? MountedExpandableRecord<SetableExpandableRecord> | boolean
+				: T['expandable'] extends SetableExpandableRecord
+					? MountedExpandableRecord<T['expandable']>
+					: T['expandable'];
+}
+
+type GuardedDynamic<U extends ArraySetableCriteria['expandable']> =
+	[U] extends [ArraySetableCriteria]
+		? GuardedCriteria<U>
+		: [U] extends [false]
+			? []
+			: unknown[];
+
+type GuardedStatic<T extends SetableShape> =
+	T extends infer U
+		? {
+			[I in keyof U]:
+				U[I] extends SetableCriteria
+					? GuardedCriteria<U[I]>
+					: U[I] extends SetableShape
+						? GuardedCriteria<{ type: "array", shape: U[I] }>
+						: never;
+		}
+		: never;
+
+type ArrayGuardedCriteria<T extends ArraySetableCriteria> =
+	 GuardedDynamic<T['expandable']> extends infer U
+		? GuardedStatic<T['shape']> extends infer V
+			? U extends any[]
+				? V extends any[]
+					? [...V, ...U]
+					: never
+				: never
+			: never
+		: never;
 
 export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends DerivedCriteriaTemplate<
 	ArrayMountedCriteria<T>,
@@ -42,15 +99,22 @@ export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends De
 > {}
 
 export type ArrayErrors =
-	| "ITEM_PROPERTY_REQUIRED"
-	| "ITEM_PROPERTY_MALFORMED"
-	| "EMPTY_PROPERTY_MALFORMED"
-    | "MIN_PROPERTY_MALFORMED"
-    | "MAX_PROPERTY_MALFORMED"
-    | "MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
+	| "SHAPE_PROPERTY_REQUIRED"
+	| "SHAPE_PROPERTY_MALFORMED"
+	| "SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED"
+    | "EXPANDABLE_PROPERTY_MALFORMED"
+	| "EXPANDABLE__ITEM_PROPERTY_MALFORMED"
+	| "EXPANDABLE__MIN_PROPERTY_MALFORMED"
+	| "EXPANDABLE__MAX_PROPERTY_MALFORMED"
+	| "EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
 
 export type ArrayRejects =
 	| "TYPE_ARRAY_UNSATISFIED"
-	| "EMPTY_UNALLOWED"
-	| "MIN_UNSATISFIED"
-	| "MAX_UNSATISFIED";
+	| "SHAPE_UNSATISFIED"
+	| "EXPANDLABLE_UNALLOWED"
+	| "EXPANDLABLE_MIN_UNSATISFIED"
+	| "EXPANDLABLE_MAX_UNSATISFIED";
+
+export interface ArrayMembers {
+	isShorthandShape(obj: {}): obj is SetableShape;
+}

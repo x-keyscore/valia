@@ -12,9 +12,9 @@
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && rollup -c",
 		"test": "npm run build && node --test",
-		"clean:unix": "rmdir /s /q ./dist",
-		"build:unix": "npm run clean:unix && rollup -c",
-		"test:unix": "npm run build:unix && node --test"
+		"clean:win": "rd /s /q dist",
+		"build:win": "npm run clean:win && rollup -c",
+		"test:win": "npm run build:win && node --test"
 	},
 	"keywords": [
 		"validator",

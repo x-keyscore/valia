@@ -7,7 +7,7 @@ export function isObject(x: unknown): x is object & BasicObject {
 	return (x !== null && typeof x === "object");
 }
 
-export function isPlainObject(x: number | string | boolean | symbol | bigint | object | null | undefined): x is object;
+export function isPlainObject(x: number | string | boolean | symbol | object): x is object;
 export function isPlainObject(x: unknown): x is PlainObject;
 
 /**

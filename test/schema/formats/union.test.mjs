@@ -31,17 +31,17 @@ describe("\nschema > formats > Union", () => {
 		before(() => {
 			union_object = new Schema({
 				type: "union",
-				union: [{ 
-					type: "struct",
-					struct: {
+				union: [{
+					type: "object",
+					shape: {
 						foo: { type: "string" },
 						bar: {
-							type: "struct",
-							struct: {
+							type: "object",
+							shape: {
 								foo: {
 									foo: {
-										type: "struct",
-										struct: {
+										type: "object",
+										shape: {
 											foo: { type: "string" }
 										}
 									},
@@ -51,18 +51,18 @@ describe("\nschema > formats > Union", () => {
 						}
 					}
 				}, {
-					type: "struct",
-					struct: {
+					type: "object",
+					shape: {
 						foo: {
-							type: "struct",
-							struct: {
+							type: "object",
+							shape: {
 								foo: { 
-									type: "struct",
-									struct: {
+									type: "object",
+									shape: {
 										foo: { type: "string" },
 										bar: {
-											type: "struct",
-											struct: {
+											type: "object",
+											shape: {
 												foo: { type: "string" }
 											}
 										}
@@ -109,7 +109,7 @@ describe("\nschema > formats > Union", () => {
 				union: [
 					{ type: "number" },
 					{ type: "string" },
-					{ type: "struct", struct: { foo: { type: "string" }, bar: { type: "string" } }},
+					{ type: "object", shape: { foo: { type: "string" }, bar: { type: "string" } }},
 					{ type: "tuple", tuple: [{ type: "string" }, { type: "string" }]}
 				]
 			});
@@ -140,14 +140,14 @@ describe("\nschema > formats > Union", () => {
 				type: "union",
 				union: [
 					{
-						type: "struct",
-						struct: {
+						type: "object",
+						shape: {
 							foo: { type: "string" }, 
 							bar: {
 								type: "union",
 								union: [{
-									type: "struct",
-									struct: {
+									type: "object",
+									shape: {
 										foo: { type: "string" },
 										bar: { type: "number" }
 									}
@@ -158,13 +158,13 @@ describe("\nschema > formats > Union", () => {
 						}
 					},
 					{
-						type: "struct",
-						struct: {
+						type: "object",
+						shape: {
 							foo: {
 								type: "union",
 								union: [{
-									type: "struct",
-									struct: {
+									type: "object",
+									shape: {
 										foo: { type: "number" },
 										bar: { type: "string" }
 									}

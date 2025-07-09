@@ -105,45 +105,71 @@ const test = new Schema({
 	}
 });
 */
-
-function testdd(): (MountedCriteria<SetableCriteria<"string" | "symbol">>) {
-	return {} as any;
-}
-
+/*
 const test = new Schema({
 	type: "object",
 	shape: {
-		foo: {
-			type: "string"
-		},
-		bar: {
-			type: "number"
-		}
+		
 	},
 	omittable: true,
 	expandable: {
+		
 		key: { type: "string" },
 		value: { type: "symbol" }
 	}
 });
 
-
 type Test = SchemaInfer<typeof test>;
 
+console.log(test.evaluate({
+	fo: Symbol("test")
+}))
+	*/
 //type Debug = Test['additional']
-// Fetcher
-
-// const struct_additional_true = new Schema({ type: 'number', enum: { one: 1, two: 2, three: 3 } });
-
-//struct_additional_true.validate({ foo: "", bar: 1, baz: 2 })
 /*
-const struct_optional_true = new Schema({
-	type: "struct",
-	optional: true,
-	struct: {
-		foo: { type: "string" },
-		bar: { type: "number" }
-	}
+const union_object = new Schema({
+	type: "union",
+	union: [{
+		type: "object",
+		shape: {
+			foo: { type: "string" },
+			bar: {
+				type: "object",
+				shape: {
+					foo: {
+						foo: {
+							type: "object",
+							shape: {
+								foo: { type: "string" }
+							}
+						},
+						bar: { type: "string" }
+					}
+				}
+			}
+		}
+	}, {
+		type: "object",
+		shape: {
+			foo: {
+				type: "object",
+				shape: {
+					foo: {
+						type: "object",
+						shape: {
+							foo: { type: "string" },
+							bar: {
+								type: "object",
+								shape: {
+									foo: { type: "string" }
+								}
+							}
+						}
+					}
+				}
+			},
+			bar: { type: "string" }
+		}
+	}]
 });
-
-console.log(struct_optional_true.validate({ bar: 0 }));*/
+*/

@@ -16,7 +16,7 @@ export class FormatsManager {
         const format = this.store.get(type);
         if (!format) throw new Issue(
             "FORMATS MANAGER",
-            "The type is unknown"
+            "This type is not recognized: " + type
         );
 
         return (format);

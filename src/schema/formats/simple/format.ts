@@ -1,6 +1,5 @@
 import type { SimpleSetableCriteria, SimpleErrors, SimpleRejects, SimpleMembers } from "./types";
 import type { Format } from "../types";
-import { isFunction, isAsyncFunction } from "../../../testers";
 
 export const SimpleFormat: Format<SimpleSetableCriteria, SimpleErrors, SimpleRejects, SimpleMembers> = {
 	type: "simple",
@@ -16,9 +15,7 @@ export const SimpleFormat: Format<SimpleSetableCriteria, SimpleErrors, SimpleRej
 		null:			1 << 0,
 		undefined:		1 << 1,
 		nullish:		1 << 2,
-		unknown:		1 << 3,
-		basicFunction:	1 << 4,
-		asyncFunction:	1 << 5
+		unknown:		1 << 3
 	},
 	mount(chunk, criteria) {
 		const { simple } = criteria;
@@ -54,12 +51,6 @@ export const SimpleFormat: Format<SimpleSetableCriteria, SimpleErrors, SimpleRej
 		}
 		if ((bitcode & bitflags.undefined) && value !== undefined) {
 			return ("SIMPLE_UNDEFINED_UNSATISFIED");
-		}
-		if ((bitcode & bitflags.basicFunction) && !isFunction(value)) {
-			return ("SIMPLE_FUNCTION_UNSATISFIED");
-		}
-		if ((bitcode & bitflags.asyncFunction) && !isAsyncFunction(value)) {
-			return ("SIMPLE_ASYNC_FUNCTION_UNSATISFIED");
 		}
 
 		return (null);

@@ -1,3 +1,4 @@
+/*
 import type { ObjectSetableCriteria } from "../object/types";
 import type {
 	SetableCriteriaTemplate,
@@ -124,3 +125,4 @@ export interface StructMembers {
 	) => (string | symbol)[];
 	isShorthandStruct(obj: {}): obj is SetableStruct;
 }
+*/

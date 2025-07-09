@@ -43,7 +43,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		return (declaredKeys.filter(key => !optional.includes(key)));
 	},
 	isShorthandShape(obj): obj is SetableShape {
-		return (isPlainObject(obj) && "type" in obj && typeof obj.type !== "string");
+		return (isPlainObject(obj) && (!("type" in obj) || typeof obj.type !== "string"));
 	},
 	mount(chunk, criteria) {
 		const { shape, strict, omittable, expandable } = criteria;
@@ -92,7 +92,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 				if (min !== undefined && max !== undefined && min > max) {
 					return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
 				}
-			} else if (typeof omittable !== "boolean") {
+			} else if (typeof expandable !== "boolean") {
 				return ("EXPANDABLE_PROPERTY_MALFORMED");
 			}
 		}
@@ -177,10 +177,10 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		const definedKeyCount = definedKeyArray.length;
 		
 		if (definedKeyCount < enforcedKeyCount) {
-			return ("STRUCT_UNSATISFIED");
+			return ("SHAPE_UNSATISFIED");
 		}
 		if (!expandable && definedKeyCount > declaredKeyCount) {
-			return ("ADDITIONAL_UNALLOWED");
+			return ("EXPANDLABLE_UNALLOWED");
 		}
 
 		if (typeof expandable === "boolean") {
@@ -192,11 +192,11 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 					enforcedMiss--;
 				}
 				else if (enforcedMiss > i) {
-					return ("STRUCT_UNSATISFIED");
+					return ("SHAPE_UNSATISFIED");
 				}
 				else if (!unforcedKeySet.has(key)) {
 					if (!expandable) {
-						return ("ADDITIONAL_UNALLOWED");
+						return ("EXPANDLABLE_UNALLOWED");
 					}
 					continue;
 				}
@@ -207,71 +207,57 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 				});
 			}
 		} else {
-			const additionalProperties: Record<string | symbol, unknown> = {};
+			const expandedKeys: (string | symbol)[] = [];
+			const { min, max } = expandable;
 
-			let requiredMiss = requiredKeyCount;
+			let requiredMiss = enforcedKeyCount;
 			for (let i = 0; i < definedKeyCount; i++) {
 				const key = definedKeyArray[i];
 
-				if (requiredKeySet.has(key)) {
+				if (enforcedKeySet.has(key)) {
 					requiredMiss--;
 				}
 				else if (requiredMiss > i) {
-					return ("STRUCT_UNSATISFIED");
+					return ("SHAPE_UNSATISFIED");
 				}
 				else if (!unforcedKeySet.has(key)) {
-					additionalProperties[key] = data[key];
+					expandedKeys.push(key);
 					continue;
 				}
 
 				chunk.push({
 					data: data[key],
-					node: struct[key]
+					node: shape[key]
 				});
 			}
 
-			chunk.push({
-				data: additionalProperties,
-				node: additional
-			});
-		}
+			if (min !== undefined && declaredKeyCount < min) {
+				return ("EXPANDLABLE_MIN_UNSATISFIED");
+			}
+			if (max !== undefined && declaredKeyCount > max) {
+				return ("EXPANDLABLE_MAX_UNSATISFIED");
+			}
 
-		return (null);
-		/*
-
-		const { strict, empty, min, max } = criteria;
-		const definedKeyArray = Reflect.ownKeys(data);
-		const definedkeyCount = definedKeyArray.length;
-
-		if (definedkeyCount === 0) {
-			return (empty ? null : "EMPTY_UNALLOWED");
-		}
-		if (min != null && definedkeyCount < min) {
-			return ("MIN_UNSATISFIED");
-		}
-		if (max != null && definedkeyCount > max) {
-			return ("MAX_UNSATISFIED");
-		}
-
-		if (criteria.key || criteria.value) {
-			for (let i = 0; i < definedkeyCount; i++) {
-				const key = definedKeyArray[i];
-
-				if (criteria.key) {
-					chunk.push({
-						data: key,
-						node: criteria.key
-					})
-				}
-				if (criteria.value) {
-					chunk.push({
-						data: data[key],
-						node: criteria.value
-					});
+			if (expandable.key || expandable.value) {
+				for (let i = 0; i < expandedKeys.length; i++) {
+					const key = expandedKeys[i];
+					
+					if (expandable.key) {
+						chunk.push({
+							data: key,
+							node: expandable.key
+						});
+					}
+					if (expandable.value) {
+						chunk.push({
+							data: data[key],
+							node: expandable.value
+						});
+					}
 				}
 			}
 		}
 
-		return (null);*/
+		return (null);
 	}
 }

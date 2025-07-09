@@ -5,9 +5,7 @@ import type { NumberSetableCriteria, NumberDerivedCriteria } from "./number/type
 import type { StringSetableCriteria, StringDerivedCriteria } from "./string/types";
 import type { SimpleSetableCriteria, SimpleDerivedCriteria } from "./simple/types";
 import type { ObjectSetableCriteria, ObjectDerivedCriteria } from "./object/types";
-import type { StructSetableCriteria, StructDerivedCriteria } from "./struct/types";
-import type { ArraySetableCriteria,  ArrayDerivedCriteria } from "./array/types";
-import type { TupleSetableCriteria, TupleDerivedCriteria } from "./tuple/types";
+import type { ArraySetableCriteria, ArrayDerivedCriteria } from "./array/types";
 import type { UnionSetableCriteria, UnionDerivedCriteria } from "./union/types";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
@@ -33,9 +31,7 @@ export interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
 	string: StringSetableCriteria;
 	simple: SimpleSetableCriteria;
 	object: ObjectSetableCriteria<T>;
-	struct: StructSetableCriteria<T>;
 	array: ArraySetableCriteria<T>;
-	tuple: TupleSetableCriteria<T>;
 	union: UnionSetableCriteria<T>;
 }
 
@@ -64,9 +60,7 @@ export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria>
 	string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
 	simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;
 	object: T extends ObjectSetableCriteria ? ObjectDerivedCriteria<T> : never;
-	struct: T extends StructSetableCriteria ? StructDerivedCriteria<T> : never;
 	array: T extends ArraySetableCriteria ? ArrayDerivedCriteria<T> : never;
-	tuple: T extends TupleSetableCriteria ? TupleDerivedCriteria<T> : never;
 	union: T extends UnionSetableCriteria ? UnionDerivedCriteria<T> : never;
 }
 

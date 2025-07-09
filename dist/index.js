@@ -26,7 +26,7 @@ class FormatsManager {
     get(type) {
         const format = this.store.get(type);
         if (!format)
-            throw new Issue("FORMATS MANAGER", "The type is unknown");
+            throw new Issue("FORMATS MANAGER", "This type is not recognized: " + type);
         return (format);
     }
 }
@@ -1387,9 +1387,7 @@ const SimpleFormat = {
         null: 1 << 0,
         undefined: 1 << 1,
         nullish: 1 << 2,
-        unknown: 1 << 3,
-        basicFunction: 1 << 4,
-        asyncFunction: 1 << 5
+        unknown: 1 << 3
     },
     mount(chunk, criteria) {
         const { simple } = criteria;
@@ -1421,219 +1419,144 @@ const SimpleFormat = {
         if ((bitcode & bitflags.undefined) && value !== undefined) {
             return ("SIMPLE_UNDEFINED_UNSATISFIED");
         }
-        if ((bitcode & bitflags.basicFunction) && !isFunction(value)) {
-            return ("SIMPLE_FUNCTION_UNSATISFIED");
-        }
-        if ((bitcode & bitflags.asyncFunction) && !isAsyncFunction(value)) {
-            return ("SIMPLE_ASYNC_FUNCTION_UNSATISFIED");
-        }
         return (null);
     }
 };
 
-const RecordFormat = {
-    type: "record",
+const ObjectFormat = {
+    type: "object",
     errors: {
-        KEY_PROPERTY_REQUIRED: "The 'key' property is required.",
-        KEY_PROPERTY_MALFORMED: "The 'key' property must be of type Plain Object.",
-        VALUE_PROPERTY_REQUIRED: "The 'value' property is required.",
-        VALUE_PROPERTY_MALFORMED: "The 'value' property must be of type Plain Object.",
+        SHAPE_PROPERTY_REQUIRED: "The 'shape' property is required.",
+        SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Plain Object.",
+        SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'shape' property must be of type Plain Object.",
         STRICT_PROPERTY_MALFORMED: "The 'strict' property must be of type Boolean.",
-        EMPTY_PROPERTY_MALFORMED: "The 'empty' property must be of type Boolean.",
-        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
-        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property."
+        OMITTABLE_PROPERTY_MALFORMED: "The 'omittable' property must be of type Boolean or Array.",
+        OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'omittable' property must be of type String or Symbol.",
+        EXPANDABLE_PROPERTY_MALFORMED: "The 'expandable' property must be of type Boolean or a Plain Object.",
+        EXPANDABLE__KEY_PROPERTY_MALFORMED: "The 'expandable.key' property, must be a criteria node Object.",
+        EXPANDABLE__VALUE_PROPERTY_MALFORMED: "The 'expandable.value' property, must be a criteria node Object.",
+        EXPANDABLE__MIN_PROPERTY_MALFORMED: "The 'expandable.min' property, must be of type Number.",
+        EXPANDABLE__MAX_PROPERTY_MALFORMED: "The 'expandable.max' property, must be of type Number.",
+        EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'expandable.min' property cannot be greater than 'expandable.max' property."
+    },
+    getUnforcedKeys(optional, declaredKeys) {
+        if (optional === true)
+            return (declaredKeys);
+        if (optional === false)
+            return ([]);
+        return (declaredKeys.filter(key => optional.includes(key)));
+    },
+    getEnforcedKeys(optional, declaredKeys) {
+        if (optional === true)
+            return ([]);
+        if (optional === false)
+            return (declaredKeys);
+        return (declaredKeys.filter(key => !optional.includes(key)));
+    },
+    isShorthandShape(obj) {
+        return (isPlainObject(obj) && (!("type" in obj) || typeof obj.type !== "string"));
     },
     mount(chunk, criteria) {
-        const { strict, empty, min, max } = criteria;
-        if (!("key" in criteria)) {
-            return ("KEY_PROPERTY_REQUIRED");
+        const { shape, strict, omittable, expandable } = criteria;
+        if (!("shape" in criteria)) {
+            return ("SHAPE_PROPERTY_REQUIRED");
         }
-        if (!isPlainObject(criteria.key)) {
-            return ("KEY_PROPERTY_MALFORMED");
+        if (!isPlainObject(shape)) {
+            return ("SHAPE_PROPERTY_MALFORMED");
         }
-        if (!("value" in criteria)) {
-            return ("VALUE_PROPERTY_REQUIRED");
-        }
-        if (!isPlainObject(criteria.value)) {
-            return ("VALUE_PROPERTY_MALFORMED");
+        for (const key of Reflect.ownKeys(shape)) {
+            if (!isPlainObject(shape[key])) {
+                return ("SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED");
+            }
         }
         if (strict !== undefined && typeof strict !== "boolean") {
             return ("STRICT_PROPERTY_MALFORMED");
         }
-        if (empty !== undefined && typeof empty !== "boolean") {
-            return ("EMPTY_PROPERTY_MALFORMED");
-        }
-        if (min !== undefined && typeof min !== "number") {
-            return ("MIN_PROPERTY_MALFORMED");
-        }
-        if (max !== undefined && typeof max !== "number") {
-            return ("MAX_PROPERTY_MALFORMED");
-        }
-        if (min !== undefined && max !== undefined && min > max) {
-            return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
-        }
-        Object.assign(criteria, {
-            strict: strict ?? true,
-            empty: empty ?? true
-        });
-        chunk.push({
-            node: criteria.key,
-            partPaths: {
-                explicit: ["key"],
-                implicit: []
-            }
-        });
-        chunk.push({
-            node: criteria.value,
-            partPaths: {
-                explicit: ["value"],
-                implicit: ["%", "string", "symbol"]
-            }
-        });
-        return (null);
-    },
-    check(chunk, criteria, data) {
-        if (criteria.strict) {
-            if (!isPlainObject(data)) {
-                return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
-            }
-        }
-        else {
-            if (!isObject(data)) {
-                return ("TYPE_OBJECT_UNSATISFIED");
-            }
-        }
-        const { empty, min, max } = criteria;
-        const keys = Reflect.ownKeys(data);
-        const keysLength = keys.length;
-        if (keysLength === 0) {
-            return (empty ? null : "EMPTY_UNALLOWED");
-        }
-        if (min != null && keysLength < min) {
-            return ("MIN_UNSATISFIED");
-        }
-        if (max != null && keysLength > max) {
-            return ("MAX_UNSATISFIED");
-        }
-        for (let i = 0; i < keysLength; i++) {
-            const key = keys[i];
-            chunk.push({
-                data: key,
-                node: criteria.key
-            }, {
-                data: data[key],
-                node: criteria.value
-            });
-        }
-        return (null);
-    }
-};
-
-const StructFormat = {
-    type: "struct",
-    errors: {
-        STRUCT_PROPERTY_REQUIRED: "The 'struct' property is required.",
-        STRUCT_PROPERTY_MALFORMED: "The 'struct' property must be of type Plain Object.",
-        STRUCT_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'struct' property must be of type Plain Object.",
-        STRICT_PROPERTY_MALFORMED: "The 'strict' property must be of type Boolean.",
-        OPTIONAL_PROPERTY_MALFORMED: "The 'optional' property must be of type Boolean or Array.",
-        OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'optional' property must be of type String or Symbol.",
-        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
-        ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'additional' property, must be a 'record’ criteria node."
-    },
-    getUnforcedKeys(optional, includedKeys) {
-        if (optional === true)
-            return (includedKeys);
-        if (optional === false)
-            return ([]);
-        return (includedKeys.filter(key => optional.includes(key)));
-    },
-    getRequiredKeys(optional, includedKeys) {
-        if (optional === true)
-            return ([]);
-        if (optional === false)
-            return (includedKeys);
-        return (includedKeys.filter(key => !optional.includes(key)));
-    },
-    isShorthandStruct(obj) {
-        return (isPlainObject(obj) && typeof obj?.type !== "string");
-    },
-    mount(chunk, criteria) {
-        if (!("struct" in criteria)) {
-            return ("STRUCT_PROPERTY_REQUIRED");
-        }
-        if (!isPlainObject(criteria.struct)) {
-            return ("STRUCT_PROPERTY_MALFORMED");
-        }
-        for (const value of Object.values(criteria.struct)) {
-            if (!isPlainObject(value)) {
-                return ("STRUCT_PROPERTY_OBJECT_VALUE_MALFORMED");
-            }
-        }
-        if (criteria.strict !== undefined && typeof criteria.strict !== "boolean") {
-            return ("STRICT_PROPERTY_MALFORMED");
-        }
-        if (criteria.optional !== undefined) {
-            if (isArray(criteria.optional)) {
-                for (const item of criteria.optional) {
+        if (omittable !== undefined) {
+            if (isArray(omittable)) {
+                for (const item of omittable) {
                     if (typeof item !== "string" && typeof item !== "symbol") {
-                        return ("OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED");
                     }
                 }
             }
-            else if (typeof criteria.optional !== "boolean") {
-                return ("OPTIONAL_PROPERTY_MALFORMED");
+            else if (typeof omittable !== "boolean") {
+                return ("OMITTABLE_PROPERTY_MALFORMED");
             }
         }
-        if (criteria.additional !== undefined) {
-            if (isPlainObject(criteria.additional)) {
-                if (criteria.additional?.type !== "record") {
-                    return ("ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED");
+        if (expandable !== undefined) {
+            if (isPlainObject(expandable)) {
+                const { key, value, min, max } = expandable;
+                if (key !== undefined && !isPlainObject(key)) {
+                    return ("EXPANDABLE__KEY_PROPERTY_MALFORMED");
+                }
+                if (value !== undefined && !isPlainObject(value)) {
+                    return ("EXPANDABLE__VALUE_PROPERTY_MALFORMED");
+                }
+                if (min !== undefined && typeof min !== "number") {
+                    return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+                }
+                if (max !== undefined && typeof max !== "number") {
+                    return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+                }
+                if (min !== undefined && max !== undefined && min > max) {
+                    return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
                 }
             }
-            else if (typeof criteria.additional !== "boolean") {
-                return ("ADDITIONAL_PROPERTY_MALFORMED");
+            else if (typeof expandable !== "boolean") {
+                return ("EXPANDABLE_PROPERTY_MALFORMED");
             }
         }
-        const optional = criteria.optional ?? false;
-        const additional = criteria.additional ?? false;
-        const includedKeyArray = Reflect.ownKeys(criteria.struct);
-        const unforcedKeyArray = this.getUnforcedKeys(optional, includedKeyArray);
-        const requiredKeyArray = this.getRequiredKeys(optional, includedKeyArray);
+        const resolvedOmittable = omittable ?? false;
+        const resolvedExpandable = expandable ?? false;
+        const declaredKeyArray = Reflect.ownKeys(shape);
+        const unforcedKeyArray = this.getUnforcedKeys(resolvedOmittable, declaredKeyArray);
+        const enforcedKeyArray = this.getEnforcedKeys(resolvedOmittable, declaredKeyArray);
         Object.assign(criteria, {
-            optional: optional,
-            additional: additional,
-            includedKeySet: new Set(includedKeyArray),
+            strict: strict ?? true,
+            omittable: resolvedOmittable,
+            expandable: resolvedExpandable,
+            declaredKeySet: new Set(declaredKeyArray),
             unforcedKeySet: new Set(unforcedKeyArray),
-            requiredKeySet: new Set(requiredKeyArray)
+            enforcedKeySet: new Set(enforcedKeyArray)
         });
-        for (let i = 0; i < includedKeyArray.length; i++) {
-            const key = includedKeyArray[i];
-            let node = criteria.struct[key];
-            if (this.isShorthandStruct(node)) {
+        for (let i = 0; i < declaredKeyArray.length; i++) {
+            const key = declaredKeyArray[i];
+            let node = shape[key];
+            if (this.isShorthandShape(node)) {
                 node = {
-                    type: "struct",
-                    struct: node
+                    type: "object",
+                    shape: node
                 };
-                criteria.struct[key] = node;
+                shape[key] = node;
             }
             chunk.push({
                 node: node,
                 partPaths: {
-                    explicit: ["struct", key],
+                    explicit: ["shape", key],
                     implicit: ["&", key]
                 }
             });
         }
-        if (typeof additional !== "boolean") {
-            chunk.push({
-                node: additional,
-                partPaths: {
-                    explicit: ["additional"],
-                    implicit: []
-                }
-            });
+        if (typeof resolvedExpandable === "object") {
+            if (resolvedExpandable.key) {
+                chunk.push({
+                    node: resolvedExpandable.key,
+                    partPaths: {
+                        explicit: ["expandable", "key"],
+                        implicit: []
+                    }
+                });
+            }
+            if (resolvedExpandable.value) {
+                chunk.push({
+                    node: resolvedExpandable.value,
+                    partPaths: {
+                        explicit: ["expandable", "value"],
+                        implicit: ["%", "string", "symbol"]
+                    }
+                });
+            }
         }
         return (null);
     },
@@ -1643,68 +1566,86 @@ const StructFormat = {
                 return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
             }
         }
-        else {
-            if (!isObject(data)) {
-                return ("TYPE_OBJECT_UNSATISFIED");
-            }
+        else if (!isObject(data)) {
+            return ("TYPE_OBJECT_UNSATISFIED");
         }
-        const { struct, additional, includedKeySet, unforcedKeySet, requiredKeySet } = criteria;
-        const includedKeyCount = includedKeySet.size;
-        const requiredKeyCount = requiredKeySet.size;
+        const { shape, expandable, declaredKeySet, unforcedKeySet, enforcedKeySet } = criteria;
+        const declaredKeyCount = declaredKeySet.size;
+        const enforcedKeyCount = enforcedKeySet.size;
         const definedKeyArray = Reflect.ownKeys(data);
         const definedKeyCount = definedKeyArray.length;
-        if (definedKeyCount < requiredKeyCount) {
-            return ("STRUCT_UNSATISFIED");
+        if (definedKeyCount < enforcedKeyCount) {
+            return ("SHAPE_UNSATISFIED");
         }
-        if (!additional && definedKeyCount > includedKeyCount) {
-            return ("ADDITIONAL_UNALLOWED");
+        if (!expandable && definedKeyCount > declaredKeyCount) {
+            return ("EXPANDLABLE_UNALLOWED");
         }
-        if (typeof additional === "boolean") {
-            let requiredMiss = requiredKeyCount;
+        if (typeof expandable === "boolean") {
+            let enforcedMiss = enforcedKeyCount;
             for (let i = 0; i < definedKeyCount; i++) {
                 const key = definedKeyArray[i];
-                if (requiredKeySet.has(key)) {
-                    requiredMiss--;
+                if (enforcedKeySet.has(key)) {
+                    enforcedMiss--;
                 }
-                else if (requiredMiss > i) {
-                    return ("STRUCT_UNSATISFIED");
+                else if (enforcedMiss > i) {
+                    return ("SHAPE_UNSATISFIED");
                 }
                 else if (!unforcedKeySet.has(key)) {
-                    if (!additional) {
-                        return ("ADDITIONAL_UNALLOWED");
+                    if (!expandable) {
+                        return ("EXPANDLABLE_UNALLOWED");
                     }
                     continue;
                 }
                 chunk.push({
                     data: data[key],
-                    node: struct[key]
+                    node: shape[key]
                 });
             }
         }
         else {
-            const additionalProperties = {};
-            let requiredMiss = requiredKeyCount;
+            const expandedKeys = [];
+            const { min, max } = expandable;
+            let requiredMiss = enforcedKeyCount;
             for (let i = 0; i < definedKeyCount; i++) {
                 const key = definedKeyArray[i];
-                if (requiredKeySet.has(key)) {
+                if (enforcedKeySet.has(key)) {
                     requiredMiss--;
                 }
                 else if (requiredMiss > i) {
-                    return ("STRUCT_UNSATISFIED");
+                    return ("SHAPE_UNSATISFIED");
                 }
                 else if (!unforcedKeySet.has(key)) {
-                    additionalProperties[key] = data[key];
+                    expandedKeys.push(key);
                     continue;
                 }
                 chunk.push({
                     data: data[key],
-                    node: struct[key]
+                    node: shape[key]
                 });
             }
-            chunk.push({
-                data: additionalProperties,
-                node: additional
-            });
+            if (min !== undefined && declaredKeyCount < min) {
+                return ("EXPANDLABLE_MIN_UNSATISFIED");
+            }
+            if (max !== undefined && declaredKeyCount > max) {
+                return ("EXPANDLABLE_MAX_UNSATISFIED");
+            }
+            if (expandable.key || expandable.value) {
+                for (let i = 0; i < expandedKeys.length; i++) {
+                    const key = expandedKeys[i];
+                    if (expandable.key) {
+                        chunk.push({
+                            data: key,
+                            node: expandable.key
+                        });
+                    }
+                    if (expandable.value) {
+                        chunk.push({
+                            data: data[key],
+                            node: expandable.value
+                        });
+                    }
+                }
+            }
         }
         return (null);
     }
@@ -1722,10 +1663,7 @@ const ArrayFormat = {
     },
     mount(chunk, criteria) {
         const { empty, min, max } = criteria;
-        if (!("item" in criteria)) {
-            return ("ITEM_PROPERTY_REQUIRED");
-        }
-        if (!isPlainObject(criteria.item)) {
+        if (criteria.item !== undefined && !isPlainObject(criteria.item)) {
             return ("ITEM_PROPERTY_MALFORMED");
         }
         if (empty !== undefined && typeof empty !== "boolean") {
@@ -1743,13 +1681,15 @@ const ArrayFormat = {
         Object.assign(criteria, {
             empty: empty ?? true
         });
-        chunk.push({
-            node: criteria.item,
-            partPaths: {
-                explicit: ["item"],
-                implicit: ["%", "number"],
-            }
-        });
+        if (criteria.item) {
+            chunk.push({
+                node: criteria.item,
+                partPaths: {
+                    explicit: ["item"],
+                    implicit: ["%", "number"],
+                }
+            });
+        }
         return (null);
     },
     check(chunk, criteria, data) {
@@ -1767,11 +1707,13 @@ const ArrayFormat = {
         if (max !== undefined && dataLength > max) {
             return ("MAX_UNSATISFIED");
         }
-        for (let i = 0; i < dataLength; i++) {
-            chunk.push({
-                data: data[i],
-                node: criteria.item
-            });
+        if (criteria.item) {
+            for (let i = 0; i < dataLength; i++) {
+                chunk.push({
+                    data: data[i],
+                    node: criteria.item
+                });
+            }
         }
         return (null);
     }
@@ -1944,8 +1886,7 @@ const formatNatives = [
     NumberFormat,
     StringFormat,
     SimpleFormat,
-    RecordFormat,
-    StructFormat,
+    ObjectFormat,
     ArrayFormat,
     TupleFormat,
     UnionFormat
@@ -2007,20 +1948,110 @@ class Schema {
         return ({ reject: null, data });
     }
 }
-// Fetcher
-// const struct_additional_true = new Schema({ type: 'number', enum: { one: 1, two: 2, three: 3 } });
-//struct_additional_true.validate({ foo: "", bar: 1, baz: 2 })
 /*
-const struct_optional_true = new Schema({
-    type: "struct",
-    optional: true,
-    struct: {
-        foo: { type: "string" },
-        bar: { type: "number" }
+const test = new Schema({
+    type: "object",
+    strict: false,
+    static: {
+        optional: ["foo"],
+        min: 0,
+        max: 0,
+        shape: {
+            foo: { type: "string" }
+        }
+    },
+    dynamic: {
+        empty: true,
+        min: 0,
+        max: 0,
+        key: { type: "string" },
+        value: { type: "string" }
     }
 });
 
-console.log(struct_optional_true.validate({ bar: 0 }));*/
+const test = new Schema({
+    type: "object",
+    strict: false,
+    shape: {
+        foo: { type: "string" }
+    },
+    optional: ["foo"],
+    additional: {
+        min: 0,
+        max: 0,
+        key: { type: "string" },
+        value: { type: "string" }
+    }
+});
+*/
+/*
+const test = new Schema({
+    type: "object",
+    shape: {
+        
+    },
+    omittable: true,
+    expandable: {
+        
+        key: { type: "string" },
+        value: { type: "symbol" }
+    }
+});
+
+type Test = SchemaInfer<typeof test>;
+
+console.log(test.evaluate({
+    fo: Symbol("test")
+}))
+    */
+//type Debug = Test['additional']
+/*
+const union_object = new Schema({
+    type: "union",
+    union: [{
+        type: "object",
+        shape: {
+            foo: { type: "string" },
+            bar: {
+                type: "object",
+                shape: {
+                    foo: {
+                        foo: {
+                            type: "object",
+                            shape: {
+                                foo: { type: "string" }
+                            }
+                        },
+                        bar: { type: "string" }
+                    }
+                }
+            }
+        }
+    }, {
+        type: "object",
+        shape: {
+            foo: {
+                type: "object",
+                shape: {
+                    foo: {
+                        type: "object",
+                        shape: {
+                            foo: { type: "string" },
+                            bar: {
+                                type: "object",
+                                shape: {
+                                    foo: { type: "string" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            bar: { type: "string" }
+        }
+    }]
+});
+*/
 
 function SchemaFactory(plugin1, plugin2, plugin3) {
     return class extends Schema {

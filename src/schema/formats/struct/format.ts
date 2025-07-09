@@ -1,3 +1,4 @@
+/*
 import type { StructSetableCriteria, SetableStruct, StructErrors, StringRejects, StructMembers } from "./types";
 import type { Format } from "../types";
 import { isObject, isPlainObject, isArray } from "../../../testers";
@@ -35,7 +36,7 @@ export const StructFormat: Format<StructSetableCriteria, StructErrors, StringRej
 		return (includedKeys.filter(key => !optional.includes(key)));
 	},
 	isShorthandStruct(obj): obj is SetableStruct {
-		return (isPlainObject(obj) && typeof obj?.type !== "string");
+		return (isPlainObject(obj));
 	},
 	mount(chunk, criteria) {
 		if (!("struct" in criteria)) {
@@ -208,3 +209,4 @@ export const StructFormat: Format<StructSetableCriteria, StructErrors, StringRej
 		return (null);
 	}
 }
+*/

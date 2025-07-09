@@ -5,7 +5,7 @@ import { Schema, Issue } from "../../dist/index.js";
 
 describe("\nschema > instance", () => {
 	describe("'criteria' property", () => {
-		let string_criteria, string_schema, tuple_criteria, tuple_schema, struct_schema, main_schema;
+		let string_criteria, string_schema, tuple_criteria, tuple_schema, object_schema, main_schema;
 
 		before(() => {
 			string_criteria = { type: "string", enum: ["foo", "bar"] };
@@ -13,19 +13,19 @@ describe("\nschema > instance", () => {
 			tuple_criteria = { type: "tuple", tuple: [{ type: "string" }, { type: "string" }] };
 			tuple_schema = new Schema(tuple_criteria);
 
-			struct_schema = new Schema({
-				type: "struct",
-				struct: {
+			object_schema = new Schema({
+				type: "object",
+				shape: {
 					foo: string_schema.criteria,
 					bar: tuple_schema.criteria
 				}
 			});
 
 			main_schema = new Schema({
-				type: "struct",
-				struct: {
-					foo: struct_schema.criteria,
-					bar: struct_schema.criteria
+				type: "object",
+				shape: {
+					foo: object_schema.criteria,
+					bar: object_schema.criteria
 				}
 			});
 		});
@@ -44,18 +44,15 @@ describe("\nschema > instance", () => {
 		it("The root objects of mounted node grafts, when used one or multiple times in\n" +
 			"the definition of a new schema, all have distinct references after the instantiation\n" +
 			"of the new schema.", () => {
-			assert.notStrictEqual(main_schema.criteria.struct.foo, struct_schema.criteria);
-			assert.notStrictEqual(main_schema.criteria.struct.bar, struct_schema.criteria);
-			assert.notStrictEqual(main_schema.criteria.struct.foo, main_schema.criteria.struct.bar);
+			assert.notStrictEqual(main_schema.criteria.shape.foo, object_schema.criteria);
+			assert.notStrictEqual(main_schema.criteria.shape.bar, object_schema.criteria);
+			assert.notStrictEqual(main_schema.criteria.shape.foo, main_schema.criteria.shape.bar);
 
-			/*
-			  Verification that the sub-objects of mounted node grafts
-			  retain references to their previous schema.
-			*/
-			assert.strictEqual(main_schema.criteria.struct.foo.struct, struct_schema.criteria.struct);
-			assert.strictEqual(main_schema.criteria.struct.bar.struct, struct_schema.criteria.struct);
-			assert.strictEqual(main_schema.criteria.struct.foo.struct.foo.enum, string_schema.criteria.enum);
-			assert.strictEqual(main_schema.criteria.struct.bar.struct.bar.tuple, tuple_schema.criteria.tuple);
+			/* Verification that the sub-objects of mounted node grafts retain references to their previous schema. */
+			assert.strictEqual(main_schema.criteria.shape.foo.shape, object_schema.criteria.shape);
+			assert.strictEqual(main_schema.criteria.shape.bar.shape, object_schema.criteria.shape);
+			assert.strictEqual(main_schema.criteria.shape.foo.shape.foo.enum, string_schema.criteria.enum);
+			assert.strictEqual(main_schema.criteria.shape.bar.shape.bar.tuple, tuple_schema.criteria.tuple);
 		});
 	});
 	describe("'validate()' method", () => {
@@ -75,8 +72,8 @@ describe("\nschema > instance", () => {
 
 		before(() => {
 			main_schema = new Schema({
-				type: "struct",
-				struct: {
+				type: "object",
+				shape: {
 					foo: { type: "string" },
 					bar: {
 						type: "string",
@@ -95,7 +92,7 @@ describe("\nschema > instance", () => {
 						code: "TYPE_STRING_UNSATISFIED",
 						type: "string",
 						path: {
-							explicit: ["struct", "bar"],
+							explicit: ["shape", "bar"],
 							implicit: ["&", "bar"]
 						},
 						label: "TEST_LABEL",

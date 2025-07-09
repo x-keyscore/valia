@@ -14,18 +14,18 @@ export type SetableShape<T extends FormatTypes = FormatTypes> = {
 type SetableKey = SetableCriteria<"string" | "symbol">;
 type SetableValue<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
 
-interface SetableExpandableRecord {
+interface SetableExpandableRecord<T extends FormatTypes = FormatTypes> {
 	min?: number;
 	max?: number;
 	key?: SetableKey;
-	value?: SetableValue;
+	value?: SetableValue<T>;
 };
 
 export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
 	shape: SetableShape<T>;
 	strict?: boolean;
 	omittable?: (string | symbol)[] | boolean;
-	expandable?: SetableExpandableRecord | boolean;
+	expandable?: SetableExpandableRecord<T> | boolean;
 }
 
 type MountedShape<T extends SetableShape> = {
@@ -38,6 +38,8 @@ type MountedShape<T extends SetableShape> = {
 };
 
 interface MountedExpandableRecord<T extends SetableExpandableRecord> {
+	min?: number;
+	max?: number;
 	key:
 		unknown extends T['key']
 			? undefined
@@ -94,7 +96,7 @@ type GuardedDynamic<T extends ObjectSetableCriteria['expandable']> =
 			? { [key: PropertyKey]: unknown; }
 			: {};
 
-type GuardedStaticKeys<T, U extends (string | symbol)[] | boolean | undefined> =
+type GuardedStaticKeys<T, U extends ObjectSetableCriteria['omittable']> =
  	[U] extends [(string | symbol)[]]
 		? { [K in keyof T as K extends U[number] ? K : never]+?: T[K]; } &
 			{ [K in keyof T as K extends U[number] ? never : K]-?: T[K]; }
@@ -102,7 +104,7 @@ type GuardedStaticKeys<T, U extends (string | symbol)[] | boolean | undefined> =
 			? { [P in keyof T]+?: T[P]; }
 			: { [P in keyof T]-?: T[P]; };
 
-type GuardedStatic<T extends SetableShape, U extends (string | symbol)[] | boolean | undefined> = {
+type GuardedStatic<T extends SetableShape, U extends ObjectSetableCriteria['omittable']> = {
 	-readonly [K in keyof GuardedStaticKeys<T, U>]:
 			T[K] extends SetableCriteria
 				? GuardedCriteria<T[K]>
@@ -145,9 +147,10 @@ export type ObjectErrors =
 export type ObjectRejects =
 	| "TYPE_PLAIN_OBJECT_UNSATISFIED"
 	| "TYPE_OBJECT_UNSATISFIED"
-	| "EMPTY_UNALLOWED"
-	| "MIN_UNSATISFIED"
-	| "MAX_UNSATISFIED";
+	| "SHAPE_UNSATISFIED"
+	| "EXPANDLABLE_UNALLOWED"
+	| "EXPANDLABLE_MIN_UNSATISFIED"
+	| "EXPANDLABLE_MAX_UNSATISFIED";
 
 export interface ObjectMembers {
 	getUnforcedKeys: (

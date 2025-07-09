@@ -1,52 +1,97 @@
-import type { ArraySetableCriteria, ArrayErrors, ArrayRejects } from "./types";
+import type { ArraySetableCriteria, SetableShape, ArrayErrors, ArrayRejects, ArrayMembers } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray } from "../../../testers";
 
-export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects> = {
+export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects, ArrayMembers> = {
 	type: "array",
 	errors: {
-		ITEM_PROPERTY_REQUIRED:
-			"The 'item' property key is required.",
-		ITEM_PROPERTY_MALFORMED:
-		    "The 'item' property must be of type Plain Object.",
-        EMPTY_PROPERTY_MALFORMED:
-            "The 'empty' property must be of type Boolean.",
-        MIN_PROPERTY_MALFORMED:
-            "The 'min' property must be of type Number.",
-        MAX_PROPERTY_MALFORMED:
-            "The 'max' property must be of type Number.",
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
-            "The 'min' property cannot be greater than 'max' property."
+		SHAPE_PROPERTY_REQUIRED:
+            "The 'shape' property is required.",
+        SHAPE_PROPERTY_MALFORMED:
+			"The 'shape' property must be of type Array.",
+		SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED:
+            "The array items of the 'shape' property must be of type Plain Object or Array.",
+		EXPANDABLE_PROPERTY_MALFORMED:
+			"The 'expandable' property must be of type Boolean or a Plain Object.",
+		EXPANDABLE__ITEM_PROPERTY_MALFORMED:
+			"The 'expandable.item' property, must be a criteria node Object.",
+		EXPANDABLE__MIN_PROPERTY_MALFORMED:
+			"The 'expandable.min' property, must be of type Number.",
+		EXPANDABLE__MAX_PROPERTY_MALFORMED:
+			"The 'expandable.max' property, must be of type Number.",
+		EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
+			"The 'expandable.min' property cannot be greater than 'expandable.max' property."
+	},
+	isShorthandShape(obj: {}): obj is SetableShape {
+		return (isArray(obj));
 	},
 	mount(chunk, criteria) {
-		const { empty, min, max } = criteria;
+		const { shape, expandable } = criteria;
 
-		if (criteria.item !== undefined && !isPlainObject(criteria.item)) {
-			return ("ITEM_PROPERTY_MALFORMED");
+		if (!("shape" in criteria)) {
+			return ("SHAPE_PROPERTY_REQUIRED");
 		}
-		if (empty !== undefined && typeof empty !== "boolean") {
-			return ("EMPTY_PROPERTY_MALFORMED");
+		if (!isArray(shape)) {
+			return ("SHAPE_PROPERTY_MALFORMED");
 		}
-		if (min !== undefined && typeof min !== "number") {
-			return ("MIN_PROPERTY_MALFORMED");
+		for (const item of shape) {
+			if (!isPlainObject(item)) {
+				return ("TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED");
+			}
 		}
-		if (max !== undefined && typeof max !== "number") {
-			return ("MAX_PROPERTY_MALFORMED");
-		}
-		if (min !== undefined && max !== undefined && min > max) {
-			return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+		if (expandable !== undefined) {
+			if (isPlainObject(expandable)) {
+				const { item, min, max } = expandable;
+
+				if (item !== undefined && !isPlainObject(item)) {
+					return ("EXPANDABLE__ITEM_PROPERTY_MALFORMED");
+				}
+				if (min !== undefined && typeof min !== "number") {
+					return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+				}
+				if (max !== undefined && typeof max !== "number") {
+					return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+				}
+				if (min !== undefined && max !== undefined && min > max) {
+					return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+				}
+			} else if (typeof expandable !== "boolean") {
+				return ("EXPANDABLE_PROPERTY_MALFORMED");
+			}
 		}
 
-		Object.assign(criteria, { 
-			empty: empty ?? true
+		const additional = criteria.additional ?? false;
+
+		Object.assign(criteria, {
+			additional: additional
 		});
 
-		if (criteria.item) {
+		for (let i = 0; i < criteria.tuple.length; i++) {
+			let item = criteria.tuple[i];
+
+			if (this.isShorthandShape(item)) {
+				item = {
+					type: "tuple",
+					tuple: item
+				}
+				criteria.tuple[i] = item;
+			}
+
 			chunk.push({
-				node: criteria.item,
+				node: item,
 				partPaths: {
-					explicit: ["item"],
-					implicit: ["%", "number"],
+					explicit: ["tuple", i],
+					implicit: ["&", i]
+				}
+			});
+		}
+
+		if (typeof additional !== "boolean") {
+			chunk.push({
+				node: additional,
+				partPaths: {
+					explicit: ["additional"],
+					implicit: []
 				}
 			});
 		}
@@ -58,28 +103,33 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			return ("TYPE_ARRAY_UNSATISFIED");
 		}
 
-		const { empty, min, max } = criteria;
+		const { tuple, additional } = criteria;
+		const tupleLength = tuple.length;
 		const dataLength = data.length;
-	
-		if (!dataLength) {
-			return (empty ? null : "EMPTY_UNALLOWED");
-		}
-		if (min !== undefined && dataLength < min) {
-			return ("MIN_UNSATISFIED");
-		}
-		if (max !== undefined && dataLength > max) {
-			return ("MAX_UNSATISFIED");
+
+		if (dataLength < tupleLength) {
+			return ("TUPLE_UNSATISFIED");
 		}
 
-		if (criteria.item) {
-			for (let i = 0; i < dataLength; i++) {
-				chunk.push({
-					data: data[i],
-					node: criteria.item
-				});
-			}
+		for (let i = 0; i < tupleLength; i++) {
+			chunk.push({
+				data: data[i],
+				node: tuple[i]
+			});
+		}
+
+		if (dataLength > tupleLength && !additional) {
+			return ("ADDITIONAL_UNALLOWED");
+		}
+		if (dataLength > tupleLength && typeof additional === "object") {
+			const additionalItems = data.slice(tupleLength);
+
+			chunk.push({
+				data: additionalItems,
+				node: additional
+			});
 		}
 
 		return (null);
 	}
-};
+}

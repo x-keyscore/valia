@@ -5,7 +5,7 @@ import { Schema } from "../../../dist/index.js";
 
 describe("\nschema > formats > Array", () => {
 	describe("Default", () => {
-		let array_default, array_string, array_struct;
+		let array_default, array_string, array_object;
 
 		before(() => {
 			array_default = new Schema({
@@ -18,11 +18,11 @@ describe("\nschema > formats > Array", () => {
 				item: { type: "string" }
 			});
 
-			array_struct = new Schema({
+			array_object = new Schema({
 				type: "array",
 				item: {
-					type: "struct",
-					struct: { foo: { type: "string" }}
+					type: "object",
+					shape: { foo: { type: "string" }}
 				}
 			});
 		});
@@ -39,13 +39,13 @@ describe("\nschema > formats > Array", () => {
 			assert.strictEqual(array_string.validate(["x", 0, "x"]), false);
 			assert.strictEqual(array_string.validate(["x", "x", 0]), false);
 
-			assert.strictEqual(array_struct.validate([{}]), false);
-			assert.strictEqual(array_struct.validate([{ bar: "x" }]), false);
-			assert.strictEqual(array_struct.validate([{ foo: "x" }, { bar: "x" }]), false);
-			assert.strictEqual(array_struct.validate([{ bar: "x" }, { foo: "x" }]), false);
-			assert.strictEqual(array_struct.validate([{ bar: "x" }, { foo: "x" }, { foo: "x" }]), false);
-			assert.strictEqual(array_struct.validate([{ foo: "x" }, { bar: "x" }, { foo: "x" }]), false);
-			assert.strictEqual(array_struct.validate([{ foo: "x" }, { foo: "x" }, { bar: "x" }]), false);
+			assert.strictEqual(array_object.validate([{}]), false);
+			assert.strictEqual(array_object.validate([{ bar: "x" }]), false);
+			assert.strictEqual(array_object.validate([{ foo: "x" }, { bar: "x" }]), false);
+			assert.strictEqual(array_object.validate([{ bar: "x" }, { foo: "x" }]), false);
+			assert.strictEqual(array_object.validate([{ bar: "x" }, { foo: "x" }, { foo: "x" }]), false);
+			assert.strictEqual(array_object.validate([{ foo: "x" }, { bar: "x" }, { foo: "x" }]), false);
+			assert.strictEqual(array_object.validate([{ foo: "x" }, { foo: "x" }, { bar: "x" }]), false);
 		});
 
 		it("should validate correct values", () => {
@@ -59,9 +59,9 @@ describe("\nschema > formats > Array", () => {
 			assert.strictEqual(array_string.validate(["x", "x"]), true);
 			assert.strictEqual(array_string.validate(["x", "x", "x"]), true);
 	
-			assert.strictEqual(array_struct.validate([{ foo: "x" }]), true);
-			assert.strictEqual(array_struct.validate([{ foo: "x" }, { foo: "x" }]), true);
-			assert.strictEqual(array_struct.validate([{ foo: "x" }, { foo: "x" }, { foo: "x" }]), true);
+			assert.strictEqual(array_object.validate([{ foo: "x" }]), true);
+			assert.strictEqual(array_object.validate([{ foo: "x" }, { foo: "x" }]), true);
+			assert.strictEqual(array_object.validate([{ foo: "x" }, { foo: "x" }, { foo: "x" }]), true);
 		});
 	});
 
