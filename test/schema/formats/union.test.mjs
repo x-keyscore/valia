@@ -110,7 +110,7 @@ describe("\nschema > formats > Union", () => {
 					{ type: "number" },
 					{ type: "string" },
 					{ type: "object", shape: { foo: { type: "string" }, bar: { type: "string" } }},
-					{ type: "tuple", tuple: [{ type: "string" }, { type: "string" }]}
+					{ type: "array", shape: [{ type: "string" }, { type: "string" }]}
 				]
 			});
 		});

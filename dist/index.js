@@ -494,7 +494,6 @@ const helpers = {
     string: stringHelpers
 };
 
-// OBJECT
 function isObject(x) {
     return (x !== null && typeof x === "object");
 }
@@ -596,7 +595,7 @@ function isUuid(str, params) {
     return (false);
 }
 
-function weak(callback) {
+function weakly(callback) {
     let ref = null;
     return (() => {
         if (!ref) {
@@ -636,7 +635,7 @@ Composition :
 const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
 const ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
 const ipV4SimpleRegex = new RegExp(`^${ipV4Pattern}$`);
-const ipV4PrefixRegex = weak(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV4PrefixRegex = weakly(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
 const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
 const ipV6Pattern = "(?:" +
     `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
@@ -648,7 +647,7 @@ const ipV6Pattern = "(?:" +
     `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
     `(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
 const ipV6SimpleRegex = new RegExp(`^${ipV6Pattern}$`);
-const ipV6PrefixRegex = weak(() => new RegExp(`^${ipV6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+const ipV6PrefixRegex = weakly(() => new RegExp(`^${ipV6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
 /**
  * **Standard:** No standard
  *
@@ -740,9 +739,9 @@ Links :
 const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
 const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
 const dotLocalRegex = new RegExp(`^${dotStringPattern}$`);
-const dotOrQuoteLocalRegex = weak(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
-const ipAddressRegex = weak(() => new RegExp(`^\\[(?:IPv6:${ipV6Pattern}|${ipV4Pattern})\\]$`));
-const generalAddressRegex = weak(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
+const dotOrQuoteLocalRegex = weakly(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const ipAddressRegex = weakly(() => new RegExp(`^\\[(?:IPv6:${ipV6Pattern}|${ipV4Pattern})\\]$`));
+const generalAddressRegex = weakly(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 function parseEmail(str) {
     const length = str.length;
     let i = 0;
@@ -959,9 +958,9 @@ function isDataUrl(str, params) {
 
 const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
 const base32Regex = new RegExp("^(?:[A-Z2-7]{8})*(?:[A-Z2-7]{2}[=]{6}|[A-Z2-7]{4}[=]{4}|[A-Z2-7]{5}[=]{3}|[A-Z2-7]{6}[=]{2}|[A-Z2-7]{7}[=]{1})?$");
-const base32HexRegex = weak(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
+const base32HexRegex = weakly(() => new RegExp("^(?:[0-9A-V]{8})*(?:[0-9A-V]{2}[=]{6}|[0-9A-V]{4}[=]{4}|[0-9A-V]{5}[=]{3}|[0-9A-V]{6}[=]{2}|[0-9A-V]{7}[=]{1})?$"));
 const base64Regex = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}[=]{2}|[A-Za-z0-9+/]{3}[=]{1})?$");
-const base64UrlRegex = weak(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
+const base64UrlRegex = weakly(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}[=]{2}|[A-Za-z0-9_-]{3}[=]{1})?$"));
 /**
  * **Standard :** RFC 4648
  *
@@ -1654,134 +1653,82 @@ const ObjectFormat = {
 const ArrayFormat = {
     type: "array",
     errors: {
-        ITEM_PROPERTY_REQUIRED: "The 'item' property key is required.",
-        ITEM_PROPERTY_MALFORMED: "The 'item' property must be of type Plain Object.",
-        EMPTY_PROPERTY_MALFORMED: "The 'empty' property must be of type Boolean.",
-        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
-        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property."
+        SHAPE_PROPERTY_REQUIRED: "The 'shape' property is required.",
+        SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Array.",
+        SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'shape' property must be of type Plain Object or Array.",
+        EXPANDABLE_PROPERTY_MALFORMED: "The 'expandable' property must be of type Boolean or a Plain Object.",
+        EXPANDABLE__ITEM_PROPERTY_MALFORMED: "The 'expandable.item' property, must be a criteria node Object.",
+        EXPANDABLE__MIN_PROPERTY_MALFORMED: "The 'expandable.min' property, must be of type Number.",
+        EXPANDABLE__MAX_PROPERTY_MALFORMED: "The 'expandable.max' property, must be of type Number.",
+        EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'expandable.min' property cannot be greater than 'expandable.max' property."
     },
-    mount(chunk, criteria) {
-        const { empty, min, max } = criteria;
-        if (criteria.item !== undefined && !isPlainObject(criteria.item)) {
-            return ("ITEM_PROPERTY_MALFORMED");
-        }
-        if (empty !== undefined && typeof empty !== "boolean") {
-            return ("EMPTY_PROPERTY_MALFORMED");
-        }
-        if (min !== undefined && typeof min !== "number") {
-            return ("MIN_PROPERTY_MALFORMED");
-        }
-        if (max !== undefined && typeof max !== "number") {
-            return ("MAX_PROPERTY_MALFORMED");
-        }
-        if (min !== undefined && max !== undefined && min > max) {
-            return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
-        }
-        Object.assign(criteria, {
-            empty: empty ?? true
-        });
-        if (criteria.item) {
-            chunk.push({
-                node: criteria.item,
-                partPaths: {
-                    explicit: ["item"],
-                    implicit: ["%", "number"],
-                }
-            });
-        }
-        return (null);
-    },
-    check(chunk, criteria, data) {
-        if (!isArray(data)) {
-            return ("TYPE_ARRAY_UNSATISFIED");
-        }
-        const { empty, min, max } = criteria;
-        const dataLength = data.length;
-        if (!dataLength) {
-            return (empty ? null : "EMPTY_UNALLOWED");
-        }
-        if (min !== undefined && dataLength < min) {
-            return ("MIN_UNSATISFIED");
-        }
-        if (max !== undefined && dataLength > max) {
-            return ("MAX_UNSATISFIED");
-        }
-        if (criteria.item) {
-            for (let i = 0; i < dataLength; i++) {
-                chunk.push({
-                    data: data[i],
-                    node: criteria.item
-                });
-            }
-        }
-        return (null);
-    }
-};
-
-const TupleFormat = {
-    type: "tuple",
-    errors: {
-        TUPLE_PROPERTY_REQUIRED: "The 'typle' property is required.",
-        TUPLE_PROPERTY_MALFORMED: "The 'tuple' property must be of type Array.",
-        TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'tuple' property must be of type Plain Object or Array.",
-        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
-        ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'additional' property, must be a 'array’ criteria node."
-    },
-    isShorthandTuple(obj) {
+    isShorthandShape(obj) {
         return (isArray(obj));
     },
     mount(chunk, criteria) {
-        if (!("tuple" in criteria)) {
-            return ("TUPLE_PROPERTY_REQUIRED");
+        const { shape, expandable } = criteria;
+        if (!("shape" in criteria)) {
+            return ("SHAPE_PROPERTY_REQUIRED");
         }
-        if (!isArray(criteria.tuple)) {
-            return ("TUPLE_PROPERTY_MALFORMED");
+        if (!isArray(shape)) {
+            return ("SHAPE_PROPERTY_MALFORMED");
         }
-        for (const item of criteria.tuple) {
-            if (!isPlainObject(item) && !isArray(item)) {
-                return ("TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED");
+        for (const item of shape) {
+            if (!isPlainObject(item)) {
+                return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
             }
         }
-        if (criteria.additional !== undefined) {
-            if (isPlainObject(criteria.additional)) {
-                if (criteria.additional?.type !== "array") {
-                    return ("ADDITIONAL_PROPERTY_OBJECT_MISCONFIGURED");
+        if (expandable !== undefined) {
+            if (isPlainObject(expandable)) {
+                const { item, min, max } = expandable;
+                if (item !== undefined && !isPlainObject(item)) {
+                    return ("EXPANDABLE__ITEM_PROPERTY_MALFORMED");
+                }
+                if (min !== undefined && typeof min !== "number") {
+                    return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+                }
+                if (max !== undefined && typeof max !== "number") {
+                    return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+                }
+                if (min !== undefined && max !== undefined && min > max) {
+                    return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
                 }
             }
-            else if (typeof criteria.additional !== "boolean") {
-                return ("ADDITIONAL_PROPERTY_MALFORMED");
+            else if (typeof expandable !== "boolean") {
+                return ("EXPANDABLE_PROPERTY_MALFORMED");
             }
         }
-        const additional = criteria.additional ?? false;
+        const resolvedExpandable = expandable ?? false;
         Object.assign(criteria, {
-            additional: additional
+            expandable: resolvedExpandable
         });
-        for (let i = 0; i < criteria.tuple.length; i++) {
-            let item = criteria.tuple[i];
-            if (this.isShorthandTuple(item)) {
-                item = {
-                    type: "tuple",
-                    tuple: item
+        for (let i = 0; i < shape.length; i++) {
+            let node = shape[i];
+            if (this.isShorthandShape(node)) {
+                node = {
+                    type: "array",
+                    shape: node
                 };
-                criteria.tuple[i] = item;
+                shape[i] = node;
             }
             chunk.push({
-                node: item,
+                node: node,
                 partPaths: {
                     explicit: ["tuple", i],
                     implicit: ["&", i]
                 }
             });
         }
-        if (typeof additional !== "boolean") {
-            chunk.push({
-                node: additional,
-                partPaths: {
-                    explicit: ["additional"],
-                    implicit: []
-                }
-            });
+        if (typeof resolvedExpandable === "object") {
+            if (resolvedExpandable.item) {
+                chunk.push({
+                    node: resolvedExpandable.item,
+                    partPaths: {
+                        explicit: ["expandable", "item"],
+                        implicit: []
+                    }
+                });
+            }
         }
         return (null);
     },
@@ -1789,27 +1736,41 @@ const TupleFormat = {
         if (!isArray(data)) {
             return ("TYPE_ARRAY_UNSATISFIED");
         }
-        const { tuple, additional } = criteria;
-        const tupleLength = tuple.length;
-        const dataLength = data.length;
-        if (dataLength < tupleLength) {
-            return ("TUPLE_UNSATISFIED");
+        const { shape, expandable } = criteria;
+        const declaredLength = shape.length;
+        const definedLength = data.length;
+        if (definedLength < declaredLength) {
+            return ("SHAPE_UNSATISFIED");
         }
-        for (let i = 0; i < tupleLength; i++) {
+        if (!expandable && definedLength > declaredLength) {
+            return ("EXPANDLABLE_UNALLOWED");
+        }
+        for (let i = 0; i < declaredLength; i++) {
             chunk.push({
                 data: data[i],
-                node: tuple[i]
+                node: shape[i]
             });
         }
-        if (dataLength > tupleLength && !additional) {
-            return ("ADDITIONAL_UNALLOWED");
+        if (definedLength === declaredLength) {
+            return (null);
         }
-        if (dataLength > tupleLength && typeof additional === "object") {
-            const additionalItems = data.slice(tupleLength);
-            chunk.push({
-                data: additionalItems,
-                node: additional
-            });
+        if (typeof expandable === "object") {
+            const expandedLength = declaredLength - declaredLength;
+            const { min, max } = expandable;
+            if (min !== undefined && expandedLength < min) {
+                return ("EXPANDLABLE_MIN_UNSATISFIED");
+            }
+            if (max !== undefined && expandedLength > max) {
+                return ("EXPANDLABLE_MAX_UNSATISFIED");
+            }
+            if (expandable.item) {
+                for (let i = declaredLength; i < definedLength; i++) {
+                    chunk.push({
+                        data: data[i],
+                        node: expandable.item
+                    });
+                }
+            }
         }
         return (null);
     }
@@ -1888,7 +1849,6 @@ const formatNatives = [
     SimpleFormat,
     ObjectFormat,
     ArrayFormat,
-    TupleFormat,
     UnionFormat
 ];
 
@@ -1948,62 +1908,37 @@ class Schema {
         return ({ reject: null, data });
     }
 }
-/*
 const test = new Schema({
     type: "object",
+    shape: {},
     strict: false,
-    static: {
-        optional: ["foo"],
-        min: 0,
-        max: 0,
-        shape: {
-            foo: { type: "string" }
-        }
-    },
-    dynamic: {
-        empty: true,
-        min: 0,
-        max: 0,
-        key: { type: "string" },
-        value: { type: "string" }
+    expandable: true
+});
+console.log(test.evaluate(Array));
+console.log(isObject(Array));
+/*
+const hslItem = new Schema({
+    type: "object",
+    shape: {
+        h: { type: "number" },
+        s: { type: "number" },
+        l: { type: "number" }
     }
 });
 
 const test = new Schema({
-    type: "object",
-    strict: false,
-    shape: {
-        foo: { type: "string" }
-    },
-    optional: ["foo"],
-    additional: {
-        min: 0,
-        max: 0,
-        key: { type: "string" },
-        value: { type: "string" }
-    }
-});
-*/
-/*
-const test = new Schema({
-    type: "object",
-    shape: {
-        
-    },
-    omittable: true,
+    type: "array",
+    shape: [],
     expandable: {
-        
-        key: { type: "string" },
-        value: { type: "symbol" }
+        max: 10,
+        item: hslItem.criteria
     }
 });
 
 type Test = SchemaInfer<typeof test>;
 
-console.log(test.evaluate({
-    fo: Symbol("test")
-}))
-    */
+console.log(test.evaluate([{ h: 10, s: 10, l: 20 }]));
+*/
 //type Debug = Test['additional']
 /*
 const union_object = new Schema({

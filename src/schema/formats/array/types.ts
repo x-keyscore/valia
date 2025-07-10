@@ -1,7 +1,6 @@
 import type {
 	SetableCriteriaTemplate,
 	DerivedCriteriaTemplate,
-	SetableCriteriaMap,
 	SetableCriteria,
 	MountedCriteria,
 	GuardedCriteria,
@@ -9,7 +8,6 @@ import type {
 } from "../types";
 
 export type SetableShape<T extends FormatTypes = FormatTypes> = [
-	SetableCriteria<T> | SetableShape,
 	...(SetableCriteria<T> | SetableShape)[]
 ];
 
@@ -63,12 +61,14 @@ export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
 					: T['expandable'];
 }
 
-type GuardedDynamic<U extends ArraySetableCriteria['expandable']> =
-	[U] extends [ArraySetableCriteria]
-		? GuardedCriteria<U>
-		: [U] extends [false]
-			? []
-			: unknown[];
+type GuardedDynamic<T extends ArraySetableCriteria['expandable']> =
+	[T] extends [SetableExpandableRecord]
+		? T['item'] extends SetableItem
+			? GuardedCriteria<T['item']>[]
+			: []
+		: [T] extends [true]
+			? unknown[]
+			: [];
 
 type GuardedStatic<T extends SetableShape> =
 	T extends infer U
@@ -116,5 +116,5 @@ export type ArrayRejects =
 	| "EXPANDLABLE_MAX_UNSATISFIED";
 
 export interface ArrayMembers {
-	isShorthandShape(obj: {}): obj is SetableShape;
+	isShorthandShape(obj: object): obj is SetableShape;
 }

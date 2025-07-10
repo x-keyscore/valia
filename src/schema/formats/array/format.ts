@@ -22,7 +22,7 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 		EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
 			"The 'expandable.min' property cannot be greater than 'expandable.max' property."
 	},
-	isShorthandShape(obj: {}): obj is SetableShape {
+	isShorthandShape(obj): obj is SetableShape {
 		return (isArray(obj));
 	},
 	mount(chunk, criteria) {
@@ -36,7 +36,7 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 		}
 		for (const item of shape) {
 			if (!isPlainObject(item)) {
-				return ("TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED");
+				return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
 			}
 		}
 		if (expandable !== undefined) {
@@ -60,25 +60,25 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			}
 		}
 
-		const additional = criteria.additional ?? false;
+		const resolvedExpandable = expandable ?? false;
 
 		Object.assign(criteria, {
-			additional: additional
+			expandable: resolvedExpandable
 		});
 
-		for (let i = 0; i < criteria.tuple.length; i++) {
-			let item = criteria.tuple[i];
+		for (let i = 0; i < shape.length; i++) {
+			let node = shape[i];
 
-			if (this.isShorthandShape(item)) {
-				item = {
-					type: "tuple",
-					tuple: item
+			if (this.isShorthandShape(node)) {
+				node = {
+					type: "array",
+					shape: node
 				}
-				criteria.tuple[i] = item;
+				shape[i] = node;
 			}
 
 			chunk.push({
-				node: item,
+				node: node,
 				partPaths: {
 					explicit: ["tuple", i],
 					implicit: ["&", i]
@@ -86,14 +86,16 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			});
 		}
 
-		if (typeof additional !== "boolean") {
-			chunk.push({
-				node: additional,
-				partPaths: {
-					explicit: ["additional"],
-					implicit: []
-				}
-			});
+		if (typeof resolvedExpandable === "object") {
+			if (resolvedExpandable.item) {
+				chunk.push({
+					node: resolvedExpandable.item,
+					partPaths: {
+						explicit: ["expandable", "item"],
+						implicit: []
+					}
+				});
+			}
 		}
 
 		return (null);
@@ -103,31 +105,47 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			return ("TYPE_ARRAY_UNSATISFIED");
 		}
 
-		const { tuple, additional } = criteria;
-		const tupleLength = tuple.length;
-		const dataLength = data.length;
+		const { shape, expandable } = criteria;
+		const declaredLength = shape.length;
+		const definedLength = data.length;
 
-		if (dataLength < tupleLength) {
-			return ("TUPLE_UNSATISFIED");
+		if (definedLength < declaredLength) {
+			return ("SHAPE_UNSATISFIED");
+		}
+		if (!expandable && definedLength > declaredLength) {
+			return ("EXPANDLABLE_UNALLOWED");
 		}
 
-		for (let i = 0; i < tupleLength; i++) {
+		for (let i = 0; i < declaredLength; i++) {
 			chunk.push({
 				data: data[i],
-				node: tuple[i]
+				node: shape[i]
 			});
 		}
 
-		if (dataLength > tupleLength && !additional) {
-			return ("ADDITIONAL_UNALLOWED");
+		if (definedLength === declaredLength) {
+			return (null);
 		}
-		if (dataLength > tupleLength && typeof additional === "object") {
-			const additionalItems = data.slice(tupleLength);
 
-			chunk.push({
-				data: additionalItems,
-				node: additional
-			});
+		if (typeof expandable === "object") {
+			const expandedLength = declaredLength - declaredLength;
+			const { min, max } = expandable;
+
+			if (min !== undefined && expandedLength < min) {
+				return ("EXPANDLABLE_MIN_UNSATISFIED");
+			}
+			if (max !== undefined && expandedLength > max) {
+				return ("EXPANDLABLE_MAX_UNSATISFIED");
+			}
+
+			if (expandable.item) {
+				for (let i = declaredLength; i < definedLength; i++) {
+					chunk.push({
+						data: data[i],
+						node: expandable.item
+					});
+				}
+			}
 		}
 
 		return (null);

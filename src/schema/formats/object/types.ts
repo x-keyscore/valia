@@ -23,7 +23,7 @@ interface SetableExpandableRecord<T extends FormatTypes = FormatTypes> {
 
 export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
 	shape: SetableShape<T>;
-	strict?: boolean;
+	is?: "like" | "pure" | "plain";
 	omittable?: (string | symbol)[] | boolean;
 	expandable?: SetableExpandableRecord<T> | boolean;
 }
@@ -60,7 +60,7 @@ interface MountedExpandableRecord<T extends SetableExpandableRecord> {
 
 export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
 	shape: MountedShape<T['shape']>;
-	strict:
+	is:
 		unknown extends T['strict']
 			? true
 			: ObjectSetableCriteria['strict'] extends T['strict']
@@ -91,7 +91,7 @@ type GuardedDynamic<T extends ObjectSetableCriteria['expandable']> =
 					: never
 			: T['value'] extends SetableCriteria
 				? { [key: PropertyKey]: GuardedCriteria<T['value']> }
-				: { [key: PropertyKey]: unknown }
+				: {}
 		: [T] extends [true]
 			? { [key: PropertyKey]: unknown; }
 			: {};

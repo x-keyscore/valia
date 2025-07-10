@@ -1,8 +1,9 @@
+/*
 import {describe, it, before } from "node:test";
 import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
-/*
+
 describe("\nschema > formats > Record", () => {
 	describe("Default", () => {
 		let record_default, record_string, record_struct;

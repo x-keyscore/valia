@@ -146,6 +146,57 @@ describe("\nschema > formats > Object", () => {
 		});
 	});
 
+	describe("'strict' parameter", () => {
+		let object_strict_true, object_strict_false;
+
+		before(() => {
+			object_strict_true = new Schema({
+				type: "object",
+				shape: {},
+				strict: true,
+				expandable: true
+			});
+
+			object_strict_false = new Schema({
+				type: "object",
+				shape: {},
+				strict: false,
+				expandable: true
+			});
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(object_strict_true.validate(0), false);
+			assert.strictEqual(object_strict_true.validate(""), false);
+			assert.strictEqual(object_strict_true.validate(null), false);
+			assert.strictEqual(object_strict_true.validate(undefined), false);
+			assert.strictEqual(object_strict_true.validate([]), false);
+			assert.strictEqual(object_strict_true.validate(Array), false);
+			assert.strictEqual(object_strict_true.validate(new Array()), false);
+			assert.strictEqual(object_strict_true.validate(Date), false);
+			assert.strictEqual(object_strict_true.validate(new Date()), false);
+			assert.strictEqual(object_strict_true.validate(class foo {}), false);
+
+			assert.strictEqual(object_strict_false.validate(0), false);
+			assert.strictEqual(object_strict_false.validate(""), false);
+			assert.strictEqual(object_strict_false.validate(null), false);
+			assert.strictEqual(object_strict_false.validate(undefined), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(object_strict_true.validate({}), true);
+			assert.strictEqual(object_strict_true.validate(new Object()), true);
+			assert.strictEqual(object_strict_true.validate(new Object(null)), true);
+
+			assert.strictEqual(object_strict_false.validate([]), true);
+			assert.strictEqual(object_strict_false.validate(Array), true);
+			assert.strictEqual(object_strict_false.validate(new Array()), true);
+			assert.strictEqual(object_strict_false.validate(Date), true);
+			assert.strictEqual(object_strict_false.validate(new Date()), true);
+			assert.strictEqual(object_strict_false.validate(class foo {}), true);
+		});
+	});
+
 	describe("'omittable' parameter (Boolean value)", () => {
 		let object_omittable_true, object_omittable_false;
 

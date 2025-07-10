@@ -1,5 +1,4 @@
-
-export function weak<O extends object>(callback: () => O): () => O {
+export function weakly<O extends object>(callback: () => O): () => O {
 	let ref: WeakRef<O> | null = null;
 
     return (() => {

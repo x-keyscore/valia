@@ -4,6 +4,7 @@ import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
+import { isObject } from "../testers";
 
 /**
  * The `Schema` class is used to define and validate data structures,
@@ -69,62 +70,42 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	}
 }
 
-/*
 const test = new Schema({
 	type: "object",
-	strict: false,
-	static: {
-		optional: ["foo"],
-		min: 0,
-		max: 0,
-		shape: {
-			foo: { type: "string" }
-		}
-	},
-	dynamic: {
-		empty: true,
-		min: 0,
-		max: 0,
-		key: { type: "string" },
-		value: { type: "string" }
+	is: "like" | "basic" | "plain", 
+	shape: {},
+	expandable: true
+});
+console.log(test.evaluate(Array));
+
+
+
+console.log(isObject(Array));
+/*
+const hslItem = new Schema({
+	type: "object",
+	shape: {
+		h: { type: "number" },
+		s: { type: "number" },
+		l: { type: "number" }
 	}
 });
 
 const test = new Schema({
-	type: "object",
-	strict: false,
-	shape: {
-		foo: { type: "string" }
-	},
-	optional: ["foo"],
-	additional: {
-		min: 0,
-		max: 0,
-		key: { type: "string" },
-		value: { type: "string" }
-	}
-});
-*/
-/*
-const test = new Schema({
-	type: "object",
-	shape: {
-		
-	},
-	omittable: true,
+	type: "array",
+	shape: [],
 	expandable: {
-		
-		key: { type: "string" },
-		value: { type: "symbol" }
+		max: 10,
+		item: hslItem.criteria
 	}
 });
 
 type Test = SchemaInfer<typeof test>;
 
-console.log(test.evaluate({
-	fo: Symbol("test")
-}))
-	*/
+console.log(test.evaluate([{ h: 10, s: 10, l: 20 }]));
+*/
+
+
 //type Debug = Test['additional']
 /*
 const union_object = new Schema({

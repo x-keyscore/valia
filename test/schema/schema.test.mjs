@@ -5,19 +5,19 @@ import { Schema, Issue } from "../../dist/index.js";
 
 describe("\nschema > instance", () => {
 	describe("'criteria' property", () => {
-		let string_criteria, string_schema, tuple_criteria, tuple_schema, object_schema, main_schema;
+		let string_criteria, string_schema, array_criteria, array_schema, object_schema, main_schema;
 
 		before(() => {
 			string_criteria = { type: "string", enum: ["foo", "bar"] };
 			string_schema = new Schema(string_criteria);
-			tuple_criteria = { type: "tuple", tuple: [{ type: "string" }, { type: "string" }] };
-			tuple_schema = new Schema(tuple_criteria);
+			array_criteria = { type: "array", shape: [{ type: "string" }, { type: "string" }] };
+			array_schema = new Schema(array_criteria);
 
 			object_schema = new Schema({
 				type: "object",
 				shape: {
 					foo: string_schema.criteria,
-					bar: tuple_schema.criteria
+					bar: array_schema.criteria
 				}
 			});
 
@@ -35,10 +35,10 @@ describe("\nschema > instance", () => {
 			"reference from the original after instantiation.", () => {
 			assert.notStrictEqual(string_criteria, string_schema.criteria);
 			assert.notStrictEqual(string_criteria.enum, string_schema.criteria.enum);
-			assert.notStrictEqual(tuple_criteria, tuple_schema.criteria);
-			assert.notStrictEqual(tuple_criteria.tuple, tuple_schema.criteria.tuple);
-			assert.notStrictEqual(tuple_criteria.tuple[0], tuple_schema.criteria.tuple[0]);
-			assert.notStrictEqual(tuple_criteria.tuple[1], tuple_schema.criteria.tuple[1]);
+			assert.notStrictEqual(array_criteria, array_schema.criteria);
+			assert.notStrictEqual(array_criteria.shape, array_schema.criteria.shape);
+			assert.notStrictEqual(array_criteria.shape[0], array_schema.criteria.shape[0]);
+			assert.notStrictEqual(array_criteria.shape[1], array_schema.criteria.shape[1]);
 		});
 
 		it("The root objects of mounted node grafts, when used one or multiple times in\n" +
@@ -52,7 +52,7 @@ describe("\nschema > instance", () => {
 			assert.strictEqual(main_schema.criteria.shape.foo.shape, object_schema.criteria.shape);
 			assert.strictEqual(main_schema.criteria.shape.bar.shape, object_schema.criteria.shape);
 			assert.strictEqual(main_schema.criteria.shape.foo.shape.foo.enum, string_schema.criteria.enum);
-			assert.strictEqual(main_schema.criteria.shape.bar.shape.bar.tuple, tuple_schema.criteria.tuple);
+			assert.strictEqual(main_schema.criteria.shape.bar.shape.bar.shape, array_schema.criteria.shape);
 		});
 	});
 	describe("'validate()' method", () => {
