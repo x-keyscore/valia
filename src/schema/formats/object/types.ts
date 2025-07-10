@@ -11,6 +11,8 @@ export type SetableShape<T extends FormatTypes = FormatTypes> = {
 	[key: string | symbol | number]: SetableCriteria<T> | SetableShape<T>;
 };
 
+type SetableNature = "LIKE" | "PURE";
+
 type SetableKey = SetableCriteria<"string" | "symbol">;
 type SetableValue<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
 
@@ -23,7 +25,7 @@ interface SetableExpandableRecord<T extends FormatTypes = FormatTypes> {
 
 export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
 	shape: SetableShape<T>;
-	is?: "like" | "pure" | "plain";
+	nature?: SetableNature;
 	omittable?: (string | symbol)[] | boolean;
 	expandable?: SetableExpandableRecord<T> | boolean;
 }
@@ -60,12 +62,6 @@ interface MountedExpandableRecord<T extends SetableExpandableRecord> {
 
 export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
 	shape: MountedShape<T['shape']>;
-	is:
-		unknown extends T['strict']
-			? true
-			: ObjectSetableCriteria['strict'] extends T['strict']
-				? boolean
-				: T['strict'];
 	expandable:
 		unknown extends T['expandable']
 			? false
@@ -134,7 +130,8 @@ export type ObjectErrors =
 	| "SHAPE_PROPERTY_REQUIRED"
 	| "SHAPE_PROPERTY_MALFORMED"
 	| "SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED"
-	| "STRICT_PROPERTY_MALFORMED"
+	| "NATURE_PROPERTY_MALFORMED"
+	| "NATURE_PROPERTY_STRING_MISCONFIGURED"
 	| "OMITTABLE_PROPERTY_MALFORMED"
 	| "OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED"
     | "EXPANDABLE_PROPERTY_MALFORMED"
@@ -153,6 +150,7 @@ export type ObjectRejects =
 	| "EXPANDLABLE_MAX_UNSATISFIED";
 
 export interface ObjectMembers {
+	NETURE: SetableNature[],
 	getUnforcedKeys: (
 		optional: boolean | (string | symbol)[],
 		declaredKeys: (string | symbol)[]

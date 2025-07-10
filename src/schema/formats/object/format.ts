@@ -1,6 +1,7 @@
 import type { ObjectSetableCriteria, SetableShape, ObjectErrors, ObjectRejects, ObjectMembers } from "./types";
 import type { Format } from "../types";
 import { isObject, isPlainObject, isArray } from "../../../testers";
+import { isObjectLike } from "../../../testers/object/object";
 
 export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRejects, ObjectMembers> = {
 	type: "object",
@@ -11,8 +12,10 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 			"The 'shape' property must be of type Plain Object.",
 		SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED:
 			"The object values of the 'shape' property must be of type Plain Object.",
-		STRICT_PROPERTY_MALFORMED:
-			"The 'strict' property must be of type Boolean.",
+		NATURE_PROPERTY_MALFORMED:
+			"The 'nature' property must be of type Boolean.",
+		NATURE_PROPERTY_STRING_MISCONFIGURED:
+			"The string of the 'nature' property must be of set on 'LIKE', 'BASIC' or 'PLAIN'.",
 		OMITTABLE_PROPERTY_MALFORMED:
 			"The 'omittable' property must be of type Boolean or Array.",
 		OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED:
@@ -30,6 +33,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
 			"The 'expandable.min' property cannot be greater than 'expandable.max' property."
 	},
+	NETURE: ["LIKE", "BASIC", "PLAIN"],
 	getUnforcedKeys(optional, declaredKeys) {
 		if (optional === true) return (declaredKeys);
 		if (optional === false) return ([]);
@@ -46,7 +50,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		return (isPlainObject(obj) && (!("type" in obj) || typeof obj.type !== "string"));
 	},
 	mount(chunk, criteria) {
-		const { shape, strict, omittable, expandable } = criteria;
+		const { shape, nature, omittable, expandable } = criteria;
 
 		if (!("shape" in criteria)) {
 			return ("SHAPE_PROPERTY_REQUIRED");
@@ -59,8 +63,13 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 				return ("SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED");
 			}
 		}
-		if (strict !== undefined && typeof strict !== "boolean") {
-			return ("STRICT_PROPERTY_MALFORMED");
+		if (nature !== undefined) {
+			if (typeof nature !== "string") {
+				return ("NATURE_PROPERTY_MALFORMED");
+			}
+			if (!this.NETURE.includes(nature)) {
+				return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
+			}
 		}
 		if (omittable !== undefined) {
 			if (isArray(omittable)) {
@@ -104,7 +113,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		const enforcedKeyArray = this.getEnforcedKeys(resolvedOmittable, declaredKeyArray);
 
 		Object.assign(criteria, {
-			strict: strict ?? true,
+			nature: nature ?? "BASIC",
 			omittable: resolvedOmittable,
 			expandable: resolvedExpandable,
 			declaredKeySet: new Set(declaredKeyArray),
@@ -157,7 +166,32 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 		return (null);
 	},
 	check(chunk, criteria, data) {
-		if (criteria.strict) {
+		const {
+			shape, nature, expandable,
+			declaredKeySet, unforcedKeySet, enforcedKeySet
+		} = criteria;
+
+		if (nature) {
+			if 
+		}
+		switch(criteria.nature) {
+			case "LIKE":
+				if (!isObjectLike(data)) {
+					return ("TYPE_OBJECT_LIKE_UNSATISFIED");
+				}
+				break;
+			case "PURE":
+				if (!isObject(data)) {
+					return ("TYPE_OBJECT_UNSATISFIED");
+				}
+				break;
+			case "PLAIN":
+				if (!isPlainObject(data)) {
+					return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
+				}
+				break;
+		}
+		if (criteria.nature) {
 			if (!isPlainObject(data)) {
 				return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
 			}
@@ -165,10 +199,7 @@ export const ObjectFormat: Format<ObjectSetableCriteria, ObjectErrors, ObjectRej
 			return ("TYPE_OBJECT_UNSATISFIED");
 		}
 
-		const {
-			shape, expandable,
-			declaredKeySet, unforcedKeySet, enforcedKeySet
-		} = criteria;
+		
 
 		const declaredKeyCount = declaredKeySet.size;
 		const enforcedKeyCount = enforcedKeySet.size;

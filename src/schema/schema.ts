@@ -72,13 +72,11 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 
 const test = new Schema({
 	type: "object",
-	is: "like" | "basic" | "plain", 
+	
 	shape: {},
 	expandable: true
 });
 console.log(test.evaluate(Array));
-
-
 
 console.log(isObject(Array));
 /*

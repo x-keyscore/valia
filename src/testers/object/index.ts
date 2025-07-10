@@ -1,6 +1,7 @@
 export {
-	isObject,
+	isObject,	
 	isPlainObject,
+	isObjectLike,
 	isArray,
 	isTypedArray,
 	isFunction,
