@@ -2,7 +2,7 @@ import type { StringSetableCriteria, StringErrorCodes, StringRejectCodes, String
 import type { Format } from "../types";
 import { isPlainObject, isArray, isFunction, testers } from "../../../testers";
 
-const stringTesters: Record<string, (...args: any[]) => boolean> = testers.string;
+const testerMap: Map<string, (...args: any[]) => boolean> = new Map(Object.entries(testers.string)); 
 
 export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, StringRejectCodes, StringCustomMembers> = {
 	type: "string",
@@ -29,7 +29,7 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 			"The object values of the 'literal' property must be of type String.",
 		CONSTRAINT_PROPERTY_MALFORMED:
 			"The 'constraint' property must be of type Plain Object.",
-		CONSTRAINT_PROPERTY_MISCONFIGURED:
+		CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED:
 			"The object of the 'constraint' property must contain at least one key.",
 		CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED:
 			"The object keys of the 'constraint' property must be of type String.",
@@ -40,28 +40,26 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		CUSTOM_PROPERTY_MALFORMED:
 			"The 'custom' property must be of type Basic Function."
 	},
-	mountConstraint(definedConstraint) {
-		if (!isPlainObject(definedConstraint)) {
+	mountConstraint(constraint) {
+		if (!isPlainObject(constraint)) {
 			return ("CONSTRAINT_PROPERTY_MALFORMED");
 		}
 
-		const definedKeys = Reflect.ownKeys(definedConstraint);
-		const setableKeys = Object.keys(stringTesters);
-
-		if (definedKeys.length < 1) {
-			return ("LITERAL_PROPERTY_OBJECT_MISCONFIGURED");
+		const keys = Reflect.ownKeys(constraint);
+		if (keys.length < 1) {
+			return ("CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED");
 		}
 
-		for (const definedKey of definedKeys) {
-			const definedValue = definedConstraint[definedKey];
-
-			if (typeof definedKey !== "string") {
+		for (const key of keys) {
+			const value = constraint[key];
+			
+			if (typeof key !== "string") {
 				return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
 			}
-			if (!setableKeys.includes(definedKey)) {
+			if (!testerMap.has(key)) {
 				return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
 			}
-			if (definedValue !== true && !isPlainObject(definedValue)) {
+			if (value !== true && !isPlainObject(value)) {
 				return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
 			}
 		}
@@ -69,7 +67,7 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		return (null);
 	},
 	mount(chunk, criteria) {
-		const {  min, max, regex, literal, constraint, custom } = criteria;
+		const { min, max, regex, literal, constraint, custom } = criteria;
 
 		if (min !== undefined && typeof min !== "number") {
 			return ("MAX_PROPERTY_MALFORMED");
@@ -81,11 +79,18 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 			return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
 		}
 		if (regex !== undefined) {
-			if (typeof regex !== "string" && !(regex instanceof RegExp)) {
+			if (typeof regex === "string") {
+				Object.assign(criteria, {
+					regex: new RegExp(regex)
+				});
+			}
+			else if (!(regex instanceof RegExp)) {
 				return ("REGEX_PROPERTY_MALFORMED");
 			}
 		}
 		if (literal !== undefined) {
+			let literalSet = undefined;
+
 			if (isArray(literal)) {
 				if (literal.length < 1) {
 					return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
@@ -96,6 +101,8 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
 					}
 				}
+
+				literalSet = new Set(literal);
 			} else if (isPlainObject(literal)) {
 				const keys = Reflect.ownKeys(literal);
 				if (keys.length < 1) {
@@ -110,9 +117,15 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
 					}
 				}
-			} else if (typeof literal !== "string") {
+
+				literalSet = new Set(Object.values(literal));
+			} else if (typeof literal === "string") {
+				literalSet = new Set([literal]);
+			} else {
 				return ("LITERAL_PROPERTY_MALFORMED");
 			}
+
+			Object.assign(criteria, { literalSet });
 		}
 		if (constraint !== undefined) {
 			const error = this.mountConstraint(constraint);
@@ -121,10 +134,6 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		if (custom !== undefined && !isFunction(custom)) {
 			return ("CUSTOM_PROPERTY_MALFORMED");
 		}
-
-		Object.assign(criteria, {
-			regex: typeof regex === "string" ? new RegExp(regex) : regex
-		});
 
 		return (null);
 	},
@@ -135,7 +144,7 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 			const definedKey = definedKeys[i];
 			const definedValue = definedConstraint[definedKey];
 
-			if (stringTesters[definedKey](value, definedValue)) {
+			if (testerMap.get(definedKey)!(value, definedValue)) {
 				return (null);
 			} else if (i === 0) {
 				return ("CONSTRAINT_UNSATISFIED");
@@ -149,7 +158,7 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 			return ("TYPE_STRING_UNSATISFIED");
 		}
 
-		const {  min, max, regex, literal, constraint, custom } = criteria;
+		const {  min, max, regex, literalSet, constraint, custom } = criteria;
 		const valueLength = value.length;
 
 		if (min !== undefined && valueLength < min) {
@@ -161,19 +170,8 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		if (regex !== undefined && !regex.test(value)) {
 			return ("REGEX_UNSATISFIED");
 		}
-		if (literal !== undefined) {
-			if (isArray(literal)) {
-				if (!literal.includes(value)) {
-					return ("LITERAL_UNSATISFIED");
-				}
-			}
-			else if (isPlainObject(literal)) {
-				if (!Object.values(literal).includes(value)) {
-					return ("LITERAL_UNSATISFIED");
-				}
-			} else if (literal !== value) {
-				return ("LITERAL_UNSATISFIED");
-			}
+		if (literalSet !== undefined && !literalSet.has(value)) {
+			return ("LITERAL_UNSATISFIED");
 		}
 		if (constraint !== undefined) {
 			const reject = this.checkConstraint(constraint, value);

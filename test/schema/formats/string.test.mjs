@@ -88,6 +88,38 @@ describe("\nschema > formats > string", () => {
 	});
 
 	describe("'literal' parameter", () => {
+		it("should throw for incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "string", literal: 0 }),
+				SchemaNodeException,
+				"throws if the value is malformed"
+			);
+
+			assert.throws(
+				() => new Schema({ type: "string", literal: [] }),
+				SchemaNodeException,
+				"throws if the array length is misconfigured"
+			);
+
+			assert.throws(
+				() => new Schema({ type: "string", literal: [0] }),
+				SchemaNodeException,
+				"throws if the array items is misconfigured"
+			);
+
+			assert.throws(
+				() => new Schema({ type: "string", literal: {} }),
+				SchemaNodeException,
+				"throws if the object length is misconfigured"
+			);
+
+			assert.throws(
+				() => new Schema({ type: "string", literal: { x: 0 } }),
+				SchemaNodeException,
+				"throws if the object values is misconfigured"
+			);
+		});
+
 		let string_literal_string, string_literal_array, string_literal_object;
 
 		before(() => {
@@ -107,38 +139,6 @@ describe("\nschema > formats > string", () => {
 					red: "RED"
 				}
 			});
-		});
-
-		it("should throw if the definition is incorrect", () => {
-			assert.throws(
-				() => new Schema({ type: "string", literal: 0 }),
-				SchemaNodeException,
-				"throws if the value is malformed"
-			);
-
-			assert.throws(
-				() => new Schema({ type: "string", literal: [] }),
-				SchemaNodeException,
-				"throws if the array length is misconfigured"
-			);
-			
-			assert.throws(
-				() => new Schema({ type: "string", literal: [0] }),
-				SchemaNodeException,
-				"throws if the array items is misconfigured"
-			);
-
-			assert.throws(
-				() => new Schema({ type: "string", literal: {} }),
-				SchemaNodeException,
-				"throws if the object length is misconfigured"
-			);
-
-			assert.throws(
-				() => new Schema({ type: "string", literal: { x: 0 } }),
-				SchemaNodeException,
-				"throws if the object values is misconfigured"
-			);
 		});
 
 		it("should invalidate incorrect values", () => {

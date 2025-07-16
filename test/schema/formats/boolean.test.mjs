@@ -28,7 +28,10 @@ describe("\nschema > formats > boolean", () => {
 		let boolean_literal;
 
 		before(() => {
-			boolean_literal = new Schema({ type: "number", literal: true });
+			boolean_literal = new Schema({
+				type: "boolean",
+				literal: true
+			});
 		});
 
 		it("should invalidate incorrect values", () => {

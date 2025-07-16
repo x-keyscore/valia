@@ -80,6 +80,13 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	}
 }
 /*
+const function_variant_string = new Schema({
+	type: "function",
+	variant: "BASIC"
+});
+const xAsyncFunction = async function () {};
+console.log(function_variant_string.validate(xAsyncFunction))*/
+/*
 function testf(): ("ASYNC" | "BASIC"  | undefined) {
 	return ("" as ("ASYNC" | "BASIC" | undefined))
 }

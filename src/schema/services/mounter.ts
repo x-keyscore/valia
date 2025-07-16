@@ -2,10 +2,13 @@ import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { MounterTask, MounterChunk, CommonErrorCodes } from "./types";
 import type { SchemaInstance } from "../types";
 import { SchemaNodeException } from "../utils";
+import { isPlainObject } from "../../testers";
 
 export const nodeSymbol = Symbol("node");
 
 const commonErrors: Record<string, string> = {
+	NODE_MALFORMED:
+		"Criteria node must be of type Plain Object.",
 	TYPE_PROPERTY_REQUIRED:
 		"",
 	TYPE_PROPERTY_MALFORMED:
@@ -24,6 +27,7 @@ function commonMount(
 	managers: SchemaInstance['managers'],
 	node: SetableCriteria
 ): CommonErrorCodes | null {
+	if (!isPlainObject(node)) return ("NODE_MALFORMED");
 	const { type, label, message, nullable } = node;
 
 	if (!("type" in node)) {

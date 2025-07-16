@@ -56,13 +56,13 @@ export const FunctionFormat: Format<
 
 		if (isArray(variant)) {
 			Object.assign(criteria, {
-				bitcode: variant.reduce((code, key) => (
+				variantBitcode: variant.reduce((code, key) => (
 					code | this.variantBitflags[key]
 				), 0)
 			});
 		} else {
 			Object.assign(criteria, {
-				bitcode: variant
+				variantBitcode: variant
 					? this.variantBitflags[variant]
 					: 0
 			});

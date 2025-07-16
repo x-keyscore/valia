@@ -61,7 +61,7 @@ describe("\nschema > formats > array", () => {
 			array_shape_symbol = new Schema({
 				type: "array",
 				shape: [
-					{ type: "symbol", symbol: xSymbol }
+					{ type: "symbol", literal: xSymbol }
 				]
 			});
 		});

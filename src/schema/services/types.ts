@@ -102,6 +102,7 @@ export interface CheckerRejection {
 // COMMON
 
 export type CommonErrorCodes =
+	| "NODE_MALFORMED"
 	| "TYPE_PROPERTY_REQUIRED"
 	| "TYPE_PROPERTY_MALFORMED"
 	| "TYPE_PROPERTY_MISCONFIGURED"

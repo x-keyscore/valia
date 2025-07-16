@@ -89,7 +89,7 @@ describe("\nschema > formats > number", () => {
 			});
 		});
 
-		it("should throw if the definition is incorrect", () => {
+		it("should throw for incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ type: "number", literal: "" }),
 				SchemaNodeException,

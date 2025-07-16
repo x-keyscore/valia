@@ -79,222 +79,6 @@ class SchemaDataRejection {
     }
 }
 
-const nodeSymbol = Symbol("node");
-const commonErrors = {
-    TYPE_PROPERTY_REQUIRED: "",
-    TYPE_PROPERTY_MALFORMED: "",
-    TYPE_PROPERTY_MISCONFIGURED: "",
-    LABEL_PROPERTY_MALFORMED: "",
-    MESSAGE_PROPERTY_MALFORMED: "",
-    NULLABLE_PROPERTY_MALFORMED: ""
-};
-function commonMount(managers, node) {
-    const { type, label, message, nullable } = node;
-    if (!("type" in node)) {
-        return ("TYPE_PROPERTY_REQUIRED");
-    }
-    if (typeof type !== "string") {
-        return ("TYPE_PROPERTY_MALFORMED");
-    }
-    if (!managers.formats.has(type)) {
-        return ("TYPE_PROPERTY_MISCONFIGURED");
-    }
-    if (label !== undefined && typeof label !== "string") {
-        return ("LABEL_PROPERTY_MALFORMED");
-    }
-    if (message !== undefined && typeof message !== "string") {
-        return ("MESSAGE_PROPERTY_MALFORMED");
-    }
-    if (nullable !== undefined && typeof nullable !== "boolean") {
-        return ("NULLABLE_PROPERTY_MALFORMED");
-    }
-    return (null);
-}
-function hasNodeSymbol(obj) {
-    return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
-}
-class MounterStack {
-    constructor(rootNode) {
-        this.tasks = [];
-        this.tasks.push({
-            node: rootNode,
-            partPath: { explicit: [], implicit: [] },
-            fullPath: { explicit: [], implicit: [] }
-        });
-    }
-    pushChunk(sourceTask, chunk) {
-        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
-        for (let i = 0; i < chunk.length; i++) {
-            const { node, partPath } = chunk[i];
-            this.tasks.push({
-                node,
-                partPath,
-                fullPath: {
-                    explicit: partPath.explicit
-                        ? fullPathExplicit.concat(partPath.explicit)
-                        : fullPathExplicit,
-                    implicit: partPath.implicit
-                        ? fullPathImplicit.concat(partPath.implicit)
-                        : fullPathImplicit
-                }
-            });
-        }
-    }
-}
-function mounter(managers, rootNode) {
-    const { formats, events } = managers;
-    const stack = new MounterStack(rootNode);
-    while (stack.tasks.length) {
-        const currentTask = stack.tasks.pop();
-        const { node, partPath, fullPath } = currentTask;
-        if (hasNodeSymbol(node)) {
-            node[nodeSymbol] = {
-                ...node[nodeSymbol],
-                partPath
-            };
-        }
-        else {
-            let code = null;
-            code = commonMount(managers, node);
-            if (code) {
-                throw new SchemaNodeException({
-                    code: code,
-                    node: node,
-                    nodePath: fullPath,
-                    message: commonErrors[code]
-                });
-            }
-            const chunk = [];
-            const format = formats.get(node.type);
-            code = format.mount(chunk, node);
-            if (code) {
-                throw new SchemaNodeException({
-                    code: code,
-                    node: node,
-                    nodePath: fullPath,
-                    message: format.errors[code]
-                });
-            }
-            Object.assign(node, {
-                [nodeSymbol]: {
-                    partPath,
-                    childNodes: chunk.map((task) => task.node)
-                }
-            });
-            Object.freeze(node);
-            if (chunk.length)
-                stack.pushChunk(currentTask, chunk);
-            events.emit("NODE_MOUNTED", node, fullPath);
-        }
-    }
-    events.emit("TREE_MOUNTED", rootNode);
-    return rootNode;
-}
-
-class CheckerStack {
-    constructor(rootNode, rootData) {
-        this.tasks = [];
-        this.tasks.push({
-            data: rootData,
-            node: rootNode,
-            fullPath: { explicit: [], implicit: [] }
-        });
-    }
-    pushChunk(sourceTask, chunk) {
-        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
-        for (let i = 0; i < chunk.length; i++) {
-            const task = chunk[i];
-            const partPath = task.node[nodeSymbol].partPath;
-            let stackHooks = sourceTask.stackHooks;
-            if (task.hooks) {
-                const hooks = {
-                    taskOwner: sourceTask,
-                    stackIndex: {
-                        chunk: this.tasks.length - i,
-                        branch: this.tasks.length
-                    },
-                    ...task.hooks
-                };
-                stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
-            }
-            this.tasks.push({
-                data: task.data,
-                node: task.node,
-                fullPath: {
-                    explicit: partPath.explicit
-                        ? fullPathExplicit.concat(partPath.explicit)
-                        : fullPathExplicit,
-                    implicit: partPath.implicit
-                        ? fullPathImplicit.concat(partPath.implicit)
-                        : fullPathImplicit
-                },
-                stackHooks
-            });
-        }
-    }
-    callHooks(sourceTask, rejection) {
-        const stackHooks = sourceTask.stackHooks;
-        if (!stackHooks)
-            return (null);
-        const lastHooks = stackHooks[stackHooks.length - 1];
-        if (!rejection && lastHooks.stackIndex.branch !== this.tasks.length) {
-            return (null);
-        }
-        loop: for (let i = stackHooks.length - 1; i >= 0; i--) {
-            const hooks = stackHooks[i];
-            const claim = rejection ? hooks.onReject(rejection) : hooks.onAccept();
-            switch (claim.action) {
-                case "DEFAULT":
-                    this.tasks.length = hooks.stackIndex.branch;
-                    if (!rejection) {
-                        rejection = null;
-                        break loop;
-                    }
-                    continue;
-                case "REJECT":
-                    this.tasks.length = hooks.stackIndex.branch;
-                    rejection = { task: hooks.taskOwner, code: claim.code };
-                    continue;
-                case "IGNORE":
-                    if (claim?.target === "CHUNK") {
-                        this.tasks.length = hooks.stackIndex.chunk;
-                    }
-                    else {
-                        this.tasks.length = hooks.stackIndex.branch;
-                    }
-                    rejection = null;
-                    break loop;
-            }
-        }
-        return (rejection);
-    }
-}
-function checker(managers, rootNode, rootData) {
-    const { formats, events } = managers;
-    const stack = new CheckerStack(rootNode, rootData);
-    let rejection = null;
-    while (stack.tasks.length) {
-        const currentTask = stack.tasks.pop();
-        const { data, node, stackHooks } = currentTask;
-        const chunk = [];
-        let code = null;
-        if (!(node.nullable && data === null)) {
-            const format = formats.get(node.type);
-            code = format.check(chunk, node, data);
-        }
-        if (code)
-            rejection = { task: currentTask, code };
-        else if (chunk.length)
-            stack.pushChunk(currentTask, chunk);
-        if (stackHooks)
-            rejection = stack.callHooks(currentTask, rejection);
-        if (rejection)
-            break;
-    }
-    events.emit("DATA_CHECKED", rootNode, rootData, rejection);
-    return (rejection);
-}
-
 function getInternalTag(target) {
     return (Object.prototype.toString.call(target).slice(8, -1));
 }
@@ -1092,6 +876,225 @@ const testers = {
     string: stringTesters$1
 };
 
+const nodeSymbol = Symbol("node");
+const commonErrors = {
+    NODE_MALFORMED: "Criteria node must be of type Plain Object.",
+    TYPE_PROPERTY_REQUIRED: "",
+    TYPE_PROPERTY_MALFORMED: "",
+    TYPE_PROPERTY_MISCONFIGURED: "",
+    LABEL_PROPERTY_MALFORMED: "",
+    MESSAGE_PROPERTY_MALFORMED: "",
+    NULLABLE_PROPERTY_MALFORMED: ""
+};
+function commonMount(managers, node) {
+    if (!isPlainObject(node))
+        return ("NODE_MALFORMED");
+    const { type, label, message, nullable } = node;
+    if (!("type" in node)) {
+        return ("TYPE_PROPERTY_REQUIRED");
+    }
+    if (typeof type !== "string") {
+        return ("TYPE_PROPERTY_MALFORMED");
+    }
+    if (!managers.formats.has(type)) {
+        return ("TYPE_PROPERTY_MISCONFIGURED");
+    }
+    if (label !== undefined && typeof label !== "string") {
+        return ("LABEL_PROPERTY_MALFORMED");
+    }
+    if (message !== undefined && typeof message !== "string") {
+        return ("MESSAGE_PROPERTY_MALFORMED");
+    }
+    if (nullable !== undefined && typeof nullable !== "boolean") {
+        return ("NULLABLE_PROPERTY_MALFORMED");
+    }
+    return (null);
+}
+function hasNodeSymbol(obj) {
+    return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
+}
+class MounterStack {
+    constructor(rootNode) {
+        this.tasks = [];
+        this.tasks.push({
+            node: rootNode,
+            partPath: { explicit: [], implicit: [] },
+            fullPath: { explicit: [], implicit: [] }
+        });
+    }
+    pushChunk(sourceTask, chunk) {
+        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
+        for (let i = 0; i < chunk.length; i++) {
+            const { node, partPath } = chunk[i];
+            this.tasks.push({
+                node,
+                partPath,
+                fullPath: {
+                    explicit: partPath.explicit
+                        ? fullPathExplicit.concat(partPath.explicit)
+                        : fullPathExplicit,
+                    implicit: partPath.implicit
+                        ? fullPathImplicit.concat(partPath.implicit)
+                        : fullPathImplicit
+                }
+            });
+        }
+    }
+}
+function mounter(managers, rootNode) {
+    const { formats, events } = managers;
+    const stack = new MounterStack(rootNode);
+    while (stack.tasks.length) {
+        const currentTask = stack.tasks.pop();
+        const { node, partPath, fullPath } = currentTask;
+        if (hasNodeSymbol(node)) {
+            node[nodeSymbol] = {
+                ...node[nodeSymbol],
+                partPath
+            };
+        }
+        else {
+            let code = null;
+            code = commonMount(managers, node);
+            if (code) {
+                throw new SchemaNodeException({
+                    code: code,
+                    node: node,
+                    nodePath: fullPath,
+                    message: commonErrors[code]
+                });
+            }
+            const chunk = [];
+            const format = formats.get(node.type);
+            code = format.mount(chunk, node);
+            if (code) {
+                throw new SchemaNodeException({
+                    code: code,
+                    node: node,
+                    nodePath: fullPath,
+                    message: format.errors[code]
+                });
+            }
+            Object.assign(node, {
+                [nodeSymbol]: {
+                    partPath,
+                    childNodes: chunk.map((task) => task.node)
+                }
+            });
+            Object.freeze(node);
+            if (chunk.length)
+                stack.pushChunk(currentTask, chunk);
+            events.emit("NODE_MOUNTED", node, fullPath);
+        }
+    }
+    events.emit("TREE_MOUNTED", rootNode);
+    return rootNode;
+}
+
+class CheckerStack {
+    constructor(rootNode, rootData) {
+        this.tasks = [];
+        this.tasks.push({
+            data: rootData,
+            node: rootNode,
+            fullPath: { explicit: [], implicit: [] }
+        });
+    }
+    pushChunk(sourceTask, chunk) {
+        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
+        for (let i = 0; i < chunk.length; i++) {
+            const task = chunk[i];
+            const partPath = task.node[nodeSymbol].partPath;
+            let stackHooks = sourceTask.stackHooks;
+            if (task.hooks) {
+                const hooks = {
+                    taskOwner: sourceTask,
+                    stackIndex: {
+                        chunk: this.tasks.length - i,
+                        branch: this.tasks.length
+                    },
+                    ...task.hooks
+                };
+                stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
+            }
+            this.tasks.push({
+                data: task.data,
+                node: task.node,
+                fullPath: {
+                    explicit: partPath.explicit
+                        ? fullPathExplicit.concat(partPath.explicit)
+                        : fullPathExplicit,
+                    implicit: partPath.implicit
+                        ? fullPathImplicit.concat(partPath.implicit)
+                        : fullPathImplicit
+                },
+                stackHooks
+            });
+        }
+    }
+    callHooks(sourceTask, rejection) {
+        const stackHooks = sourceTask.stackHooks;
+        if (!stackHooks)
+            return (null);
+        const lastHooks = stackHooks[stackHooks.length - 1];
+        if (!rejection && lastHooks.stackIndex.branch !== this.tasks.length) {
+            return (null);
+        }
+        loop: for (let i = stackHooks.length - 1; i >= 0; i--) {
+            const hooks = stackHooks[i];
+            const claim = rejection ? hooks.onReject(rejection) : hooks.onAccept();
+            switch (claim.action) {
+                case "DEFAULT":
+                    this.tasks.length = hooks.stackIndex.branch;
+                    if (!rejection) {
+                        rejection = null;
+                        break loop;
+                    }
+                    continue;
+                case "REJECT":
+                    this.tasks.length = hooks.stackIndex.branch;
+                    rejection = { task: hooks.taskOwner, code: claim.code };
+                    continue;
+                case "IGNORE":
+                    if (claim?.target === "CHUNK") {
+                        this.tasks.length = hooks.stackIndex.chunk;
+                    }
+                    else {
+                        this.tasks.length = hooks.stackIndex.branch;
+                    }
+                    rejection = null;
+                    break loop;
+            }
+        }
+        return (rejection);
+    }
+}
+function checker(managers, rootNode, rootData) {
+    const { formats, events } = managers;
+    const stack = new CheckerStack(rootNode, rootData);
+    let rejection = null;
+    while (stack.tasks.length) {
+        const currentTask = stack.tasks.pop();
+        const { data, node, stackHooks } = currentTask;
+        const chunk = [];
+        let code = null;
+        if (!(node.nullable && data === null)) {
+            const format = formats.get(node.type);
+            code = format.check(chunk, node, data);
+        }
+        if (code)
+            rejection = { task: currentTask, code };
+        else if (chunk.length)
+            stack.pushChunk(currentTask, chunk);
+        if (stackHooks)
+            rejection = stack.callHooks(currentTask, rejection);
+        if (rejection)
+            break;
+    }
+    events.emit("DATA_CHECKED", rootNode, rootData, rejection);
+    return (rejection);
+}
+
 /**
  * Clones the object starting from the root and stops traversing a branch
  * when a mounted criteria node is encountered. In such cases, the mounted
@@ -1220,12 +1223,12 @@ const FunctionFormat = {
         }
         if (isArray(variant)) {
             Object.assign(criteria, {
-                bitcode: variant.reduce((code, key) => (code | this.variantBitflags[key]), 0)
+                variantBitcode: variant.reduce((code, key) => (code | this.variantBitflags[key]), 0)
             });
         }
         else {
             Object.assign(criteria, {
-                bitcode: variant
+                variantBitcode: variant
                     ? this.variantBitflags[variant]
                     : 0
             });
@@ -2099,6 +2102,13 @@ class Schema {
         return ({ rejection: null, data });
     }
 }
+/*
+const function_variant_string = new Schema({
+    type: "function",
+    variant: "BASIC"
+});
+const xAsyncFunction = async function () {};
+console.log(function_variant_string.validate(xAsyncFunction))*/
 /*
 function testf(): ("ASYNC" | "BASIC"  | undefined) {
     return ("" as ("ASYNC" | "BASIC" | undefined))

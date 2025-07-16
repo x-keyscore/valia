@@ -23,6 +23,8 @@ export interface StringSetableCriteria extends SetableCriteriaTemplate<"string">
 
 export interface StringMountedCriteria {
 	regex?: RegExp;
+	literalSet?: Set<string>;
+	constraintMap?: Map<string, object | undefined>
 }
 
 type StringGuardedCriteria<T extends StringSetableCriteria> =
@@ -51,13 +53,13 @@ export type StringErrorCodes =
 	| "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED"
     | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CONSTRAINT_PROPERTY_MALFORMED"
-	| "CONSTRAINT_PROPERTY_MISCONFIGURED"
+	| "CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED"
     | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED"
 	| "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED"
     | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CUSTOM_PROPERTY_MALFORMED";
 
-export type StringRejectCodes  =
+export type StringRejectCodes =
 	| "TYPE_STRING_UNSATISFIED"
 	| "MIN_UNSATISFIED"
 	| "MAX_UNSATISFIED"

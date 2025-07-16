@@ -87,16 +87,15 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 			return ("MAX_UNSATISFIED");
 		}
 		if (literal !== undefined) {
-			if (isArray(literal)) {
+			if (typeof literal === "number" && literal !== value) {
+				return ("LITERAL_UNSATISFIED");
+			}
+			else if (isArray(literal)) {
 				if (!literal.includes(value)) {
 					return ("LITERAL_UNSATISFIED");
 				}
 			}
-			else if (isPlainObject(literal)) {
-				if (!Object.values(literal).includes(value)) {
-					return ("LITERAL_UNSATISFIED");
-				}
-			} else if (literal !== value) {
+			else if (!Object.values(literal).includes(value)) {
 				return ("LITERAL_UNSATISFIED");
 			}
 		}
