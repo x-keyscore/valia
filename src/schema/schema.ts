@@ -1,10 +1,11 @@
 import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeTypes } from "./formats";
-import type { SchemaEvaluate, SchemaInfer } from "./types";
+import type { SchemaEvaluateResult, SchemaInfer } from "./types";
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
 import { isObject } from "../testers";
+import { SchemaDataRejection } from "./utils";
 
 /**
  * The `Schema` class is used to define and validate data structures,
@@ -52,9 +53,9 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * the validated data conforms to `GuardedCriteria<T>`.
 	 */
 	validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>> {
-		const reject = checker(this.managers, this.criteria, data);
+		const rejection = checker(this.managers, this.criteria, data);
 
-		return (!reject);
+		return (!rejection);
 	}
 
 	/**
@@ -62,23 +63,44 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 *
 	 * @param data - The data to be evaluated.
 	 */
-	evaluate(data: unknown): SchemaEvaluate<T> {
-		const reject = checker(this.managers, this.criteria, data);
-		if (reject) return ({ reject, data: null });
+	evaluate(data: unknown): SchemaEvaluateResult<T> {
+		const rejection = checker(this.managers, this.criteria, data);
+		if (rejection) {
+			return ({
+				rejection: new SchemaDataRejection({
+					code: rejection.code,
+					node: rejection.task.node,
+					nodePath: rejection.task.fullPath
+				}),
+				data: null
+			});
+		}
 
-		return ({ reject: null, data });
+		return ({ rejection: null, data });
 	}
+}
+/*
+function testf(): ("ASYNC" | "BASIC"  | undefined) {
+	return ("" as ("ASYNC" | "BASIC" | undefined))
 }
 
 const test = new Schema({
+	type: "string",
+	literal: ["test"]
+});
+
+type Test = SchemaInfer<typeof test>;
+*/
+/*
+const test = new Schema({
 	type: "object",
-	
+
 	shape: {},
 	expandable: true
 });
 console.log(test.evaluate(Array));
 
-console.log(isObject(Array));
+console.log(isObject(Array));*/
 /*
 const hslItem = new Schema({
 	type: "object",

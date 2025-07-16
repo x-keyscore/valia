@@ -1,8 +1,8 @@
-import type { ArraySetableCriteria, SetableShape, ArrayErrors, ArrayRejects, ArrayMembers } from "./types";
+import type { ArraySetableCriteria, SetableShape, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray } from "../../../testers";
 
-export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects, ArrayMembers> = {
+export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers> = {
 	type: "array",
 	errors: {
 		SHAPE_PROPERTY_REQUIRED:
@@ -12,21 +12,21 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 		SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED:
             "The array items of the 'shape' property must be of type Plain Object or Array.",
 		EXPANDABLE_PROPERTY_MALFORMED:
-			"The 'expandable' property must be of type Boolean or a Plain Object.",
+			"The 'extensible' property must be of type Boolean or a Plain Object.",
 		EXPANDABLE__ITEM_PROPERTY_MALFORMED:
-			"The 'expandable.item' property, must be a criteria node Object.",
+			"The 'extensible.item' property, must be a criteria node Object.",
 		EXPANDABLE__MIN_PROPERTY_MALFORMED:
-			"The 'expandable.min' property, must be of type Number.",
+			"The 'extensible.min' property, must be of type Number.",
 		EXPANDABLE__MAX_PROPERTY_MALFORMED:
-			"The 'expandable.max' property, must be of type Number.",
+			"The 'extensible.max' property, must be of type Number.",
 		EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
-			"The 'expandable.min' property cannot be greater than 'expandable.max' property."
+			"The 'extensible.min' property cannot be greater than 'extensible.max' property."
 	},
 	isShorthandShape(obj): obj is SetableShape {
 		return (isArray(obj));
 	},
 	mount(chunk, criteria) {
-		const { shape, expandable } = criteria;
+		const { shape, extensible } = criteria;
 
 		if (!("shape" in criteria)) {
 			return ("SHAPE_PROPERTY_REQUIRED");
@@ -35,13 +35,13 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			return ("SHAPE_PROPERTY_MALFORMED");
 		}
 		for (const item of shape) {
-			if (!isPlainObject(item)) {
+			if (!isPlainObject(item) && !isArray(item)) {
 				return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
 			}
 		}
-		if (expandable !== undefined) {
-			if (isPlainObject(expandable)) {
-				const { item, min, max } = expandable;
+		if (extensible !== undefined) {
+			if (isPlainObject(extensible)) {
+				const { item, min, max } = extensible;
 
 				if (item !== undefined && !isPlainObject(item)) {
 					return ("EXPANDABLE__ITEM_PROPERTY_MALFORMED");
@@ -55,15 +55,15 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 				if (min !== undefined && max !== undefined && min > max) {
 					return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
 				}
-			} else if (typeof expandable !== "boolean") {
+			} else if (typeof extensible !== "boolean") {
 				return ("EXPANDABLE_PROPERTY_MALFORMED");
 			}
 		}
 
-		const resolvedExpandable = expandable ?? false;
+		const resolvedExtensible = extensible ?? false;
 
 		Object.assign(criteria, {
-			expandable: resolvedExpandable
+			extensible: resolvedExtensible
 		});
 
 		for (let i = 0; i < shape.length; i++) {
@@ -79,20 +79,19 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 
 			chunk.push({
 				node: node,
-				partPaths: {
-					explicit: ["tuple", i],
+				partPath: {
+					explicit: ["shape", i],
 					implicit: ["&", i]
 				}
 			});
 		}
 
-		if (typeof resolvedExpandable === "object") {
-			if (resolvedExpandable.item) {
+		if (typeof resolvedExtensible === "object") {
+			if (resolvedExtensible.item) {
 				chunk.push({
-					node: resolvedExpandable.item,
-					partPaths: {
-						explicit: ["expandable", "item"],
-						implicit: []
+					node: resolvedExtensible.item,
+					partPath: {
+						explicit: ["extensible", "item"]
 					}
 				});
 			}
@@ -105,15 +104,15 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			return ("TYPE_ARRAY_UNSATISFIED");
 		}
 
-		const { shape, expandable } = criteria;
+		const { shape, extensible } = criteria;
 		const declaredLength = shape.length;
 		const definedLength = data.length;
 
 		if (definedLength < declaredLength) {
 			return ("SHAPE_UNSATISFIED");
 		}
-		if (!expandable && definedLength > declaredLength) {
-			return ("EXPANDLABLE_UNALLOWED");
+		if (!extensible && definedLength > declaredLength) {
+			return ("EXTENSIBLE_UNALLOWED");
 		}
 
 		for (let i = 0; i < declaredLength; i++) {
@@ -127,22 +126,22 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrors, ArrayRejects
 			return (null);
 		}
 
-		if (typeof expandable === "object") {
-			const expandedLength = declaredLength - declaredLength;
-			const { min, max } = expandable;
+		if (typeof extensible === "object") {
+			const extendedItemCount = definedLength - declaredLength;
+			const { min, max } = extensible;
 
-			if (min !== undefined && expandedLength < min) {
-				return ("EXPANDLABLE_MIN_UNSATISFIED");
+			if (min !== undefined && extendedItemCount < min) {
+				return ("EXTENSIBLE_MIN_UNSATISFIED");
 			}
-			if (max !== undefined && expandedLength > max) {
-				return ("EXPANDLABLE_MAX_UNSATISFIED");
+			if (max !== undefined && extendedItemCount > max) {
+				return ("EXTENSIBLE_MAX_UNSATISFIED");
 			}
 
-			if (expandable.item) {
+			if (extendedItemCount && extensible.item) {
 				for (let i = declaredLength; i < definedLength; i++) {
 					chunk.push({
 						data: data[i],
-						node: expandable.item
+						node: extensible.item
 					});
 				}
 			}

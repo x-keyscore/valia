@@ -1,42 +1,35 @@
 import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
-import type { BasicFunction, AsyncFunction } from "../../../testers";
 
-export type SimpleTypes =
-	| "null"
-	| "undefined"
-	| "nullish"
-	| "unknown";
+interface VariantMap {
+	UNKNOWN: unknown;
+	NULL: null;
+	UNDEFINED: undefined;
+	NULLISH: undefined | null;
+}
 
 export interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
-	simple: SimpleTypes;
+	variant: keyof VariantMap;
 }
 
 export interface SimpleMountedCriteria {
-	bitcode: number;
+	variantBitcode: number;
 }
-
-type SimpleGuardedCriteria<T extends SimpleSetableCriteria> =
-	T["simple"] extends "null"      ? null :
-	T["simple"] extends "undefined" ? undefined :
-	T["simple"] extends "nullish"   ? undefined | null :
-	T["simple"] extends "unknown"   ? unknown :
-	never;
 
 export interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<
 	SimpleMountedCriteria,
-	SimpleGuardedCriteria<T>
+	VariantMap[T['variant']]
 > {}
 
-export type SimpleErrors =
-    | "SIMPLE_PROPERTY_REQUIRED"
-    | "SIMPLE_PROPERTY_MALFORMED"
-	| "SIMPLE_PROPERTY_STRING_MISCONFIGURED";
+export type SimpleErrorCodes =
+    | "VARIANT_PROPERTY_REQUIRED"
+    | "VARIANT_PROPERTY_MALFORMED"
+	| "VARIANT_PROPERTY_STRING_MISCONFIGURED";
 
-export type SimpleRejects =
-	| "SIMPLE_NULLISH_UNSATISFIED"
-	| "SIMPLE_NULL_UNSATISFIED"
-	| "SIMPLE_UNDEFINED_UNSATISFIED"
+export type SimpleRejectCodes =
+	| "VARIANT_NULLISH_UNSATISFIED"
+	| "VARIANT_NULL_UNSATISFIED"
+	| "VARIANT_UNDEFINED_UNSATISFIED";
 
-export interface SimpleMembers {
-	bitflags: Record<SimpleTypes, number>
+export interface SimpleCustomMembers {
+	variantBitflags: Record<keyof VariantMap, number>
 }

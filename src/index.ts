@@ -1,7 +1,8 @@
 export {
 	Schema,
 	SchemaFactory,
-	SchemaNodeError
+	SchemaNodeException,
+	SchemaDataRejection
 } from './schema';
 
 export type {
@@ -38,7 +39,6 @@ export type {
 export {
 	isObject,
 	isPlainObject,
-	isObjectLike,
 	isArray,
 	isTypedArray,
 	isFunction,

@@ -12,6 +12,10 @@ export class FormatsManager {
         }
     }
 
+    has(type: string): boolean {
+        return (!!this.store.has(type));
+    }
+
     get(type: FormatTypes): Format {
         const format = this.store.get(type);
         if (!format) throw new Issue(

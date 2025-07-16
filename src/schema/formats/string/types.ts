@@ -3,79 +3,72 @@ import { testers } from "../../../testers";
 
 type StringTesters = typeof testers.string;
 
-type SetableTestersParams<T extends (input: any, params: any) => any> = 
+type SetableConstraintParams<T extends (input: any, params: any) => any> = 
 	T extends (input: any, params: infer U) => any ? U : never;
 
-export type SetableTesters = {
-	[K in keyof StringTesters]?: SetableTestersParams<StringTesters[K]> | boolean;
+export type SetableConstraint = {
+	[K in keyof StringTesters]?: true | SetableConstraintParams<StringTesters[K]>;
 }
 
-export interface StringSetableCriteria extends SetableTesters, SetableCriteriaTemplate<"string"> {
-	/** @default true */
-	empty?: boolean;
+type SetableLiteral = string | string[] | Record<string | number, string>;
+
+export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 	min?: number;
 	max?: number;
-	enum?: string[] | Record<string | number, string>;
 	regex?: string | RegExp;
-	testers?: SetableTesters;
+	literal?: SetableLiteral;
+	constraint?: SetableConstraint;
 	custom?: (value: string) => boolean;
 }
 
-export interface StringMountedCriteria<T extends StringSetableCriteria> {
-	empty:
-		unknown extends T['empty']
-			? true
-			: StringSetableCriteria['empty'] extends T['empty']
-				? boolean
-				: T['empty'];
+export interface StringMountedCriteria {
 	regex?: RegExp;
 }
 
-type EnumValues<T extends StringSetableCriteria> =
-	T['enum'] extends Record<string | number, string>
-		? T['enum'][keyof T['enum']]
-		: T['enum'] extends string[]
-			? T['enum'][number]
-			: never;
-
 type StringGuardedCriteria<T extends StringSetableCriteria> =
-	T['enum'] extends (string[] | Record<string | number, string>)
-		? (EnumValues<T> | (T['empty'] extends true ? "" : never))
-		: string;
+	T['literal'] extends Record<string | number, string>
+		? T['literal'][keyof T['literal']]
+		: T["literal"] extends string[]
+			? T['literal'][number]
+			: T['literal'] extends string
+				? T["literal"]
+				: string;
 
 export interface StringDerivedCriteria<T extends StringSetableCriteria> extends DerivedCriteriaTemplate<
-	StringMountedCriteria<T>,
+	StringMountedCriteria,
 	StringGuardedCriteria<T>
 > {}
 
-export type StringErrors =
-    | "EMPTY_PROPERTY_MALFORMED"
+export type StringErrorCodes =
     | "MIN_PROPERTY_MALFORMED"
     | "MAX_PROPERTY_MALFORMED"
     | "MIN_MAX_PROPERTIES_MISCONFIGURED"
-    | "ENUM_PROPERTY_MALFORMED"
-    | "ENUM_PROPERTY_ARRAY_ITEM_MALFORMED"
-	| "ENUM_PROPERTY_OBJECT_KEY_MALFORMED"
-    | "ENUM_PROPERTY_OBJECT_VALUE_MALFORMED"
-    | "REGEX_PROPERTY_MALFORMED"
-    | "TESTERS_PROPERTY_MALFORMED"
-    | "TESTERS_PROPERTY_OBJECT_KEY_MALFORMED"
-    | "TESTERS_PROPERTY_OBJECT_VALUE_MALFORMED"
+	| "REGEX_PROPERTY_MALFORMED"
+    | "LITERAL_PROPERTY_MALFORMED"
+	| "LITERAL_PROPERTY_ARRAY_MISCONFIGURED"
+    | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "LITERAL_PROPERTY_OBJECT_MISCONFIGURED"
+	| "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED"
+    | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED"
+    | "CONSTRAINT_PROPERTY_MALFORMED"
+	| "CONSTRAINT_PROPERTY_MISCONFIGURED"
+    | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED"
+	| "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED"
+    | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CUSTOM_PROPERTY_MALFORMED";
 
-export type StringRejects =
+export type StringRejectCodes  =
 	| "TYPE_STRING_UNSATISFIED"
-	| "EMPTY_UNALLOWED"
 	| "MIN_UNSATISFIED"
 	| "MAX_UNSATISFIED"
-	| "ENUM_UNSATISFIED"
 	| "REGEX_UNSATISFIED"
-	| "TESTERS_UNSATISFIED"
+	| "LITERAL_UNSATISFIED"
+	| "CONSTRAINT_UNSATISFIED"
 	| "CUSTOM_UNSATISFIED";
 
-export interface StringMembers {
-	mountTesters:
-		(definedTesters: Record<string | symbol, unknown>) => StringErrors | null;
-	checkTesters:
-	(definedTesters: Record<string, {} | undefined | boolean>, value: string) => StringRejects | null;
+export interface StringCustomMembers {
+	mountConstraint:
+		(definedTesters: Record<string | symbol, unknown>) => StringErrorCodes | null;
+	checkConstraint:
+		(definedTesters: Record<string, {} | undefined | boolean>, value: string) => StringRejectCodes | null;
 }

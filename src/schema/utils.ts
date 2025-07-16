@@ -1,52 +1,39 @@
-import { FormatTypes, SetableCriteria } from "./formats";
-import { NodePaths } from "./services";
+import type { NodeExceptionReport, DataRejectionReport } from "./types";
+import type { SetableCriteria } from "./formats";
+import type { NodePath } from "./services";
 
-interface SchemaNodeErrorContext {
-    node: SetableCriteria;
-    type: FormatTypes;
-    path: NodePaths;
-    code: string;
-    message: string;
-}
-
-export class SchemaNodeError extends Error {
-    public node: SetableCriteria;
-    public type: FormatTypes;
-    public path: NodePaths;
+export class SchemaNodeException extends Error {
     public code: string;
     public message: string;
+    public node: SetableCriteria;
+    public nodePath: NodePath;
 
-	constructor(context: SchemaNodeErrorContext) {
-		super(context.message);
+	constructor(report: NodeExceptionReport) {
+        super();
 
-        this.node = context.node;
-        this.type = context.type;
-        this.path = context.path;
-        this.code = context.code;
-        this.message = context.message;
+        this.code = report.code;
+        this.message = report.message;
+        this.node = report.node;
+        this.nodePath = report.nodePath;
 	}
 }
 
-interface SchemaDataRejectContext {
-    node: SetableCriteria;
-    type: FormatTypes;
-    path: NodePaths;
-    code: string;
-    message: string;
-}
-
-export class SchemaDataReject {
-    public node: SetableCriteria;
-    public type: FormatTypes;
-    public path: NodePaths;
+export class SchemaDataRejection {
+    /**
+     * Syntax: `<MEMBER>[<DETAIL>]<REASON>`
+     *
+     * Components:
+     * - `<MEMBER>`    : The criterion involved (e.g. EMPTY, MIN, ENUM)
+     * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
+     * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
+     */
     public code: string;
-    public message: string;
+    public node: SetableCriteria;
+    public nodePath: NodePath;
 
-	constructor(context: SchemaDataRejectContext) {
-        this.node = context.node;
-        this.type = context.type;
-        this.path = context.path;
-        this.code = context.code;
-        this.message = context.message;
+	constructor(report: DataRejectionReport) {
+        this.code = report.code;
+        this.node = report.node;
+        this.nodePath = report.nodePath;
 	}
 }

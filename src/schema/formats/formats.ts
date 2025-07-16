@@ -1,3 +1,4 @@
+import { FunctionFormat } from "./function/format";
 import { BooleanFormat } from "./boolean/format";
 import { SymbolFormat } from "./symbol/format";
 import { NumberFormat } from "./number/format";
@@ -8,6 +9,7 @@ import { ArrayFormat } from "./array/format";
 import { UnionFormat } from "./union/format";
 
 export const formatNatives = [
+	FunctionFormat,
 	BooleanFormat,
 	SymbolFormat,
 	NumberFormat,

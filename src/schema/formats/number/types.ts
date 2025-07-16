@@ -1,37 +1,43 @@
 import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
 
+type SetableLiteral = number | number[] | Record<string | number, number>;
+
 export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
 	min?: number;
 	max?: number;
-	enum?: number[] | Record<string | number, number>;
-	custom?: (input: number) => boolean;
+	literal?: SetableLiteral;
+	custom?: (value: number) => boolean;
 }
 
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = 
-	T['enum'] extends number[]
-		? T['enum'][number]
-		: T['enum'] extends Record<string | number, number>
-			? T['enum'][keyof T['enum']]
-			: number;
+	T['literal'] extends Record<string | number, number>
+		? T['literal'][keyof T['literal']]
+		: T["literal"] extends number[]
+			? T['literal'][number]
+			: T['literal'] extends number
+				? T["literal"]
+				: number;
 
 export interface NumberDerivedCriteria<T extends NumberSetableCriteria> extends DerivedCriteriaTemplate<
 	{},
 	NumberGuardedCriteria<T>
 > {}
 
-export type NumberErrors =
+export type NumberErrorCodes =
 	| "MIN_PROPERTY_MALFORMED"
     | "MAX_PROPERTY_MALFORMED"
     | "MIN_AND_MAX_PROPERTIES_MISCONFIGURED"
-    | "ENUM_PROPERTY_MALFORMED"
-    | "ENUM_PROPERTY_ARRAY_ITEM_MALFORMED"
-	| "ENUM_PROPERTY_OBJECT_KEY_MALFORMED"
-    | "ENUM_PROPERTY_OBJECT_VALUE_MALFORMED"
+    | "LITERAL_PROPERTY_MALFORMED"
+	| "LITERAL_PROPERTY_ARRAY_MISCONFIGURED"
+    | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "LITERAL_PROPERTY_OBJECT_MISCONFIGURED"
+	| "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED"
+    | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CUSTOM_PROPERTY_MALFORMED";
 
-export type NumberRejects =
+export type NumberRejectCodes =
 	| "TYPE_NUMBER_UNSATISFIED"
 	| "MIN_UNSATISFIED"
 	| "MAX_UNSATISFIED"
-	| "ENUM_UNSATISFIED"
+	| "LITERAL_UNSATISFIED"
 	| "CUSTOM_UNSATISFIED";

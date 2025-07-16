@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { Schema } from "../../../dist/index.js";
 
-describe("\nschema > formats > Symbol", () => {
+describe("\nschema > formats > symbol", () => {
 	const xSymbol = Symbol("x");
 	const ySymbol = Symbol("y");
 
@@ -26,19 +26,19 @@ describe("\nschema > formats > Symbol", () => {
 		});
 	});
 
-	describe("'symbol' parameter", () => {
-		let symbol_symbol;
+	describe("'literal' parameter", () => {
+		let symbol_literal;
 
 		before(() => {
-			symbol_symbol = new Schema({ type: "symbol", symbol: xSymbol });
+			symbol_literal = new Schema({ type: "symbol", literal: xSymbol });
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(symbol_symbol.validate(ySymbol), false);
+			assert.strictEqual(symbol_literal.validate(ySymbol), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(symbol_symbol.validate(xSymbol), true);
+			assert.strictEqual(symbol_literal.validate(xSymbol), true);
 		});
 	});
 });

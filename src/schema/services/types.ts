@@ -1,7 +1,7 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
 
-export interface NodePaths {
+export interface NodePath {
 	/**
 	 * **Composition of explicit path :**
 	 * ```py
@@ -30,27 +30,27 @@ export interface NodePaths {
 	 * my-path is products[0].price or products[1].price and continue
 	 * ```
 	*/
-	implicit: (LooseAutocomplete<"&" | "%" | "@" | "string" | "number" | "symbol"> | number | symbol)[];
+	implicit: (LooseAutocomplete<"&" | "%" | "string" | "number" | "symbol"> | number | symbol)[];
 }
 
 // MOUNTER
 
 export interface MounterTask {
 	node: SetableCriteria | MountedCriteria;
-	partPaths: NodePaths;
-	fullPaths: NodePaths;
+	partPath: Partial<NodePath>;
+	fullPath: NodePath;
 }
 
 export interface MounterChunkTask {
 	node: SetableCriteria | MountedCriteria;
-	partPaths: NodePaths;
+	partPath: Partial<NodePath>;
 };
 
 export type MounterChunk = MounterChunkTask[];
 
 // CHECKER
 
-export interface CheckerHooks<R extends string = string,> {
+export interface CheckerHooks<R extends string = string> {
 	onAccept(): {
 		action: "DEFAULT"
 	} | {
@@ -60,7 +60,7 @@ export interface CheckerHooks<R extends string = string,> {
 		action: "REJECT";
 		code: R;
 	};
-	onReject(reject: CheckerReject): {
+	onReject(rejection: CheckerRejection): {
 		action: "DEFAULT"
 	} | {
 		action: "IGNORE";
@@ -71,9 +71,9 @@ export interface CheckerHooks<R extends string = string,> {
 	};
 }
 
-export interface CheckerStackItemHooks extends CheckerHooks {
-	owner: CheckerTask;
-	index: {
+export interface CheckerWrapHooks extends CheckerHooks {
+	taskOwner: CheckerTask;
+	stackIndex: {
 		chunk: number;
 		branch: number;
 	};
@@ -82,8 +82,8 @@ export interface CheckerStackItemHooks extends CheckerHooks {
 export interface CheckerTask {
 	data: unknown;
 	node: MountedCriteria;
-	fullPaths: NodePaths;
-	stackHooks?: CheckerStackItemHooks[];
+	fullPath: NodePath;
+	stackHooks?: CheckerWrapHooks[];
 }
 
 export interface CheckerChunkTask {
@@ -94,19 +94,17 @@ export interface CheckerChunkTask {
 
 export type CheckerChunk = CheckerChunkTask[];
 
-export interface CheckerReject {
-	path: NodePaths;
-	/**
-	 * Syntax: `<FORMAT>.<RULE>[.<DETAIL>].<REASON>`
-	 *
-	 * Components:
-	 * - `<FORMAT>`    : The format involved (e.g. NUMBER, STRING, STRUCT)
-	 * - `<MEMBER>`      : The criterion involved (e.g. EMPTY, MIN, ENUM)
-	 * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
-	 * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
-	 */
+export interface CheckerRejection {
 	code: string;
-	type: string;
-	label: string | undefined;
-	message: string | undefined;
+	task: CheckerTask;
 }
+
+// COMMON
+
+export type CommonErrorCodes =
+	| "TYPE_PROPERTY_REQUIRED"
+	| "TYPE_PROPERTY_MALFORMED"
+	| "TYPE_PROPERTY_MISCONFIGURED"
+	| "LABEL_PROPERTY_MALFORMED"
+	| "MESSAGE_PROPERTY_MALFORMED"
+	| "NULLABLE_PROPERTY_MALFORMED";

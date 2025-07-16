@@ -1,4 +1,5 @@
-import type { NodePaths, MounterChunk, CheckerChunk } from "../services";
+import type { NodePath, MounterChunk, CheckerChunk } from "../services";
+import type { FunctionSetableCriteria, FunctionDerivedCriteria } from "./function/types";
 import type { BooleanSetableCriteria, BooleanDerivedCriteria } from "./boolean/types";
 import type { SymbolSetableCriteria, SymbolDerivedCriteria } from "./symbol/types";
 import type { NumberSetableCriteria, NumberDerivedCriteria } from "./number/types";
@@ -21,10 +22,11 @@ export interface SetableCriteriaTemplate<T extends string> {
 	type: T;
 	label?: string;
 	message?: string;
-	nullish?: boolean;
+	nullable?: boolean;
 }
 
 export interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
+	function: FunctionSetableCriteria;
 	boolean: BooleanSetableCriteria;
 	symbol: SymbolSetableCriteria;
 	number: NumberSetableCriteria;
@@ -54,6 +56,7 @@ export interface DerivedCriteriaTemplate<Mounted, Guarded> {
 }
 
 export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria> {
+	function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
 	boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
 	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria : never;
 	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never
@@ -71,9 +74,9 @@ export type SetableCriteria<T extends FormatTypes = FormatTypes> =
 
 // MOUNTED CRITERIA
 
-export interface GlobalMountedCriteria {
+export interface CommonMountedCriteria {
 	[nodeSymbol]: {
-		partPaths: NodePaths;
+		partPath: Partial<NodePath>;
 		childNodes: Set<MountedCriteria>;
 	};
 }
@@ -85,15 +88,15 @@ export type MountedCriteria<T extends SetableCriteria = SetableCriteria> =
 			: (
 				& Omit<T, keyof DerivedCriteriaMap<T>[T['type']]['mounted']>
 				& DerivedCriteriaMap<T>[T['type']]['mounted']
-				& GlobalMountedCriteria
+				& CommonMountedCriteria
 			)
 		: never;
 
 // GUARDED CRITERIA
 
 export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = 
-	T['nullish'] extends true
-		? DerivedCriteriaMap<T>[T['type']]['guarded'] | undefined | null
+	T['nullable'] extends true
+		? DerivedCriteriaMap<T>[T['type']]['guarded'] | null
 		: DerivedCriteriaMap<T>[T['type']]['guarded'];
 
 // FORMAT
@@ -112,7 +115,7 @@ export type Format<
 > = {
 	type: T['type'];
 	errors: { [K in E]: string };
-	mount?(
+	mount(
 		chunk: MounterChunk,
 		criteria: T
 	): E | null;

@@ -1,15 +1,17 @@
-import type { SymbolSetableCriteria, SymbolErrors, SymbolRejects } from "./types";
+import type { SymbolSetableCriteria, SymbolErrorCodes, SymbolRejectCodes } from "./types";
 import type { Format } from "../types";
 
-export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrors, SymbolRejects> = {
+export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, SymbolRejectCodes> = {
 	type: "symbol",
 	errors: {
-        SYMBOL_PROPERTY_MALFORMED:
-            "The 'symbol' property must be of type Symbol."
+        LITERAL_PROPERTY_MALFORMED:
+            "The 'literal' property must be of type Symbol."
     },
 	mount(chunk, criteria) {
-		if (criteria.symbol !== undefined && typeof criteria.symbol !== "symbol") {
-			return ("SYMBOL_PROPERTY_MALFORMED");
+		const { literal } = criteria;
+
+		if (literal !== undefined && typeof literal !== "symbol") {
+			return ("LITERAL_PROPERTY_MALFORMED");
 		}
 
 		return (null);
@@ -18,8 +20,11 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrors, SymbolRej
 		if (typeof value !== "symbol") {
 			return ("TYPE_SYMBOL_UNSATISFIED");
 		}
-		else if (criteria.symbol && value !== criteria.symbol) {
-			return ("SYMBOL_UNSATISFIED");
+
+		const { literal } = criteria;
+
+		if (literal !== undefined && literal !== value) {
+			return ("LITERAL_UNSATISFIED");
 		}
 
 		return (null);

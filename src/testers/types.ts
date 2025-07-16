@@ -12,6 +12,6 @@ export interface TypedArray extends ArrayBufferView {
     [index: number]: number | bigint;
 }
 
-export type BasicFunction = (...args: unknown[]) => unknown;
+export type BasicFunction = (...args: any[]) => unknown;
 
-export type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
+export type AsyncFunction = (...args: any[]) => Promise<unknown>;

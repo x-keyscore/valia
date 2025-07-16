@@ -1,5 +1,3 @@
-import { AsyncFunction } from "../testers";
-
 export type InternalTags =
 	| "Undefined"
 	| "Boolean"
@@ -53,48 +51,3 @@ export type InternalTags =
 	| "Intl.PluralRules"
 	| "Intl.RelativeTimeFormat"
 	| "Intl.Locale";
-
-export type InternalObjects =
-	| Object
-	| Function
-	| AsyncFunction
-	| Promise<unknown>
-	| GeneratorFunction
-	| AsyncGeneratorFunction
-	| Generator
-	| AsyncGenerator
-	| Array<unknown>
-	| ArrayBuffer
-	| SharedArrayBuffer
-	| Int8Array
-	| Int16Array
-	| Int32Array
-	| Uint8Array
-	| Uint8ClampedArray
-	| Uint16Array
-	| Uint32Array
-	| Float32Array
-	| Float64Array
-	| BigInt64Array
-	| BigUint64Array
-	| DataView
-	| Map<unknown, unknown>
-	| Set<unknown>
-	| WeakMap<WeakKey, unknown>
-	| WeakSet<WeakKey>
-	| WeakRef<WeakKey>
-	| FinalizationRegistry<unknown>
-	| Date
-	| JSON
-	| Math
-	| Error
-	| RegExp
-	| Atomics
-	| Intl.Collator
-	| Intl.DateTimeFormat
-	| Intl.ListFormat
-	| Intl.NumberFormat
-	| Intl.PluralRules
-	| Intl.RelativeTimeFormat
-	| Intl.Locale
-	| Iterator<unknown>;

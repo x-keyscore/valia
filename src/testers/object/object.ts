@@ -26,15 +26,6 @@ export function isPlainObject(x: unknown): x is PlainObject {
     return (prototype === null || prototype === Object.prototype);
 }
 
-/**
- * An object-like value is considered as follows:
- * - It must not be `null`.
- * - It must be of `object` or `function` type.
- */
-export function isObjectLike(x: unknown): x is object {
-  return ((x !== null && typeof x === "object") || typeof x === "function");
-}
-
 // ARRAY
 export function isArray(x: unknown): x is BasicArray {
 	return (Array.isArray(x));

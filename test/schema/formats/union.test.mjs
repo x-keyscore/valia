@@ -1,9 +1,9 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
-import { Schema } from "../../../dist/index.js";
+import { Schema, SchemaDataRejection } from "../../../dist/index.js";
 
-describe("\nschema > formats > Union", () => {
+describe("\nschema > formats > union", () => {
 	describe("Default (Primitive Union)", () => {
 		let union_primitve;
 
@@ -201,13 +201,11 @@ describe("\nschema > formats > Union", () => {
 			assert.deepStrictEqual(
 				union_nested.evaluate({ foo: { foo: "x", bar: "x" }, bar: "x" }),
 				{
-					reject: {
-						code: 'UNION_UNSATISFIED',
-						path: { explicit: [], implicit: [] },
-						type: 'union',
-						label: undefined,
-						message: undefined
-					},
+					rejection: new SchemaDataRejection({
+						code: "UNION_UNSATISFIED",
+						node: union_nested.criteria,
+						nodePath: { explicit: [], implicit: [] }
+					}),
 					data: null
 				}
 			);

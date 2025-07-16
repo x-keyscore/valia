@@ -1,11 +1,11 @@
 export type {
-    NodePaths,
+    NodePath,
     MounterTask,
     MounterChunk,
     CheckerTask,
     CheckerChunk,
     CheckerHooks,
-    CheckerReject
+    CheckerRejection
 } from './types';
 
 export { mounter, nodeSymbol, hasNodeSymbol } from "./mounter";

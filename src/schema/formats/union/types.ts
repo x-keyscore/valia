@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 type SetableUnion<T extends FormatTypes = FormatTypes> =
-	[SetableCriteria<T>, SetableCriteria<T>, ...SetableCriteria<T>[]];
+	[SetableCriteria<T>, ...SetableCriteria<T>[]];
 
 export interface UnionSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"union"> {
 	union: SetableUnion<T>;
@@ -43,10 +43,12 @@ export interface UnionDerivedCriteria<T extends UnionSetableCriteria> extends De
 	UnionGuardedCriteria<T>
 > {}
 
-export type UnionErrors = 
+export type UnionErrorCodes = 
 	| "UNION_PROPERTY_REQUIRED"
 	| "UNION_PROPERTY_MALFORMED"
+	| "UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED"
 	| "UNION_PROPERTY_ARRAY_ITEM_MALFORMED";
+	
 
-export type UnionRejects = 
+export type UnionRejectCodes = 
 	| "UNION_UNSATISFIED";

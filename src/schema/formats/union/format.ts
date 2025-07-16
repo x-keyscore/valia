@@ -1,39 +1,46 @@
-import type { UnionSetableCriteria, UnionErrors, UnionRejects } from "./types";
+import type { UnionSetableCriteria, UnionErrorCodes, UnionRejectCodes } from "./types";
 import type { CheckerHooks } from "../../services";
 import type { Format } from "../types";
 import { isPlainObject, isArray } from "../../../testers";
 
-export const UnionFormat: Format<UnionSetableCriteria, UnionErrors> = {
+export const UnionFormat: Format<UnionSetableCriteria, UnionErrorCodes> = {
 	type: "union",
 	errors: {
 		UNION_PROPERTY_REQUIRED:
             "The 'union' property is required.",
        	UNION_PROPERTY_MALFORMED:
 			"The 'union' property must be of type Array.",
+		UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED:
+			"The array length of the 'union' must be greater than 0.",
         UNION_PROPERTY_ARRAY_ITEM_MALFORMED:
-            "The array items of the 'tuple' property must be of type Plain Object.",
+            "The array items of the 'union' property must be of type Plain Object.",
     },
 	mount(chunk, criteria) {
 		if (!("union" in criteria)) {
 			return ("UNION_PROPERTY_REQUIRED");
 		}
-		if (!isArray(criteria.union)) {
+
+		const union = criteria.union;
+		const unionLength = union.length;
+
+		if (!isArray(union)) {
 			return ("UNION_PROPERTY_MALFORMED");
 		}
-		for (const item of criteria.union) {
-			if (!isPlainObject(item) && !isArray(item)) {
-				return ("UNION_PROPERTY_ARRAY_ITEM_MALFORMED");
-			}
+		if (unionLength < 1) {
+			return ("UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
 		}
 
-		const unionLength = criteria.union.length;
-
 		for (let i = 0; i < unionLength; i++) {
+			const node = union[i];
+
+			if (!isPlainObject(node) && !isArray(node)) {
+				return ("UNION_PROPERTY_ARRAY_ITEM_MALFORMED");
+			}
+
 			chunk.push({
-				node: criteria.union[i],
-				partPaths: {
-					explicit: ["union", i],
-					implicit: []
+				node: node,
+				partPath: {
+					explicit: ["union", i]
 				}
 			});
 		}
@@ -41,10 +48,11 @@ export const UnionFormat: Format<UnionSetableCriteria, UnionErrors> = {
 		return (null);
 	},
 	check(chunk, criteria, data) {
-		const unionLength = criteria.union.length;
-		let rejectCount = 0;
+		const union = criteria.union;
+		const unionLength = union.length;
 
-		const hooks: CheckerHooks<UnionRejects> = {
+		let rejectCount = 0;
+		const hooks: CheckerHooks<UnionRejectCodes> = {
 			onAccept() {
 				return ({
 					action: "IGNORE",
@@ -69,7 +77,7 @@ export const UnionFormat: Format<UnionSetableCriteria, UnionErrors> = {
 			chunk.push({
 				hooks,
 				data,
-				node: criteria.union[i]
+				node: union[i]
 			});
 		}
 
