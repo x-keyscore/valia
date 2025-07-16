@@ -22,7 +22,11 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 		const { literal } = criteria;
 
 		if (literal !== undefined) {
-			if (isArray(literal)) {
+			let literalSet = undefined;
+
+			if (typeof literal === "symbol") {
+				literalSet = new Set([literal]);
+			} else if (isArray(literal)) {
 				if (literal.length < 1) {
 					return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
 				}
@@ -32,6 +36,8 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
 					}
 				}
+
+				literalSet = new Set(literal);
 			} else if (isPlainObject(literal)) {
 				const keys = Reflect.ownKeys(literal);
 				if (keys.length < 1) {
@@ -46,9 +52,13 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
 					}
 				}
-			} else if (typeof literal !== "symbol") {
+
+				literalSet = new Set(Object.values(literal));
+			} else {
 				return ("LITERAL_PROPERTY_MALFORMED");
 			}
+
+			Object.assign(criteria, { literalSet });
 		}
 
 		return (null);
@@ -58,20 +68,10 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 			return ("TYPE_SYMBOL_UNSATISFIED");
 		}
 
-		const { literal } = criteria;
+		const { literalSet } = criteria;
 
-		if (literal !== undefined) {
-			if (typeof literal === "symbol" && literal !== value) {
-				return ("LITERAL_UNSATISFIED");
-			}
-			else if (isArray(literal)) {
-				if (!literal.includes(value)) {
-					return ("LITERAL_UNSATISFIED");
-				}
-			}
-			else if (!Object.values(literal).includes(value)) {
-				return ("LITERAL_UNSATISFIED");
-			}
+		if (literalSet !== undefined && !literalSet.has(value)) {
+			return ("LITERAL_UNSATISFIED");
 		}
 
 		return (null);

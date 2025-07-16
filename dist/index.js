@@ -854,7 +854,7 @@ function isBase16(str, params) {
     return (str.length % 2 === 0 && base16Regex.test(str));
 }
 
-var stringTesters$1 = /*#__PURE__*/Object.freeze({
+var stringTesters = /*#__PURE__*/Object.freeze({
     __proto__: null,
     isAscii: isAscii,
     isBase16: isBase16,
@@ -873,7 +873,7 @@ var stringTesters$1 = /*#__PURE__*/Object.freeze({
 
 const testers = {
     object: objectTesters,
-    string: stringTesters$1
+    string: stringTesters
 };
 
 const nodeSymbol = Symbol("node");
@@ -1279,12 +1279,50 @@ const BooleanFormat = {
 const SymbolFormat = {
     type: "symbol",
     errors: {
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Symbol."
+        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Symbol, Array or Plain Object.",
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
+        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type Symbol.",
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must contain at least one key.",
+        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type String.",
+        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type Symbol.",
     },
     mount(chunk, criteria) {
         const { literal } = criteria;
-        if (literal !== undefined && typeof literal !== "symbol") {
-            return ("LITERAL_PROPERTY_MALFORMED");
+        if (literal !== undefined) {
+            let literalSet = undefined;
+            if (typeof literal === "symbol") {
+                literalSet = new Set([literal]);
+            }
+            else if (isArray(literal)) {
+                if (literal.length < 1) {
+                    return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
+                }
+                for (const item of literal) {
+                    if (typeof item !== "symbol") {
+                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                    }
+                }
+                literalSet = new Set(literal);
+            }
+            else if (isPlainObject(literal)) {
+                const keys = Reflect.ownKeys(literal);
+                if (keys.length < 1) {
+                    return ("LITERAL_PROPERTY_OBJECT_MISCONFIGURED");
+                }
+                for (const key of keys) {
+                    if (typeof key !== "string") {
+                        return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+                    }
+                    if (typeof literal[key] !== "symbol") {
+                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+                    }
+                }
+                literalSet = new Set(Object.values(literal));
+            }
+            else {
+                return ("LITERAL_PROPERTY_MALFORMED");
+            }
+            Object.assign(criteria, { literalSet });
         }
         return (null);
     },
@@ -1292,8 +1330,8 @@ const SymbolFormat = {
         if (typeof value !== "symbol") {
             return ("TYPE_SYMBOL_UNSATISFIED");
         }
-        const { literal } = criteria;
-        if (literal !== undefined && literal !== value) {
+        const { literalSet } = criteria;
+        if (literalSet !== undefined && !literalSet.has(value)) {
             return ("LITERAL_UNSATISFIED");
         }
         return (null);
@@ -1371,17 +1409,15 @@ const NumberFormat = {
             return ("MAX_UNSATISFIED");
         }
         if (literal !== undefined) {
-            if (isArray(literal)) {
+            if (typeof literal === "number" && literal !== value) {
+                return ("LITERAL_UNSATISFIED");
+            }
+            else if (isArray(literal)) {
                 if (!literal.includes(value)) {
                     return ("LITERAL_UNSATISFIED");
                 }
             }
-            else if (isPlainObject(literal)) {
-                if (!Object.values(literal).includes(value)) {
-                    return ("LITERAL_UNSATISFIED");
-                }
-            }
-            else if (literal !== value) {
+            else if (!Object.values(literal).includes(value)) {
                 return ("LITERAL_UNSATISFIED");
             }
         }
@@ -1392,7 +1428,7 @@ const NumberFormat = {
     }
 };
 
-const stringTesters = testers.string;
+const testerMap = new Map(Object.entries(testers.string));
 const StringFormat = {
     type: "string",
     errors: {
@@ -1407,34 +1443,11 @@ const StringFormat = {
         LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type String.",
         LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type String.",
         CONSTRAINT_PROPERTY_MALFORMED: "The 'constraint' property must be of type Plain Object.",
-        CONSTRAINT_PROPERTY_MISCONFIGURED: "The object of the 'constraint' property must contain at least one key.",
+        CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'constraint' property must contain at least one key.",
         CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'constraint' property must be of type String.",
         CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED: "The object keys of the 'constraint' property must be a known string.",
         CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'constraint' property must be of type True or Plain Object.",
         CUSTOM_PROPERTY_MALFORMED: "The 'custom' property must be of type Basic Function."
-    },
-    mountConstraint(definedConstraint) {
-        if (!isPlainObject(definedConstraint)) {
-            return ("CONSTRAINT_PROPERTY_MALFORMED");
-        }
-        const definedKeys = Reflect.ownKeys(definedConstraint);
-        const setableKeys = Object.keys(stringTesters);
-        if (definedKeys.length < 1) {
-            return ("LITERAL_PROPERTY_OBJECT_MISCONFIGURED");
-        }
-        for (const definedKey of definedKeys) {
-            const definedValue = definedConstraint[definedKey];
-            if (typeof definedKey !== "string") {
-                return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
-            }
-            if (!setableKeys.includes(definedKey)) {
-                return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
-            }
-            if (definedValue !== true && !isPlainObject(definedValue)) {
-                return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
-            }
-        }
-        return (null);
     },
     mount(chunk, criteria) {
         const { min, max, regex, literal, constraint, custom } = criteria;
@@ -1448,12 +1461,21 @@ const StringFormat = {
             return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
         }
         if (regex !== undefined) {
-            if (typeof regex !== "string" && !(regex instanceof RegExp)) {
+            if (typeof regex === "string") {
+                Object.assign(criteria, {
+                    regex: new RegExp(regex)
+                });
+            }
+            else if (!(regex instanceof RegExp)) {
                 return ("REGEX_PROPERTY_MALFORMED");
             }
         }
         if (literal !== undefined) {
-            if (isArray(literal)) {
+            let literalSet = undefined;
+            if (typeof literal === "string") {
+                literalSet = new Set([literal]);
+            }
+            else if (isArray(literal)) {
                 if (literal.length < 1) {
                     return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
                 }
@@ -1462,6 +1484,7 @@ const StringFormat = {
                         return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
                     }
                 }
+                literalSet = new Set(literal);
             }
             else if (isPlainObject(literal)) {
                 const keys = Reflect.ownKeys(literal);
@@ -1476,43 +1499,52 @@ const StringFormat = {
                         return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
                     }
                 }
+                literalSet = new Set(Object.values(literal));
             }
-            else if (typeof literal !== "string") {
+            else {
                 return ("LITERAL_PROPERTY_MALFORMED");
             }
+            Object.assign(criteria, { literalSet });
         }
         if (constraint !== undefined) {
-            const error = this.mountConstraint(constraint);
-            if (error)
-                return (error);
+            if (isPlainObject(constraint)) {
+                const keys = Reflect.ownKeys(constraint);
+                if (keys.length < 1) {
+                    return ("CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED");
+                }
+                const constraintMap = new Map();
+                for (const key of keys) {
+                    if (typeof key !== "string") {
+                        return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
+                    }
+                    if (!testerMap.has(key)) {
+                        return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
+                    }
+                    const value = constraint[key];
+                    if (typeof value !== "boolean" && !isPlainObject(value)) {
+                        return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
+                    }
+                    else if (value === false) {
+                        continue;
+                    }
+                    constraintMap.set(key, value);
+                }
+                Object.assign(criteria, { constraintMap });
+            }
+            else {
+                return ("CONSTRAINT_PROPERTY_MALFORMED");
+            }
         }
         if (custom !== undefined && !isFunction(custom)) {
             return ("CUSTOM_PROPERTY_MALFORMED");
         }
-        Object.assign(criteria, {
-            regex: typeof regex === "string" ? new RegExp(regex) : regex
-        });
         return (null);
-    },
-    checkConstraint(definedConstraint, value) {
-        const definedKeys = Object.keys(definedConstraint);
-        for (let i = definedKeys.length - 1; i >= 0; i--) {
-            const definedKey = definedKeys[i];
-            const definedValue = definedConstraint[definedKey];
-            if (stringTesters[definedKey](value, definedValue)) {
-                return (null);
-            }
-            else if (i === 0) {
-                return ("CONSTRAINT_UNSATISFIED");
-            }
-        }
-        return ("CONSTRAINT_UNSATISFIED");
     },
     check(chunk, criteria, value) {
         if (typeof value !== "string") {
             return ("TYPE_STRING_UNSATISFIED");
         }
-        const { min, max, regex, literal, constraint, custom } = criteria;
+        const { min, max, regex, literalSet, constraintMap, custom } = criteria;
         const valueLength = value.length;
         if (min !== undefined && valueLength < min) {
             return ("MIN_UNSATISFIED");
@@ -1523,25 +1555,20 @@ const StringFormat = {
         if (regex !== undefined && !regex.test(value)) {
             return ("REGEX_UNSATISFIED");
         }
-        if (literal !== undefined) {
-            if (isArray(literal)) {
-                if (!literal.includes(value)) {
-                    return ("LITERAL_UNSATISFIED");
-                }
-            }
-            else if (isPlainObject(literal)) {
-                if (!Object.values(literal).includes(value)) {
-                    return ("LITERAL_UNSATISFIED");
-                }
-            }
-            else if (literal !== value) {
-                return ("LITERAL_UNSATISFIED");
-            }
+        if (literalSet !== undefined && !literalSet.has(value)) {
+            return ("LITERAL_UNSATISFIED");
         }
-        if (constraint !== undefined) {
-            const reject = this.checkConstraint(constraint, value);
-            if (reject)
-                return (reject);
+        if (constraintMap !== undefined) {
+            let isAccept = false;
+            for (const [key, config] of constraintMap) {
+                if (testerMap.get(key)(value, config)) {
+                    isAccept = true;
+                    break;
+                }
+            }
+            if (!isAccept) {
+                return ("CONSTRAINT_UNSATISFIED");
+            }
         }
         if (custom && !custom(value)) {
             return ("CUSTOM_UNSATISFIED");

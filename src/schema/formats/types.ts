@@ -58,7 +58,7 @@ export interface DerivedCriteriaTemplate<Mounted, Guarded> {
 export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria> {
 	function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
 	boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
-	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria : never;
+	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
 	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never
 	string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
 	simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;

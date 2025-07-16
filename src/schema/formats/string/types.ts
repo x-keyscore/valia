@@ -7,7 +7,7 @@ type SetableConstraintParams<T extends (input: any, params: any) => any> =
 	T extends (input: any, params: infer U) => any ? U : never;
 
 export type SetableConstraint = {
-	[K in keyof StringTesters]?: true | SetableConstraintParams<StringTesters[K]>;
+	[K in keyof StringTesters]?: boolean | SetableConstraintParams<StringTesters[K]>;
 }
 
 type SetableLiteral = string | string[] | Record<string | number, string>;
@@ -24,7 +24,7 @@ export interface StringSetableCriteria extends SetableCriteriaTemplate<"string">
 export interface StringMountedCriteria {
 	regex?: RegExp;
 	literalSet?: Set<string>;
-	constraintMap?: Map<string, object | undefined>
+	constraintMap?: Map<string, object | undefined>;
 }
 
 type StringGuardedCriteria<T extends StringSetableCriteria> =
@@ -67,10 +67,3 @@ export type StringRejectCodes =
 	| "LITERAL_UNSATISFIED"
 	| "CONSTRAINT_UNSATISFIED"
 	| "CUSTOM_UNSATISFIED";
-
-export interface StringCustomMembers {
-	mountConstraint:
-		(definedTesters: Record<string | symbol, unknown>) => StringErrorCodes | null;
-	checkConstraint:
-		(definedTesters: Record<string, {} | undefined | boolean>, value: string) => StringRejectCodes | null;
-}

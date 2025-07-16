@@ -6,18 +6,22 @@ export interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol">
 	literal?: SetableLiteral;
 }
 
-type SymbolGuardedCriteria<T extends SymbolSetableCriteria> = 
-	T['literal'] extends Record<string | number, number>
-		? T['literal'][keyof T['literal']]
-		: T["literal"] extends number[]
-			? T['literal'][number]
-			: T['literal'] extends number
-				? T["literal"]
-				: number;
+export interface SymbolMountedCriteria {
+	literalSet?: Set<symbol>;
+}
 
-export interface SymbolDerivedCriteria extends DerivedCriteriaTemplate<
-	{},
-	symbol
+type SymbolGuardedCriteria<T extends SymbolSetableCriteria> = 
+	T['literal'] extends Record<string | number, symbol>
+		? T['literal'][keyof T['literal']]
+		: T["literal"] extends symbol[]
+			? T['literal'][number]
+			: T['literal'] extends symbol
+				? T["literal"]
+				: symbol;
+
+export interface SymbolDerivedCriteria<T extends SymbolSetableCriteria> extends DerivedCriteriaTemplate<
+	SymbolMountedCriteria,
+	SymbolGuardedCriteria<T>
 > {}
 
 export type SymbolErrorCodes =

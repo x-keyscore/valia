@@ -354,11 +354,17 @@ interface BooleanDerivedCriteria extends DerivedCriteriaTemplate<{}, boolean> {
 }
 type BooleanRejectCodes = "TYPE_BOOLEAN_UNSATISFIED" | "LITERAL_UNSATISFIED";
 
+type SetableLiteral$2 = symbol | symbol[] | Record<string | number, symbol>;
 interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol"> {
-    literal?: symbol;
+    literal?: SetableLiteral$2;
 }
-interface SymbolDerivedCriteria extends DerivedCriteriaTemplate<{}, symbol> {
+interface SymbolMountedCriteria {
+    literalSet?: Set<symbol>;
 }
+type SymbolGuardedCriteria<T extends SymbolSetableCriteria> = T['literal'] extends Record<string | number, symbol> ? T['literal'][keyof T['literal']] : T["literal"] extends symbol[] ? T['literal'][number] : T['literal'] extends symbol ? T["literal"] : symbol;
+interface SymbolDerivedCriteria<T extends SymbolSetableCriteria> extends DerivedCriteriaTemplate<SymbolMountedCriteria, SymbolGuardedCriteria<T>> {
+}
+type SymbolErrorCodes = "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED";
 type SymbolRejectCodes = "TYPE_SYMBOL_UNSATISFIED" | "LITERAL_UNSATISFIED";
 
 type SetableLiteral$1 = number | number[] | Record<string | number, number>;
@@ -377,7 +383,7 @@ type NumberRejectCodes = "TYPE_NUMBER_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UN
 type StringTesters = typeof testers.string;
 type SetableConstraintParams<T extends (input: any, params: any) => any> = T extends (input: any, params: infer U) => any ? U : never;
 type SetableConstraint = {
-    [K in keyof StringTesters]?: true | SetableConstraintParams<StringTesters[K]>;
+    [K in keyof StringTesters]?: boolean | SetableConstraintParams<StringTesters[K]>;
 };
 type SetableLiteral = string | string[] | Record<string | number, string>;
 interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
@@ -390,16 +396,14 @@ interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 }
 interface StringMountedCriteria {
     regex?: RegExp;
+    literalSet?: Set<string>;
+    constraintMap?: Map<string, object | undefined>;
 }
 type StringGuardedCriteria<T extends StringSetableCriteria> = T['literal'] extends Record<string | number, string> ? T['literal'][keyof T['literal']] : T["literal"] extends string[] ? T['literal'][number] : T['literal'] extends string ? T["literal"] : string;
 interface StringDerivedCriteria<T extends StringSetableCriteria> extends DerivedCriteriaTemplate<StringMountedCriteria, StringGuardedCriteria<T>> {
 }
-type StringErrorCodes = "MIN_PROPERTY_MALFORMED" | "MAX_PROPERTY_MALFORMED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "REGEX_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED" | "CONSTRAINT_PROPERTY_MALFORMED" | "CONSTRAINT_PROPERTY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED" | "CUSTOM_PROPERTY_MALFORMED";
+type StringErrorCodes = "MIN_PROPERTY_MALFORMED" | "MAX_PROPERTY_MALFORMED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "REGEX_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED" | "CONSTRAINT_PROPERTY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED" | "CUSTOM_PROPERTY_MALFORMED";
 type StringRejectCodes = "TYPE_STRING_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "REGEX_UNSATISFIED" | "LITERAL_UNSATISFIED" | "CONSTRAINT_UNSATISFIED" | "CUSTOM_UNSATISFIED";
-interface StringCustomMembers {
-    mountConstraint: (definedTesters: Record<string | symbol, unknown>) => StringErrorCodes | null;
-    checkConstraint: (definedTesters: Record<string, {} | undefined | boolean>, value: string) => StringRejectCodes | null;
-}
 
 interface VariantMap {
     UNKNOWN: unknown;
@@ -573,26 +577,53 @@ declare const formatNatives: (Format<FunctionSetableCriteria, FunctionErrorCodes
     type: "symbol";
     errors: {
         LITERAL_PROPERTY_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: SymbolSetableCriteria): "LITERAL_PROPERTY_MALFORMED" | null;
-    check(chunk: CheckerChunk, criteria: Omit<SymbolSetableCriteria, never> & CommonMountedCriteria, value: unknown): SymbolRejectCodes | null;
-} | {
-    type: "number";
-    errors: {
-        LITERAL_PROPERTY_MALFORMED: string;
-        MIN_PROPERTY_MALFORMED: string;
-        MAX_PROPERTY_MALFORMED: string;
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: string;
         LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
         LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
         LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
         LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
         LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
+    };
+    mount(chunk: MounterChunk, criteria: SymbolSetableCriteria): SymbolErrorCodes | null;
+    check(chunk: CheckerChunk, criteria: Omit<SymbolSetableCriteria, "literalSet"> & SymbolMountedCriteria & CommonMountedCriteria, value: unknown): SymbolRejectCodes | null;
+} | {
+    type: "number";
+    errors: {
+        LITERAL_PROPERTY_MALFORMED: string;
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
+        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
+        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
+        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
+        MIN_PROPERTY_MALFORMED: string;
+        MAX_PROPERTY_MALFORMED: string;
+        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: string;
         CUSTOM_PROPERTY_MALFORMED: string;
     };
     mount(chunk: MounterChunk, criteria: NumberSetableCriteria): NumberErrorCodes | null;
     check(chunk: CheckerChunk, criteria: Omit<NumberSetableCriteria, never> & CommonMountedCriteria, value: unknown): NumberRejectCodes | null;
-} | Format<StringSetableCriteria, StringErrorCodes, StringRejectCodes, StringCustomMembers> | Format<SimpleSetableCriteria, SimpleErrorCodes, SimpleRejectCodes, SimpleCustomMembers> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectErrorCodes, ObjectRejectCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers> | {
+} | {
+    type: "string";
+    errors: {
+        LITERAL_PROPERTY_MALFORMED: string;
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
+        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
+        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
+        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
+        MIN_PROPERTY_MALFORMED: string;
+        MAX_PROPERTY_MALFORMED: string;
+        CUSTOM_PROPERTY_MALFORMED: string;
+        MIN_MAX_PROPERTIES_MISCONFIGURED: string;
+        REGEX_PROPERTY_MALFORMED: string;
+        CONSTRAINT_PROPERTY_MALFORMED: string;
+        CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED: string;
+        CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED: string;
+        CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED: string;
+        CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED: string;
+    };
+    mount(chunk: MounterChunk, criteria: StringSetableCriteria): StringErrorCodes | null;
+    check(chunk: CheckerChunk, criteria: Omit<StringSetableCriteria, keyof StringMountedCriteria> & StringMountedCriteria & CommonMountedCriteria, value: unknown): StringRejectCodes | null;
+} | Format<SimpleSetableCriteria, SimpleErrorCodes, SimpleRejectCodes, SimpleCustomMembers> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectErrorCodes, ObjectRejectCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers> | {
     type: "union";
     errors: {
         UNION_PROPERTY_REQUIRED: string;
@@ -643,7 +674,7 @@ interface DerivedCriteriaTemplate<Mounted, Guarded> {
 interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria> {
     function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
     boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
-    symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria : never;
+    symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
     number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never;
     string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
     simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;

@@ -1,10 +1,14 @@
-import type { StringSetableCriteria, StringErrorCodes, StringRejectCodes, StringCustomMembers } from "./types";
+import type { StringSetableCriteria, SetableConstraint, StringErrorCodes, StringRejectCodes } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray, isFunction, testers } from "../../../testers";
 
-const testerMap: Map<string, (...args: any[]) => boolean> = new Map(Object.entries(testers.string)); 
+const testerMap: Map<string, (...args: any[]) => boolean> = new Map(Object.entries(testers.string));
 
-export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, StringRejectCodes, StringCustomMembers> = {
+export const StringFormat: Format<
+	StringSetableCriteria,
+	StringErrorCodes,
+	StringRejectCodes
+> = {
 	type: "string",
 	errors: {
 		MIN_PROPERTY_MALFORMED:
@@ -40,32 +44,6 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		CUSTOM_PROPERTY_MALFORMED:
 			"The 'custom' property must be of type Basic Function."
 	},
-	mountConstraint(constraint) {
-		if (!isPlainObject(constraint)) {
-			return ("CONSTRAINT_PROPERTY_MALFORMED");
-		}
-
-		const keys = Reflect.ownKeys(constraint);
-		if (keys.length < 1) {
-			return ("CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED");
-		}
-
-		for (const key of keys) {
-			const value = constraint[key];
-			
-			if (typeof key !== "string") {
-				return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
-			}
-			if (!testerMap.has(key)) {
-				return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
-			}
-			if (value !== true && !isPlainObject(value)) {
-				return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
-			}
-		}
-
-		return (null);
-	},
 	mount(chunk, criteria) {
 		const { min, max, regex, literal, constraint, custom } = criteria;
 
@@ -91,7 +69,9 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 		if (literal !== undefined) {
 			let literalSet = undefined;
 
-			if (isArray(literal)) {
+			if (typeof literal === "string") {
+				literalSet = new Set([literal]);
+			} else if (isArray(literal)) {
 				if (literal.length < 1) {
 					return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
 				}
@@ -119,8 +99,6 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 				}
 
 				literalSet = new Set(Object.values(literal));
-			} else if (typeof literal === "string") {
-				literalSet = new Set([literal]);
 			} else {
 				return ("LITERAL_PROPERTY_MALFORMED");
 			}
@@ -128,59 +106,80 @@ export const StringFormat: Format<StringSetableCriteria, StringErrorCodes, Strin
 			Object.assign(criteria, { literalSet });
 		}
 		if (constraint !== undefined) {
-			const error = this.mountConstraint(constraint);
-			if (error) return (error);
+			if (isPlainObject(constraint)) {
+				const keys = Reflect.ownKeys(constraint);
+				if (keys.length < 1) {
+					return ("CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED");
+				}
+
+				const constraintMap = new Map();
+				for (const key of keys) {
+					if (typeof key !== "string") {
+						return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
+					}
+					if (!testerMap.has(key)) {
+						return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
+					}
+
+					const value = constraint[key as keyof SetableConstraint];
+					if (typeof value !== "boolean" && !isPlainObject(value)) {
+						return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
+					} else if (value === false) {
+						continue;
+					}
+
+					constraintMap.set(key, value);
+				}
+
+				Object.assign(criteria, { constraintMap });
+			} else {
+				return ("CONSTRAINT_PROPERTY_MALFORMED");
+			}
 		}
 		if (custom !== undefined && !isFunction(custom)) {
 			return ("CUSTOM_PROPERTY_MALFORMED");
 		}
 
-		return (null);
-	},
-	checkConstraint(definedConstraint, value) {
-		const definedKeys = Object.keys(definedConstraint);
-
-		for (let i = definedKeys.length - 1; i >= 0; i--) {
-			const definedKey = definedKeys[i];
-			const definedValue = definedConstraint[definedKey];
-
-			if (testerMap.get(definedKey)!(value, definedValue)) {
-				return (null);
-			} else if (i === 0) {
-				return ("CONSTRAINT_UNSATISFIED");
+			return (null);
+		},
+		check(chunk, criteria, value) {
+			if (typeof value !== "string") {
+				return ("TYPE_STRING_UNSATISFIED");
 			}
-		}
 
-		return ("CONSTRAINT_UNSATISFIED");
-	},
-	check(chunk, criteria, value) {
-		if (typeof value !== "string") {
-			return ("TYPE_STRING_UNSATISFIED");
-		}
+			const { min, max, regex, literalSet, constraintMap, custom } = criteria;
+			const valueLength = value.length;
 
-		const {  min, max, regex, literalSet, constraint, custom } = criteria;
-		const valueLength = value.length;
+			if (min !== undefined && valueLength < min) {
+				return ("MIN_UNSATISFIED");
+			}
+			if (max !== undefined && valueLength > max) {
+				return ("MAX_UNSATISFIED");
+			}
+			if (regex !== undefined && !regex.test(value)) {
+				return ("REGEX_UNSATISFIED");
+			}
+			if (literalSet !== undefined && !literalSet.has(value)) {
+				return ("LITERAL_UNSATISFIED");
+			}
+			if (constraintMap !== undefined) {
+				let isAccept = false;
 
-		if (min !== undefined && valueLength < min) {
-			return ("MIN_UNSATISFIED");
-		}
-		if (max !== undefined && valueLength > max) {
-			return ("MAX_UNSATISFIED");
-		}
-		if (regex !== undefined && !regex.test(value)) {
-			return ("REGEX_UNSATISFIED");
-		}
-		if (literalSet !== undefined && !literalSet.has(value)) {
-			return ("LITERAL_UNSATISFIED");
-		}
-		if (constraint !== undefined) {
-			const reject = this.checkConstraint(constraint, value);
-			if (reject) return (reject);
-		}
-		if (custom && !custom(value)) {
-			return ("CUSTOM_UNSATISFIED");
-		}
+				for (const [key, config] of constraintMap) {
+					if (testerMap.get(key)!(value, config)) {
+						isAccept = true;
+						break;
+					}
+				}
 
-		return (null);
+				if (!isAccept) {
+					return ("CONSTRAINT_UNSATISFIED");
+				}
+			}
+			if (custom && !custom(value)) {
+				return ("CUSTOM_UNSATISFIED");
+			}
+
+			return (null);
+		}
 	}
-}
