@@ -36,12 +36,12 @@ Schema definition
 import { Schema } from 'valia';
 
 const user = new Schema({ 
-  type: "struct",
-  struct: {
+  type: "object",
+  shape: {
     name: { type: "string" },
     role: {
-        type: "string",
-        enum: ["WORKER", "CUSTOMER"]
+      type: "string",
+      literal: ["WORKER", "CUSTOMER"]
     }
   }
 });
@@ -100,7 +100,7 @@ interface SchemaReject {
 
 ## Formats
 
-[Simple](#simple) • [Number](#number) • [String](#string) • [Boolean](#boolean) • [Struct](#struct) • [Record](#record) • [Tuple](#tuple) • [Array](#array) • [Union](#union) • [Symbol](#symbol)
+[Number](#number) • [String](#string) • [Symbol](#symbol) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Simple](#simple) • [Union](#union)
 
 > The order in the property tables is the same order in which the checker performs validation.
 
@@ -108,29 +108,15 @@ interface SchemaReject {
 
 |Property|Default|Description|
 |--|--|--|
-|`label?`  ||String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
-|`message?`||String that will be returned in the reject object.|
-|`nullish?`||Allows `null` and `undefined`|
+|`label?`   ||String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
+|`message?` ||String that will be returned in the reject object.|
+|`nullable?`||Allows `null`|
 
 ```ts
 interface Criteria {
   label?: string;
   message?: string;
-  nullish?: boolean;
-}
-```
-
-### Simple
-
-|Property|Default|Description|
-|--|--|--|
-|`type`  ||Format name|
-|`simple`||Simple type|
-
-```ts
-interface Criteria {
-  type: "simple",
-  simple: "null" | "undefined" | "nullish"  | "unknown" | "any";
+  nullable?: boolean;
 }
 ```
 
@@ -138,19 +124,18 @@ interface Criteria {
 
 |Property|Default|Description|
 |--|--|--|
-|`type`   |      |Format name|
-|`min?`   |      |Minimum value accepted|
-|`max?`   |      |Maximum value accepted|
-|`enum?`  |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`custom?`|      |Customized test function|
+|`min?`    |      |Minimum numeric value.|
+|`max?`    |      |Maximum numeric value.|
+|`literal?`|      |Restricts the value to a single number, an array of numbers or to the numeric values of an object (TypeScript enum).|
+|`custom?` |      |Custom validation function returning a boolean.|
 
 ```ts
 interface Criteria {
   type: "number";
   min?: number;
   max?: number;
-  enum?: string[] | Record<string | number, string>;
-  custom?: (x: string) => boolean;
+  literal?: number | number[] | Record<string | number, number>;
+  custom?: (x: number) => boolean;
 }
 ```
 
@@ -158,25 +143,37 @@ interface Criteria {
 
 |Property|Default|Description|
 |--|--|--|
-|`type`    |      |Format name|
-|`empty?`  |`true`|If the string can be empty|
-|`min?`    |      |Minimum length accepted|
-|`max?`    |      |Maximum length accepted|
-|`enum?`   |      |Restrict the value to the items of an array, the values of an object, or the values of a TypeScript Enum.|
-|`regex?`  |      |A native regex|
-|`custom?` |      |Customized test function|
-|`testers?`|      |Allows you to directly apply a test that you will find [here](#string-1), with its parameters if necessary.|
+|`min?`       ||Minimum string length.|
+|`max?`       ||Maximum string length.|
+|`regex?`     ||Regular expression (as a RegExp object or a string).|
+|`literal?`   ||Restricts the value to a single string, an array of strings or to the string values of an object (TypeScript enum).|
+|`constraint?`||Restricts the value using string testers. Each key refers to a [string tester](#string-1) name and the value is either a boolean (to activate the tester or not) or an options object (in which case the tester is active).|
+|`custom?`    ||Custom validation function returning a boolean.|
 
 ```ts
 interface Criteria {
   type: "string";
-  empty?: boolean;
   min?: number;
   max?: number;
-  enum?: string[] | Record<string | number, string>;
-  regex?: RegExp;
+  regex?: RegExp | string;
+  literal?: string | string[] | Record<string | number, string>;
+  constraint?: { [key: string]: object  | boolean };
   custom?: (x: string) => boolean;
-  testers?: { [key: TesterNames]: true | TesterConfigs };
+}
+```
+
+### Symbol
+
+|Property|Default|Description|
+|--|--|--|
+|`literal?`||Restricts the value to a single symbol, an array of symbols or to the symbol values of an object (TypeScript enum).|
+|`custom?` ||Custom validation function returning a boolean.|
+
+```ts
+interface Criteria {
+  type: "symbol";
+  literal?: symbol | symbol[] | Record<string | number, symbol>;
+  custom?: (x: symbol) => boolean;
 }
 ```
 
@@ -184,55 +181,50 @@ interface Criteria {
 
 |Property|Default|Description|
 |--|--|--|
-|`type`||Format name|
+|`literal?`||Restricts the value to a single boolean state.|
 
 ```ts
 interface Criteria {
   type: "boolean";
+  literal: boolean;
+  custom?: (x: boolean) => boolean;
 }
 ```
 
-### Struct
+### Object
 
 |Property|Default|Description|
 |--|--|--|
-|`type`       |       |Format name|
-|`struct`     |       |Object mapping expected keys to their respective formats.|
-|`optional?`  |`false`|Array of optional keys or boolean|
-|`additional?`|`false`|Record of additional properties or boolean|
+|`shape`      |       |Object mapping expected keys to their respective formats.|
+|`omittable?` |`false`|Optionnalize keys with a boolean|
+|`extensible?`|`false`|Record of additional properties or boolean|
 
-```ts
-type SetableStruct = {
-  [key: string | symbol]: SetableCriteria | SetableStruct;
-}
-
-interface Criteria {
-  type: "struct";
-  struct: SetableStruct;
-  optional?: (string | symbol)[] | boolean;
-  additional?: SetableCriteria<"record"> | boolean;
-}
-```
-
-### Record
+- Extensible Options
 
 |Property|Default|Description|
 |--|--|--|
-|`type`  |       |Format name|
-|`empty?`|`false`|If the object can be empty|
-|`min?`  |       |Minimum properties accepted|
-|`max?`  |       |Maximum properties accepted|
-|`key`   |       |Criteria of key|
-|`value` |       |Criteria of value|
+|`min?`  ||Minimum properties.|
+|`max?`  ||Maximum properties.|
+|`key?`  ||Criteria node.|
+|`value?`||Criteria node.|
 
 ```ts
-interface Criteria {
-  type: "record";
-  empty?: boolean;
+type SetableShape = {
+  [key: string | symbol]: SetableCriteria | SetableShape;
+}
+
+type SetableExtensible = {
   min?: number;
   max?: number;
-  key: SetableCriteria<"string" | "symbol">;
-  value: SetableCriteria;
+  key?: SetableCriteria<"string" | "symbol">;
+  value?: SetableCriteria;
+}
+
+interface Criteria {
+  type: "object";
+  shape: SetableShape;
+  omissible?: boolean | (string | symbol)[];
+  extensible?: boolean | SetableExtensible;
 }
 ```
 
@@ -272,6 +264,19 @@ interface Criteria {
 }
 ```
 
+### Simple
+
+|Property|Default|Description|
+|--|--|--|
+|`simple`||Simple type|
+
+```ts
+interface Criteria {
+  type: "simple",
+  simple: "NULL" | "UNDEFINED" | "NULLISH"  | "UNKNOWN";
+}
+```
+
 ### Union
 
 |Property|Default|Description|
@@ -283,20 +288,6 @@ interface Criteria {
 interface Criteria {
   type: "union";
   union?: [SetableCriteria, ...SetableCriteria[]];
-}
-```
-
-### Symbol
-
-|Property|Default|Description|
-|--|--|--|
-|`type`   ||Format name|
-|`symbol?`||Specific symbol|
-
-```ts
-interface Criteria {
-  type: "symbol";
-  symbol?: symbol;
 }
 ```
 

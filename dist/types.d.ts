@@ -325,25 +325,25 @@ declare const testers: {
     string: typeof stringTesters;
 };
 
-interface VariantMap$1 {
+interface VariantMap {
     BASIC: BasicFunction;
     ASYNC: AsyncFunction;
     BASIC_GENERATOR: GeneratorFunction;
     ASYNC_GENERATOR: AsyncGeneratorFunction;
 }
 interface FunctionSetableCriteria extends SetableCriteriaTemplate<"function"> {
-    variant?: keyof VariantMap$1 | (keyof VariantMap$1)[];
+    variant?: keyof VariantMap | (keyof VariantMap)[];
 }
 interface FunctionMountedCriteria {
     variantBitcode: number;
 }
-type FunctionGuardedCriteria<T extends FunctionSetableCriteria> = T['variant'] extends (keyof VariantMap$1)[] ? VariantMap$1[T['variant'][number]] : [T['variant']] extends [keyof VariantMap$1] ? VariantMap$1[T['variant']] : Function;
+type FunctionGuardedCriteria<T extends FunctionSetableCriteria> = T['variant'] extends (keyof VariantMap)[] ? VariantMap[T['variant'][number]] : [T['variant']] extends [keyof VariantMap] ? VariantMap[T['variant']] : Function;
 interface FunctionDerivedCriteria<T extends FunctionSetableCriteria> extends DerivedCriteriaTemplate<FunctionMountedCriteria, FunctionGuardedCriteria<T>> {
 }
 type FunctionErrorCodes = "VARIANT_PROPERTY_MALFORMED" | "VARIANT_PROPERTY_STRING_MISCONFIGURED" | "VARIANT_PROPERTY_ARRAY_LENGTH_MISCONFIGURED" | "VARIANT_PROPERTY_ARRAY_ITEM_MISCONFIGURED";
 type FunctionRejectCodes = "TYPE_FUNCTION_UNSATISFIED" | "VARIANT_UNSATISFIED";
 interface FunctionCustomMembers {
-    variantBitflags: Record<keyof VariantMap$1, number>;
+    variantBitflags: Record<keyof VariantMap, number>;
     tagBitflags: Record<string, number>;
 }
 
@@ -396,8 +396,8 @@ interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 }
 interface StringMountedCriteria {
     regex?: RegExp;
-    literalSet?: Set<string>;
-    constraintMap?: Map<string, object | undefined>;
+    resolvedLiteral?: Set<string>;
+    resolvedConstraint?: Map<string, object | undefined>;
 }
 type StringGuardedCriteria<T extends StringSetableCriteria> = T['literal'] extends Record<string | number, string> ? T['literal'][keyof T['literal']] : T["literal"] extends string[] ? T['literal'][number] : T['literal'] extends string ? T["literal"] : string;
 interface StringDerivedCriteria<T extends StringSetableCriteria> extends DerivedCriteriaTemplate<StringMountedCriteria, StringGuardedCriteria<T>> {
@@ -405,24 +405,24 @@ interface StringDerivedCriteria<T extends StringSetableCriteria> extends Derived
 type StringErrorCodes = "MIN_PROPERTY_MALFORMED" | "MAX_PROPERTY_MALFORMED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "REGEX_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED" | "CONSTRAINT_PROPERTY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED" | "CUSTOM_PROPERTY_MALFORMED";
 type StringRejectCodes = "TYPE_STRING_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "REGEX_UNSATISFIED" | "LITERAL_UNSATISFIED" | "CONSTRAINT_UNSATISFIED" | "CUSTOM_UNSATISFIED";
 
-interface VariantMap {
+interface Simples {
     UNKNOWN: unknown;
     NULL: null;
     UNDEFINED: undefined;
     NULLISH: undefined | null;
 }
 interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
-    variant: keyof VariantMap;
+    simple: keyof Simples;
 }
 interface SimpleMountedCriteria {
-    variantBitcode: number;
+    bitcode: number;
 }
-interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<SimpleMountedCriteria, VariantMap[T['variant']]> {
+interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<SimpleMountedCriteria, Simples[T['simple']]> {
 }
-type SimpleErrorCodes = "VARIANT_PROPERTY_REQUIRED" | "VARIANT_PROPERTY_MALFORMED" | "VARIANT_PROPERTY_STRING_MISCONFIGURED";
-type SimpleRejectCodes = "VARIANT_NULLISH_UNSATISFIED" | "VARIANT_NULL_UNSATISFIED" | "VARIANT_UNDEFINED_UNSATISFIED";
+type SimpleErrorCodes = "SIMPLE_PROPERTY_REQUIRED" | "SIMPLE_PROPERTY_MALFORMED" | "SIMPLE_PROPERTY_STRING_MISCONFIGURED";
+type SimpleRejectCodes = "SIMPLE_NULLISH_UNSATISFIED" | "SIMPLE_NULL_UNSATISFIED" | "SIMPLE_UNDEFINED_UNSATISFIED";
 interface SimpleCustomMembers {
-    variantBitflags: Record<keyof VariantMap, number>;
+    bitflags: Record<keyof Simples, number>;
 }
 
 type SetableShape$1<T extends FormatTypes = FormatTypes> = {

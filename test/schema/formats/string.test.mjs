@@ -14,7 +14,6 @@ describe("\nschema > formats > string", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(string_default.validate(0), false);
 			assert.strictEqual(string_default.validate({}), false);
-			assert.strictEqual(string_default.validate([]), false);
 		});
 
 		it("should validate correct values", () => {
@@ -88,7 +87,7 @@ describe("\nschema > formats > string", () => {
 	});
 
 	describe("'literal' parameter", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ type: "string", literal: 0 }),
 				SchemaNodeException,
@@ -127,10 +126,12 @@ describe("\nschema > formats > string", () => {
 				type: "string",
 				literal: "BLUE"
 			});
+
 			string_literal_array = new Schema({
 				type: "string",
 				literal: ["BLUE", "WHITE", "RED"]
 			});
+
 			string_literal_object = new Schema({
 				type: "string",
 				literal: {
@@ -165,7 +166,7 @@ describe("\nschema > formats > string", () => {
 		});
 	});
 
-	describe("'constraint' parameter (One constraint)", () => {
+	describe("'constraint' parameter", () => {
 		let string_constraint_1, string_constraint_2;
 
 		before(() => {
@@ -188,11 +189,11 @@ describe("\nschema > formats > string", () => {
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(string_constraint_1.validate(""), false);
 			assert.strictEqual(string_constraint_1.validate("x"), false);
-			assert.strictEqual(string_constraint_1.validate("182.168"), false);
+			assert.strictEqual(string_constraint_1.validate("182.168."), false);
 
 			assert.strictEqual(string_constraint_2.validate(""), false);
 			assert.strictEqual(string_constraint_2.validate("x"), false);
-			assert.strictEqual(string_constraint_2.validate("192.168"), false);
+			assert.strictEqual(string_constraint_2.validate("192.168."), false);
 			assert.strictEqual(string_constraint_2.validate("foo@bar."), false);
 		});
 

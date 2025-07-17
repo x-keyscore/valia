@@ -3,11 +3,11 @@ import { testers } from "../../../testers";
 
 type StringTesters = typeof testers.string;
 
-type SetableConstraintParams<T extends (input: any, params: any) => any> = 
-	T extends (input: any, params: infer U) => any ? U : never;
+type SetableConstraintOptions<K extends keyof StringTesters> = 
+	StringTesters[K] extends (input: any, params: infer U) => any ? U : never;
 
 export type SetableConstraint = {
-	[K in keyof StringTesters]?: boolean | SetableConstraintParams<StringTesters[K]>;
+	[K in keyof StringTesters]?: boolean | SetableConstraintOptions<K>;
 }
 
 type SetableLiteral = string | string[] | Record<string | number, string>;
@@ -23,8 +23,8 @@ export interface StringSetableCriteria extends SetableCriteriaTemplate<"string">
 
 export interface StringMountedCriteria {
 	regex?: RegExp;
-	literalSet?: Set<string>;
-	constraintMap?: Map<string, object | undefined>;
+	resolvedLiteral?: Set<string>;
+	resolvedConstraint?: Map<string, object | undefined>;
 }
 
 type StringGuardedCriteria<T extends StringSetableCriteria> =

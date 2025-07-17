@@ -47,7 +47,7 @@ describe("\nschema > formats > function", () => {
 			});
 		});
 
-		it("should throw if the definition is incorrect", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ type: "function", variant: 0 }),
 				SchemaNodeException,

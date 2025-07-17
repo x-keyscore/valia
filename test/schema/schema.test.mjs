@@ -5,7 +5,7 @@ import { Schema, SchemaNodeException, SchemaDataRejection } from "../../dist/ind
 
 describe("\nschema > instance", () => {
 	describe("'criteria' property", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema(0),
 				SchemaNodeException,
@@ -74,7 +74,7 @@ describe("\nschema > instance", () => {
 			schema = new Schema({ type: "string" });
 		});
 
-		it("should return the correct result", () => {
+		it("should return a correct result", () => {
 			assert.strictEqual(typeof schema.validate(0), "boolean");
 			assert.strictEqual(typeof schema.validate("x"), "boolean");
 		});
@@ -128,7 +128,7 @@ describe("\nschema > instance", () => {
 
 describe("\nschema > formats > (Common properties)", () => {
 	describe("'type' property", () => {
-		it("should throw if the definition is incorrect", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({}),
 				SchemaNodeException,
@@ -150,7 +150,7 @@ describe("\nschema > formats > (Common properties)", () => {
 	});
 
 	describe("'label' property", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ label: 0 }),
 				SchemaNodeException,
@@ -160,7 +160,7 @@ describe("\nschema > formats > (Common properties)", () => {
 	});
 
 	describe("'message' property", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ message: 0 }),
 				SchemaNodeException,
@@ -170,7 +170,7 @@ describe("\nschema > formats > (Common properties)", () => {
 	});
 
 	describe("'nullable' property", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({ nullable: 0 }),
 				SchemaNodeException,

@@ -5,15 +5,15 @@ import { Schema, SchemaNodeException } from "../../../dist/index.js";
 
 describe("\nschema > formats > simple", () => {
 	describe("Default", () => {
-		it("should throw for incorrect definitions", () => {
+		it("should throw on incorrect definitions", () => {
 			assert.throws(
-				() => new Schema({ type: "simple", variant: 0 }),
+				() => new Schema({ type: "simple", simple: 0 }),
 				SchemaNodeException,
 				"throws if the value is malformed"
 			);
 
 			assert.throws(
-				() => new Schema({ type: "simple", variant: "" }),
+				() => new Schema({ type: "simple", simple: "" }),
 				SchemaNodeException,
 				"throws if the value is misconfigured"
 			);
@@ -22,10 +22,10 @@ describe("\nschema > formats > simple", () => {
 		let simple_NULL, simple_UNDEFINED, simple_NULLISH, simple_UNKNOWN;
 
 		before(() => {
-			simple_NULL = new Schema({ type: "simple", variant: "NULL" });
-			simple_UNDEFINED = new Schema({ type: "simple", variant: "UNDEFINED" });
-			simple_NULLISH = new Schema({ type: "simple", variant: "NULLISH" });
-			simple_UNKNOWN = new Schema({ type: "simple", variant: "UNKNOWN" });
+			simple_NULL = new Schema({ type: "simple", simple: "NULL" });
+			simple_UNDEFINED = new Schema({ type: "simple", simple: "UNDEFINED" });
+			simple_NULLISH = new Schema({ type: "simple", simple: "NULLISH" });
+			simple_UNKNOWN = new Schema({ type: "simple", simple: "UNKNOWN" });
 		});
 
 		it("should invalidate incorrect values", () => {

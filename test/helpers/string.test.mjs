@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { base16ToBase64, base16ToBase32, base64ToBase16, base32ToBase16 } from "../../dist/index.js";
 
-describe("\ntools / string / base16ToBase64", () => {
+describe("\nhelpers / string / base16ToBase64", () => {
 	describe("Default", () => {
 		it("should return the correct values", () => {
 			assert.strictEqual(base16ToBase64(""), "");
@@ -33,7 +33,7 @@ describe("\ntools / string / base16ToBase64", () => {
 	});
 });
 
-describe("\ntools / string / base16ToBase32", () => {
+describe("\nhelpers / string / base16ToBase32", () => {
 	describe("Default", () => {
 		it("should return the correct values", () => {
 			assert.strictEqual(base16ToBase32(""), "");
@@ -67,7 +67,7 @@ describe("\ntools / string / base16ToBase32", () => {
 	});
 });
 
-describe("\ntools / string / base64ToBase16", () => {
+describe("\nhelpers / string / base64ToBase16", () => {
 	describe("Default", () => {
 		it("should return the correct values", () => {
 			assert.strictEqual(base64ToBase16(""), "");
@@ -86,7 +86,7 @@ describe("\ntools / string / base64ToBase16", () => {
 	});
 });
 
-describe("\ntools / string / base32ToBase16", () => {
+describe("\nhelpers / string / base32ToBase16", () => {
 	describe("Default", () => {
 		it("should return the correct values", () => {
 			assert.strictEqual(base32ToBase16(""), "");

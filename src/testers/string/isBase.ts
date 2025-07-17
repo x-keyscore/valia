@@ -16,7 +16,7 @@ const base64UrlRegex = weakly(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z
  * 
  * @version 1.0.0
  */
-export function isBase64(str: string, params?: undefined): boolean {
+export function isBase64(str: string, options?: undefined): boolean {
 	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 4 == 0 && base64Regex.test(str));
 }
@@ -28,7 +28,7 @@ export function isBase64(str: string, params?: undefined): boolean {
  * 
  * @version 1.0.0
  */
-export function isBase64Url(str: string, params?: undefined): boolean {
+export function isBase64Url(str: string, options?: undefined): boolean {
 	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }
@@ -40,7 +40,7 @@ export function isBase64Url(str: string, params?: undefined): boolean {
  * 
  * @version 1.0.0
  */
-export function isBase32(str: string, params?: undefined): boolean {
+export function isBase32(str: string, options?: undefined): boolean {
 	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 8 === 0 && base32Regex.test(str));
 }
@@ -52,7 +52,7 @@ export function isBase32(str: string, params?: undefined): boolean {
  * 
  * @version 1.0.0
  */
-export function isBase32Hex(str: string, params?: undefined): boolean {
+export function isBase32Hex(str: string, options?: undefined): boolean {
 	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 8 === 0 && base32HexRegex().test(str));
 }
@@ -64,7 +64,7 @@ export function isBase32Hex(str: string, params?: undefined): boolean {
  * 
  * @version 1.0.0
  */
-export function isBase16(str: string, params?: undefined): boolean {
+export function isBase16(str: string, options?: undefined): boolean {
 	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
 	return (str.length % 2 === 0 && base16Regex.test(str));
 }

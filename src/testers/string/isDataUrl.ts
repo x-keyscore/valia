@@ -26,7 +26,7 @@ interface DataUrlObject {
 	parameters: { name: string, value: string }[];
 }
 
-interface DataUrlParams {
+interface DataUrlOptions {
 	/**
 	 * Specifies the type of media.
 	 * 
@@ -124,7 +124,7 @@ function parseDataUrl(str: string): DataUrlObject | null {
  * 
  * @version 2.0.0
  */
-export function isDataUrl(str: string, params?: DataUrlParams): boolean {
+export function isDataUrl(str: string, options?: DataUrlOptions): boolean {
 	const dataUrl = parseDataUrl(str);
 	if (!dataUrl) return (false);
 
@@ -155,13 +155,13 @@ export function isDataUrl(str: string, params?: DataUrlParams): boolean {
 	// CHECK DATA
 	if (!dataRegex.test(dataUrl.data)) return (false);
 
-	if (params?.type) {
-		const hasValidType = params.type.some(type => 
+	if (options?.type) {
+		const hasValidType = options.type.some(type => 
 			type.toLowerCase() === dataUrl.type.toLowerCase());
 		if (!hasValidType) return (false);
 	}
-	if (params?.subtype) {
-		const hasValidSubtype = params.subtype.some(subtype => 
+	if (options?.subtype) {
+		const hasValidSubtype = options.subtype.some(subtype => 
 			subtype.toLowerCase() === dataUrl.subtype.toLowerCase());
 		if (!hasValidSubtype) return (false);
 	}

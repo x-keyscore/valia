@@ -9,53 +9,52 @@ export const SimpleFormat: Format<
 > = {
 	type: "simple",
 	errors: {
-		VARIANT_PROPERTY_REQUIRED:
-            "The 'variant' property must be defined.",
-        VARIANT_PROPERTY_MALFORMED:
-            "The 'variant' property must be of type String.",
-		VARIANT_PROPERTY_STRING_MISCONFIGURED:
-            "The 'variant' property must be a known string."
+		SIMPLE_PROPERTY_REQUIRED:
+            "The 'simple' property must be defined.",
+        SIMPLE_PROPERTY_MALFORMED:
+            "The 'simple' property must be of type String.",
+		SIMPLE_PROPERTY_STRING_MISCONFIGURED:
+            "The 'simple' property must be a known string."
 	},
-	variantBitflags: {
+	bitflags: {
 		UNKNOWN:	1 << 0,
 		NULLISH:	1 << 1,
 		NULL:		1 << 2,
 		UNDEFINED:	1 << 3
 	},
 	mount(chunk, criteria) {
-		const { variant } = criteria;
+		const { simple } = criteria;
 
-		if (!("variant" in criteria)) {
-			return ("VARIANT_PROPERTY_REQUIRED");
+		if (!("simple" in criteria)) {
+			return ("SIMPLE_PROPERTY_REQUIRED");
 		}
-		if (typeof variant !== "string") {
-			return ("VARIANT_PROPERTY_MALFORMED");
+		if (typeof simple !== "string") {
+			return ("SIMPLE_PROPERTY_MALFORMED");
 		}
-		if (!(variant in this.variantBitflags)) {
-			return ("VARIANT_PROPERTY_STRING_MISCONFIGURED");
+		if (!(simple in this.bitflags)) {
+			return ("SIMPLE_PROPERTY_STRING_MISCONFIGURED");
 		}
 
 		Object.assign(criteria, {
-			variantBitcode: this.variantBitflags[variant]
+			bitcode: this.bitflags[simple]
 		});
 
 		return (null);
 	},
 	check(chunk, criteria, value) {
-		const { variantBitcode } = criteria;
-		const { variantBitflags } = this
+		const { bitcode } = criteria, { bitflags } = this;
 	
-		if (variantBitcode & variantBitflags.UNKNOWN) {
+		if (bitcode & bitflags.UNKNOWN) {
 			return (null);
 		}
-		if (variantBitcode & variantBitflags.NULLISH && value != null) {
-			return ("VARIANT_NULLISH_UNSATISFIED");
+		if (bitcode & bitflags.NULLISH && value != null) {
+			return ("SIMPLE_NULLISH_UNSATISFIED");
 		}
-		if (variantBitcode & variantBitflags.NULL && value !== null) {
-			return ("VARIANT_NULL_UNSATISFIED");
+		if (bitcode & bitflags.NULL && value !== null) {
+			return ("SIMPLE_NULL_UNSATISFIED");
 		}
-		if ((variantBitcode & variantBitflags.UNDEFINED) && value !== undefined) {
-			return ("VARIANT_UNDEFINED_UNSATISFIED");
+		if ((bitcode & bitflags.UNDEFINED) && value !== undefined) {
+			return ("SIMPLE_UNDEFINED_UNSATISFIED");
 		}
 
 		return (null);

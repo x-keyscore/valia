@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { getInternalTag } from "../../dist/index.js";
 
-describe("\ntools / object / getInternalTag", () => {
+describe("\nhelpers / object / getInternalTag", () => {
 	describe("Default", () => {
 		it("should return the correct values", () => {
             assert.strictEqual(getInternalTag(0), "Number");

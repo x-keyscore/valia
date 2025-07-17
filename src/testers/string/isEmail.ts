@@ -35,7 +35,7 @@ interface EmailObject {
 	domain: string;
 }
 
-interface EmailParams {
+interface EmailOptions {
 	/** **Default:** `false` */
 	allowQuotedString?: boolean;
 	/** **Default:** `false` */
@@ -84,21 +84,21 @@ function parseEmail(str: string): EmailObject | null {
 	});
 }
 
-function isValidLocal(str: string, params?: EmailParams): boolean {
+function isValidLocal(str: string, options?: EmailOptions): boolean {
 	if (dotLocalRegex.test(str)) return (true);
 
-	if (params?.allowQuotedString
+	if (options?.allowQuotedString
 		&& dotOrQuoteLocalRegex().test(str)) return (true);
 
 	return (false);
 }
 
-function isValidDomain(str: string, params?: EmailParams): boolean {
+function isValidDomain(str: string, options?: EmailOptions): boolean {
 	if (isDomain(str)) return (true);
 
-	if (params?.allowIpAddress
+	if (options?.allowIpAddress
 		&& ipAddressRegex().test(str)) return (true);
-	if (params?.allowGeneralAddress
+	if (options?.allowGeneralAddress
 		&& generalAddressRegex().test(str)) return (true);
 	
 	return (false);
@@ -109,15 +109,15 @@ function isValidDomain(str: string, params?: EmailParams): boolean {
  * 
  * @version 2.0.0
  */
-export function isEmail(str: string, params?: EmailParams): boolean {
+export function isEmail(str: string, options?: EmailOptions): boolean {
 	const email = parseEmail(str);
 	if (!email) return (false);
 
 	// CHECK LOCAL
-	if (!isValidLocal(email.local, params)) return (false);
+	if (!isValidLocal(email.local, options)) return (false);
 
 	// CHECK DOMAIN
-	if (!isValidDomain(email.domain, params)) return (false);
+	if (!isValidDomain(email.domain, options)) return (false);
 	
 	// RFC 5321 4.5.3.1.2 : Length restriction
 	if (!email.domain.length || email.domain.length > 255) return (false);

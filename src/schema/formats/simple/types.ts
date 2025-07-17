@@ -1,6 +1,6 @@
 import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
 
-interface VariantMap {
+interface Simples {
 	UNKNOWN: unknown;
 	NULL: null;
 	UNDEFINED: undefined;
@@ -8,28 +8,28 @@ interface VariantMap {
 }
 
 export interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
-	variant: keyof VariantMap;
+	simple: keyof Simples;
 }
 
 export interface SimpleMountedCriteria {
-	variantBitcode: number;
+	bitcode: number;
 }
 
 export interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<
 	SimpleMountedCriteria,
-	VariantMap[T['variant']]
+	Simples[T['simple']]
 > {}
 
 export type SimpleErrorCodes =
-    | "VARIANT_PROPERTY_REQUIRED"
-    | "VARIANT_PROPERTY_MALFORMED"
-	| "VARIANT_PROPERTY_STRING_MISCONFIGURED";
+    | "SIMPLE_PROPERTY_REQUIRED"
+    | "SIMPLE_PROPERTY_MALFORMED"
+	| "SIMPLE_PROPERTY_STRING_MISCONFIGURED";
 
 export type SimpleRejectCodes =
-	| "VARIANT_NULLISH_UNSATISFIED"
-	| "VARIANT_NULL_UNSATISFIED"
-	| "VARIANT_UNDEFINED_UNSATISFIED";
+	| "SIMPLE_NULLISH_UNSATISFIED"
+	| "SIMPLE_NULL_UNSATISFIED"
+	| "SIMPLE_UNDEFINED_UNSATISFIED";
 
 export interface SimpleCustomMembers {
-	variantBitflags: Record<keyof VariantMap, number>
+	bitflags: Record<keyof Simples, number>
 }
