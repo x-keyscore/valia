@@ -25,7 +25,7 @@ describe("\nschema > formats > array", () => {
 			assert.strictEqual(
 				array_default.validate([""]),
 				false,
-				"Should be invalid because 'extensible' parameter set on 'false' by default"
+				"Should be invalid because 'additional' parameter set on 'false' by default"
 			);
 		});
 
@@ -146,94 +146,94 @@ describe("\nschema > formats > array", () => {
 		});
 	});
 
-	describe("'extensible' property (Boolean value with 'shape' used)", () => {
-		let array_extensible_true, array_extensible_false;
+	describe("'additional' property (Boolean value with 'shape' used)", () => {
+		let array_additional_true, array_additional_false;
 
 		before(() => {
-			array_extensible_true = new Schema({
+			array_additional_true = new Schema({
 				type: "array",
 				shape: [
 					{ type: "string" }
 				],
-				extensible: true
+				additional: true
 			});
 
-			array_extensible_false = new Schema({
+			array_additional_false = new Schema({
 				type: "array",
 				shape: [
 					{ type: "string" }
 				],
-				extensible: false
+				additional: false
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_extensible_true.validate([]), false);
-			assert.strictEqual(array_extensible_true.validate([0]), false);
+			assert.strictEqual(array_additional_true.validate([]), false);
+			assert.strictEqual(array_additional_true.validate([0]), false);
 
-			assert.strictEqual(array_extensible_false.validate([]), false);
-			assert.strictEqual(array_extensible_false.validate([0]), false);
-			assert.strictEqual(array_extensible_false.validate(["", 0]), false);
-			assert.strictEqual(array_extensible_false.validate([0, ""]), false);
+			assert.strictEqual(array_additional_false.validate([]), false);
+			assert.strictEqual(array_additional_false.validate([0]), false);
+			assert.strictEqual(array_additional_false.validate(["", 0]), false);
+			assert.strictEqual(array_additional_false.validate([0, ""]), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(array_extensible_true.validate([""]), true);
-			assert.strictEqual(array_extensible_true.validate(["", 0]), true);
-			assert.strictEqual(array_extensible_true.validate(["", 0, 0]), true);
+			assert.strictEqual(array_additional_true.validate([""]), true);
+			assert.strictEqual(array_additional_true.validate(["", 0]), true);
+			assert.strictEqual(array_additional_true.validate(["", 0, 0]), true);
 
-			assert.strictEqual(array_extensible_true.validate([""]), true);
+			assert.strictEqual(array_additional_true.validate([""]), true);
 		});
 	});
 
-	describe("'extensible' property (Boolean value with 'shape' not used)", () => {
-		let array_extensible_true, array_extensible_false;
+	describe("'additional' property (Boolean value with 'shape' not used)", () => {
+		let array_additional_true, array_additional_false;
 
 		before(() => {
-			array_extensible_true = new Schema({
+			array_additional_true = new Schema({
 				type: "array",
 				shape: [],
-				extensible: true
+				additional: true
 			});
 
-			array_extensible_false = new Schema({
+			array_additional_false = new Schema({
 				type: "array",
 				shape: [],
-				extensible: false
+				additional: false
 			});
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_extensible_false.validate([0]), false);
-			assert.strictEqual(array_extensible_false.validate([0, 0]), false);
+			assert.strictEqual(array_additional_false.validate([0]), false);
+			assert.strictEqual(array_additional_false.validate([0, 0]), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(array_extensible_true.validate([]), true);
-			assert.strictEqual(array_extensible_true.validate([0]), true);
-			assert.strictEqual(array_extensible_true.validate([0, 0]), true);
+			assert.strictEqual(array_additional_true.validate([]), true);
+			assert.strictEqual(array_additional_true.validate([0]), true);
+			assert.strictEqual(array_additional_true.validate([0, 0]), true);
 
-			assert.strictEqual(array_extensible_false.validate([]), true);
+			assert.strictEqual(array_additional_false.validate([]), true);
 		});
 	});
 
-	describe("'extensible' property (Object)", () => {
+	describe("'additional' property (Object)", () => {
 		describe("'item' property ('shape' used)", () => {
-			let extensible_item_string, extensible_item_object;
+			let additional_item_string, additional_item_object;
 
 			before(() => {
-				extensible_item_string = new Schema({
+				additional_item_string = new Schema({
 					type: "array",
 					shape: [{ type: "string" }],
-					extensible: {
+					additional: {
 						item: { type: "number" }
 					}
 				});
 
-				extensible_item_object = new Schema({
+				additional_item_object = new Schema({
 					type: "array",
 					shape: [{ type: "string" }],
-					extensible: {
+					additional: {
 						item: {
 							type: "object",
 							shape: { foo: { type: "string" } }
@@ -243,49 +243,49 @@ describe("\nschema > formats > array", () => {
 			});
 
 			it("should invalidate incorrect values", () => {
-				assert.strictEqual(extensible_item_string.validate([]), false);
-				assert.strictEqual(extensible_item_string.validate([0]), false);
-				assert.strictEqual(extensible_item_string.validate([0, ""]), false);
-				assert.strictEqual(extensible_item_string.validate(["", "", 0]), false);
-				assert.strictEqual(extensible_item_string.validate(["", 0, ""]), false);
+				assert.strictEqual(additional_item_string.validate([]), false);
+				assert.strictEqual(additional_item_string.validate([0]), false);
+				assert.strictEqual(additional_item_string.validate([0, ""]), false);
+				assert.strictEqual(additional_item_string.validate(["", "", 0]), false);
+				assert.strictEqual(additional_item_string.validate(["", 0, ""]), false);
 
-				assert.strictEqual(extensible_item_object.validate([]), false);
-				assert.strictEqual(extensible_item_object.validate([0]), false);
-				assert.strictEqual(extensible_item_object.validate(["", {}]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { foo: 0 }]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { bar: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { foo: "" }, { foo: 0 }]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { foo: 0 }, { foo: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { foo: "" }, { bar: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate(["", { bar: "" }, { foo: "" }]), false);
+				assert.strictEqual(additional_item_object.validate([]), false);
+				assert.strictEqual(additional_item_object.validate([0]), false);
+				assert.strictEqual(additional_item_object.validate(["", {}]), false);
+				assert.strictEqual(additional_item_object.validate(["", { foo: 0 }]), false);
+				assert.strictEqual(additional_item_object.validate(["", { bar: "" }]), false);
+				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { foo: 0 }]), false);
+				assert.strictEqual(additional_item_object.validate(["", { foo: 0 }, { foo: "" }]), false);
+				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { bar: "" }]), false);
+				assert.strictEqual(additional_item_object.validate(["", { bar: "" }, { foo: "" }]), false);
 			});
 
 			it("should validate correct values", () => {
-				assert.strictEqual(extensible_item_string.validate([""]), true);
-				assert.strictEqual(extensible_item_string.validate(["", 0]), true);
-				assert.strictEqual(extensible_item_string.validate(["", 0, 0]), true);
+				assert.strictEqual(additional_item_string.validate([""]), true);
+				assert.strictEqual(additional_item_string.validate(["", 0]), true);
+				assert.strictEqual(additional_item_string.validate(["", 0, 0]), true);
 
-				assert.strictEqual(extensible_item_object.validate(["", { foo: "" }]), true);
-				assert.strictEqual(extensible_item_object.validate(["", { foo: "" }, { foo: "" }]), true);
+				assert.strictEqual(additional_item_object.validate(["", { foo: "" }]), true);
+				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { foo: "" }]), true);
 			});
 		});
 
 		describe("'item' property ('shape' not used)", () => {
-			let extensible_item_string, extensible_item_object;
+			let additional_item_string, additional_item_object;
 
 			before(() => {
-				extensible_item_string = new Schema({
+				additional_item_string = new Schema({
 					type: "array",
 					shape: [],
-					extensible: {
+					additional: {
 						item: { type: "string" }
 					}
 				});
 
-				extensible_item_object = new Schema({
+				additional_item_object = new Schema({
 					type: "array",
 					shape: [],
-					extensible: {
+					additional: {
 						item: {
 							type: "object",
 							shape: { foo: { type: "string" } }
@@ -295,69 +295,69 @@ describe("\nschema > formats > array", () => {
 			});
 
 			it("should invalidate incorrect values", () => {
-				assert.strictEqual(extensible_item_string.validate([0]), false);
-				assert.strictEqual(extensible_item_string.validate(["", 0]), false);
-				assert.strictEqual(extensible_item_string.validate([0, ""]), false);
+				assert.strictEqual(additional_item_string.validate([0]), false);
+				assert.strictEqual(additional_item_string.validate(["", 0]), false);
+				assert.strictEqual(additional_item_string.validate([0, ""]), false);
 
-				assert.strictEqual(extensible_item_object.validate([{}]), false);
-				assert.strictEqual(extensible_item_object.validate([{ foo: 0 }]), false);
-				assert.strictEqual(extensible_item_object.validate([{ bar: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate([{ foo: "" }, { foo: 0 }]), false);
-				assert.strictEqual(extensible_item_object.validate([{ foo: 0 }, { foo: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate([{ foo: "" }, { bar: "" }]), false);
-				assert.strictEqual(extensible_item_object.validate([{ bar: "" }, { foo: "" }]), false);
+				assert.strictEqual(additional_item_object.validate([{}]), false);
+				assert.strictEqual(additional_item_object.validate([{ foo: 0 }]), false);
+				assert.strictEqual(additional_item_object.validate([{ bar: "" }]), false);
+				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { foo: 0 }]), false);
+				assert.strictEqual(additional_item_object.validate([{ foo: 0 }, { foo: "" }]), false);
+				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { bar: "" }]), false);
+				assert.strictEqual(additional_item_object.validate([{ bar: "" }, { foo: "" }]), false);
 			});
 
 			it("should validate correct values", () => {
-				assert.strictEqual(extensible_item_string.validate([""]), true);
-				assert.strictEqual(extensible_item_string.validate(["", ""]), true);
+				assert.strictEqual(additional_item_string.validate([""]), true);
+				assert.strictEqual(additional_item_string.validate(["", ""]), true);
 
-				assert.strictEqual(extensible_item_object.validate([{ foo: "" }]), true);
-				assert.strictEqual(extensible_item_object.validate([{ foo: "" }, { foo: "" }]), true);
+				assert.strictEqual(additional_item_object.validate([{ foo: "" }]), true);
+				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { foo: "" }]), true);
 			});
 		});
 
 		describe("'min' property", () => {
-			let extensible_min;
+			let additional_min;
 
 			before(() => {
-				extensible_min = new Schema({
+				additional_min = new Schema({
 					type: "array",
 					shape: [],
-					extensible: {
+					additional: {
 						min: 4
 					}
 				});
 			});
 
 			it("should invalidate incorrect values", () => {
-				assert.strictEqual(extensible_min.validate(["x", "x", "x"]), false);
+				assert.strictEqual(additional_min.validate(["x", "x", "x"]), false);
 			});
 
 			it("should validate correct values", () => {
-				assert.strictEqual(extensible_min.validate(["x", "x", "x", "x"]), true);
+				assert.strictEqual(additional_min.validate(["x", "x", "x", "x"]), true);
 			});
 		});
 
 		describe("'max' property", () => {
-			let extensible_max;
+			let additional_max;
 
 			before(() => {
-				extensible_max = new Schema({
+				additional_max = new Schema({
 					type: "array",
 					shape: [],
-					extensible: {
+					additional: {
 						max: 4
 					}
 				});
 			});
 
 			it("should invalidate incorrect values", () => {
-				assert.strictEqual(extensible_max.validate(["x", "x", "x", "x", "x"]), false);
+				assert.strictEqual(additional_max.validate(["x", "x", "x", "x", "x"]), false);
 			});
 
 			it("should validate correct values", () => {
-				assert.strictEqual(extensible_max.validate(["x", "x", "x", "x"]), true);
+				assert.strictEqual(additional_max.validate(["x", "x", "x", "x"]), true);
 			});
 		});
 	});

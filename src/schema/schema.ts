@@ -4,7 +4,6 @@ import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
 import { Issue } from "../utils";
-import { isObject } from "../testers";
 import { SchemaDataRejection } from "./utils";
 
 /**
@@ -42,7 +41,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 		}
 		return (this.mountedCriteria);
 	}
-
+	
 	/**
 	 * Validates the provided data against the schema.
 	 * 
@@ -54,7 +53,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 */
 	validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>> {
 		const rejection = checker(this.managers, this.criteria, data);
-
+		
 		return (!rejection);
 	}
 

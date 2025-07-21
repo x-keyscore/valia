@@ -1,11 +1,11 @@
-import type { UnionSetableCriteria, UnionErrorCodes, UnionRejectCodes } from "./types";
+import type { UnionSetableCriteria, UnionExceptionCodes, UnionRejectionCodes } from "./types";
 import type { CheckerHooks } from "../../services";
 import type { Format } from "../types";
 import { isPlainObject, isArray } from "../../../testers";
 
-export const UnionFormat: Format<UnionSetableCriteria, UnionErrorCodes> = {
+export const UnionFormat: Format<UnionSetableCriteria, UnionExceptionCodes> = {
 	type: "union",
-	errors: {
+	exceptions: {
 		UNION_PROPERTY_REQUIRED:
             "The 'union' property is required.",
        	UNION_PROPERTY_MALFORMED:
@@ -52,7 +52,7 @@ export const UnionFormat: Format<UnionSetableCriteria, UnionErrorCodes> = {
 		const unionLength = union.length;
 
 		let rejectCount = 0;
-		const hooks: CheckerHooks<UnionRejectCodes> = {
+		const hooks: CheckerHooks<UnionRejectionCodes> = {
 			onAccept() {
 				return ({
 					action: "IGNORE",

@@ -119,9 +119,9 @@ export function mounter<T extends SetableCriteria>(
 			code = commonMount(managers, node);
 			if (code) {
 				throw new SchemaNodeException({
-					code: code,
 					node: node,
 					nodePath: fullPath,
+					code: code,
 					message: commonErrors[code]
 				});
 			}
@@ -132,10 +132,10 @@ export function mounter<T extends SetableCriteria>(
 			code = format.mount(chunk, node);
 			if (code) {
 				throw new SchemaNodeException({
-					code: code,
 					node: node,
 					nodePath: fullPath,
-					message: format.errors[code]
+					code: code,
+					message: format.exceptions[code]
 				});
 			}
 

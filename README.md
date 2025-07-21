@@ -182,6 +182,7 @@ interface Criteria {
 |Property|Default|Description|
 |--|--|--|
 |`literal?`||Restricts the value to a single boolean state.|
+|`custom?` ||Custom validation function returning a boolean.|
 
 ```ts
 interface Criteria {
@@ -193,75 +194,274 @@ interface Criteria {
 
 ### Object
 
-|Property|Default|Description|
-|--|--|--|
-|`shape`      |       |Object mapping expected keys to their respective formats.|
-|`omittable?` |`false`|Optionnalize keys with a boolean|
-|`extensible?`|`false`|Record of additional properties or boolean|
+#### **Properties :**
 
-- Extensible Options
+- **`nature?`** — *(Default: `"STANDARD"`)*
+  - **"STANDARD"**: Expects an object that can be validated by the `isObject` function.
+  - **"PLAIN"**: Expects an object that can be validated by the `isPlainObject` function.
 
-|Property|Default|Description|
-|--|--|--|
-|`min?`  ||Minimum properties.|
-|`max?`  ||Maximum properties.|
-|`key?`  ||Criteria node.|
-|`value?`||Criteria node.|
+- **`shape?`**
 
+  An object with expected property names or symbols as keys and criteria nodes defining the expected values.
+
+- **`optional?`** — *(Default: `false`, Only usable if `shape` is defined)*
+  - **boolean**:
+    - **true**: All properties defined in `shape` are optional.
+    - **false**: All properties defined in `shape` are required.
+  - **string[]**: List of property names in `shape` that optional (the rest will be required).
+
+- **`additional?`** — *(Default: `false`; Only usable if `shape` is defined)*
+  - **boolean**:
+    - **true**: Allows properties not defined in `shape`.
+    - **false**: Disallows properties not defined in `shape`.
+  - **object**:
+    - **min?**: Minimum number of additional keys required.
+    - **max?**: Maximum number of additional keys required.
+    - **key?**: Criteria node that each additional key must satisfy.
+    - **value?**: Criteria node that each additional value must satisfy.
+
+#### **Exemples :**
+
+- Validates any standard JavaScript object
 ```ts
-type SetableShape = {
-  [key: string | symbol]: SetableCriteria | SetableShape;
-}
+const schema = new Schema({
+  type: "object"
+});
 
-type SetableExtensible = {
-  min?: number;
-  max?: number;
-  key?: SetableCriteria<"string" | "symbol">;
-  value?: SetableCriteria;
-}
+✅
+schema.validate({});
+schema.validate([]);
+schema.validate(new Date());
+schema.validate(Object.create(null));
 
-interface Criteria {
-  type: "object";
-  shape: SetableShape;
-  omissible?: boolean | (string | symbol)[];
-  extensible?: boolean | SetableExtensible;
-}
+❌
+schema.validate("");
 ```
 
-### Tuple
-
-|Property|Default|Description|
-|--|--|--|
-|`type`       |       |Format name|
-|`tuple`      |       |Array mapping expected items to their respective formats.|
-|`additional?`|`false`|Array of additional item or boolean|
-
+- Validates only plain objects
 ```ts
-interface Criteria {
-  type: "tuple";
-  tuple: [SetableCriteria, ...SetableCriteria[]];
-  additional?: SetableCriteria<"array"> | boolean;
-}
+const schema = new Schema({
+  type: "object",
+  nature: "PLAIN"
+});
+
+✅
+schema.validate({});
+schema.validate(Object.create(null));
+
+❌
+schema.validate("");
+schema.validate([]);
+schema.validate(new Date());
 ```
+
+- Validates an object with a fixed property structure
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" }
+  }
+});
+
+✅
+schema.validate({ foo: "x", bar: "x" });
+
+❌
+schema.validate({});
+schema.validate({ foo: "x" });
+schema.validate({ bar: "x" });
+schema.validate({ foo: "x", bar: "x", a: "" });
+```
+
+- Validates an object with all properties optional
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" }
+  },
+  optional: true
+});
+
+✅
+schema.validate({});
+schema.validate({ foo: "x" });
+schema.validate({ bar: "x" });
+schema.validate({ foo: "x", bar: "x" });
+
+❌
+schema.validate({ foo: "x", bar: "x", a: "x" });
+```
+
+- Validates an object with a mix of required and optional properties
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" }
+  },
+  optional: ["bar"]
+});
+
+✅
+schema.validate({ foo: "x" });
+schema.validate({ foo: "x", bar: "x" });
+
+❌
+schema.validate({});
+schema.validate({ bar: "x" });
+schema.validate({ foo: "x", bar: "x", a: "x" });
+```
+
+- Allows additional properties without validation
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" }
+  },
+  additional: true
+});
+
+✅
+schema.validate({ foo: "x", bar: "x" });
+schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
+
+❌
+schema.validate({});
+schema.validate({ bar: "x" });
+schema.validate({ foo: "x" });
+```
+
+- Allows additional properties with validation
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" }
+  },
+  additional: {
+    key: { type: "string" },
+    value: { type: "number" }
+  }
+});
+
+✅
+schema.validate({ foo: "x", bar: "x" });
+schema.validate({ foo: "x", bar: "x", a: 0 });
+schema.validate({ foo: "x", bar: "x", a: 0, b: 0 });
+
+❌
+schema.validate({});
+schema.validate({ foo: "x" });
+schema.validate({ bar: "x" });
+schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
+```
+
+*The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
 
 ### Array
 
-|Property|Default|Description|
-|--|--|--|
-|`type`  |      |Format name|
-|`empty?`|`true`|If the array can be empty|
-|`min?`  |      |Minimum items accepted|
-|`max?`  |      |Maximum items accepted|
-|`item`  |      |Criteria of the array items|
+#### **Properties :**
 
+- **`shape?`**
+
+  An array with criteria nodes defining the expected items.
+
+- **`additional?`** — *(Default: `false`; Only usable if `shape` is defined)*
+  - **boolean**:
+    - **true**: Allows items not defined in `shape`.
+    - **false**: Disallows items not defined in `shape`.
+  - **object**:
+    - **min?**: Minimum number of additional items required.
+    - **max?**: Maximum number of additional items required.
+    - **item?**: Criteria node that each additional item must satisfy.
+
+#### **Exemples :**
+
+- Validates any standard JavaScript array
 ```ts
-interface Criteria {
-  type: "array";
-  empty?: boolean;
-  min?: number;
-  max?: number;
-  item: SetableCriteria;
-}
+const schema = new Schema({
+  type: "array"
+});
+
+✅
+schema.validate([]);
+schema.validate(["x"]);
+
+❌
+schema.validate({});
+schema.validate("");
+```
+
+- Validates an array with a fixed item structure (Tuple)
+```ts
+const schema = new Schema({
+  type: "array",
+  shape: [
+    { type: "string" },
+    { type: "string" }
+  ]
+});
+
+✅
+schema.validate(["x", "x"]);
+
+❌
+schema.validate([]);
+schema.validate(["x"]);
+schema.validate(["x", "x", "x"]);
+```
+
+- Allows additional items without validation
+```ts
+const schema = new Schema({
+  type: "array",
+  shape: [
+    { type: "string" },
+    { type: "string" }
+  ],
+  additional: true
+});
+
+✅
+schema.validate(["x", "x"]);
+schema.validate(["x", "x", "x"]);
+schema.validate(["x", "x", "x", 0]);
+
+❌
+schema.validate([]);
+schema.validate(["x"]);
+```
+
+- Allows additional items with validation
+```ts
+const schema = new Schema({
+  type: "array",
+  shape: [
+    { type: "string" },
+    { type: "string" }
+  ],
+  additional: {
+    item: { type: "number" }
+  }
+});
+
+✅
+schema.validate(["x", "x"]);
+schema.validate(["x", "x", 0]);
+schema.validate(["x", "x", 0, 0]);
+
+❌
+schema.validate([]);
+schema.validate(["x"]);
+schema.validate(["x", "x", "x"]);
 ```
 
 ### Simple

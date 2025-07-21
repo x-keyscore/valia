@@ -13,7 +13,7 @@ export type SetableShape<T extends FormatTypes = FormatTypes> = [
 
 type SetableItem<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
 
-interface SetableExtensibleRecord<T extends FormatTypes = FormatTypes> {
+interface SetableAdditionalOptions<T extends FormatTypes = FormatTypes> {
 	min?: number;
 	max?: number;
 	item?: SetableItem<T>;
@@ -21,7 +21,7 @@ interface SetableExtensibleRecord<T extends FormatTypes = FormatTypes> {
 
 export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
 	shape: SetableShape<T>;
-	extensible?: SetableExtensibleRecord<T> | boolean;
+	additional?: boolean | SetableAdditionalOptions<T>;
 }
 
 type MountedShape<T extends SetableShape> =
@@ -36,13 +36,13 @@ type MountedShape<T extends SetableShape> =
 		}
 		: never;
 
-interface MountedExtensibleRecord<T extends SetableExtensibleRecord> {
+interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
 	min?: number;
 	max?: number;
 	item:
 		unknown extends T['item']
 			? undefined
-			: SetableExtensibleRecord['item'] extends T['item']
+			: SetableAdditionalOptions['item'] extends T['item']
 				? MountedCriteria<SetableItem> | undefined
 				: T['item'] extends SetableItem
 					? MountedCriteria<T['item']>
@@ -51,18 +51,18 @@ interface MountedExtensibleRecord<T extends SetableExtensibleRecord> {
 
 export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
 	shape: MountedShape<T['shape']>;
-	extensible:
-		unknown extends T['extensible']
+	additional:
+		unknown extends T['additional']
 			? false
-			: ArraySetableCriteria['extensible'] extends T['extensible']
-				? MountedExtensibleRecord<SetableExtensibleRecord> | boolean
-				: T['extensible'] extends SetableExtensibleRecord
-					? MountedExtensibleRecord<T['extensible']>
-					: T['extensible'];
+			: ArraySetableCriteria['additional'] extends T['additional']
+				? MountedAdditionalOptions<SetableAdditionalOptions> | boolean
+				: T['additional'] extends SetableAdditionalOptions
+					? MountedAdditionalOptions<T['additional']>
+					: T['additional'];
 }
 
-type GuardedDynamic<T extends ArraySetableCriteria['extensible']> =
-	[T] extends [SetableExtensibleRecord]
+type GuardedDynamic<T extends ArraySetableCriteria['additional']> =
+	[T] extends [SetableAdditionalOptions]
 		? T['item'] extends SetableItem
 			? GuardedCriteria<T['item']>[]
 			: []
@@ -83,7 +83,7 @@ type GuardedStatic<T extends SetableShape> =
 		: never;
 
 type ArrayGuardedCriteria<T extends ArraySetableCriteria> =
-	 GuardedDynamic<T['extensible']> extends infer U
+	 GuardedDynamic<T['additional']> extends infer U
 		? GuardedStatic<T['shape']> extends infer V
 			? U extends any[]
 				? V extends any[]
@@ -98,22 +98,22 @@ export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends De
 	ArrayGuardedCriteria<T>
 > {}
 
-export type ArrayErrorCodes =
+export type ArrayExceptionCodes =
 	| "SHAPE_PROPERTY_REQUIRED"
 	| "SHAPE_PROPERTY_MALFORMED"
 	| "SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED"
-    | "EXPANDABLE_PROPERTY_MALFORMED"
-	| "EXPANDABLE__ITEM_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MIN_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MAX_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
+    | "ADDITIONAL_PROPERTY_MALFORMED"
+	| "ADDITIONAL__ITEM_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MIN_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MAX_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
 
-export type ArrayRejectCodes =
+export type ArrayRejectionCodes =
 	| "TYPE_ARRAY_UNSATISFIED"
 	| "SHAPE_UNSATISFIED"
-	| "EXTENSIBLE_UNALLOWED"
-	| "EXTENSIBLE_MIN_UNSATISFIED"
-	| "EXTENSIBLE_MAX_UNSATISFIED";
+	| "ADDITIONAL_UNALLOWED"
+	| "ADDITIONAL_MIN_UNSATISFIED"
+	| "ADDITIONAL_MAX_UNSATISFIED";
 
 export interface ArrayCustomMembers {
 	isShorthandShape(obj: object): obj is SetableShape;

@@ -1,32 +1,37 @@
-import type { ArraySetableCriteria, SetableShape, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers } from "./types";
+import type { ArraySetableCriteria, SetableShape, ArrayExceptionCodes, ArrayRejectionCodes, ArrayCustomMembers } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray } from "../../../testers";
 
-export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRejectCodes, ArrayCustomMembers> = {
+export const ArrayFormat: Format<
+	ArraySetableCriteria,
+	ArrayExceptionCodes,
+	ArrayRejectionCodes,
+	ArrayCustomMembers
+> = {
 	type: "array",
-	errors: {
+	exceptions: {
 		SHAPE_PROPERTY_REQUIRED:
             "The 'shape' property is required.",
         SHAPE_PROPERTY_MALFORMED:
 			"The 'shape' property must be of type Array.",
 		SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED:
             "The array items of the 'shape' property must be of type Plain Object or Array.",
-		EXPANDABLE_PROPERTY_MALFORMED:
-			"The 'extensible' property must be of type Boolean or a Plain Object.",
-		EXPANDABLE__ITEM_PROPERTY_MALFORMED:
-			"The 'extensible.item' property, must be a criteria node Object.",
-		EXPANDABLE__MIN_PROPERTY_MALFORMED:
-			"The 'extensible.min' property, must be of type Number.",
-		EXPANDABLE__MAX_PROPERTY_MALFORMED:
-			"The 'extensible.max' property, must be of type Number.",
-		EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
-			"The 'extensible.min' property cannot be greater than 'extensible.max' property."
+		ADDITIONAL_PROPERTY_MALFORMED:
+			"The 'additional' property must be of type Boolean or a Plain Object.",
+		ADDITIONAL__ITEM_PROPERTY_MALFORMED:
+			"The 'additional.item' property, must be a criteria node Object.",
+		ADDITIONAL__MIN_PROPERTY_MALFORMED:
+			"The 'additional.min' property, must be of type Number.",
+		ADDITIONAL__MAX_PROPERTY_MALFORMED:
+			"The 'additional.max' property, must be of type Number.",
+		ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
+			"The 'additional.min' property cannot be greater than 'additional.max' property."
 	},
 	isShorthandShape(obj): obj is SetableShape {
 		return (isArray(obj));
 	},
 	mount(chunk, criteria) {
-		const { shape, extensible } = criteria;
+		const { shape, additional } = criteria;
 
 		if (!("shape" in criteria)) {
 			return ("SHAPE_PROPERTY_REQUIRED");
@@ -39,31 +44,31 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRej
 				return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
 			}
 		}
-		if (extensible !== undefined) {
-			if (isPlainObject(extensible)) {
-				const { item, min, max } = extensible;
+		if (additional !== undefined) {
+			if (isPlainObject(additional)) {
+				const { item, min, max } = additional;
 
 				if (item !== undefined && !isPlainObject(item)) {
-					return ("EXPANDABLE__ITEM_PROPERTY_MALFORMED");
+					return ("ADDITIONAL__ITEM_PROPERTY_MALFORMED");
 				}
 				if (min !== undefined && typeof min !== "number") {
-					return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+					return ("ADDITIONAL__MIN_PROPERTY_MALFORMED");
 				}
 				if (max !== undefined && typeof max !== "number") {
-					return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+					return ("ADDITIONAL__MAX_PROPERTY_MALFORMED");
 				}
 				if (min !== undefined && max !== undefined && min > max) {
-					return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+					return ("ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
 				}
-			} else if (typeof extensible !== "boolean") {
-				return ("EXPANDABLE_PROPERTY_MALFORMED");
+			} else if (typeof additional !== "boolean") {
+				return ("ADDITIONAL_PROPERTY_MALFORMED");
 			}
 		}
 
-		const resolvedExtensible = extensible ?? false;
+		const resolvedExtensible = additional ?? false;
 
 		Object.assign(criteria, {
-			extensible: resolvedExtensible
+			additional: resolvedExtensible
 		});
 
 		for (let i = 0; i < shape.length; i++) {
@@ -91,7 +96,7 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRej
 				chunk.push({
 					node: resolvedExtensible.item,
 					partPath: {
-						explicit: ["extensible", "item"]
+						explicit: ["additional", "item"]
 					}
 				});
 			}
@@ -104,15 +109,15 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRej
 			return ("TYPE_ARRAY_UNSATISFIED");
 		}
 
-		const { shape, extensible } = criteria;
+		const { shape, additional } = criteria;
 		const declaredLength = shape.length;
 		const definedLength = data.length;
 
 		if (definedLength < declaredLength) {
 			return ("SHAPE_UNSATISFIED");
 		}
-		if (!extensible && definedLength > declaredLength) {
-			return ("EXTENSIBLE_UNALLOWED");
+		if (!additional && definedLength > declaredLength) {
+			return ("ADDITIONAL_UNALLOWED");
 		}
 
 		for (let i = 0; i < declaredLength; i++) {
@@ -126,22 +131,22 @@ export const ArrayFormat: Format<ArraySetableCriteria, ArrayErrorCodes, ArrayRej
 			return (null);
 		}
 
-		if (typeof extensible === "object") {
+		if (typeof additional === "object") {
 			const extendedItemCount = definedLength - declaredLength;
-			const { min, max } = extensible;
+			const { min, max } = additional;
 
 			if (min !== undefined && extendedItemCount < min) {
-				return ("EXTENSIBLE_MIN_UNSATISFIED");
+				return ("ADDITIONAL_MIN_UNSATISFIED");
 			}
 			if (max !== undefined && extendedItemCount > max) {
-				return ("EXTENSIBLE_MAX_UNSATISFIED");
+				return ("ADDITIONAL_MAX_UNSATISFIED");
 			}
 
-			if (extendedItemCount && extensible.item) {
+			if (extendedItemCount && additional.item) {
 				for (let i = declaredLength; i < definedLength; i++) {
 					chunk.push({
 						data: data[i],
-						node: extensible.item
+						node: additional.item
 					});
 				}
 			}

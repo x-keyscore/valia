@@ -7,7 +7,7 @@ export interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol">
 }
 
 export interface SymbolMountedCriteria {
-	literalSet?: Set<symbol>;
+	resolvedLiteral?: Set<symbol>;
 }
 
 type SymbolGuardedCriteria<T extends SymbolSetableCriteria> = 
@@ -24,7 +24,7 @@ export interface SymbolDerivedCriteria<T extends SymbolSetableCriteria> extends 
 	SymbolGuardedCriteria<T>
 > {}
 
-export type SymbolErrorCodes =
+export type SymbolExceptionCodes =
 	| "LITERAL_PROPERTY_MALFORMED"
 	| "LITERAL_PROPERTY_ARRAY_MISCONFIGURED"
     | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED"
@@ -32,6 +32,6 @@ export type SymbolErrorCodes =
 	| "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED"
     | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED";
 
-export type SymbolRejectCodes =
+export type SymbolRejectionCodes =
 	| "TYPE_SYMBOL_UNSATISFIED"
 	| "LITERAL_UNSATISFIED";

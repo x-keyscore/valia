@@ -43,12 +43,12 @@ export interface UnionDerivedCriteria<T extends UnionSetableCriteria> extends De
 	UnionGuardedCriteria<T>
 > {}
 
-export type UnionErrorCodes = 
+export type UnionExceptionCodes = 
 	| "UNION_PROPERTY_REQUIRED"
 	| "UNION_PROPERTY_MALFORMED"
 	| "UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED"
 	| "UNION_PROPERTY_ARRAY_ITEM_MALFORMED";
 	
 
-export type UnionRejectCodes = 
+export type UnionRejectionCodes = 
 	| "UNION_UNSATISFIED";

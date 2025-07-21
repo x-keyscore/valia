@@ -111,10 +111,10 @@ export type Format<
 	T extends SetableCriteria = SetableCriteria,
 	E extends string = string,
 	R extends string = string,
-	M extends {} = {}
+	C extends {} = {}
 > = {
 	type: T['type'];
-	errors: { [K in E]: string };
+	exceptions: { [K in E]: string };
 	mount(
 		chunk: MounterChunk,
 		criteria: T
@@ -124,6 +124,6 @@ export type Format<
         criteria: MountedCriteria<T>,
         value: unknown
     ): R | null;
-} & M;
+} & C;
 
 export type FormatNativeTypes = (typeof formatNatives)[number]['type'];

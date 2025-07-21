@@ -7,14 +7,14 @@ import type {
 	FormatTypes
 } from "../types";
 
-export type SetableShape<T extends FormatTypes = FormatTypes> = {
+export interface SetableShape<T extends FormatTypes = FormatTypes> {
 	[key: string | symbol | number]: SetableCriteria<T> | SetableShape<T>;
 };
 
 type SetableKey = SetableCriteria<"string" | "symbol">;
 type SetableValue<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
 
-interface SetableExtensibleRecord<T extends FormatTypes = FormatTypes> {
+interface SetableAdditionalOptions<T extends FormatTypes = FormatTypes> {
 	min?: number;
 	max?: number;
 	key?: SetableKey;
@@ -23,9 +23,9 @@ interface SetableExtensibleRecord<T extends FormatTypes = FormatTypes> {
 
 export interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
 	shape: SetableShape<T>;
-	strict?: boolean;
-	omittable?: (string | symbol)[] | boolean;
-	extensible?: SetableExtensibleRecord<T> | boolean;
+	nature?: "STANDARD" | "PLAIN";
+	optional?: (string | symbol)[] | boolean;
+	additional?: SetableAdditionalOptions<T> | boolean;
 }
 
 type MountedShape<T extends SetableShape> = {
@@ -37,13 +37,13 @@ type MountedShape<T extends SetableShape> = {
 				: never;
 };
 
-interface MountedExtensibleRecord<T extends SetableExtensibleRecord> {
+interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
 	min?: number;
 	max?: number;
 	key:
 		unknown extends T['key']
 			? undefined
-			: SetableExtensibleRecord['key'] extends T['key']
+			: SetableAdditionalOptions['key'] extends T['key']
 				? MountedCriteria<SetableKey> | undefined
 				: T['key'] extends SetableKey
 					? MountedCriteria<T['key']>
@@ -51,7 +51,7 @@ interface MountedExtensibleRecord<T extends SetableExtensibleRecord> {
 	value:
 		unknown extends T['value']
 			? undefined
-			: SetableExtensibleRecord['value'] extends T['value']
+			: SetableAdditionalOptions['value'] extends T['value']
 				? MountedCriteria<SetableCriteria> | undefined
 				: T['value'] extends SetableCriteria
 					? MountedCriteria<T['value']>
@@ -60,27 +60,27 @@ interface MountedExtensibleRecord<T extends SetableExtensibleRecord> {
 
 export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
 	shape: MountedShape<T['shape']>;
-	strict:
-		unknown extends T['strict']
-			? true
-			: ObjectSetableCriteria['strict'] extends T['strict']
-				? boolean
-				: T['strict'];
-	extensible:
-		unknown extends T['extensible']
+	nature:
+		unknown extends T['nature']
+			? "standard"
+			: ObjectSetableCriteria['nature'] extends T['nature']
+				? NonNullable<ObjectSetableCriteria['nature']>
+				: T['nature'];
+	additional:
+		unknown extends T['additional']
 			? false
-			: ObjectSetableCriteria['extensible'] extends T['extensible']
-				? MountedExtensibleRecord<SetableExtensibleRecord> | boolean
-				: T['extensible'] extends SetableExtensibleRecord
-					? MountedExtensibleRecord<T['extensible']>
-					: T['extensible'];
-	declaredKeySet: Set<string | symbol>;
-	unforcedKeySet: Set<string | symbol>;
-	enforcedKeySet: Set<string | symbol>;
+			: ObjectSetableCriteria['additional'] extends T['additional']
+				? MountedAdditionalOptions<SetableAdditionalOptions> | boolean
+				: T['additional'] extends SetableAdditionalOptions
+					? MountedAdditionalOptions<T['additional']>
+					: T['additional'];
+	declaredKeySet?: Set<string | symbol>;
+	unforcedKeySet?: Set<string | symbol>;
+	enforcedKeySet?: Set<string | symbol>;
 }
 
-type GuardedDynamic<T extends ObjectSetableCriteria['extensible']> =
-	[T] extends [SetableExtensibleRecord]
+type GuardedDynamic<T extends ObjectSetableCriteria['additional']> =
+	[T] extends [SetableAdditionalOptions]
 		? T['key'] extends SetableKey
 			? T['value'] extends SetableCriteria
 				? GuardedCriteria<T['key']> extends infer U
@@ -96,7 +96,7 @@ type GuardedDynamic<T extends ObjectSetableCriteria['extensible']> =
 			? { [key: PropertyKey]: unknown; }
 			: {};
 
-type GuardedStaticKeys<T, U extends ObjectSetableCriteria['omittable']> =
+type GuardedStaticKeys<T, U extends ObjectSetableCriteria['optional']> =
  	[U] extends [(string | symbol)[]]
 		? { [K in keyof T as K extends U[number] ? K : never]+?: T[K]; } &
 			{ [K in keyof T as K extends U[number] ? never : K]-?: T[K]; }
@@ -104,7 +104,7 @@ type GuardedStaticKeys<T, U extends ObjectSetableCriteria['omittable']> =
 			? { [P in keyof T]+?: T[P]; }
 			: { [P in keyof T]-?: T[P]; };
 
-type GuardedStatic<T extends SetableShape, U extends ObjectSetableCriteria['omittable']> = {
+type GuardedStatic<T extends SetableShape, U extends ObjectSetableCriteria['optional']> = {
 	-readonly [K in keyof GuardedStaticKeys<T, U>]:
 			T[K] extends SetableCriteria
 				? GuardedCriteria<T[K]>
@@ -112,8 +112,8 @@ type GuardedStatic<T extends SetableShape, U extends ObjectSetableCriteria['omit
 };
 
 type ObjectGuardedCriteria<T extends ObjectSetableCriteria> =
-	GuardedDynamic<T['extensible']> extends infer D
-		? GuardedStatic<T['shape'], T['omittable']> extends infer S
+	GuardedDynamic<T['additional']> extends infer D
+		? GuardedStatic<T['shape'], T['optional']> extends infer S
 			? {
 				[K in keyof (D & S)]: 
 					K extends keyof S
@@ -130,22 +130,24 @@ export interface ObjectDerivedCriteria<T extends ObjectSetableCriteria> extends 
 	ObjectGuardedCriteria<T>
 > {}
 
-export type ObjectErrorCodes =
-	| "SHAPE_PROPERTY_REQUIRED"
+export type ObjectExceptionCodes =
 	| "SHAPE_PROPERTY_MALFORMED"
 	| "SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED"
-	| "STRICT_PROPERTY_MALFORMED"
-	| "OMITTABLE_PROPERTY_MALFORMED"
-	| "OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED"
-    | "EXPANDABLE_PROPERTY_MALFORMED"
-	| "EXPANDABLE__KEY_PROPERTY_MALFORMED"
-	| "EXPANDABLE__KEY_PROPERTY_MISCONFIGURED"
-	| "EXPANDABLE__VALUE_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MIN_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MAX_PROPERTY_MALFORMED"
-	| "EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
+	| "NATURE_PROPERTY_MALFORMED"
+	| "NATURE_PROPERTY_STRING_MISCONFIGURED"
+	| "OPTIONAL_PROPERTY_MALFORMED"
+	| "OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED"
+    | "ADDITIONAL_PROPERTY_MALFORMED"
+	| "ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED"
+	| "ADDITIONAL__KEY_PROPERTY_MALFORMED"
+	| "ADDITIONAL__KEY_PROPERTY_MISCONFIGURED"
+	| "ADDITIONAL__VALUE_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MIN_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MAX_PROPERTY_MALFORMED"
+	| "ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
 
-export type ObjectRejectCodes =
+export type ObjectRejectionCodes =
 	| "TYPE_PLAIN_OBJECT_UNSATISFIED"
 	| "TYPE_OBJECT_UNSATISFIED"
 	| "SHAPE_UNSATISFIED"
@@ -154,12 +156,13 @@ export type ObjectRejectCodes =
 	| "EXTENSIBLE_MAX_UNSATISFIED";
 
 export interface ObjectCustomMembers {
+	natures: (ObjectSetableCriteria['nature'])[],
 	getUnforcedKeys: (
-		omittable: boolean | (string | symbol)[],
+		optional: boolean | (string | symbol)[],
 		declaredKeys: (string | symbol)[]
 	) => (string | symbol)[];
 	getEnforcedKeys: (
-		omittable: boolean | (string | symbol)[],
+		optional: boolean | (string | symbol)[],
 		declaredKeys: (string | symbol)[]
 	) => (string | symbol)[];
 	isShorthandShape(obj: object): obj is SetableShape;

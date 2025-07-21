@@ -7,56 +7,56 @@ describe("\nschema > formats > simple", () => {
 	describe("Default", () => {
 		it("should throw on incorrect definitions", () => {
 			assert.throws(
-				() => new Schema({ type: "simple", simple: 0 }),
+				() => new Schema({ type: "simple", nature: 0 }),
 				SchemaNodeException,
 				"throws if the value is malformed"
 			);
 
 			assert.throws(
-				() => new Schema({ type: "simple", simple: "" }),
+				() => new Schema({ type: "simple", nature: "" }),
 				SchemaNodeException,
 				"throws if the value is misconfigured"
 			);
 		});
 
-		let simple_NULL, simple_UNDEFINED, simple_NULLISH, simple_UNKNOWN;
+		let nature_NULL, nature_UNDEFINED, nature_NULLISH, nature_UNKNOWN;
 
 		before(() => {
-			simple_NULL = new Schema({ type: "simple", simple: "NULL" });
-			simple_UNDEFINED = new Schema({ type: "simple", simple: "UNDEFINED" });
-			simple_NULLISH = new Schema({ type: "simple", simple: "NULLISH" });
-			simple_UNKNOWN = new Schema({ type: "simple", simple: "UNKNOWN" });
+			nature_NULL = new Schema({ type: "simple", nature: "NULL" });
+			nature_UNDEFINED = new Schema({ type: "simple", nature: "UNDEFINED" });
+			nature_NULLISH = new Schema({ type: "simple", nature: "NULLISH" });
+			nature_UNKNOWN = new Schema({ type: "simple", nature: "UNKNOWN" });
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(simple_NULL.validate(0), false);
-			assert.strictEqual(simple_NULL.validate(""), false);
-			assert.strictEqual(simple_NULL.validate({}), false);
-			assert.strictEqual(simple_NULL.validate(undefined), false);
+			assert.strictEqual(nature_NULL.validate(0), false);
+			assert.strictEqual(nature_NULL.validate(""), false);
+			assert.strictEqual(nature_NULL.validate({}), false);
+			assert.strictEqual(nature_NULL.validate(undefined), false);
 
-			assert.strictEqual(simple_UNDEFINED.validate(0), false);
-			assert.strictEqual(simple_UNDEFINED.validate(""), false);
-			assert.strictEqual(simple_UNDEFINED.validate({}), false);
-			assert.strictEqual(simple_UNDEFINED.validate(null), false);
+			assert.strictEqual(nature_UNDEFINED.validate(0), false);
+			assert.strictEqual(nature_UNDEFINED.validate(""), false);
+			assert.strictEqual(nature_UNDEFINED.validate({}), false);
+			assert.strictEqual(nature_UNDEFINED.validate(null), false);
 
-			assert.strictEqual(simple_NULLISH.validate(0), false);
-			assert.strictEqual(simple_NULLISH.validate(""), false);
-			assert.strictEqual(simple_NULLISH.validate({}), false);
+			assert.strictEqual(nature_NULLISH.validate(0), false);
+			assert.strictEqual(nature_NULLISH.validate(""), false);
+			assert.strictEqual(nature_NULLISH.validate({}), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(simple_NULL.validate(null), true);
+			assert.strictEqual(nature_NULL.validate(null), true);
 
-			assert.strictEqual(simple_UNDEFINED.validate(undefined), true);
+			assert.strictEqual(nature_UNDEFINED.validate(undefined), true);
 
-			assert.strictEqual(simple_NULLISH.validate(null), true);
-			assert.strictEqual(simple_NULLISH.validate(undefined), true);
+			assert.strictEqual(nature_NULLISH.validate(null), true);
+			assert.strictEqual(nature_NULLISH.validate(undefined), true);
 
-			assert.strictEqual(simple_UNKNOWN.validate(0), true);
-			assert.strictEqual(simple_UNKNOWN.validate(""), true);
-			assert.strictEqual(simple_UNKNOWN.validate({}), true);
-			assert.strictEqual(simple_UNKNOWN.validate([]), true);
-			assert.strictEqual(simple_UNKNOWN.validate(false), true);
+			assert.strictEqual(nature_UNKNOWN.validate(0), true);
+			assert.strictEqual(nature_UNKNOWN.validate(""), true);
+			assert.strictEqual(nature_UNKNOWN.validate({}), true);
+			assert.strictEqual(nature_UNKNOWN.validate([]), true);
+			assert.strictEqual(nature_UNKNOWN.validate(false), true);
 		});
 	});
 });

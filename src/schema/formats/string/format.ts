@@ -1,4 +1,4 @@
-import type { StringSetableCriteria, SetableConstraint, StringErrorCodes, StringRejectCodes } from "./types";
+import type { StringSetableCriteria, SetableConstraint, StringExceptionCodes, StringRejectionCodes } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray, isFunction, testers } from "../../../testers";
 
@@ -6,11 +6,11 @@ const stringTesters: Map<string, (...args: any[]) => boolean> = new Map(Object.e
 
 export const StringFormat: Format<
 	StringSetableCriteria,
-	StringErrorCodes,
-	StringRejectCodes
+	StringExceptionCodes,
+	StringRejectionCodes
 > = {
 	type: "string",
-	errors: {
+	exceptions: {
 		MIN_PROPERTY_MALFORMED:
 			"The 'min' property must be of type Number.",
 		MAX_PROPERTY_MALFORMED:
@@ -67,7 +67,7 @@ export const StringFormat: Format<
 			}
 		}
 		if (literal !== undefined) {
-			let resolvedLiteral = undefined;
+			let resolvedLiteral;
 
 			if (typeof literal === "string") {
 				resolvedLiteral = new Set([literal]);

@@ -386,8 +386,8 @@ var objectTesters = /*#__PURE__*/Object.freeze({
  *
  * Empty returns `false`.
  */
-function isAscii(str, config) {
-    if (config?.onlyPrintable)
+function isAscii(str, options) {
+    if (options?.onlyPrintable)
         return (RegExp("^[\\x20-\\x7E]+$").test(str));
     return (RegExp("^[\\x00-\\x7F]+$").test(str));
 }
@@ -537,7 +537,7 @@ const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Z
  *
  * @version 1.0.0
  */
-function isDomain(str, params) {
+function isDomain(str, options) {
     return (domainRegex.test(str));
 }
 
@@ -606,21 +606,21 @@ function parseEmail(str) {
         domain: str.slice(domainStart, domainEnd)
     });
 }
-function isValidLocal(str, params) {
+function isValidLocal(str, options) {
     if (dotLocalRegex.test(str))
         return (true);
-    if (params?.allowQuotedString
+    if (options?.allowQuotedString
         && dotOrQuoteLocalRegex().test(str))
         return (true);
     return (false);
 }
-function isValidDomain(str, params) {
+function isValidDomain(str, options) {
     if (isDomain(str))
         return (true);
-    if (params?.allowIpAddress
+    if (options?.allowIpAddress
         && ipAddressRegex().test(str))
         return (true);
-    if (params?.allowGeneralAddress
+    if (options?.allowGeneralAddress
         && generalAddressRegex().test(str))
         return (true);
     return (false);
@@ -630,15 +630,15 @@ function isValidDomain(str, params) {
  *
  * @version 2.0.0
  */
-function isEmail(str, params) {
+function isEmail(str, options) {
     const email = parseEmail(str);
     if (!email)
         return (false);
     // CHECK LOCAL
-    if (!isValidLocal(email.local, params))
+    if (!isValidLocal(email.local, options))
         return (false);
     // CHECK DOMAIN
-    if (!isValidDomain(email.domain, params))
+    if (!isValidDomain(email.domain, options))
         return (false);
     // RFC 5321 4.5.3.1.2 : Length restriction
     if (!email.domain.length || email.domain.length > 255)
@@ -743,7 +743,7 @@ function parseDataUrl(str) {
  *
  * @version 2.0.0
  */
-function isDataUrl(str, params) {
+function isDataUrl(str, options) {
     const dataUrl = parseDataUrl(str);
     if (!dataUrl)
         return (false);
@@ -775,13 +775,13 @@ function isDataUrl(str, params) {
     // CHECK DATA
     if (!dataRegex.test(dataUrl.data))
         return (false);
-    if (params?.type) {
-        const hasValidType = params.type.some(type => type.toLowerCase() === dataUrl.type.toLowerCase());
+    if (options?.type) {
+        const hasValidType = options.type.some(type => type.toLowerCase() === dataUrl.type.toLowerCase());
         if (!hasValidType)
             return (false);
     }
-    if (params?.subtype) {
-        const hasValidSubtype = params.subtype.some(subtype => subtype.toLowerCase() === dataUrl.subtype.toLowerCase());
+    if (options?.subtype) {
+        const hasValidSubtype = options.subtype.some(subtype => subtype.toLowerCase() === dataUrl.subtype.toLowerCase());
         if (!hasValidSubtype)
             return (false);
     }
@@ -800,7 +800,7 @@ const base64UrlRegex = weakly(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z
  *
  * @version 1.0.0
  */
-function isBase64(str, params) {
+function isBase64(str, options) {
     if (typeof str !== "string")
         new Issue("Parameters", "'str' must be of type string.");
     return (str.length % 4 == 0 && base64Regex.test(str));
@@ -812,7 +812,7 @@ function isBase64(str, params) {
  *
  * @version 1.0.0
  */
-function isBase64Url(str, params) {
+function isBase64Url(str, options) {
     if (typeof str !== "string")
         new Issue("Parameters", "'str' must be of type string.");
     return (str.length % 4 === 0 && base64UrlRegex().test(str));
@@ -824,7 +824,7 @@ function isBase64Url(str, params) {
  *
  * @version 1.0.0
  */
-function isBase32(str, params) {
+function isBase32(str, options) {
     if (typeof str !== "string")
         new Issue("Parameters", "'str' must be of type string.");
     return (str.length % 8 === 0 && base32Regex.test(str));
@@ -836,7 +836,7 @@ function isBase32(str, params) {
  *
  * @version 1.0.0
  */
-function isBase32Hex(str, params) {
+function isBase32Hex(str, options) {
     if (typeof str !== "string")
         new Issue("Parameters", "'str' must be of type string.");
     return (str.length % 8 === 0 && base32HexRegex().test(str));
@@ -848,7 +848,7 @@ function isBase32Hex(str, params) {
  *
  * @version 1.0.0
  */
-function isBase16(str, params) {
+function isBase16(str, options) {
     if (typeof str !== "string")
         new Issue("Parameters", "'str' must be of type string.");
     return (str.length % 2 === 0 && base16Regex.test(str));
@@ -958,9 +958,9 @@ function mounter(managers, rootNode) {
             code = commonMount(managers, node);
             if (code) {
                 throw new SchemaNodeException({
-                    code: code,
                     node: node,
                     nodePath: fullPath,
+                    code: code,
                     message: commonErrors[code]
                 });
             }
@@ -969,10 +969,10 @@ function mounter(managers, rootNode) {
             code = format.mount(chunk, node);
             if (code) {
                 throw new SchemaNodeException({
-                    code: code,
                     node: node,
                     nodePath: fullPath,
-                    message: format.errors[code]
+                    code: code,
+                    message: format.exceptions[code]
                 });
             }
             Object.assign(node, {
@@ -1181,13 +1181,13 @@ function cloner(rootSrc) {
 
 const FunctionFormat = {
     type: "function",
-    errors: {
-        VARIANT_PROPERTY_MALFORMED: "The 'variant' property must be of type String.",
-        VARIANT_PROPERTY_STRING_MISCONFIGURED: "The 'variant' property must be a known string.",
-        VARIANT_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: "The array length of the 'variant' must be greater than 0.",
-        VARIANT_PROPERTY_ARRAY_ITEM_MISCONFIGURED: "The array items of the 'variant' property must be a known string."
+    exceptions: {
+        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
+        NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string.",
+        NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: "The array length of the 'nature' must be greater than 0.",
+        NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED: "The array items of the 'nature' property must be a known string."
     },
-    variantBitflags: {
+    natureBitflags: {
         BASIC: 1 << 1,
         ASYNC: 1 << 2,
         BASIC_GENERATOR: 1 << 3,
@@ -1200,36 +1200,36 @@ const FunctionFormat = {
         AsyncGeneratorFunction: 1 << 4
     },
     mount(chunk, criteria) {
-        const { variant } = criteria;
-        if (variant !== undefined) {
-            if (typeof variant == "string") {
-                if (!(variant in this.variantBitflags)) {
-                    return ("VARIANT_PROPERTY_STRING_MISCONFIGURED");
+        const { nature } = criteria;
+        if (nature !== undefined) {
+            if (typeof nature == "string") {
+                if (!(nature in this.natureBitflags)) {
+                    return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
                 }
             }
-            else if (isArray(variant)) {
-                if (variant.length < 1) {
-                    return ("VARIANT_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
+            else if (isArray(nature)) {
+                if (nature.length < 1) {
+                    return ("NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
                 }
-                for (const item of variant) {
-                    if (!(item in this.variantBitflags)) {
-                        return ("VARIANT_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
+                for (const item of nature) {
+                    if (!(item in this.natureBitflags)) {
+                        return ("NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
                     }
                 }
             }
             else {
-                return ("VARIANT_PROPERTY_MALFORMED");
+                return ("NATURE_PROPERTY_MALFORMED");
             }
         }
-        if (isArray(variant)) {
+        if (isArray(nature)) {
             Object.assign(criteria, {
-                variantBitcode: variant.reduce((code, key) => (code | this.variantBitflags[key]), 0)
+                natureBitcode: nature.reduce((code, key) => (code | this.natureBitflags[key]), 0)
             });
         }
         else {
             Object.assign(criteria, {
-                variantBitcode: variant
-                    ? this.variantBitflags[variant]
+                natureBitcode: nature
+                    ? this.natureBitflags[nature]
                     : 0
             });
         }
@@ -1239,13 +1239,13 @@ const FunctionFormat = {
         if (typeof value !== "function") {
             return ("TYPE_FUNCTION_UNSATISFIED");
         }
-        const { variantBitcode } = criteria;
+        const { natureBitcode } = criteria;
         const { tagBitflags } = this;
-        if (variantBitcode) {
+        if (natureBitcode) {
             const tag = getInternalTag(value);
             const tagBitflag = tagBitflags[tag];
-            if (!tagBitflag || !(variantBitcode & tagBitflag)) {
-                return ("VARIANT_UNSATISFIED");
+            if (!tagBitflag || !(natureBitcode & tagBitflag)) {
+                return ("NATURE_UNSATISFIED");
             }
         }
         return (null);
@@ -1254,7 +1254,7 @@ const FunctionFormat = {
 
 const BooleanFormat = {
     type: "boolean",
-    errors: {
+    exceptions: {
         LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Boolean."
     },
     mount(chunk, criteria) {
@@ -1278,7 +1278,7 @@ const BooleanFormat = {
 
 const SymbolFormat = {
     type: "symbol",
-    errors: {
+    exceptions: {
         LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Symbol, Array or Plain Object.",
         LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
         LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type Symbol.",
@@ -1289,9 +1289,9 @@ const SymbolFormat = {
     mount(chunk, criteria) {
         const { literal } = criteria;
         if (literal !== undefined) {
-            let literalSet = undefined;
+            let resolvedLiteral;
             if (typeof literal === "symbol") {
-                literalSet = new Set([literal]);
+                resolvedLiteral = new Set([literal]);
             }
             else if (isArray(literal)) {
                 if (literal.length < 1) {
@@ -1302,7 +1302,7 @@ const SymbolFormat = {
                         return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
                     }
                 }
-                literalSet = new Set(literal);
+                resolvedLiteral = new Set(literal);
             }
             else if (isPlainObject(literal)) {
                 const keys = Reflect.ownKeys(literal);
@@ -1317,12 +1317,12 @@ const SymbolFormat = {
                         return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
                     }
                 }
-                literalSet = new Set(Object.values(literal));
+                resolvedLiteral = new Set(Object.values(literal));
             }
             else {
                 return ("LITERAL_PROPERTY_MALFORMED");
             }
-            Object.assign(criteria, { literalSet });
+            Object.assign(criteria, { resolvedLiteral });
         }
         return (null);
     },
@@ -1330,8 +1330,8 @@ const SymbolFormat = {
         if (typeof value !== "symbol") {
             return ("TYPE_SYMBOL_UNSATISFIED");
         }
-        const { literalSet } = criteria;
-        if (literalSet !== undefined && !literalSet.has(value)) {
+        const { resolvedLiteral } = criteria;
+        if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
             return ("LITERAL_UNSATISFIED");
         }
         return (null);
@@ -1340,7 +1340,7 @@ const SymbolFormat = {
 
 const NumberFormat = {
     type: "number",
-    errors: {
+    exceptions: {
         MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
         MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
         MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property.",
@@ -1364,7 +1364,11 @@ const NumberFormat = {
             return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
         }
         if (literal !== undefined) {
-            if (isArray(literal)) {
+            let resolvedLiteral;
+            if (typeof literal === "number") {
+                resolvedLiteral = new Set([literal]);
+            }
+            else if (isArray(literal)) {
                 if (literal.length < 1) {
                     return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
                 }
@@ -1373,6 +1377,7 @@ const NumberFormat = {
                         return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
                     }
                 }
+                resolvedLiteral = new Set(literal);
             }
             else if (isPlainObject(literal)) {
                 const keys = Reflect.ownKeys(literal);
@@ -1387,10 +1392,12 @@ const NumberFormat = {
                         return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
                     }
                 }
+                resolvedLiteral = new Set(Object.values(literal));
             }
-            else if (typeof literal !== "number") {
+            else {
                 return ("LITERAL_PROPERTY_MALFORMED");
             }
+            Object.assign(criteria, { resolvedLiteral });
         }
         if (custom !== undefined && !isFunction(custom)) {
             return ("CUSTOM_PROPERTY_MALFORMED");
@@ -1401,25 +1408,15 @@ const NumberFormat = {
         if (typeof value !== "number") {
             return ("TYPE_NUMBER_UNSATISFIED");
         }
-        const { min, max, literal, custom } = criteria;
+        const { min, max, resolvedLiteral, custom } = criteria;
         if (min !== undefined && value < min) {
             return ("MIN_UNSATISFIED");
         }
         if (max !== undefined && value > max) {
             return ("MAX_UNSATISFIED");
         }
-        if (literal !== undefined) {
-            if (typeof literal === "number" && literal !== value) {
-                return ("LITERAL_UNSATISFIED");
-            }
-            else if (isArray(literal)) {
-                if (!literal.includes(value)) {
-                    return ("LITERAL_UNSATISFIED");
-                }
-            }
-            else if (!Object.values(literal).includes(value)) {
-                return ("LITERAL_UNSATISFIED");
-            }
+        if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
+            return ("LITERAL_UNSATISFIED");
         }
         if (custom && !custom(value)) {
             return ("CUSTOM_UNSATISFIED");
@@ -1431,7 +1428,7 @@ const NumberFormat = {
 const stringTesters = new Map(Object.entries(testers.string));
 const StringFormat = {
     type: "string",
-    errors: {
+    exceptions: {
         MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
         MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
         MIN_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property.",
@@ -1471,7 +1468,7 @@ const StringFormat = {
             }
         }
         if (literal !== undefined) {
-            let resolvedLiteral = undefined;
+            let resolvedLiteral;
             if (typeof literal === "string") {
                 resolvedLiteral = new Set([literal]);
             }
@@ -1579,46 +1576,46 @@ const StringFormat = {
 
 const SimpleFormat = {
     type: "simple",
-    errors: {
-        SIMPLE_PROPERTY_REQUIRED: "The 'simple' property must be defined.",
-        SIMPLE_PROPERTY_MALFORMED: "The 'simple' property must be of type String.",
-        SIMPLE_PROPERTY_STRING_MISCONFIGURED: "The 'simple' property must be a known string."
+    exceptions: {
+        NATURE_PROPERTY_REQUIRED: "The 'nature' property must be defined.",
+        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
+        NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string."
     },
-    bitflags: {
+    natureBitflags: {
         UNKNOWN: 1 << 0,
         NULLISH: 1 << 1,
         NULL: 1 << 2,
         UNDEFINED: 1 << 3
     },
     mount(chunk, criteria) {
-        const { simple } = criteria;
-        if (!("simple" in criteria)) {
-            return ("SIMPLE_PROPERTY_REQUIRED");
+        const { nature } = criteria;
+        if (!("nature" in criteria)) {
+            return ("NATURE_PROPERTY_REQUIRED");
         }
-        if (typeof simple !== "string") {
-            return ("SIMPLE_PROPERTY_MALFORMED");
+        if (typeof nature !== "string") {
+            return ("NATURE_PROPERTY_MALFORMED");
         }
-        if (!(simple in this.bitflags)) {
-            return ("SIMPLE_PROPERTY_STRING_MISCONFIGURED");
+        if (!(nature in this.natureBitflags)) {
+            return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
         }
         Object.assign(criteria, {
-            bitcode: this.bitflags[simple]
+            natureBitcode: this.natureBitflags[nature]
         });
         return (null);
     },
     check(chunk, criteria, value) {
-        const { bitcode } = criteria, { bitflags } = this;
-        if (bitcode & bitflags.UNKNOWN) {
+        const { natureBitcode } = criteria, { natureBitflags } = this;
+        if (natureBitcode & natureBitflags.UNKNOWN) {
             return (null);
         }
-        if (bitcode & bitflags.NULLISH && value != null) {
-            return ("SIMPLE_NULLISH_UNSATISFIED");
+        if (natureBitcode & natureBitflags.NULLISH && value != null) {
+            return ("NATURE_NULLISH_UNSATISFIED");
         }
-        if (bitcode & bitflags.NULL && value !== null) {
-            return ("SIMPLE_NULL_UNSATISFIED");
+        if (natureBitcode & natureBitflags.NULL && value !== null) {
+            return ("NATURE_NULL_UNSATISFIED");
         }
-        if ((bitcode & bitflags.UNDEFINED) && value !== undefined) {
-            return ("SIMPLE_UNDEFINED_UNSATISFIED");
+        if ((natureBitcode & natureBitflags.UNDEFINED) && value !== undefined) {
+            return ("NATURE_UNDEFINED_UNSATISFIED");
         }
         return (null);
     }
@@ -1626,103 +1623,120 @@ const SimpleFormat = {
 
 const ObjectFormat = {
     type: "object",
-    errors: {
-        SHAPE_PROPERTY_REQUIRED: "The 'shape' property is required.",
+    exceptions: {
         SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Plain Object.",
         SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'shape' property must be of type Plain Object.",
-        STRICT_PROPERTY_MALFORMED: "The 'strict' property must be of type Boolean.",
-        OMITTABLE_PROPERTY_MALFORMED: "The 'omittable' property must be of type Boolean or Array.",
-        OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'omittable' property must be of type String or Symbol.",
-        EXPANDABLE_PROPERTY_MALFORMED: "The 'extensible' property must be of type Boolean or a Plain Object.",
-        EXPANDABLE__KEY_PROPERTY_MALFORMED: "The 'extensible.key' property, must be a criteria node of type Plain Object.",
-        EXPANDABLE__KEY_PROPERTY_MISCONFIGURED: "The value of the 'extensible.key' property, must be a criteria node with a 'type' property equal to 'string' or 'symbol'",
-        EXPANDABLE__VALUE_PROPERTY_MALFORMED: "The 'extensible.value' property, must be a criteria node Object.",
-        EXPANDABLE__MIN_PROPERTY_MALFORMED: "The 'extensible.min' property, must be of type Number.",
-        EXPANDABLE__MAX_PROPERTY_MALFORMED: "The 'extensible.max' property, must be of type Number.",
-        EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'extensible.min' property cannot be greater than 'extensible.max' property."
+        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
+        NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string.",
+        OPTIONAL_PROPERTY_MALFORMED: "The 'optional' property must be of type Boolean or Array.",
+        OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'optional' property must be of type String or Symbol.",
+        OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED: "The 'optional' property cannot be defined without the 'shape' property.",
+        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
+        ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED: "The 'additional' property cannot be defined without the 'shape' property.",
+        ADDITIONAL__KEY_PROPERTY_MALFORMED: "The 'additional.key' property, must be a criteria node of type Plain Object.",
+        ADDITIONAL__KEY_PROPERTY_MISCONFIGURED: "The value of the 'additional.key' property, must be a criteria node with a 'type' property equal to 'string' or 'symbol'",
+        ADDITIONAL__VALUE_PROPERTY_MALFORMED: "The 'additional.value' property, must be a criteria node Object.",
+        ADDITIONAL__MIN_PROPERTY_MALFORMED: "The 'additional.min' property, must be of type Number.",
+        ADDITIONAL__MAX_PROPERTY_MALFORMED: "The 'additional.max' property, must be of type Number.",
+        ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'additional.min' property cannot be greater than 'additional.max' property."
     },
-    getUnforcedKeys(omittable, declaredKeys) {
-        if (omittable === true)
+    natures: ["STANDARD", "PLAIN"],
+    getUnforcedKeys(optional, declaredKeys) {
+        if (optional === true)
             return (declaredKeys);
-        if (omittable === false)
+        if (optional === false)
             return ([]);
-        return (declaredKeys.filter(key => omittable.includes(key)));
+        return (declaredKeys.filter(key => optional.includes(key)));
     },
-    getEnforcedKeys(omittable, declaredKeys) {
-        if (omittable === true)
+    getEnforcedKeys(optional, declaredKeys) {
+        if (optional === true)
             return ([]);
-        if (omittable === false)
+        if (optional === false)
             return (declaredKeys);
-        return (declaredKeys.filter(key => !omittable.includes(key)));
+        return (declaredKeys.filter(key => !optional.includes(key)));
     },
     isShorthandShape(obj) {
         return (isPlainObject(obj) && (!("type" in obj) || typeof obj.type !== "string"));
     },
     mount(chunk, criteria) {
-        const { shape, strict, omittable, extensible } = criteria;
-        if (!("shape" in criteria)) {
-            return ("SHAPE_PROPERTY_REQUIRED");
-        }
-        if (!isPlainObject(shape)) {
-            return ("SHAPE_PROPERTY_MALFORMED");
-        }
-        for (const key of Reflect.ownKeys(shape)) {
-            if (!isPlainObject(shape[key])) {
-                return ("SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED");
+        const { shape, nature, optional, additional } = criteria;
+        if (shape !== undefined) {
+            if (!isPlainObject(shape)) {
+                return ("SHAPE_PROPERTY_MALFORMED");
+            }
+            for (const key of Reflect.ownKeys(shape)) {
+                if (!isPlainObject(shape[key])) {
+                    return ("SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED");
+                }
             }
         }
-        if (strict !== undefined && typeof strict !== "boolean") {
-            return ("STRICT_PROPERTY_MALFORMED");
+        if (nature !== undefined) {
+            if (typeof nature !== "string") {
+                return ("NATURE_PROPERTY_MALFORMED");
+            }
+            if (!this.natures.includes(nature)) {
+                return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
+            }
         }
-        if (omittable !== undefined) {
-            if (isArray(omittable)) {
-                for (const item of omittable) {
+        if (optional !== undefined) {
+            if (!("shape" in criteria)) {
+                return ("OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED");
+            }
+            if (isArray(optional)) {
+                for (const item of optional) {
                     if (typeof item !== "string" && typeof item !== "symbol") {
-                        return ("OMITTABLE_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED");
                     }
                 }
             }
-            else if (typeof omittable !== "boolean") {
-                return ("OMITTABLE_PROPERTY_MALFORMED");
+            else if (typeof optional !== "boolean") {
+                return ("OPTIONAL_PROPERTY_MALFORMED");
             }
         }
-        if (extensible !== undefined) {
-            if (isPlainObject(extensible)) {
-                const { key, value, min, max } = extensible;
+        if (additional !== undefined) {
+            if (!("shape" in criteria)) {
+                return ("ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED");
+            }
+            if (isPlainObject(additional)) {
+                const { key, value, min, max } = additional;
                 if (isPlainObject(key)) {
                     if (key.type !== "string" && key.type !== "symbol") {
-                        return ("EXPANDABLE__KEY_PROPERTY_MISCONFIGURED");
+                        return ("ADDITIONAL__KEY_PROPERTY_MISCONFIGURED");
                     }
                 }
                 else if (key !== undefined) {
-                    return ("EXPANDABLE__KEY_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__KEY_PROPERTY_MALFORMED");
                 }
                 if (value !== undefined && !isPlainObject(value)) {
-                    return ("EXPANDABLE__VALUE_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__VALUE_PROPERTY_MALFORMED");
                 }
                 if (min !== undefined && typeof min !== "number") {
-                    return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__MIN_PROPERTY_MALFORMED");
                 }
                 if (max !== undefined && typeof max !== "number") {
-                    return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__MAX_PROPERTY_MALFORMED");
                 }
                 if (min !== undefined && max !== undefined && min > max) {
-                    return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+                    return ("ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
                 }
             }
-            else if (typeof extensible !== "boolean") {
-                return ("EXPANDABLE_PROPERTY_MALFORMED");
+            else if (typeof additional !== "boolean") {
+                return ("ADDITIONAL_PROPERTY_MALFORMED");
             }
         }
-        const resolvedOmittable = omittable ?? false;
-        const resolvedExtensible = extensible ?? false;
-        const declaredKeyArray = Reflect.ownKeys(shape);
-        const unforcedKeyArray = this.getUnforcedKeys(resolvedOmittable, declaredKeyArray);
-        const enforcedKeyArray = this.getEnforcedKeys(resolvedOmittable, declaredKeyArray);
+        const resolvedOptional = optional ?? false;
+        const resolvedAdditional = additional ?? false;
         Object.assign(criteria, {
-            strict: strict ?? true,
-            omittable: resolvedOmittable,
-            extensible: resolvedExtensible,
+            nature: nature ?? "STANDARD",
+            optional: resolvedOptional,
+            additional: resolvedAdditional
+        });
+        if (shape === undefined)
+            return (null);
+        const declaredKeyArray = Reflect.ownKeys(shape);
+        const unforcedKeyArray = this.getUnforcedKeys(resolvedOptional, declaredKeyArray);
+        const enforcedKeyArray = this.getEnforcedKeys(resolvedOptional, declaredKeyArray);
+        Object.assign(criteria, {
             declaredKeySet: new Set(declaredKeyArray),
             unforcedKeySet: new Set(unforcedKeyArray),
             enforcedKeySet: new Set(enforcedKeyArray)
@@ -1745,20 +1759,20 @@ const ObjectFormat = {
                 }
             });
         }
-        if (isPlainObject(resolvedExtensible)) {
-            if (resolvedExtensible.key) {
+        if (isPlainObject(resolvedAdditional)) {
+            if (resolvedAdditional.key) {
                 chunk.push({
-                    node: resolvedExtensible.key,
+                    node: resolvedAdditional.key,
                     partPath: {
-                        explicit: ["extensible", "key"]
+                        explicit: ["additional", "key"]
                     }
                 });
             }
-            if (resolvedExtensible.value) {
+            if (resolvedAdditional.value) {
                 chunk.push({
-                    node: resolvedExtensible.value,
+                    node: resolvedAdditional.value,
                     partPath: {
-                        explicit: ["extensible", "value"],
+                        explicit: ["additional", "value"],
                         implicit: ["%", "string", "symbol"]
                     }
                 });
@@ -1767,15 +1781,17 @@ const ObjectFormat = {
         return (null);
     },
     check(chunk, criteria, data) {
-        if (criteria.strict) {
-            if (!isPlainObject(data)) {
-                return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
+        if (criteria.nature === "STANDARD") {
+            if (!isObject(data)) {
+                return ("TYPE_OBJECT_UNSATISFIED");
             }
         }
-        else if (!isObject(data)) {
-            return ("TYPE_OBJECT_UNSATISFIED");
+        else if (!isPlainObject(data)) {
+            return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
         }
-        const { shape, extensible, declaredKeySet, unforcedKeySet, enforcedKeySet } = criteria;
+        const { shape, additional, declaredKeySet, unforcedKeySet, enforcedKeySet } = criteria;
+        if (shape === undefined)
+            return (null);
         const declaredKeyCount = declaredKeySet.size;
         const enforcedKeyCount = enforcedKeySet.size;
         const definedKeyArray = Reflect.ownKeys(data);
@@ -1783,10 +1799,10 @@ const ObjectFormat = {
         if (definedKeyCount < enforcedKeyCount) {
             return ("SHAPE_UNSATISFIED");
         }
-        if (!extensible && definedKeyCount > declaredKeyCount) {
+        if (!additional && definedKeyCount > declaredKeyCount) {
             return ("EXTENSIBLE_UNALLOWED");
         }
-        if (typeof extensible === "boolean") {
+        if (typeof additional === "boolean") {
             let enforcedMiss = enforcedKeyCount;
             for (let i = 0; i < definedKeyCount; i++) {
                 const key = definedKeyArray[i];
@@ -1797,7 +1813,7 @@ const ObjectFormat = {
                     return ("SHAPE_UNSATISFIED");
                 }
                 else if (!unforcedKeySet.has(key)) {
-                    if (!extensible) {
+                    if (!additional) {
                         return ("EXTENSIBLE_UNALLOWED");
                     }
                     continue;
@@ -1810,14 +1826,14 @@ const ObjectFormat = {
         }
         else {
             const extendedKeyArray = [];
-            const { min, max } = extensible;
-            let requiredMiss = enforcedKeyCount;
+            const { min, max } = additional;
+            let enforcedMiss = enforcedKeyCount;
             for (let i = 0; i < definedKeyCount; i++) {
                 const key = definedKeyArray[i];
                 if (enforcedKeySet.has(key)) {
-                    requiredMiss--;
+                    enforcedMiss--;
                 }
-                else if (requiredMiss > i) {
+                else if (enforcedMiss > i) {
                     return ("SHAPE_UNSATISFIED");
                 }
                 else if (!unforcedKeySet.has(key)) {
@@ -1836,19 +1852,19 @@ const ObjectFormat = {
             if (max !== undefined && extendedKeyCount > max) {
                 return ("EXTENSIBLE_MAX_UNSATISFIED");
             }
-            if (extendedKeyCount && (extensible.key || extensible.value)) {
+            if (extendedKeyCount && (additional.key || additional.value)) {
                 for (let i = 0; i < extendedKeyCount; i++) {
                     const key = extendedKeyArray[i];
-                    if (extensible.key) {
+                    if (additional.key) {
                         chunk.push({
                             data: key,
-                            node: extensible.key
+                            node: additional.key
                         });
                     }
-                    if (extensible.value) {
+                    if (additional.value) {
                         chunk.push({
                             data: data[key],
-                            node: extensible.value
+                            node: additional.value
                         });
                     }
                 }
@@ -1860,21 +1876,21 @@ const ObjectFormat = {
 
 const ArrayFormat = {
     type: "array",
-    errors: {
+    exceptions: {
         SHAPE_PROPERTY_REQUIRED: "The 'shape' property is required.",
         SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Array.",
         SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'shape' property must be of type Plain Object or Array.",
-        EXPANDABLE_PROPERTY_MALFORMED: "The 'extensible' property must be of type Boolean or a Plain Object.",
-        EXPANDABLE__ITEM_PROPERTY_MALFORMED: "The 'extensible.item' property, must be a criteria node Object.",
-        EXPANDABLE__MIN_PROPERTY_MALFORMED: "The 'extensible.min' property, must be of type Number.",
-        EXPANDABLE__MAX_PROPERTY_MALFORMED: "The 'extensible.max' property, must be of type Number.",
-        EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'extensible.min' property cannot be greater than 'extensible.max' property."
+        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
+        ADDITIONAL__ITEM_PROPERTY_MALFORMED: "The 'additional.item' property, must be a criteria node Object.",
+        ADDITIONAL__MIN_PROPERTY_MALFORMED: "The 'additional.min' property, must be of type Number.",
+        ADDITIONAL__MAX_PROPERTY_MALFORMED: "The 'additional.max' property, must be of type Number.",
+        ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'additional.min' property cannot be greater than 'additional.max' property."
     },
     isShorthandShape(obj) {
         return (isArray(obj));
     },
     mount(chunk, criteria) {
-        const { shape, extensible } = criteria;
+        const { shape, additional } = criteria;
         if (!("shape" in criteria)) {
             return ("SHAPE_PROPERTY_REQUIRED");
         }
@@ -1886,29 +1902,29 @@ const ArrayFormat = {
                 return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
             }
         }
-        if (extensible !== undefined) {
-            if (isPlainObject(extensible)) {
-                const { item, min, max } = extensible;
+        if (additional !== undefined) {
+            if (isPlainObject(additional)) {
+                const { item, min, max } = additional;
                 if (item !== undefined && !isPlainObject(item)) {
-                    return ("EXPANDABLE__ITEM_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__ITEM_PROPERTY_MALFORMED");
                 }
                 if (min !== undefined && typeof min !== "number") {
-                    return ("EXPANDABLE__MIN_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__MIN_PROPERTY_MALFORMED");
                 }
                 if (max !== undefined && typeof max !== "number") {
-                    return ("EXPANDABLE__MAX_PROPERTY_MALFORMED");
+                    return ("ADDITIONAL__MAX_PROPERTY_MALFORMED");
                 }
                 if (min !== undefined && max !== undefined && min > max) {
-                    return ("EXPANDABLE__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+                    return ("ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
                 }
             }
-            else if (typeof extensible !== "boolean") {
-                return ("EXPANDABLE_PROPERTY_MALFORMED");
+            else if (typeof additional !== "boolean") {
+                return ("ADDITIONAL_PROPERTY_MALFORMED");
             }
         }
-        const resolvedExtensible = extensible ?? false;
+        const resolvedExtensible = additional ?? false;
         Object.assign(criteria, {
-            extensible: resolvedExtensible
+            additional: resolvedExtensible
         });
         for (let i = 0; i < shape.length; i++) {
             let node = shape[i];
@@ -1932,7 +1948,7 @@ const ArrayFormat = {
                 chunk.push({
                     node: resolvedExtensible.item,
                     partPath: {
-                        explicit: ["extensible", "item"]
+                        explicit: ["additional", "item"]
                     }
                 });
             }
@@ -1943,14 +1959,14 @@ const ArrayFormat = {
         if (!isArray(data)) {
             return ("TYPE_ARRAY_UNSATISFIED");
         }
-        const { shape, extensible } = criteria;
+        const { shape, additional } = criteria;
         const declaredLength = shape.length;
         const definedLength = data.length;
         if (definedLength < declaredLength) {
             return ("SHAPE_UNSATISFIED");
         }
-        if (!extensible && definedLength > declaredLength) {
-            return ("EXTENSIBLE_UNALLOWED");
+        if (!additional && definedLength > declaredLength) {
+            return ("ADDITIONAL_UNALLOWED");
         }
         for (let i = 0; i < declaredLength; i++) {
             chunk.push({
@@ -1961,20 +1977,20 @@ const ArrayFormat = {
         if (definedLength === declaredLength) {
             return (null);
         }
-        if (typeof extensible === "object") {
+        if (typeof additional === "object") {
             const extendedItemCount = definedLength - declaredLength;
-            const { min, max } = extensible;
+            const { min, max } = additional;
             if (min !== undefined && extendedItemCount < min) {
-                return ("EXTENSIBLE_MIN_UNSATISFIED");
+                return ("ADDITIONAL_MIN_UNSATISFIED");
             }
             if (max !== undefined && extendedItemCount > max) {
-                return ("EXTENSIBLE_MAX_UNSATISFIED");
+                return ("ADDITIONAL_MAX_UNSATISFIED");
             }
-            if (extendedItemCount && extensible.item) {
+            if (extendedItemCount && additional.item) {
                 for (let i = declaredLength; i < definedLength; i++) {
                     chunk.push({
                         data: data[i],
-                        node: extensible.item
+                        node: additional.item
                     });
                 }
             }
@@ -1985,7 +2001,7 @@ const ArrayFormat = {
 
 const UnionFormat = {
     type: "union",
-    errors: {
+    exceptions: {
         UNION_PROPERTY_REQUIRED: "The 'union' property is required.",
         UNION_PROPERTY_MALFORMED: "The 'union' property must be of type Array.",
         UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: "The array length of the 'union' must be greater than 0.",

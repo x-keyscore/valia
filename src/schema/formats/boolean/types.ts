@@ -9,9 +9,9 @@ export interface BooleanDerivedCriteria extends DerivedCriteriaTemplate<
 	boolean
 > {}
 
-export type BooleanErrorCodes =
+export type BooleanExceptionCodes =
 	| "LITERAL_PROPERTY_MALFORMED";
 
-export type BooleanRejectCodes = 
+export type BooleanRejectionCodes = 
 	| "TYPE_BOOLEAN_UNSATISFIED"
 	| "LITERAL_UNSATISFIED";

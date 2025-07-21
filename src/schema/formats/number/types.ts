@@ -9,6 +9,10 @@ export interface NumberSetableCriteria extends SetableCriteriaTemplate<"number">
 	custom?: (value: number) => boolean;
 }
 
+export interface NumberMountedCriteria {
+	resolvedLiteral?: Set<number>;
+}
+
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = 
 	T['literal'] extends Record<string | number, number>
 		? T['literal'][keyof T['literal']]
@@ -19,11 +23,11 @@ type NumberGuardedCriteria<T extends NumberSetableCriteria> =
 				: number;
 
 export interface NumberDerivedCriteria<T extends NumberSetableCriteria> extends DerivedCriteriaTemplate<
-	{},
+	NumberMountedCriteria,
 	NumberGuardedCriteria<T>
 > {}
 
-export type NumberErrorCodes =
+export type NumberExceptionCodes =
 	| "MIN_PROPERTY_MALFORMED"
     | "MAX_PROPERTY_MALFORMED"
     | "MIN_AND_MAX_PROPERTIES_MISCONFIGURED"
@@ -35,7 +39,7 @@ export type NumberErrorCodes =
     | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CUSTOM_PROPERTY_MALFORMED";
 
-export type NumberRejectCodes =
+export type NumberRejectionCodes =
 	| "TYPE_NUMBER_UNSATISFIED"
 	| "MIN_UNSATISFIED"
 	| "MAX_UNSATISFIED"

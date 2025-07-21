@@ -1,10 +1,14 @@
-import type { NumberSetableCriteria, NumberErrorCodes, NumberRejectCodes } from "./types";
+import type { NumberSetableCriteria, NumberExceptionCodes, NumberRejectionCodes } from "./types";
 import type { Format } from "../types";
 import { isPlainObject, isArray, isFunction } from "../../../testers";
 
-export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, NumberRejectCodes> = {
+export const NumberFormat: Format<
+	NumberSetableCriteria,
+	NumberExceptionCodes,
+	NumberRejectionCodes
+> = {
 	type: "number",
-	errors: {
+	exceptions: {
         MIN_PROPERTY_MALFORMED:
 		    "The 'min' property must be of type Number.",
        	MAX_PROPERTY_MALFORMED:
@@ -27,7 +31,7 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
             "The 'custom' property must be of type Basic Function."
     },
 	mount(chunk, criteria) {
-		const {  min, max, literal, custom } = criteria;
+		const { min, max, literal, custom } = criteria;
 
 		if (min !== undefined && typeof min !== "number") {
 			return ("MIN_PROPERTY_MALFORMED");
@@ -38,8 +42,13 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 		if (min !== undefined && max !== undefined && min > max) {
 			return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
 		}
+		
 		if (literal !== undefined) {
-			if (isArray(literal)) {
+			let resolvedLiteral;
+
+			if (typeof literal === "number") {
+				resolvedLiteral = new Set([literal]);
+			} else if (isArray(literal)) {
 				if (literal.length < 1) {
 					return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
 				}
@@ -49,6 +58,8 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
 					}
 				}
+
+				resolvedLiteral = new Set(literal);
 			} else if (isPlainObject(literal)) {
 				const keys = Reflect.ownKeys(literal);
 				if (keys.length < 1) {
@@ -63,9 +74,13 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
 					}
 				}
-			} else if (typeof literal !== "number") {
+
+				resolvedLiteral = new Set(Object.values(literal));
+			} else {
 				return ("LITERAL_PROPERTY_MALFORMED");
 			}
+
+			Object.assign(criteria, { resolvedLiteral });
 		}
 		if (custom !== undefined && !isFunction(custom)) {
 			return ("CUSTOM_PROPERTY_MALFORMED");
@@ -78,7 +93,7 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 			return ("TYPE_NUMBER_UNSATISFIED");
 		}
 
-		const { min, max, literal, custom } = criteria;
+		const { min, max, resolvedLiteral, custom } = criteria;
 
 		if (min !== undefined && value < min) {
 			return ("MIN_UNSATISFIED");
@@ -86,18 +101,8 @@ export const NumberFormat: Format<NumberSetableCriteria, NumberErrorCodes, Numbe
 		if (max !== undefined && value > max) {
 			return ("MAX_UNSATISFIED");
 		}
-		if (literal !== undefined) {
-			if (typeof literal === "number" && literal !== value) {
-				return ("LITERAL_UNSATISFIED");
-			}
-			else if (isArray(literal)) {
-				if (!literal.includes(value)) {
-					return ("LITERAL_UNSATISFIED");
-				}
-			}
-			else if (!Object.values(literal).includes(value)) {
-				return ("LITERAL_UNSATISFIED");
-			}
+		if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
+			return ("LITERAL_UNSATISFIED");
 		}
 		if (custom && !custom(value)) {
 			return ("CUSTOM_UNSATISFIED");

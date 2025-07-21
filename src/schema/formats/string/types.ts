@@ -41,7 +41,7 @@ export interface StringDerivedCriteria<T extends StringSetableCriteria> extends 
 	StringGuardedCriteria<T>
 > {}
 
-export type StringErrorCodes =
+export type StringExceptionCodes =
     | "MIN_PROPERTY_MALFORMED"
     | "MAX_PROPERTY_MALFORMED"
     | "MIN_MAX_PROPERTIES_MISCONFIGURED"
@@ -59,7 +59,7 @@ export type StringErrorCodes =
     | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED"
     | "CUSTOM_PROPERTY_MALFORMED";
 
-export type StringRejectCodes =
+export type StringRejectionCodes =
 	| "TYPE_STRING_UNSATISFIED"
 	| "MIN_UNSATISFIED"
 	| "MAX_UNSATISFIED"

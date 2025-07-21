@@ -1,6 +1,6 @@
 import type { SetableCriteriaTemplate, DerivedCriteriaTemplate } from "../types";
 
-interface Simples {
+interface NatureMap {
 	UNKNOWN: unknown;
 	NULL: null;
 	UNDEFINED: undefined;
@@ -8,28 +8,28 @@ interface Simples {
 }
 
 export interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
-	simple: keyof Simples;
+	nature: keyof NatureMap;
 }
 
 export interface SimpleMountedCriteria {
-	bitcode: number;
+	natureBitcode: number;
 }
 
 export interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<
 	SimpleMountedCriteria,
-	Simples[T['simple']]
+	NatureMap[T['nature']]
 > {}
 
-export type SimpleErrorCodes =
-    | "SIMPLE_PROPERTY_REQUIRED"
-    | "SIMPLE_PROPERTY_MALFORMED"
-	| "SIMPLE_PROPERTY_STRING_MISCONFIGURED";
+export type SimpleExceptionCodes =
+    | "NATURE_PROPERTY_REQUIRED"
+    | "NATURE_PROPERTY_MALFORMED"
+	| "NATURE_PROPERTY_STRING_MISCONFIGURED";
 
-export type SimpleRejectCodes =
-	| "SIMPLE_NULLISH_UNSATISFIED"
-	| "SIMPLE_NULL_UNSATISFIED"
-	| "SIMPLE_UNDEFINED_UNSATISFIED";
+export type SimpleRejectionCodes =
+	| "NATURE_NULLISH_UNSATISFIED"
+	| "NATURE_NULL_UNSATISFIED"
+	| "NATURE_UNDEFINED_UNSATISFIED";
 
 export interface SimpleCustomMembers {
-	bitflags: Record<keyof Simples, number>
+	natureBitflags: Record<keyof NatureMap, number>
 }

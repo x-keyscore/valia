@@ -1,10 +1,14 @@
-import type { SymbolSetableCriteria, SymbolErrorCodes, SymbolRejectCodes } from "./types";
+import type { SymbolSetableCriteria, SymbolExceptionCodes, SymbolRejectionCodes } from "./types";
 import type { Format } from "../types";
 import { isArray, isPlainObject } from "../../../testers";
 
-export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, SymbolRejectCodes> = {
+export const SymbolFormat: Format<
+	SymbolSetableCriteria,
+	SymbolExceptionCodes,
+	SymbolRejectionCodes
+> = {
 	type: "symbol",
-	errors: {
+	exceptions: {
 		LITERAL_PROPERTY_MALFORMED:
 			"The 'literal' property must be of type Symbol, Array or Plain Object.",
 		LITERAL_PROPERTY_ARRAY_MISCONFIGURED:
@@ -22,10 +26,10 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 		const { literal } = criteria;
 
 		if (literal !== undefined) {
-			let literalSet = undefined;
+			let resolvedLiteral;
 
 			if (typeof literal === "symbol") {
-				literalSet = new Set([literal]);
+				resolvedLiteral = new Set([literal]);
 			} else if (isArray(literal)) {
 				if (literal.length < 1) {
 					return ("LITERAL_PROPERTY_ARRAY_MISCONFIGURED");
@@ -37,7 +41,7 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 					}
 				}
 
-				literalSet = new Set(literal);
+				resolvedLiteral = new Set(literal);
 			} else if (isPlainObject(literal)) {
 				const keys = Reflect.ownKeys(literal);
 				if (keys.length < 1) {
@@ -53,12 +57,12 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 					}
 				}
 
-				literalSet = new Set(Object.values(literal));
+				resolvedLiteral = new Set(Object.values(literal));
 			} else {
 				return ("LITERAL_PROPERTY_MALFORMED");
 			}
 
-			Object.assign(criteria, { literalSet });
+			Object.assign(criteria, { resolvedLiteral });
 		}
 
 		return (null);
@@ -68,9 +72,9 @@ export const SymbolFormat: Format<SymbolSetableCriteria, SymbolErrorCodes, Symbo
 			return ("TYPE_SYMBOL_UNSATISFIED");
 		}
 
-		const { literalSet } = criteria;
+		const { resolvedLiteral } = criteria;
 
-		if (literalSet !== undefined && !literalSet.has(value)) {
+		if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
 			return ("LITERAL_UNSATISFIED");
 		}
 

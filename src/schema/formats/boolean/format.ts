@@ -1,9 +1,13 @@
-import type { BooleanSetableCriteria, BooleanErrorCodes, BooleanRejectCodes } from "./types";
+import type { BooleanSetableCriteria, BooleanExceptionCodes, BooleanRejectionCodes } from "./types";
 import type { Format } from "../types";
 
-export const BooleanFormat: Format<BooleanSetableCriteria, BooleanErrorCodes, BooleanRejectCodes> = {
+export const BooleanFormat: Format<
+	BooleanSetableCriteria,
+	BooleanExceptionCodes,
+	BooleanRejectionCodes
+> = {
 	type: "boolean",
-	errors: {
+	exceptions: {
 		LITERAL_PROPERTY_MALFORMED:
 			"The 'literal' property must be of type Boolean."
 	},
