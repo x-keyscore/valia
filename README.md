@@ -106,11 +106,20 @@ interface SchemaReject {
 
 ### Global
 
-|Property|Default|Description|
-|--|--|--|
-|`label?`   ||String that will be returned in the reject object. Ideal for adding your own error codes, for example.|
-|`message?` ||String that will be returned in the reject object.|
-|`nullable?`||Allows `null`|
+#### **Properties :**
+
+- **`label?`**
+
+  An array with criteria nodes defining the expected items.
+
+- **`message?`**
+
+   An array with criteria nodes defining the expected items.
+
+- **`nullable?`**
+  - **boolean**:
+    - **true**: Allows items not defined in `shape`.
+    - **false**: Disallows items not defined in `shape`.
 
 ```ts
 interface Criteria {
@@ -201,7 +210,7 @@ interface Criteria {
   - **"PLAIN"**: Expects an object that can be validated by the `isPlainObject` function.
 
 - **`shape?`**
-
+  
   An object with expected property names or symbols as keys and criteria nodes defining the expected values.
 
 - **`optional?`** — *(Default: `false`, Only usable if `shape` is defined)*
@@ -222,7 +231,7 @@ interface Criteria {
 
 #### **Exemples :**
 
-- Validates any standard JavaScript object
+**Validates any standard JavaScript object**
 ```ts
 const schema = new Schema({
   type: "object"
@@ -238,7 +247,7 @@ schema.validate(Object.create(null));
 schema.validate("");
 ```
 
-- Validates only plain objects
+**Validates only plain objects**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -255,7 +264,7 @@ schema.validate([]);
 schema.validate(new Date());
 ```
 
-- Validates an object with a fixed property structure
+**Validates an object with a fixed property structure**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -265,17 +274,15 @@ const schema = new Schema({
   }
 });
 
-✅
-schema.validate({ foo: "x", bar: "x" });
+✅ schema.validate({ foo: "x", bar: "x" });
 
-❌
-schema.validate({});
-schema.validate({ foo: "x" });
-schema.validate({ bar: "x" });
-schema.validate({ foo: "x", bar: "x", a: "" });
+❌ schema.validate({});
+❌ schema.validate({ foo: "x" });
+❌ schema.validate({ bar: "x" });
+❌ schema.validate({ foo: "x", bar: "x", a: "" });
 ```
 
-- Validates an object with all properties optional
+**Validates an object with all properties optional**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -286,17 +293,15 @@ const schema = new Schema({
   optional: true
 });
 
-✅
-schema.validate({});
-schema.validate({ foo: "x" });
-schema.validate({ bar: "x" });
-schema.validate({ foo: "x", bar: "x" });
+✅ schema.validate({});
+✅ schema.validate({ foo: "x" });
+✅ schema.validate({ bar: "x" });
+✅ schema.validate({ foo: "x", bar: "x" });
 
-❌
-schema.validate({ foo: "x", bar: "x", a: "x" });
+❌ schema.validate({ foo: "x", bar: "x", a: "x" });
 ```
 
-- Validates an object with a mix of required and optional properties
+**Validates an object with a mix of required and optional properties**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -307,17 +312,15 @@ const schema = new Schema({
   optional: ["bar"]
 });
 
-✅
-schema.validate({ foo: "x" });
-schema.validate({ foo: "x", bar: "x" });
+✅ schema.validate({ foo: "x" });
+✅ schema.validate({ foo: "x", bar: "x" });
 
-❌
-schema.validate({});
-schema.validate({ bar: "x" });
-schema.validate({ foo: "x", bar: "x", a: "x" });
+❌ schema.validate({});
+❌ schema.validate({ bar: "x" });
+❌ schema.validate({ foo: "x", bar: "x", a: "x" });
 ```
 
-- Allows additional properties without validation
+**Allows additional properties without validation**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -328,17 +331,15 @@ const schema = new Schema({
   additional: true
 });
 
-✅
-schema.validate({ foo: "x", bar: "x" });
-schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
+✅ schema.validate({ foo: "x", bar: "x" });
+✅ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 
-❌
-schema.validate({});
-schema.validate({ bar: "x" });
-schema.validate({ foo: "x" });
+❌ schema.validate({});
+❌ schema.validate({ bar: "x" });
+❌ schema.validate({ foo: "x" });
 ```
 
-- Allows additional properties with validation
+**Allows additional properties with validation**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -352,16 +353,14 @@ const schema = new Schema({
   }
 });
 
-✅
-schema.validate({ foo: "x", bar: "x" });
-schema.validate({ foo: "x", bar: "x", a: 0 });
-schema.validate({ foo: "x", bar: "x", a: 0, b: 0 });
+✅ schema.validate({ foo: "x", bar: "x" });
+✅ schema.validate({ foo: "x", bar: "x", a: 0 });
+✅ schema.validate({ foo: "x", bar: "x", a: 0, b: 0 });
 
-❌
-schema.validate({});
-schema.validate({ foo: "x" });
-schema.validate({ bar: "x" });
-schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
+❌ schema.validate({});
+❌ schema.validate({ foo: "x" });
+❌ schema.validate({ bar: "x" });
+❌ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 ```
 
 *The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
@@ -371,7 +370,7 @@ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 #### **Properties :**
 
 - **`shape?`**
-
+  
   An array with criteria nodes defining the expected items.
 
 - **`additional?`** — *(Default: `false`; Only usable if `shape` is defined)*
@@ -385,22 +384,20 @@ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 
 #### **Exemples :**
 
-- Validates any standard JavaScript array
+**Validates any standard JavaScript array**
 ```ts
 const schema = new Schema({
   type: "array"
 });
 
-✅
-schema.validate([]);
-schema.validate(["x"]);
+✅ schema.validate([]);
+✅ schema.validate(["x"]);
 
-❌
-schema.validate({});
-schema.validate("");
+❌ schema.validate({});
+❌ schema.validate("");
 ```
 
-- Validates an array with a fixed item structure (Tuple)
+**Validates an array with a fixed item structure**
 ```ts
 const schema = new Schema({
   type: "array",
@@ -410,16 +407,14 @@ const schema = new Schema({
   ]
 });
 
-✅
-schema.validate(["x", "x"]);
+✅ schema.validate(["x", "x"]);
 
-❌
-schema.validate([]);
-schema.validate(["x"]);
-schema.validate(["x", "x", "x"]);
+❌ schema.validate([]);
+❌ schema.validate(["x"]);
+❌ schema.validate(["x", "x", "x"]);
 ```
 
-- Allows additional items without validation
+**Allows additional items without validation**
 ```ts
 const schema = new Schema({
   type: "array",
@@ -430,17 +425,15 @@ const schema = new Schema({
   additional: true
 });
 
-✅
-schema.validate(["x", "x"]);
-schema.validate(["x", "x", "x"]);
-schema.validate(["x", "x", "x", 0]);
+✅ schema.validate(["x", "x"]);
+✅ schema.validate(["x", "x", "x"]);
+✅ schema.validate(["x", "x", "x", 0]);
 
-❌
-schema.validate([]);
-schema.validate(["x"]);
+❌ schema.validate([]);
+❌ schema.validate(["x"]);
 ```
 
-- Allows additional items with validation
+**Allows additional items with validation**
 ```ts
 const schema = new Schema({
   type: "array",
@@ -453,42 +446,67 @@ const schema = new Schema({
   }
 });
 
-✅
-schema.validate(["x", "x"]);
-schema.validate(["x", "x", 0]);
-schema.validate(["x", "x", 0, 0]);
+✅ schema.validate(["x", "x"]);
+✅ schema.validate(["x", "x", 0]);
+✅ schema.validate(["x", "x", 0, 0]);
 
-❌
-schema.validate([]);
-schema.validate(["x"]);
-schema.validate(["x", "x", "x"]);
+❌ schema.validate([]);
+❌ schema.validate(["x"]);
+❌ schema.validate(["x", "x", "x"]);
 ```
 
 ### Simple
 
-|Property|Default|Description|
-|--|--|--|
-|`simple`||Simple type|
+#### **Properties :**
+
+- **`simple`**
+
+  - **"NULL"**: The value must be strictly `null`.
+  - **"UNDEFINED"**: The value must be strictly `undefined`.
+  - **"NULLISH"**: The value can be either `null` or `undefined`.
+  - **"UNKNOWN"**: Any value is accepted (no constraint).
+
+#### **Exemples :**
 
 ```ts
-interface Criteria {
+const schema = new Schema({
   type: "simple",
-  simple: "NULL" | "UNDEFINED" | "NULLISH"  | "UNKNOWN";
-}
+  simple: "NULL"
+});
+
+✅ schema.validate(null);
+
+❌ schema.validate(0);
+❌ schema.validate("");
+❌ schema.validate({});
+❌ schema.validate([]);
 ```
 
 ### Union
 
-|Property|Default|Description|
-|--|--|--|
-|`type` ||Format name|
-|`union`||Table in which the possible criteria are specified|
+#### **Properties :**
+
+- **`union`**
+
+  An array of criteria nodes, where each node defines an acceptable structure or value.<br/>
+  A value is considered **valid if it matches at least one** of the provided criteria.
+
+#### **Exemples :**
 
 ```ts
-interface Criteria {
-  type: "union";
-  union?: [SetableCriteria, ...SetableCriteria[]];
-}
+const schema = new Schema({
+  type: "union",
+  union: [
+    { type: "string" },
+    { type: "number" }
+  ]
+});
+
+✅ schema.validate(0);
+✅ schema.validate("");
+
+❌ schema.validate({});
+❌ schema.validate([]);
 ```
 
 ## Exemples
