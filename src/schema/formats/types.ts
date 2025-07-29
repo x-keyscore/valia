@@ -59,7 +59,7 @@ export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria>
 	function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
 	boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
 	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
-	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never
+	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never;
 	string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
 	simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;
 	object: T extends ObjectSetableCriteria ? ObjectDerivedCriteria<T> : never;
@@ -104,14 +104,15 @@ export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> =
 /**
  * @template T Extended interface of `SettableCriteriaTemplate` that
  * defines the format criteria users must or can specify.
- * @template E Error codes you want to use in the format.
- * @template M Custom members you want to add to the format.
+ * @template E Except codes you want to use in the format.
+ * @template R Reject codes you want to use in the format.
+ * @template C Custom members you want to add to the format.
  */
 export type Format<
 	T extends SetableCriteria = SetableCriteria,
 	E extends string = string,
 	R extends string = string,
-	C extends {} = {}
+	C extends object = object
 > = {
 	type: T['type'];
 	exceptions: { [K in E]: string };

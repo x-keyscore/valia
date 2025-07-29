@@ -171,12 +171,21 @@ interface Criteria {
 }
 ```
 
+
 ### Symbol
 
-|Property|Default|Description|
-|--|--|--|
-|`literal?`||Restricts the value to a single symbol, an array of symbols or to the symbol values of an object (TypeScript enum).|
-|`custom?` ||Custom validation function returning a boolean.|
+#### **Properties :**
+
+- **`literal?`**
+  <br/>• **symbol**: Restricts the accepted value to a single `symbol`.
+  <br/>• **array**: Restricts the accepted value to an array of `symbol`.
+  <br/>• **object**: Restricts the accepted value to the `symbol` values of an object.
+
+- **`custom?`**
+  <br/>A custom validation function that receives the value and must
+  return a boolean indicating whether the value is valid.
+
+#### **Exemples :**
 
 ```ts
 interface Criteria {
@@ -186,20 +195,49 @@ interface Criteria {
 }
 ```
 
+
 ### Boolean
 
-|Property|Default|Description|
-|--|--|--|
-|`literal?`||Restricts the value to a single boolean state.|
-|`custom?` ||Custom validation function returning a boolean.|
+#### **Properties :**
 
+- **`literal?`**
+
+  Restricts the accepted value to a single boolean state: `true` or `false`.
+
+- **`custom?`**
+
+  A custom validation function that receives the value and must
+  return a boolean indicating whether the value is valid.
+
+#### **Exemples :**
+
+**Validates any boolean**
 ```ts
-interface Criteria {
-  type: "boolean";
-  literal: boolean;
-  custom?: (x: boolean) => boolean;
-}
+const schema = new Schema({
+  type: "boolean"
+});
+
+✅ schema.validate(true);
+✅ schema.validate(false);
+
+❌ schema.validate("");
+❌ schema.validate({});
 ```
+
+**Validates only a boolean state**
+```ts
+const schema = new Schema({
+  type: "boolean",
+  literal: true
+});
+
+✅ schema.validate(true);
+
+❌ schema.validate("");
+❌ schema.validate({});
+❌ schema.validate(false);
+```
+
 
 ### Object
 
@@ -237,14 +275,12 @@ const schema = new Schema({
   type: "object"
 });
 
-✅
-schema.validate({});
-schema.validate([]);
-schema.validate(new Date());
-schema.validate(Object.create(null));
+✅ schema.validate({});
+✅ schema.validate([]);
+✅ schema.validate(new Date());
+✅ schema.validate(Object.create(null));
 
-❌
-schema.validate("");
+❌ schema.validate("");
 ```
 
 **Validates only plain objects**
@@ -254,14 +290,12 @@ const schema = new Schema({
   nature: "PLAIN"
 });
 
-✅
-schema.validate({});
-schema.validate(Object.create(null));
+✅ schema.validate({});
+✅ schema.validate(Object.create(null));
 
-❌
-schema.validate("");
-schema.validate([]);
-schema.validate(new Date());
+❌ schema.validate("");
+❌ schema.validate([]);
+❌schema.validate(new Date());
 ```
 
 **Validates an object with a fixed property structure**
@@ -362,7 +396,6 @@ const schema = new Schema({
 ❌ schema.validate({ bar: "x" });
 ❌ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 ```
-
 *The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
 
 ### Array
@@ -454,6 +487,7 @@ const schema = new Schema({
 ❌ schema.validate(["x"]);
 ❌ schema.validate(["x", "x", "x"]);
 ```
+*The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
 
 ### Simple
 
@@ -479,7 +513,6 @@ const schema = new Schema({
 ❌ schema.validate(0);
 ❌ schema.validate("");
 ❌ schema.validate({});
-❌ schema.validate([]);
 ```
 
 ### Union
@@ -506,7 +539,6 @@ const schema = new Schema({
 ✅ schema.validate("");
 
 ❌ schema.validate({});
-❌ schema.validate([]);
 ```
 
 ## Exemples
