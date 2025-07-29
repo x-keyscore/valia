@@ -1,11 +1,12 @@
-# Valia &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
+# Valia · [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
 
-Une bibliothèque de validation légère et moderne pour TypeScript et JavaScript.
+Bibliothèque de validation légère et moderne pour TypeScript et JavaScript.
 
-Elle s’intègre naturellement à vos projets front-end comme back-end, permet de définir des schémas de manière intuitive,
-<br/>et propose des fonctionnalités puissantes telles que la déduction de types ou des testeurs conformes aux normes, tels que **isEmail**, **isUuid** ou **isIp**.
+🔌 S’intègre naturellement à vos projets, qu’ils soient front-end ou back-end, et permet de définir des schémas de manière intuitive tout en favorisant leur réutilisation.
 
-## Table of Contents
+💡 Pensée pour allier simplicité et puissance, elle propose des fonctionnalités avancées comme l’inférence de types, ainsi que des validateurs standards tels que **isEmail**, **isUuid** ou **isIp**.
+
+## Table of contents
 - [Schema](#schema)
   - [Instance](#instance)
   - [Formats](#formats)
@@ -28,7 +29,6 @@ Elle s’intègre naturellement à vos projets front-end comme back-end, permet 
 import type { SchemaInfer } from 'valia';
 import { Schema } from 'valia';
 
-// Déclarer un schéma
 const user = new Schema({ 
   type: "object",
   shape: {
@@ -40,7 +40,6 @@ const user = new Schema({
   }
 });
 
-// Inférer le type du schéma
 type User = SchemaInfer<typeof user>;
 
 let mock: User = {
@@ -48,18 +47,19 @@ let mock: User = {
   role: "WORKER"
 };
 
-// Valider une valeur avec le schéma
 if (user.validate(mock)) {
   console.log(mock.name, mock.role);
 }
 ```
-*Ici l'inférence est à titre d'exemple et n'est pas utile au bon fonctionnement du schéma*
+*Ici **SchemaInfer** est à titre d'exemple et n'est pas utile au bon fonctionnement du schéma.*
 
 <br/>
 
 # Schema
 
-## Instance
+## Instances
+
+### Schema
 
 <ul>
   <li>
@@ -68,48 +68,110 @@ if (user.validate(mock)) {
     Propriété représentant la racine des noeuds de critères montés.
   </li>
   <li>
-    <strong>validate(value)</strong>
+    <strong>validate(data)</strong>
     <br/>
     Valide les données fournies par rapport au schéma et renvoie un boolean.
     <br/>
-    Cette fonction à une
-    <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates">
-      protection de type
-    </a>
-    si elle renvoie <strong>true</strong>, le type de la valeur passée en paramètre sera du type déduit de votre schéma.
+    Cette fonction utilise la
+    <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates">prédiction de type</a>,
+    si elle renvoie <strong>true</strong> le type de la valeur passée en paramètre sera du type déduit de votre schéma.
   </li>
   <li>
-    <strong>evaluate(value)</strong>
+    <strong>evaluate(data)</strong>
     <br/>
-    Valide les données fournies par rapport au schéma et renvoie
-    <strong>null</strong> si la valeur est acceptée ou une instance de
-    <strong>SchemaDataRejection</strong> si la valeur est rejetée.
+    Valide les données fournies par rapport au schéma et renvoie un objet avec les propriétés suivantes :
+    <ul>
+      <li>
+        <strong>rejection</strong>: Instance de <strong>SchemaDataRejection</strong> si la valeur est rejetée sinon <strong>null</strong>.
+      </li>
+      <li>
+        <strong>data</strong>:Données passées en paramètre de la fonction si celles-ci sont acceptées sinon <strong>null</strong>.
+      </li>
+    </ul>
   </li>
 </ul>
 
-```ts
-interface SchemaInstance {
-  criteria: MountedCriteria;
-  validate(data: unknown): data is GuardedCriteria;
-  evaluate(data: unknown): {
-    reject: SchemaReject
-  } | {
-    data: GuardedCriteria
-  };
-}
-```
-```ts
-interface SchemaReject {
-  path: {
-    explicit: [];
-    implicit: [];
-  };
-  code: string;
-  type: string;
-  label: string | undefined;
-  message: string | undefined;
-};
-```
+### SchemaRejection
+
+<ul>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code de rejet du noeud (e.g. <strong>"MIN_UNSATISFIED"</strong>, <strong>"REGEX_UNSATISFIED"</strong>).
+  </li>
+  <li>
+    <strong>label</strong>
+    <br/>
+    Label défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le label n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud de critères ayant émis le rejet.
+  </li>
+  <li>
+    <strong>nodePath</strong>
+    <ul>
+      <li>
+        <strong>explicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre des critères du schéma.
+      </li>
+      <li>
+        <strong>implicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre de données attendues par les critères du schema.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+### SchemaException
+
+<ul>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code de rejet du noeud (e.g. <strong>"MIN_PROPERTY_MALFORMED"</strong>, <strong>"REGEX_PROPERTY_MALFORMED"</strong>).
+  </li>
+  <li>
+    <strong>label</strong>
+    <br/>
+    Label défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le label n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud de critères ayant émis le rejet.
+  </li>
+  <li>
+    <strong>nodePath</strong>
+    <ul>
+      <li>
+        <strong>explicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre des critères du schéma.
+      </li>
+      <li>
+        <strong>implicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre de données attendues par les critères du schema.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+### SchemaError
+
+<ul>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
+  </li>
+</ul>
 
 ## Formats
 
