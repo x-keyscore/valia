@@ -57,9 +57,7 @@ if (user.validate(mock)) {
 
 # Schema
 
-## Instances
-
-### Schema
+## Instance
 
 <ul>
   <li>
@@ -91,7 +89,7 @@ if (user.validate(mock)) {
   </li>
 </ul>
 
-### SchemaRejection
+### SchemaDataRejection
 
 <ul>
   <li>
@@ -127,7 +125,7 @@ if (user.validate(mock)) {
   </li>
 </ul>
 
-### SchemaException
+### SchemaNodeException
 
 <ul>
   <li>
@@ -163,16 +161,6 @@ if (user.validate(mock)) {
   </li>
 </ul>
 
-### SchemaError
-
-<ul>
-  <li>
-    <strong>message</strong>
-    <br/>
-    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
-  </li>
-</ul>
-
 ## Formats
 
 [Number](#number) • [String](#string) • [Symbol](#symbol) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Simple](#simple) • [Union](#union)
@@ -187,7 +175,7 @@ if (user.validate(mock)) {
   <li>
     <strong>label?</strong>
     <br/>
-    Une chaine de caratéres permetant d'idantifié le noeud, celle-ci vous sera retournée dans les objets d'exception et de réjection.
+    Une chaine de caratéres permetant d'idantifié le noeud, celle-ci vous sera retournée dans les instance de <strong>SchemaRejection</strong> et <strong>SchemaException</strong>.
   </li>
   <li>
     <strong>message?</strong>
