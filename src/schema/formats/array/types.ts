@@ -7,35 +7,32 @@ import type {
 	FormatTypes,
 } from "../types";
 
-export type SetableShape<T extends FormatTypes = FormatTypes> = [
-	...(SetableCriteria<T> | SetableShape)[]
+/*
+nature?:
+min?: number;
+max?: number;
+keys?: SetableKeys<T>;
+values?: SetableValues<T>;
+struct?: SetableStruct<T>;
+optional?: string[] | boolean;
+additional?: boolean;
+*/
+
+type SetableItems<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
+
+export type SetableTuple<T extends FormatTypes = FormatTypes> = [
+	...(SetableCriteria<T> | SetableTuple)[]
 ];
 
-type SetableItem<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
-
-interface SetableAdditionalOptions<T extends FormatTypes = FormatTypes> {
+export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
 	min?: number;
 	max?: number;
-	item?: SetableItem<T>;
-};
-
-export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
-	shape: SetableShape<T>;
-	additional?: boolean | SetableAdditionalOptions<T>;
+	items?: SetableItems<T>;
+	tuple?: SetableTuple<T>;
+	additional?: boolean;
 }
 
-type MountedShape<T extends SetableShape> =
-	T extends infer U
-		? {
-			[I in keyof U]:
-				U[I] extends SetableCriteria
-					? MountedCriteria<U[I]>
-					: U[I] extends SetableShape
-						? MountedCriteria<{ type: "array", shape: U[I] }>
-						: never;
-		}
-		: never;
-
+/*
 interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
 	min?: number;
 	max?: number;
@@ -48,50 +45,96 @@ interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
 					? MountedCriteria<T['item']>
 					: T['item'];
 }
+*/
+
+type MountedTuple<T extends SetableTuple> =
+	T extends infer U
+		? {
+			[I in keyof U]:
+				U[I] extends SetableCriteria
+					? MountedCriteria<U[I]>
+					: U[I] extends SetableTuple
+						? MountedCriteria<{ type: "array", shape: U[I] }>
+						: never;
+		}
+		: never;
 
 export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
-	shape: MountedShape<T['shape']>;
-	additional:
-		unknown extends T['additional']
-			? false
-			: ArraySetableCriteria['additional'] extends T['additional']
-				? MountedAdditionalOptions<SetableAdditionalOptions> | boolean
-				: T['additional'] extends SetableAdditionalOptions
-					? MountedAdditionalOptions<T['additional']>
-					: T['additional'];
+	items:
+		unknown extends T['items']
+			? undefined
+			: ArraySetableCriteria['items'] extends T['items']
+				? MountedCriteria<SetableItems> | undefined
+				: T['items'] extends SetableItems
+					? MountedCriteria<T['items']>
+					: T['items'];
+	tuple:
+		unknown extends T['tuple']
+			? undefined
+			: ArraySetableCriteria['tuple'] extends T['tuple']
+				? MountedTuple<SetableTuple> | undefined
+				: T['tuple'] extends SetableTuple
+					? MountedTuple<T['tuple']>
+					: T['tuple'];
 }
 
-type GuardedDynamic<T extends ArraySetableCriteria['additional']> =
-	[T] extends [SetableAdditionalOptions]
-		? T['item'] extends SetableItem
-			? GuardedCriteria<T['item']>[]
+type GuardedDynamic<T extends ArraySetableCriteria['items']> =
+	[T] extends [ArraySetableCriteria['items']]
+		? T extends SetableItems
+			? GuardedCriteria<T>[]
 			: []
 		: [T] extends [true]
 			? unknown[]
 			: [];
 
-type GuardedStatic<T extends SetableShape> =
-	T extends infer U
+type GuardedStatic<T extends ArraySetableCriteria['tuple']> =
+	T extends any[]
 		? {
-			[I in keyof U]:
-				U[I] extends SetableCriteria
-					? GuardedCriteria<U[I]>
-					: U[I] extends SetableShape
-						? GuardedCriteria<{ type: "array", shape: U[I] }>
+			[I in keyof T]:
+				T[I] extends SetableCriteria
+					? GuardedCriteria<T[I]>
+					: T[I] extends SetableTuple
+						? GuardedCriteria<{ type: "array", tuple: T[I] }>
 						: never;
 		}
-		: never;
+		: [];
 
 type ArrayGuardedCriteria<T extends ArraySetableCriteria> =
-	 GuardedDynamic<T['additional']> extends infer U
-		? GuardedStatic<T['shape']> extends infer V
+	GuardedStatic<T['tuple']> extends infer U
+		? GuardedDynamic<T['items']> extends infer V
 			? U extends any[]
 				? V extends any[]
-					? [...V, ...U]
+					? [...U, ...V]
 					: never
 				: never
 			: never
 		: never;
+
+/*
+	undefined extends T['tuple']
+		? undefined extends T['items']
+			? [...unknown[]]
+			: GuardedDynamic<T['items']> extends infer U
+				? U extends any[]
+					? [...U]
+					: never
+				: never
+		: undefined extends T['items']
+			? GuardedStatic<T['tuple']> extends infer U
+				? U extends any[]
+					? [...U]
+					: never
+				: never
+			: GuardedStatic<T['tuple']> extends infer U
+				? GuardedDynamic<T['items']> extends infer V
+					? U extends any[]
+						? V extends any[]
+							? [...U, ...V]
+							: never
+						: never
+					: never
+				: never;
+*/
 
 export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends DerivedCriteriaTemplate<
 	ArrayMountedCriteria<T>,
@@ -116,5 +159,5 @@ export type ArrayRejectionCodes =
 	| "ADDITIONAL_MAX_UNSATISFIED";
 
 export interface ArrayCustomMembers {
-	isShorthandShape(obj: object): obj is SetableShape;
+	isShorthandShape(obj: object): obj is SetableTuple;
 }

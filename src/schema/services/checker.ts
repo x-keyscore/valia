@@ -2,6 +2,7 @@ import type { CheckerTask, CheckerChunk, CheckerRejection } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
 import { nodeSymbol } from "./mounter";
+import { SchemaDataRejection } from "../utils";
 
 export class CheckerStack {
 	tasks: CheckerTask[] = [];
@@ -108,7 +109,7 @@ export function checker(
 	managers: SchemaInstance['managers'],
 	rootNode: MountedCriteria,
 	rootData: unknown
-): CheckerRejection | null {
+): SchemaDataRejection | null {
 	const { formats, events } = managers;
 	const stack = new CheckerStack(rootNode, rootData);
 
@@ -131,8 +132,18 @@ export function checker(
 		if (rejection) break;
 	}
 
-	events.emit("DATA_CHECKED", rootNode, rootData, rejection);
+	if (rejection) {
+		const rejectionInstance = new SchemaDataRejection({
+			code: rejection.code,
+			node: rejection.task.node,
+			nodePath: rejection.task.fullPath
+		});
 
-	return (rejection);
+		events.emit("DATA_REJECTED", rootNode, rootData, rejectionInstance);
+		return (rejectionInstance);
+	} else {
+		events.emit("DATA_ACCEPTED", rootNode, rootData);
+		return (null);
+	}
 };
 

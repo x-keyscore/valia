@@ -1,12 +1,12 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { MounterTask, MounterChunk, CommonErrorCodes } from "./types";
+import type { MounterTask, MounterChunk, CommonExceptionCodes } from "./types";
 import type { SchemaInstance } from "../types";
 import { SchemaNodeException } from "../utils";
 import { isPlainObject } from "../../testers";
 
 export const nodeSymbol = Symbol("node");
 
-const commonErrors: Record<string, string> = {
+const commonExceptions: Record<string, string> = {
 	NODE_MALFORMED:
 		"Criteria node must be of type Plain Object.",
 	TYPE_PROPERTY_REQUIRED:
@@ -21,12 +21,12 @@ const commonErrors: Record<string, string> = {
 		"",
 	NULLABLE_PROPERTY_MALFORMED:
 		""
-} satisfies Record<CommonErrorCodes, string>;
+} satisfies Record<CommonExceptionCodes, string>;
 
 function commonMount(
 	managers: SchemaInstance['managers'],
 	node: SetableCriteria
-): CommonErrorCodes | null {
+): CommonExceptionCodes | null {
 	if (!isPlainObject(node)) return ("NODE_MALFORMED");
 	const { type, label, message, nullable } = node;
 
@@ -122,7 +122,7 @@ export function mounter<T extends SetableCriteria>(
 					node: node,
 					nodePath: fullPath,
 					code: code,
-					message: commonErrors[code]
+					message: commonExceptions[code]
 				});
 			}
 
@@ -153,7 +153,7 @@ export function mounter<T extends SetableCriteria>(
 		}
 	}
 
-	events.emit("TREE_MOUNTED", rootNode as MountedCriteria<T>);
+	events.emit("TREE_MOUNTED", rootNode as MountedCriteria);
 
 	return (rootNode as MountedCriteria<T>);
 };

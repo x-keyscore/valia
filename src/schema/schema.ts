@@ -3,8 +3,6 @@ import type { SchemaEvaluateResult, SchemaInfer } from "./types";
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
 import { formatNatives } from "./formats";
-import { Issue } from "../utils";
-import { SchemaDataRejection } from "./utils";
 
 /**
  * The `Schema` class is used to define and validate data structures,
@@ -37,7 +35,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 */
 	get criteria(): MountedCriteria<T> {
 		if (!this.mountedCriteria) {
-			throw new Issue("SCHEMA", "Criteria are not initialized.");
+			throw new Error("Criteria are not initialized.");
 		}
 		return (this.mountedCriteria);
 	}
@@ -47,9 +45,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * 
 	 * @param data - The data to be validated.
 	 * 
-	 * @returns `true` if the value is **valid**, otherwise `false`.  
-	 * This function acts as a **type guard**, ensuring that
-	 * the validated data conforms to `GuardedCriteria<T>`.
+	 * @returns A boolean.
 	 */
 	validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>> {
 		const rejection = checker(this.managers, this.criteria, data);
@@ -64,17 +60,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 */
 	evaluate(data: unknown): SchemaEvaluateResult<T> {
 		const rejection = checker(this.managers, this.criteria, data);
-		if (rejection) {
-			return ({
-				rejection: new SchemaDataRejection({
-					code: rejection.code,
-					node: rejection.task.node,
-					nodePath: rejection.task.fullPath
-				}),
-				data: null
-			});
-		}
-
+		if (rejection) return ({ rejection, data: null });
 		return ({ rejection: null, data });
 	}
 }
@@ -102,14 +88,11 @@ const cardSchema = new Schema({
 		title: { type: "string", max: 128 },
 		description: { type: "string", max: 2048 },
 		is_public: { type: "boolean" },
-		sections: { 
+		sections: {
 			type: "array",
-			shape: [],
-			additional: {
-				item: {
-					type: "union",
-					union: [sectionTitleSchema.criteria, sectionTextSchema.criteria]
-				}
+			items: {
+				type: "union",
+				union: [sectionTitleSchema.criteria, sectionTextSchema.criteria]
 			}
 		}
 	}
@@ -133,32 +116,13 @@ const userSchema = new Schema({
 		avatar_url: { type: "string" },
 		cards: {
 			type: "array",
-			shape: [],
-			additional: {
-				item: cardSchema.criteria
-			}
+			items: cardSchema.criteria
 		}
 	}
 });
 
+userSchema.criteria.shape.cards.
 type User = SchemaInfer<typeof userSchema>;
-
-const sections = {
-	type: "object",
-	shape: {
-		test: { type: "string" },
-		test2: { type: "number" } 
-	},
-	optional: true,
-	record: {
-		min: 1,
-		max: 2,
-		keys: { type: "string" },
-		values: { type: "string" },
-	}
-	min: 0,
-	max: 3,
-}
 
 /*
 const function_variant_string = new Schema({
