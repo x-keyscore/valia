@@ -88,35 +88,6 @@ var objectHelpers = /*#__PURE__*/Object.freeze({
     getInternalTag: getInternalTag
 });
 
-function convertBase16ToBase64(input, base64, padding) {
-    const totalChunksLength = Math.floor(input.length / 6) * 6;
-    let output = "";
-    let i = 0;
-    while (i < totalChunksLength) {
-        const dec = parseInt(input.slice(i, i + 6), 16);
-        output += (base64[((dec >> 18) & 63)]
-            + base64[((dec >> 12) & 63)]
-            + base64[((dec >> 6) & 63)]
-            + base64[(dec & 63)]);
-        i += 6;
-    }
-    if (i < input.length) {
-        const restChunk = input.slice(i, i + 6);
-        // 143016576 = 00100 01000 01100 10000 10100 00000 = 4 8 12 16 20 0
-        const leftShift = (143016576 >> (restChunk.length * 5)) & 31;
-        const dec = parseInt(restChunk, 16) << leftShift;
-        output += base64[((dec >> 18) & 63)]
-            + base64[((dec >> 12) & 63)];
-        if (leftShift < 12)
-            output += base64[((dec >> 6) & 63)];
-        if (leftShift < 8)
-            output += base64[(dec & 63)];
-    }
-    while (padding && output.length % 4 !== 0) {
-        output += '=';
-    }
-    return (output);
-}
 function convertBase16ToBase32(input, base32, padding = true) {
     const totalChunksLength = Math.floor(input.length / 10) * 10;
     let output = "";
@@ -163,43 +134,32 @@ function convertBase16ToBase32(input, base32, padding = true) {
     }
     return (output);
 }
-function convertBase64ToBase16(input, base64) {
-    if (input.endsWith("="))
-        input = input.slice(0, input.indexOf("="));
-    const totalChunksLength = Math.floor(input.length / 4) * 4;
-    const base16 = "0123456789ABCDEF";
+function convertBase16ToBase64(input, base64, padding) {
+    const totalChunksLength = Math.floor(input.length / 6) * 6;
     let output = "";
     let i = 0;
     while (i < totalChunksLength) {
-        const dec = (base64.indexOf(input[i]) << 18)
-            | (base64.indexOf(input[i + 1]) << 12)
-            | (base64.indexOf(input[i + 2]) << 6)
-            | base64.indexOf(input[i + 3]);
-        output += base16[((dec >> 20) & 15)]
-            + base16[((dec >> 16) & 15)]
-            + base16[((dec >> 12) & 15)]
-            + base16[((dec >> 8) & 15)]
-            + base16[((dec >> 4) & 15)]
-            + base16[(dec & 15)];
-        i += 4;
+        const dec = parseInt(input.slice(i, i + 6), 16);
+        output += (base64[((dec >> 18) & 63)]
+            + base64[((dec >> 12) & 63)]
+            + base64[((dec >> 6) & 63)]
+            + base64[(dec & 63)]);
+        i += 6;
     }
     if (i < input.length) {
-        const rest = input.slice(i);
-        const restLength = rest.length;
-        const dec = ((base64.indexOf(rest[0]) << 18)
-            | (rest[1] ? base64.indexOf(rest[1]) << 12 : 0)
-            | (rest[2] ? base64.indexOf(rest[2]) << 6 : 0)
-            | (rest[3] ? base64.indexOf(rest[3]) : 0));
-        output += base16[((dec >> 20) & 15)]
-            + base16[((dec >> 16) & 15)];
-        if (restLength > 2) {
-            output += base16[((dec >> 12) & 15)]
-                + base16[((dec >> 8) & 15)];
-        }
-        if (restLength > 3) {
-            output += base16[((dec >> 4) & 15)]
-                + base16[(dec & 15)];
-        }
+        const restChunk = input.slice(i, i + 6);
+        // 143016576 = 00100 01000 01100 10000 10100 00000 = 4 8 12 16 20 0
+        const leftShift = (143016576 >> (restChunk.length * 5)) & 31;
+        const dec = parseInt(restChunk, 16) << leftShift;
+        output += base64[((dec >> 18) & 63)]
+            + base64[((dec >> 12) & 63)];
+        if (leftShift < 12)
+            output += base64[((dec >> 6) & 63)];
+        if (leftShift < 8)
+            output += base64[(dec & 63)];
+    }
+    while (padding && output.length % 4 !== 0) {
+        output += '=';
     }
     return (output);
 }
@@ -259,57 +219,107 @@ function convertBase32ToBase16(input, base32) {
     }
     return (output);
 }
-function base16ToBase64(input, to = "B64", padding = true) {
-    if (to === "B64") {
-        const base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        return (convertBase16ToBase64(input, base64, padding));
+function convertBase64ToBase16(input, base64) {
+    if (input.endsWith("="))
+        input = input.slice(0, input.indexOf("="));
+    const totalChunksLength = Math.floor(input.length / 4) * 4;
+    const base16 = "0123456789ABCDEF";
+    let output = "";
+    let i = 0;
+    while (i < totalChunksLength) {
+        const dec = (base64.indexOf(input[i]) << 18)
+            | (base64.indexOf(input[i + 1]) << 12)
+            | (base64.indexOf(input[i + 2]) << 6)
+            | base64.indexOf(input[i + 3]);
+        output += base16[((dec >> 20) & 15)]
+            + base16[((dec >> 16) & 15)]
+            + base16[((dec >> 12) & 15)]
+            + base16[((dec >> 8) & 15)]
+            + base16[((dec >> 4) & 15)]
+            + base16[(dec & 15)];
+        i += 4;
     }
-    else if (to === "B64URL") {
-        const base64Url = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-        return (convertBase16ToBase64(input, base64Url, padding));
+    if (i < input.length) {
+        const rest = input.slice(i);
+        const restLength = rest.length;
+        const dec = ((base64.indexOf(rest[0]) << 18)
+            | (rest[1] ? base64.indexOf(rest[1]) << 12 : 0)
+            | (rest[2] ? base64.indexOf(rest[2]) << 6 : 0)
+            | (rest[3] ? base64.indexOf(rest[3]) : 0));
+        output += base16[((dec >> 20) & 15)]
+            + base16[((dec >> 16) & 15)];
+        if (restLength > 2) {
+            output += base16[((dec >> 12) & 15)]
+                + base16[((dec >> 8) & 15)];
+        }
+        if (restLength > 3) {
+            output += base16[((dec >> 4) & 15)]
+                + base16[(dec & 15)];
+        }
     }
-    else {
-        throw new Issue("Parameters", "The base64 type of the parameter 'to' is unknown.");
-    }
+    return (output);
 }
-function base16ToBase32(input, to = "B16", padding = true) {
-    if (to === "B16") {
-        const base32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        return (convertBase16ToBase32(input, base32, padding));
+const base32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const base32Hex = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+const base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const base64Url = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+function base16ToBase32(str, to = "B32", padding = true) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
     }
-    else if (to === "B16HEX") {
-        const base32Hex = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-        return (convertBase16ToBase32(input, base32Hex, padding));
+    if (typeof to !== "string") {
+        throw new Error("The 'to' argument must be of type string.");
     }
-    else {
-        throw new Issue("Parameters", "The base32 type of the parameter 'to' is unknown.");
+    if (typeof padding !== "boolean") {
+        throw new Error("The 'string' argument must be of type boolean.");
     }
+    if (to === "B32")
+        return (convertBase16ToBase32(str, base32, padding));
+    if (to === "B32HEX")
+        return (convertBase16ToBase32(str, base32Hex, padding));
+    throw new Error("The 'to' argument must be a known string.");
 }
-function base64ToBase16(input, from = "B64") {
-    if (from === "B64") {
-        const base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        return (convertBase64ToBase16(input, base64));
+function base16ToBase64(str, to = "B64", padding = true) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
     }
-    else if (from === "B64URL") {
-        const base64Url = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-        return (convertBase64ToBase16(input, base64Url));
+    if (typeof to !== "string") {
+        throw new Error("The 'to' argument must be of type string.");
     }
-    else {
-        throw new Issue("Parameters", "The base64 type of the parameter 'from' is unknown.");
+    if (typeof padding !== "boolean") {
+        throw new Error("The 'string' argument must be of type boolean.");
     }
+    if (to === "B64")
+        return (convertBase16ToBase64(str, base64, padding));
+    if (to === "B64URL")
+        return (convertBase16ToBase64(str, base64Url, padding));
+    throw new Error("The 'to' argument must be a known string.");
 }
-function base32ToBase16(input, from = "B16") {
-    if (from === "B16") {
-        const base32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        return (convertBase32ToBase16(input, base32));
+function base32ToBase16(str, from = "B32") {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
     }
-    else if (from === "B16HEX") {
-        const base32Hex = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-        return (convertBase32ToBase16(input, base32Hex));
+    if (typeof from !== "string") {
+        throw new Error("The 'to' argument must be of type string.");
     }
-    else {
-        throw new Issue("Parameters", "The base32 type of the parameter 'from' is unknown.");
+    if (from === "B32")
+        return (convertBase32ToBase16(str, base32));
+    if (from === "B32HEX")
+        return (convertBase32ToBase16(str, base32Hex));
+    throw new Error("The 'from' argument must be a known string.");
+}
+function base64ToBase16(str, from = "B64") {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
     }
+    if (typeof from !== "string") {
+        throw new Error("The 'to' argument must be of type string.");
+    }
+    if (from === "B64")
+        return (convertBase64ToBase16(str, base64));
+    if (from === "B64URL")
+        return (convertBase64ToBase16(str, base64Url));
+    throw new Error("The 'from' argument must be a known string.");
 }
 
 var stringHelpers = /*#__PURE__*/Object.freeze({
@@ -379,16 +389,11 @@ var objectTesters = /*#__PURE__*/Object.freeze({
 });
 
 /**
- * Check if all characters of the string are in the ASCII table (%d0-%d127).
+ * Check if all characters in the string are part of the ASCII table.
  *
- * If you enable `onlyPrintable` valid characters will be limited to
- * printable characters from the ASCII table (%32-%d126).
- *
- * Empty returns `false`.
+ * An empty string will return `false`.
  */
 function isAscii(str, options) {
-    if (options?.onlyPrintable)
-        return (RegExp("^[\\x20-\\x7E]+$").test(str));
     return (RegExp("^[\\x00-\\x7F]+$").test(str));
 }
 
@@ -418,11 +423,27 @@ const extractUuidVersionRegex = new RegExp("^[0-9A-F]{8}-[0-9A-F]{4}-([1-7])[0-9
  *
  * @version 1.0.0
  */
-function isUuid(str, params) {
-    const extracted = extractUuidVersionRegex.exec(str);
-    if (!extracted || !extracted[1])
+function isUuid(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    if (options !== undefined) {
+        if (typeof options !== "object") {
+            throw new Error("The 'options' argument must be of type object.");
+        }
+        if (options?.version !== undefined) {
+            if (typeof options.version !== "number") {
+                throw new Error("The 'cidr' property of the 'options' argument must be of type number.");
+            }
+            if (options.version < 1 || options.version > 7) {
+                throw new Error("The 'cidr' property of the 'options' argument must be a number between 1 and 7.");
+            }
+        }
+    }
+    const execResult = extractUuidVersionRegex.exec(str);
+    if (!execResult || !execResult[1])
         return (false);
-    if (!params?.version || (extracted[1].codePointAt(0) - 48) === params?.version)
+    if (!options?.version || (execResult[1].codePointAt(0) - 48) === options?.version)
         return (true);
     return (false);
 }
@@ -444,14 +465,49 @@ function weakly(callback) {
         return (value);
     });
 }
+/**
+ * @see https://www.garykessler.net/library/file_sigs.html
+ * @see https://en.wikipedia.org/wiki/List_of_file_signatures
+ *
+const signatures = [
+    // Image
+    { ext: "png" as const, offset: 0, flags: ["89504E470D0A1A0A"]},
+    { ext: "jpg" as const, offset: 0, flags: ["FFD8FFE0"]},
+    { ext: "jp2" as const, offset: 0, flags: ["0000000C6A5020200D0A870A"]},
+    { ext: "gif" as const, offset: 0, flags: ["474946383761", "474946383961"]},
+    { ext: "webp" as const, offset: 0, flags: ["52494646????????57454250"]},
+    // Audio
+    { ext: "mp3" as const, offset: 0, flags: ["FFFB", "FFF3", "FFF2", "494433"]},
+    { ext: "mp4" as const, offset: 4, flags: ["6674797069736F6D", "667479704D534E56"]},
+    // 3D
+    { ext: "stl" as const, offset: 4, flags: ["736F6C6964"]}
+];
+
+export function hasFileSignature(hex: string, extensions: Array<(typeof signatures)[number]['ext']>) {
+    for (let i = 0; i < extensions.length; i++) {
+        const { offset, flags } = signatures.find(({ ext }) => ext === extensions[i])!;
+
+        for (let i = 0; i < flags.length; i++) {
+            const flag = flags[i];
+            let j = (flag.length - 1) + offset;
+
+            if (j >= hex.length) continue;
+            while (j >= 0) {
+                if (flag[j] !== "?" && hex[j] !== flag[j]) break;
+                j--;
+            }
+            if (j === 0) return (true);
+        }
+    }
+}*/
 
 /**
 # IPV4
 
 Composition :
     dec-octet = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 255
-    prefix    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
-    IPv4      = dec-octet 3("." dec-octet) ["/" prefix]
+    suffixe    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
+    IPv4      = dec-octet 3("." dec-octet) ["/" suffixe]
 
 # IPV6
 
@@ -461,13 +517,14 @@ Composition :
     IPv6-comp   = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]
     IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4
     IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4
-    prefix      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
-    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]
+    suffixe      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
+    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" suffixe]
 */
 const ipV4Seg = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])";
 const ipV4Pattern = `(?:${ipV4Seg}\\.){3}${ipV4Seg}`;
-const ipV4SimpleRegex = new RegExp(`^${ipV4Pattern}$`);
-const ipV4PrefixRegex = weakly(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV4Regex = new RegExp(`^${ipV4Pattern}$`);
+const ipV4WithCidrExpectedRegex = weakly(() => new RegExp(`^${ipV4Pattern}/(3[0-2]|[12]?[0-9])$`));
+const ipV4WithCidrAcceptedRegex = weakly(() => new RegExp(`^${ipV4Pattern}(?:/(3[0-2]|[12]?[0-9]))?$`));
 const ipV6Seg = "(?:[0-9a-fA-F]{1,4})";
 const ipV6Pattern = "(?:" +
     `(?:${ipV6Seg}:){7}(?:${ipV6Seg}|:)|` +
@@ -478,46 +535,98 @@ const ipV6Pattern = "(?:" +
     `(?:${ipV6Seg}:){2}(?:(?::${ipV6Seg}){0,3}:${ipV4Pattern}|(?::${ipV6Seg}){1,5}|:)|` +
     `(?:${ipV6Seg}:){1}(?:(?::${ipV6Seg}){0,4}:${ipV4Pattern}|(?::${ipV6Seg}){1,6}|:)|` +
     `(?::(?:(?::${ipV6Seg}){0,5}:${ipV4Pattern}|(?::${ipV6Seg}){1,7}|:)))`;
-const ipV6SimpleRegex = new RegExp(`^${ipV6Pattern}$`);
-const ipV6PrefixRegex = weakly(() => new RegExp(`^${ipV6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+const ipV6Regex = new RegExp(`^${ipV6Pattern}$`);
+const ipV6WithCidrExpectedRegex = weakly(() => new RegExp(`^${ipV6Pattern}/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$`));
+const ipV6WithCidrAcceptedRegex = weakly(() => new RegExp(`^${ipV6Pattern}(?:/(12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$`));
+function checkArguments(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    if (options !== undefined) {
+        if (typeof options !== "object") {
+            throw new Error("The 'options' argument must be of type object.");
+        }
+        if (options.cidr !== undefined && typeof options.cidr !== "string") {
+            throw new Error("The 'cidr' property of the 'options' argument must be of type string.");
+        }
+    }
+}
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-function isIp(str, params) {
-    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
-        return (true);
-    if (!params?.allowPrefix && ipV6SimpleRegex.test(str))
-        return (true);
-    else if (params?.allowPrefix && ipV6PrefixRegex().test(str))
-        return (true);
+function isIp(str, options) {
+    checkArguments(str, options);
+    if (options?.cidr === undefined || options.cidr === "reject") {
+        if (ipV4Regex.test(str))
+            return (true);
+        if (ipV6Regex.test(str))
+            return (true);
+    }
+    else if (options.cidr === "expect") {
+        if (ipV4WithCidrExpectedRegex().test(str))
+            return (true);
+        if (ipV6WithCidrExpectedRegex().test(str))
+            return (true);
+    }
+    else if (options.cidr === "accept") {
+        if (ipV4WithCidrAcceptedRegex().test(str))
+            return (true);
+        if (ipV6WithCidrAcceptedRegex().test(str))
+            return (true);
+    }
+    else {
+        throw new Error("The 'options.cidr' property must be a known string.");
+    }
     return (false);
 }
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-function isIpV4(str, params) {
-    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
-        return (true);
+function isIpV4(str, options) {
+    checkArguments(str, options);
+    if (options?.cidr === undefined || options.cidr === "reject") {
+        if (ipV4Regex.test(str))
+            return (true);
+    }
+    else if (options.cidr === "expect") {
+        if (ipV4WithCidrExpectedRegex().test(str))
+            return (true);
+    }
+    else if (options.cidr === "accept") {
+        if (ipV4WithCidrAcceptedRegex().test(str))
+            return (true);
+    }
+    else {
+        throw new Error("The 'options.cidr' property must be a known string.");
+    }
     return (false);
 }
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-function isIpV6(str, params) {
-    if (!params?.allowPrefix && ipV4SimpleRegex.test(str))
-        return (true);
-    else if (params?.allowPrefix && ipV4PrefixRegex().test(str))
-        return (true);
+function isIpV6(str, options) {
+    checkArguments(str, options);
+    if (options?.cidr === undefined || options.cidr === "reject") {
+        if (ipV6Regex.test(str))
+            return (true);
+    }
+    else if (options.cidr === "expect") {
+        if (ipV6WithCidrExpectedRegex().test(str))
+            return (true);
+    }
+    else if (options.cidr === "accept") {
+        if (ipV6WithCidrAcceptedRegex().test(str))
+            return (true);
+    }
+    else {
+        throw new Error("The 'options.cidr' property must be a known string.");
+    }
     return (false);
 }
 
@@ -538,6 +647,9 @@ const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Z
  * @version 1.0.0
  */
 function isDomain(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
     return (domainRegex.test(str));
 }
 
@@ -568,10 +680,10 @@ Links :
     https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.3
     https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
 */
-const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
-const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
-const dotLocalRegex = new RegExp(`^${dotStringPattern}$`);
-const dotOrQuoteLocalRegex = weakly(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const localDotPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
+const localQuotePattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
+const localDotRegex = new RegExp(`^${localDotPattern}$`);
+const localDotOrLocalQuoteRegex = weakly(() => new RegExp(`^(?:${localDotPattern}|${localQuotePattern})$`));
 const ipAddressRegex = weakly(() => new RegExp(`^\\[(?:IPv6:${ipV6Pattern}|${ipV4Pattern})\\]$`));
 const generalAddressRegex = weakly(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
 function parseEmail(str) {
@@ -606,15 +718,15 @@ function parseEmail(str) {
         domain: str.slice(domainStart, domainEnd)
     });
 }
-function isValidLocal(str, options) {
-    if (dotLocalRegex.test(str))
+function validateLocal(str, options) {
+    if (localDotRegex.test(str))
         return (true);
-    if (options?.allowQuotedString
-        && dotOrQuoteLocalRegex().test(str))
+    if (options?.allowLocalQuote
+        && localDotOrLocalQuoteRegex().test(str))
         return (true);
     return (false);
 }
-function isValidDomain(str, options) {
+function validateDomain(str, options) {
     if (isDomain(str))
         return (true);
     if (options?.allowIpAddress
@@ -631,14 +743,31 @@ function isValidDomain(str, options) {
  * @version 2.0.0
  */
 function isEmail(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    if (options !== undefined) {
+        if (typeof options !== "object") {
+            throw new Error("The 'options' argument must be of type object.");
+        }
+        if (options.allowLocalQuote !== undefined && typeof options.allowLocalQuote !== "boolean") {
+            throw new Error("The 'allowLocalQuote' property of the 'options' argument must be of type boolean.");
+        }
+        if (options.allowIpAddress !== undefined && typeof options.allowIpAddress !== "boolean") {
+            throw new Error("The 'allowIpAddress' property of the 'options' argument must be of type boolean.");
+        }
+        if (options.allowGeneralAddress !== undefined && typeof options.allowGeneralAddress !== "boolean") {
+            throw new Error("The 'allowGeneralAddress' property of the 'options' argument must be of type boolean.");
+        }
+    }
     const email = parseEmail(str);
     if (!email)
         return (false);
-    // CHECK LOCAL
-    if (!isValidLocal(email.local, options))
+    // VALIDATE LOCAL
+    if (!validateLocal(email.local, options))
         return (false);
-    // CHECK DOMAIN
-    if (!isValidDomain(email.domain, options))
+    // VALIDATE DOMAIN
+    if (!validateDomain(email.domain, options))
         return (false);
     // RFC 5321 4.5.3.1.2 : Length restriction
     if (!email.domain.length || email.domain.length > 255)
@@ -744,6 +873,20 @@ function parseDataUrl(str) {
  * @version 2.0.0
  */
 function isDataUrl(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    if (options !== undefined) {
+        if (typeof options !== "object") {
+            throw new Error("The 'options' argument must be of type object.");
+        }
+        if (options.type !== undefined && !isArray(options.type)) {
+            throw new Error("The 'type' property of the 'options' argument must be of type string.");
+        }
+        if (options.subtype !== undefined && !isArray(options.subtype)) {
+            throw new Error("The 'subtype' property of the 'options' argument must be of type string.");
+        }
+    }
     const dataUrl = parseDataUrl(str);
     if (!dataUrl)
         return (false);
@@ -769,7 +912,8 @@ function isDataUrl(str, options) {
         if (!valueRegex.test(parameter.value))
             return (false);
         // RFC 6838 4.3: Identical name restriction and case insensitive
-        if (dataUrl.parameters.some(({ name }, j) => j !== i && name.toLowerCase() === name.toLowerCase()))
+        const hasIdenticalName = dataUrl.parameters.some(({ name }, j) => j !== i && name.toLowerCase() === name.toLowerCase());
+        if (hasIdenticalName)
             return (false);
     }
     // CHECK DATA
@@ -796,26 +940,15 @@ const base64UrlRegex = weakly(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z
 /**
  * **Standard :** RFC 4648
  *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
  *
  * @version 1.0.0
  */
-function isBase64(str, options) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 4 == 0 && base64Regex.test(str));
-}
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
- *
- * @version 1.0.0
- */
-function isBase64Url(str, options) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 4 === 0 && base64UrlRegex().test(str));
+function isBase16(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    return (str.length % 2 === 0 && base16Regex.test(str));
 }
 /**
  * **Standard :** RFC 4648
@@ -825,8 +958,9 @@ function isBase64Url(str, options) {
  * @version 1.0.0
  */
 function isBase32(str, options) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
     return (str.length % 8 === 0 && base32Regex.test(str));
 }
 /**
@@ -837,21 +971,36 @@ function isBase32(str, options) {
  * @version 1.0.0
  */
 function isBase32Hex(str, options) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
     return (str.length % 8 === 0 && base32HexRegex().test(str));
 }
 /**
  * **Standard :** RFC 4648
  *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
  *
  * @version 1.0.0
  */
-function isBase16(str, options) {
-    if (typeof str !== "string")
-        new Issue("Parameters", "'str' must be of type string.");
-    return (str.length % 2 === 0 && base16Regex.test(str));
+function isBase64(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    return (str.length % 4 == 0 && base64Regex.test(str));
+}
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
+ *
+ * @version 1.0.0
+ */
+function isBase64Url(str, options) {
+    if (typeof str !== "string") {
+        throw new Error("The 'str' argument must be of type string.");
+    }
+    return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }
 
 var stringTesters$1 = /*#__PURE__*/Object.freeze({
@@ -1341,16 +1490,16 @@ const SymbolFormat = {
 const NumberFormat = {
     type: "number",
     exceptions: {
-        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
-        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
+        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type number.",
+        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type number.",
         MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property.",
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Number, Array or Plain Object.",
+        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type number, array or plain-object.",
         LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type Number.",
+        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type number.",
         LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must contain at least one key.",
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type String.",
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type Number.",
-        CUSTOM_PROPERTY_MALFORMED: "The 'custom' property must be of type Basic Function."
+        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type string.",
+        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type number.",
+        CUSTOM_PROPERTY_MALFORMED: "The 'custom' property must be of type basic-function."
     },
     mount(chunk, criteria) {
         const { min, max, literal, custom } = criteria;
@@ -1457,15 +1606,8 @@ const StringFormat = {
         if (min !== undefined && max !== undefined && min > max) {
             return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
         }
-        if (regex !== undefined) {
-            if (typeof regex === "string") {
-                Object.assign(criteria, {
-                    regex: new RegExp(regex)
-                });
-            }
-            else if (!(regex instanceof RegExp)) {
-                return ("REGEX_PROPERTY_MALFORMED");
-            }
+        if (regex !== undefined && !(regex instanceof RegExp)) {
+            return ("REGEX_PROPERTY_MALFORMED");
         }
         if (literal !== undefined) {
             let resolvedLiteral;
@@ -1521,10 +1663,12 @@ const StringFormat = {
                     if (typeof value !== "boolean" && !isPlainObject(value)) {
                         return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
                     }
-                    else if (value === false) {
+                    if (value === false)
                         continue;
-                    }
-                    resolvedConstraint.set(key, value);
+                    if (value === true)
+                        resolvedConstraint.set(key, undefined);
+                    else
+                        resolvedConstraint.set(key, value);
                 }
                 Object.assign(criteria, { resolvedConstraint });
             }

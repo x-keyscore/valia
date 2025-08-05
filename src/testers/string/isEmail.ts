@@ -37,18 +37,18 @@ interface EmailObject {
 
 interface EmailOptions {
 	/** **Default:** `false` */
-	allowQuotedString?: boolean;
+	allowLocalQuote?: boolean;
 	/** **Default:** `false` */
 	allowIpAddress?: boolean;
 	/** **Default:** `false` */
 	allowGeneralAddress?: boolean;
 }
 
-const dotStringPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
-const quotedStringPattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
+const localDotPattern = "(?:[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+(?:\\.[-!=?A-B\\x23-\\x27\\x2A-\\x2B\\x2F-\\x39\\x5E-\\x7E]+)*)";
+const localQuotePattern = "(?:\"(?:[\\x20-\\x21\\x23-\\x5B\\x5D-\\x7E]|\\\\[\\x20-\\x7E])*\")";
 
-const dotLocalRegex = new RegExp(`^${dotStringPattern}$`);
-const dotOrQuoteLocalRegex = weakly(() => new RegExp(`^(?:${dotStringPattern}|${quotedStringPattern})$`));
+const localDotRegex = new RegExp(`^${localDotPattern}$`);
+const localDotOrLocalQuoteRegex = weakly(() => new RegExp(`^(?:${localDotPattern}|${localQuotePattern})$`));
 
 const ipAddressRegex = weakly(() => new RegExp(`^\\[(?:IPv6:${ipV6Pattern}|${ipV4Pattern})\\]$`));
 const generalAddressRegex = weakly(() => new RegExp(`(?:[a-zA-Z0-9-]*[a-zA-Z0-9]+:[\\x21-\\x5A\\x5E-\\x7E]+)`));
@@ -84,16 +84,16 @@ function parseEmail(str: string): EmailObject | null {
 	});
 }
 
-function isValidLocal(str: string, options?: EmailOptions): boolean {
-	if (dotLocalRegex.test(str)) return (true);
+function validateLocal(str: string, options?: EmailOptions): boolean {
+	if (localDotRegex.test(str)) return (true);
 
-	if (options?.allowQuotedString
-		&& dotOrQuoteLocalRegex().test(str)) return (true);
+	if (options?.allowLocalQuote
+		&& localDotOrLocalQuoteRegex().test(str)) return (true);
 
 	return (false);
 }
 
-function isValidDomain(str: string, options?: EmailOptions): boolean {
+function validateDomain(str: string, options?: EmailOptions): boolean {
 	if (isDomain(str)) return (true);
 
 	if (options?.allowIpAddress
@@ -110,15 +110,33 @@ function isValidDomain(str: string, options?: EmailOptions): boolean {
  * @version 2.0.0
  */
 export function isEmail(str: string, options?: EmailOptions): boolean {
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+	if (options !== undefined) {
+		if (typeof options !== "object") {
+			throw new Error("The 'options' argument must be of type object.");
+		}
+		if (options.allowLocalQuote !== undefined && typeof options.allowLocalQuote !== "boolean") {
+			throw new Error("The 'allowLocalQuote' property of the 'options' argument must be of type boolean.");
+		}
+		if (options.allowIpAddress !== undefined && typeof options.allowIpAddress !== "boolean") {
+			throw new Error("The 'allowIpAddress' property of the 'options' argument must be of type boolean.");
+		}
+		if (options.allowGeneralAddress !== undefined && typeof options.allowGeneralAddress !== "boolean") {
+			throw new Error("The 'allowGeneralAddress' property of the 'options' argument must be of type boolean.");
+		}
+	}
+
 	const email = parseEmail(str);
 	if (!email) return (false);
 
-	// CHECK LOCAL
-	if (!isValidLocal(email.local, options)) return (false);
+	// VALIDATE LOCAL
+	if (!validateLocal(email.local, options)) return (false);
 
-	// CHECK DOMAIN
-	if (!isValidDomain(email.domain, options)) return (false);
-	
+	// VALIDATE DOMAIN
+	if (!validateDomain(email.domain, options)) return (false);
+
 	// RFC 5321 4.5.3.1.2 : Length restriction
 	if (!email.domain.length || email.domain.length > 255) return (false);
 

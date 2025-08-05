@@ -15,14 +15,13 @@ type SetableLiteral = string | string[] | Record<string | number, string>;
 export interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
 	min?: number;
 	max?: number;
-	regex?: string | RegExp;
+	regex?: RegExp;
 	literal?: SetableLiteral;
 	constraint?: SetableConstraint;
 	custom?: (value: string) => boolean;
 }
 
 export interface StringMountedCriteria {
-	regex?: RegExp;
 	resolvedLiteral?: Set<string>;
 	resolvedConstraint?: Map<string, object | undefined>;
 }

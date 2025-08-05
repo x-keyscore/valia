@@ -17,5 +17,9 @@ const domainRegex = new RegExp("^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Z
  * @version 1.0.0
  */
 export function isDomain(str: string, options?: undefined): boolean {
+    if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+
 	return (domainRegex.test(str));
 }

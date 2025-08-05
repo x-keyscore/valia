@@ -56,15 +56,8 @@ export const StringFormat: Format<
 		if (min !== undefined && max !== undefined && min > max) {
 			return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
 		}
-		if (regex !== undefined) {
-			if (typeof regex === "string") {
-				Object.assign(criteria, {
-					regex: new RegExp(regex)
-				});
-			}
-			else if (!(regex instanceof RegExp)) {
-				return ("REGEX_PROPERTY_MALFORMED");
-			}
+		if (regex !== undefined && !(regex instanceof RegExp)) {
+			return ("REGEX_PROPERTY_MALFORMED");
 		}
 		if (literal !== undefined) {
 			let resolvedLiteral;
@@ -124,11 +117,11 @@ export const StringFormat: Format<
 					const value = constraint[key as keyof SetableConstraint];
 					if (typeof value !== "boolean" && !isPlainObject(value)) {
 						return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
-					} else if (value === false) {
-						continue;
 					}
-
-					resolvedConstraint.set(key, value);
+					
+					if (value === false) continue;
+					if (value === true) resolvedConstraint.set(key, undefined);
+					else resolvedConstraint.set(key, value);
 				}
 
 				Object.assign(criteria, { resolvedConstraint });

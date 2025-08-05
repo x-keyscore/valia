@@ -1,4 +1,3 @@
-import { Issue } from "../../utils";
 import { weakly } from "../utils";
 
 const base16Regex = new RegExp("^(?:[A-F0-9]{2})*$");
@@ -12,25 +11,16 @@ const base64UrlRegex = weakly(() => new RegExp("^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z
 /**
  * **Standard :** RFC 4648
  * 
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
  * 
  * @version 1.0.0
  */
-export function isBase64(str: string, options?: undefined): boolean {
-	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
-	return (str.length % 4 == 0 && base64Regex.test(str));
-}
+export function isBase16(str: string, options?: undefined): boolean {
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
 
-/**
- * **Standard :** RFC 4648
- * 
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
- * 
- * @version 1.0.0
- */
-export function isBase64Url(str: string, options?: undefined): boolean {
-	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
-	return (str.length % 4 === 0 && base64UrlRegex().test(str));
+	return (str.length % 2 === 0 && base16Regex.test(str));
 }
 
 /**
@@ -41,7 +31,10 @@ export function isBase64Url(str: string, options?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase32(str: string, options?: undefined): boolean {
-	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+
 	return (str.length % 8 === 0 && base32Regex.test(str));
 }
 
@@ -53,18 +46,39 @@ export function isBase32(str: string, options?: undefined): boolean {
  * @version 1.0.0
  */
 export function isBase32Hex(str: string, options?: undefined): boolean {
-	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+
 	return (str.length % 8 === 0 && base32HexRegex().test(str));
 }
 
 /**
  * **Standard :** RFC 4648
  * 
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
  * 
  * @version 1.0.0
  */
-export function isBase16(str: string, options?: undefined): boolean {
-	if (typeof str !== "string") new Issue("Parameters", "'str' must be of type string.");
-	return (str.length % 2 === 0 && base16Regex.test(str));
+export function isBase64(str: string, options?: undefined): boolean {
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+
+	return (str.length % 4 == 0 && base64Regex.test(str));
+}
+
+/**
+ * **Standard :** RFC 4648
+ * 
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
+ * 
+ * @version 1.0.0
+ */
+export function isBase64Url(str: string, options?: undefined): boolean {
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+
+	return (str.length % 4 === 0 && base64UrlRegex().test(str));
 }

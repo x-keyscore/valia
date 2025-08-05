@@ -133,22 +133,15 @@ declare namespace objectTesters {
   };
 }
 
-interface AsciiOptions {
-    /** **Default:** `false` */
-    onlyPrintable?: boolean;
-}
 /**
- * Check if all characters of the string are in the ASCII table (%d0-%d127).
+ * Check if all characters in the string are part of the ASCII table.
  *
- * If you enable `onlyPrintable` valid characters will be limited to
- * printable characters from the ASCII table (%32-%d126).
- *
- * Empty returns `false`.
+ * An empty string will return `false`.
  */
-declare function isAscii(str: string, options?: AsciiOptions): boolean;
+declare function isAscii(str: string, options?: undefined): boolean;
 
-interface UuidParams {
-    /** **Default:** All versions are allowed */
+interface UuidOptions {
+    /** Specifies the allowed version number, between 1 and 7. */
     version?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 /**
@@ -156,11 +149,11 @@ interface UuidParams {
  *
  * @version 1.0.0
  */
-declare function isUuid(str: string, params?: UuidParams): boolean;
+declare function isUuid(str: string, options?: UuidOptions): boolean;
 
 interface EmailOptions {
     /** **Default:** `false` */
-    allowQuotedString?: boolean;
+    allowLocalQuote?: boolean;
     /** **Default:** `false` */
     allowIpAddress?: boolean;
     /** **Default:** `false` */
@@ -206,8 +199,8 @@ declare function isDataUrl(str: string, options?: DataUrlOptions): boolean;
 
 Composition :
     dec-octet = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 255
-    prefix    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
-    IPv4      = dec-octet 3("." dec-octet) ["/" prefix]
+    suffixe    = 1*2DIGIT ; Representing a decimal integer value in the range 0 through 32.
+    IPv4      = dec-octet 3("." dec-octet) ["/" suffixe]
 
 # IPV6
 
@@ -217,53 +210,47 @@ Composition :
     IPv6-comp   = [1*4HEXDIG *5(":" 1*4HEXDIG)] "::" [1*4HEXDIG *5(":" 1*4HEXDIG)]
     IPv6v4-full = 1*4HEXDIG 5(":" 1*4HEXDIG) ":" IPv4
     IPv6v4-comp = [1*4HEXDIG *3(":" 1*4HEXDIG)] "::" [1*4HEXDIG *3(":" 1*4HEXDIG) ":"] IPv4
-    prefix      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
-    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" prefix]
+    suffixe      = 1*3DIGIT ; Representing a decimal integer value in the range 0 through 128.
+    IPv6        = (IPv6-full / IPv6-comp / IPv6v4-full / IPv6v4-comp) ["/" suffixe]
 */
-interface IpParams {
+interface IpOptions {
     /**
-     * Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).
+     * Defines the expected behavior for a CIDR suffix.
+     * - `"reject"` : CIDR is rejected (ex: `"192.168.0.1"` true, `"192.168.0.1/24"` false)
+     * - `"accept"` : CIDR is accepted (ex: `"192.168.0.1"` true, `"192.168.0.1/24"` true)
+     * - `"expect"` : CIDR is expected (ex: `"192.168.0.1"` false, `"192.168.0.1/24"` true)
      *
-     *
-     * **Default:** `false`
+     * **Default:** `"reject"`
      */
-    allowPrefix?: boolean;
+    cidr?: "reject" | "accept" | "expect";
 }
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-declare function isIp(str: string, params?: IpParams): boolean;
+declare function isIp(str: string, options?: IpOptions): boolean;
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-declare function isIpV4(str: string, params?: IpParams): boolean;
+declare function isIpV4(str: string, options?: IpOptions): boolean;
 /**
  * **Standard:** No standard
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-declare function isIpV6(str: string, params?: IpParams): boolean;
+declare function isIpV6(str: string, options?: IpOptions): boolean;
 
 /**
  * **Standard :** RFC 4648
  *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
  *
  * @version 1.0.0
  */
-declare function isBase64(str: string, options?: undefined): boolean;
-/**
- * **Standard :** RFC 4648
- *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
- *
- * @version 1.0.0
- */
-declare function isBase64Url(str: string, options?: undefined): boolean;
+declare function isBase16(str: string, options?: undefined): boolean;
 /**
  * **Standard :** RFC 4648
  *
@@ -283,11 +270,19 @@ declare function isBase32Hex(str: string, options?: undefined): boolean;
 /**
  * **Standard :** RFC 4648
  *
- * @see https://datatracker.ietf.org/doc/html/rfc4648#section-8
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-4
  *
  * @version 1.0.0
  */
-declare function isBase16(str: string, options?: undefined): boolean;
+declare function isBase64(str: string, options?: undefined): boolean;
+/**
+ * **Standard :** RFC 4648
+ *
+ * @see https://datatracker.ietf.org/doc/html/rfc4648#section-5
+ *
+ * @version 1.0.0
+ */
+declare function isBase64Url(str: string, options?: undefined): boolean;
 
 declare const stringTesters_isAscii: typeof isAscii;
 declare const stringTesters_isBase16: typeof isBase16;
@@ -392,13 +387,12 @@ type SetableLiteral = string | string[] | Record<string | number, string>;
 interface StringSetableCriteria extends SetableCriteriaTemplate<"string"> {
     min?: number;
     max?: number;
-    regex?: string | RegExp;
+    regex?: RegExp;
     literal?: SetableLiteral;
     constraint?: SetableConstraint;
     custom?: (value: string) => boolean;
 }
 interface StringMountedCriteria {
-    regex?: RegExp;
     resolvedLiteral?: Set<string>;
     resolvedConstraint?: Map<string, object | undefined>;
 }
@@ -570,74 +564,7 @@ interface UnionDerivedCriteria<T extends UnionSetableCriteria> extends DerivedCr
 }
 type UnionExceptionCodes = "UNION_PROPERTY_REQUIRED" | "UNION_PROPERTY_MALFORMED" | "UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED" | "UNION_PROPERTY_ARRAY_ITEM_MALFORMED";
 
-declare const formatNatives: (Format<FunctionSetableCriteria, FunctionExceptionCodes, FunctionRejectionCodes, FunctionCustomMembers> | {
-    type: "boolean";
-    exceptions: {
-        LITERAL_PROPERTY_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: BooleanSetableCriteria): "LITERAL_PROPERTY_MALFORMED" | null;
-    check(chunk: CheckerChunk, criteria: Omit<BooleanSetableCriteria, never> & CommonMountedCriteria, value: unknown): BooleanRejectionCodes | null;
-} | {
-    type: "symbol";
-    exceptions: {
-        LITERAL_PROPERTY_MALFORMED: string;
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: SymbolSetableCriteria): SymbolExceptionCodes | null;
-    check(chunk: CheckerChunk, criteria: Omit<SymbolSetableCriteria, "resolvedLiteral"> & SymbolMountedCriteria & CommonMountedCriteria, value: unknown): SymbolRejectionCodes | null;
-} | {
-    type: "number";
-    exceptions: {
-        LITERAL_PROPERTY_MALFORMED: string;
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
-        MIN_PROPERTY_MALFORMED: string;
-        MAX_PROPERTY_MALFORMED: string;
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: string;
-        CUSTOM_PROPERTY_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: NumberSetableCriteria): NumberExceptionCodes | null;
-    check(chunk: CheckerChunk, criteria: Omit<NumberSetableCriteria, "resolvedLiteral"> & NumberMountedCriteria & CommonMountedCriteria, value: unknown): NumberRejectionCodes | null;
-} | {
-    type: "string";
-    exceptions: {
-        LITERAL_PROPERTY_MALFORMED: string;
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: string;
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: string;
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: string;
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: string;
-        MIN_PROPERTY_MALFORMED: string;
-        MAX_PROPERTY_MALFORMED: string;
-        CUSTOM_PROPERTY_MALFORMED: string;
-        MIN_MAX_PROPERTIES_MISCONFIGURED: string;
-        REGEX_PROPERTY_MALFORMED: string;
-        CONSTRAINT_PROPERTY_MALFORMED: string;
-        CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED: string;
-        CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED: string;
-        CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED: string;
-        CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: StringSetableCriteria): StringExceptionCodes | null;
-    check(chunk: CheckerChunk, criteria: Omit<StringSetableCriteria, keyof StringMountedCriteria> & StringMountedCriteria & CommonMountedCriteria, value: unknown): StringRejectionCodes | null;
-} | Format<SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes, SimpleCustomMembers> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectExceptionCodes, ObjectRejectionCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayExceptionCodes, ArrayRejectionCodes, ArrayCustomMembers> | {
-    type: "union";
-    exceptions: {
-        UNION_PROPERTY_REQUIRED: string;
-        UNION_PROPERTY_MALFORMED: string;
-        UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: string;
-        UNION_PROPERTY_ARRAY_ITEM_MALFORMED: string;
-    };
-    mount(chunk: MounterChunk, criteria: UnionSetableCriteria<keyof SetableCriteriaMap<any>>): UnionExceptionCodes | null;
-    check(chunk: CheckerChunk, criteria: Omit<UnionSetableCriteria<keyof SetableCriteriaMap<any>>, "union"> & UnionMountedCriteria<UnionSetableCriteria<keyof SetableCriteriaMap<any>>> & CommonMountedCriteria, value: unknown): string | null;
-})[];
+declare const formatNatives: (Format<FunctionSetableCriteria, FunctionExceptionCodes, FunctionRejectionCodes, FunctionCustomMembers> | Format<BooleanSetableCriteria, "LITERAL_PROPERTY_MALFORMED", BooleanRejectionCodes> | Format<SymbolSetableCriteria, SymbolExceptionCodes, SymbolRejectionCodes> | Format<NumberSetableCriteria, NumberExceptionCodes, NumberRejectionCodes> | Format<StringSetableCriteria, StringExceptionCodes, StringRejectionCodes> | Format<SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes, SimpleCustomMembers> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectExceptionCodes, ObjectRejectionCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayExceptionCodes, ArrayRejectionCodes, ArrayCustomMembers> | Format<UnionSetableCriteria<keyof SetableCriteriaMap<any>>, UnionExceptionCodes>)[];
 
 /**
  * Defines the criteria users must or can specify.
@@ -700,10 +627,11 @@ type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = T['nullable'
 /**
  * @template T Extended interface of `SettableCriteriaTemplate` that
  * defines the format criteria users must or can specify.
- * @template E Error codes you want to use in the format.
- * @template M Custom members you want to add to the format.
+ * @template E Except codes you want to use in the format.
+ * @template R Reject codes you want to use in the format.
+ * @template C Custom members you want to add to the format.
  */
-type Format<T extends SetableCriteria = SetableCriteria, E extends string = string, R extends string = string, C extends {} = {}> = {
+type Format<T extends SetableCriteria = SetableCriteria, E extends string = string, R extends string = string, C extends object = object> = {
     type: T['type'];
     exceptions: {
         [K in E]: string;
@@ -834,10 +762,10 @@ declare namespace objectHelpers {
   };
 }
 
-declare function base16ToBase64(input: string, to?: "B64" | "B64URL", padding?: boolean): string;
-declare function base16ToBase32(input: string, to?: "B16" | "B16HEX", padding?: boolean): string;
-declare function base64ToBase16(input: string, from?: "B64" | "B64URL"): string;
-declare function base32ToBase16(input: string, from?: "B16" | "B16HEX"): string;
+declare function base16ToBase32(str: string, to?: "B32" | "B32HEX", padding?: boolean): string;
+declare function base16ToBase64(str: string, to?: "B64" | "B64URL", padding?: boolean): string;
+declare function base32ToBase16(str: string, from?: "B32" | "B32HEX"): string;
+declare function base64ToBase16(str: string, from?: "B64" | "B64URL"): string;
 
 declare const stringHelpers_base16ToBase32: typeof base16ToBase32;
 declare const stringHelpers_base16ToBase64: typeof base16ToBase64;

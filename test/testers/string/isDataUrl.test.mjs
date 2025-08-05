@@ -5,6 +5,11 @@ import { isDataUrl } from "../../../dist/index.js";
 
 describe("\ntesters > string > isDataUrl", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isDataUrl(0), Error);
+			assert.throws(() => isDataUrl("", 0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isDataUrl(""), false);
 			assert.strictEqual(isDataUrl("data:"), false);
@@ -31,7 +36,11 @@ describe("\ntesters > string > isDataUrl", () => {
 		});
 	});
 
-	describe("'type' parameter", () => {
+	describe("'type' property of options", () => {
+		it("should throw on incorrect options", () => {
+			assert.throws(() => isDataUrl("data:text/plain,foo", { type: 0 }), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isDataUrl("data:text/plain,foo", { type: ["audio"] }), false);
 		});
@@ -41,7 +50,11 @@ describe("\ntesters > string > isDataUrl", () => {
 		});
 	});
 
-	describe("'subtype' parameter", () => {
+	describe("'subtype' property of options", () => {
+		it("should throw on incorrect options", () => {
+			assert.throws(() => isDataUrl("data:text/plain,foo", { subtype: 0 }), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isDataUrl("data:text/plain,foo", { subtype: ["mp4"] }), false);
 		});

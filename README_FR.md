@@ -1,4 +1,4 @@
-# Valia · [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
+# ![logo-valia-h64-v2](https://github.com/user-attachments/assets/ea937a53-9b80-43d7-93ac-81538d9526f8) · [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
 
 Bibliothèque de validation légère et moderne pour TypeScript et JavaScript.
 
@@ -6,9 +6,10 @@ Bibliothèque de validation légère et moderne pour TypeScript et JavaScript.
 
 💡 Pensée pour allier simplicité et puissance, elle propose des fonctionnalités avancées comme l’inférence de types, ainsi que des validateurs standards tels que **isEmail**, **isUuid** ou **isIp**.
 
-## Table of contents
+## Table des matières
+
 - [Schema](#schema)
-  - [Instance](#instance)
+  - [Instances](#instances)
   - [Formats](#formats)
   - [Exemples](#exemples)
 - [Testers](#testers)
@@ -51,13 +52,16 @@ if (user.validate(mock)) {
   console.log(mock.name, mock.role);
 }
 ```
-*Ici **SchemaInfer** est à titre d'exemple et n'est pas utile au bon fonctionnement du schéma.*
 
 <br/>
 
 # Schema
 
-## Instance
+## Instances
+
+### Schema
+
+`new Schema(criteria: SetableCriteria): Schema;`
 
 <ul>
   <li>
@@ -68,22 +72,71 @@ if (user.validate(mock)) {
   <li>
     <strong>validate(data)</strong>
     <br/>
-    Valide les données fournies par rapport au schéma et renvoie un boolean.
+    Valide les données fournies selon le schéma et retourne un booléen. Si elle renvoie <strong>true</strong>, TypeScript considère que les données sont du type défini par le schéma.
     <br/>
-    Cette fonction utilise la
-    <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates">prédiction de type</a>,
-    si elle renvoie <strong>true</strong> le type de la valeur passée en paramètre sera du type déduit de votre schéma.
+    <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates">En savoir plus sur la prédiction de types ↗</a>
   </li>
   <li>
     <strong>evaluate(data)</strong>
     <br/>
-    Valide les données fournies par rapport au schéma et renvoie un objet avec les propriétés suivantes :
+    Valide les données fournies selon le schéma et retourne un objet avec les propriétés suivantes :
     <ul>
       <li>
-        <strong>rejection</strong>: Instance de <strong>SchemaDataRejection</strong> si la valeur est rejetée sinon <strong>null</strong>.
+        <strong>rejection</strong>: Instance de <strong>SchemaDataRejection</strong> si les données sont rejetées sinon <strong>null</strong>.
       </li>
       <li>
-        <strong>data</strong>:Données passées en paramètre de la fonction si celles-ci sont acceptées sinon <strong>null</strong>.
+        <strong>data</strong>: Données passées en paramètre de la fonction si celles-ci sont acceptées sinon <strong>null</strong>.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+### SchemaException
+
+<ul>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code de rejet (e.g. <strong>"REGEXP_"</strong>, <strong>"REGEX_UNSATISFIED"</strong>).
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
+  </li>
+</ul>
+
+### SchemaNodeException
+
+<ul>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code de rejet du noeud de critères (e.g. <strong>"MIN_PROPERTY_MALFORMED"</strong>, <strong>"REGEX_PROPERTY_MALFORMED"</strong>).
+  </li>
+  <li>
+    <strong>label</strong>
+    <br/>
+    Label défini sur le noeud de critères ayant émis l'exception ou <strong>undefined</strong> si le label n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud  de critères ayant émis l'exception ou <strong>undefined</strong> si le message n'a pas été spécifié.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud de critères ayant émis l'exception.
+  </li>
+  <li>
+    <strong>nodePath</strong>
+    <ul>
+      <li>
+        <strong>explicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre des critères du schéma.
+      </li>
+      <li>
+        <strong>implicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre de données attendues par les critères du schema.
       </li>
     </ul>
   </li>
@@ -110,43 +163,7 @@ if (user.validate(mock)) {
   <li>
     <strong>node</strong>
     <br/>
-    Noeud de critères ayant émis le rejet.
-  </li>
-  <li>
-    <strong>nodePath</strong>
-    <ul>
-      <li>
-        <strong>explicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre des critères du schéma.
-      </li>
-      <li>
-        <strong>implicit</strong>: Tableau de segments représentant le chemin du noeud dans l'arbre de données attendues par les critères du schema.
-      </li>
-    </ul>
-  </li>
-</ul>
-
-### SchemaNodeException
-
-<ul>
-  <li>
-    <strong>code</strong>
-    <br/>
-    Code de rejet du noeud (e.g. <strong>"MIN_PROPERTY_MALFORMED"</strong>, <strong>"REGEX_PROPERTY_MALFORMED"</strong>).
-  </li>
-  <li>
-    <strong>label</strong>
-    <br/>
-    Label défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le label n'a pas été spécifié.
-  </li>
-  <li>
-    <strong>message</strong>
-    <br/>
-    Message défini sur le noeud ayant émis le rejet ou <strong>undefined</strong> si le message n'a pas été spécifié.
-  </li>
-  <li>
-    <strong>node</strong>
-    <br/>
-    Noeud de critères ayant émis le rejet.
+    Noeud ayant émis le rejet.
   </li>
   <li>
     <strong>nodePath</strong>
@@ -163,9 +180,11 @@ if (user.validate(mock)) {
 
 ## Formats
 
-[Number](#number) • [String](#string) • [Symbol](#symbol) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Simple](#simple) • [Union](#union)
+Les formats définissent les types de noeuds disponibles pour les critères d'un schéma.
+<br/>
+*L'ordre des propriétés décrites ici respecte l'ordre d'exécution.*
 
-*L'ordre des propriétés décrites respecte l'ordre d'exécution par le validateur*
+[Number](#number) • [String](#string) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Symbol](#symbol) • [Simple](#simple) • [Union](#union)
 
 ### Global
 
@@ -175,7 +194,7 @@ if (user.validate(mock)) {
   <li>
     <strong>label?</strong>
     <br/>
-    Une chaine de caratéres permetant d'idantifié le noeud, celle-ci vous sera retournée dans les instance de <strong>SchemaRejection</strong> et <strong>SchemaException</strong>.
+    Une chaine de caratéres permetant d'idantifié le noeud, celle-ci vous sera retournée dans les instance de <strong>SchemaDataRejection</strong> et <strong>SchemaNodeException</strong>.
   </li>
   <li>
     <strong>message?</strong>
@@ -220,7 +239,7 @@ if (user.validate(mock)) {
     </ul>
   </li>
   <li>
-    <strong>custom()?</strong>
+    <strong>custom(value)?</strong>
     <br/>
     Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
   </li>
@@ -242,7 +261,7 @@ const schema = new Schema({
 **Valide des nombres qui appartiennent à une plage spécifique**
 ```ts
 const schema = new Schema({
-  type: "string",
+  type: "number",
   min: 0,
   max: 10
 });
@@ -257,7 +276,7 @@ const schema = new Schema({
 **Validé un nombre spécifique**
 ```ts
 const schema = new Schema({
-  type: "string",
+  type: "number",
   literal: 141
 });
 
@@ -270,7 +289,7 @@ const schema = new Schema({
 **Validé des nombres spécifique avec un tableau**
 ```ts
 const schema = new Schema({
-  type: "string",
+  type: "number",
   literal: [141, 282]
 });
 
@@ -300,13 +319,13 @@ const schema = new Schema({
   <li>
     <strong>regex?</strong>
     <br/>
-    Une expression régulière pouvant être fournie sous forme d'objet (<strong>RegExp</strong>) ou sous forme de chaîne de caractères (<strong>string</strong>).
+    Une expression régulière fournie sous forme d'objet (<strong>RegExp</strong>).
   </li>
   <li>
     <strong>literal?</strong>
     <br/>
     <ul>
-      <li><strong>string</strong>: Restreint la valeur à une seul chaîne de caractères.</li>
+      <li><strong>string</strong>: Restreint la valeur à une seul chaîne de caractères valides.</li>
       <li><strong>array</strong>: Restreint la valeur avec un tableau où les items représentent les chaîne de caractères valides.</li>
       <li><strong>object</strong>: Restreint la valeur avec un objet où les valeurs représentent les chaîne de caractères valides.</li>
     </ul>
@@ -322,7 +341,7 @@ const schema = new Schema({
     La valeur sera considérée comme valide si au moins un testeur renvoie un résultat positif.
   </li>
   <li>
-    <strong>custom()?</strong>
+    <strong>custom(value)?</strong>
     <br/>
     Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
   </li>
@@ -433,97 +452,6 @@ const schema = new Schema({
 ❌ schema.validate("127.0.0.1");
 ```
 
-### Symbol
-
-#### **Propriétés :**
-
-<ul>
-  <li>
-    <strong>literal?</strong>
-    <br/>
-    <ul>
-      <li><strong>symbol</strong>: Restreint la valeur à un seul symbole valide.</li>
-      <li><strong>array</strong>: Restreint la valeur avec un tableau où les items représentent les symboles valides.</li>
-      <li><strong>object</strong>: Restreint la valeur avec un objet où les valeurs représentent les symboles valides.</li>
-    </ul>
-  </li>
-  <br/>
-  <li>
-    <strong>custom()?</strong>
-    <br/>
-    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
-  </li>
-</ul>
-
-#### **Exemples :**
-
-**Validé n'importe quel symbole**
-```ts
-const xSymbol = Symbol("x");
-const ySymbol = Symbol("y");
-
-const schema = new Schema({
-  type: "symbol"
-});
-
-✅ schema.validate(xSymbol);
-✅ schema.validate(ySymbol);
-```
-
-**Validé un symbole spécifique**
-```ts
-const xSymbol = Symbol("x");
-const ySymbol = Symbol("y");
-
-const schema = new Schema({
-  type: "symbol",
-  literal: xSymbol
-});
-
-✅ schema.validate(xSymbol);
-
-❌ schema.validate(ySymbol);
-```
-
-**Validé des symboles spécifiques avec un tableau**
-```ts
-const xSymbol = Symbol("x");
-const ySymbol = Symbol("y");
-const zSymbol = Symbol("z");
-
-const schema = new Schema({
-  type: "symbol",
-  literal: [xSymbol, ySymbol]
-});
-
-✅ schema.validate(xSymbol);
-✅ schema.validate(ySymbol);
-
-❌ schema.validate(zSymbol);
-```
-
-**Validé des symboles spécifiques avec un enum**
-```ts
-enum mySymbol {
-  X = Symbol("x"),
-  Y = Symbol("y"),
-};
-
-enum otherSymbol {
-  Z = Symbol("z")
-};
-
-const schema = new Schema({
-  type: "symbol",
-  literal: mySymbol
-});
-
-✅ schema.validate(mySymbol.X);
-✅ schema.validate(mySymbol.Y);
-
-❌ schema.validate(otherSymbol.Z);
-```
-
 
 ### Boolean
 
@@ -535,9 +463,8 @@ const schema = new Schema({
     <br/>
     Restreint la valeur à un seul état de booléen valide.
   </li>
-  <br/>
   <li>
-    <strong>custom()?</strong>
+    <strong>custom(value)?</strong>
     <br/>
     Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
   </li>
@@ -935,6 +862,99 @@ const schema = new Schema({
 ❌ schema.validate(["x", "x", "x"]);
 ```
 
+
+### Symbol
+
+#### **Propriétés :**
+
+<ul>
+  <li>
+    <strong>literal?</strong>
+    <br/>
+    <ul>
+      <li><strong>symbol</strong>: Restreint la valeur à un seul symbole valide.</li>
+      <li><strong>array</strong>: Restreint la valeur avec un tableau où les items représentent les symboles valides.</li>
+      <li><strong>object</strong>: Restreint la valeur avec un objet où les valeurs représentent les symboles valides.</li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>custom(value)?</strong>
+    <br/>
+    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
+  </li>
+</ul>
+
+#### **Exemples :**
+
+**Validé n'importe quel symbole**
+```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+
+const schema = new Schema({
+  type: "symbol"
+});
+
+✅ schema.validate(xSymbol);
+✅ schema.validate(ySymbol);
+```
+
+**Validé un symbole spécifique**
+```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+
+const schema = new Schema({
+  type: "symbol",
+  literal: xSymbol
+});
+
+✅ schema.validate(xSymbol);
+
+❌ schema.validate(ySymbol);
+```
+
+**Validé des symboles spécifiques avec un tableau**
+```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+const zSymbol = Symbol("z");
+
+const schema = new Schema({
+  type: "symbol",
+  literal: [xSymbol, ySymbol]
+});
+
+✅ schema.validate(xSymbol);
+✅ schema.validate(ySymbol);
+
+❌ schema.validate(zSymbol);
+```
+
+**Validé des symboles spécifiques avec un enum**
+```ts
+enum mySymbol {
+  X = Symbol("x"),
+  Y = Symbol("y"),
+};
+
+enum otherSymbol {
+  Z = Symbol("z")
+};
+
+const schema = new Schema({
+  type: "symbol",
+  literal: mySymbol
+});
+
+✅ schema.validate(mySymbol.X);
+✅ schema.validate(mySymbol.Y);
+
+❌ schema.validate(otherSymbol.Z);
+```
+
+
 ### Simple
 
 #### **Propriétés :**
@@ -1104,119 +1124,227 @@ const user = new Schema({
 
 # Testers
 
-### Object
+## Object
 
-|Function|Description|
-|--|--|
-|`isObject`                |Checks if it is an object|
-|`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`|
-|`isArray`                 |Checks if it is an array|
-|`isTypedArray`            |Checks if it is an typed array|
-|`isFunction`              |Checks if it is an function|
-|`isBasicFunction`         |Checks if it is an function and if it is not `async`, `generator` or `async generator`.|
-|`isAsyncFunction`         |Checks if it is an async function|
-|`isGeneratorFunction`     |Checks if it is an generator function|
-|`isAsyncGeneratorFunction`|Checks if it is an async generator function|
+#### `isObject(value): boolean`
+Vérifie si la valeur fournie est de type **object**.
 
-<br/>
+#### `isPlainObject(value): boolean`
+Vérifie si la valeur fournie est de type **object** et dont le prototype est soit **Object.prototype**, soit **null**.
+<br/>Par exemple les valeurs créées via le littérale **{}** ou via **Object.create(null)** font partie des valeurs acceptées.
 
-### String
+#### `isArray(value): boolean`
+Vérifie si la valeur fournie est de type **array**.
 
-|Function|Description|
-|--|--|
-|`isAscii`    |**Standard:** No standard|
-|`isIpV4`     |**Standard:** No standard|
-|`isIpV6`     |**Standard:** No standard|
-|`isIp`       |See **isIpV4** and **isIpV6**|
-|`isEmail`    |**Standard:** RFC 5321|
-|`isDomain`   |**Standard:** RFC 1035|
-|`isDataURL`  |**Standard:** RFC 2397|
-|`isUuid`     |**Standard:** RFC 9562|
-|`isBase16`   |**Standard:** RFC 4648|
-|`isBase32`   |**Standard:** RFC 4648|
-|`isBase32Hex`|**Standard:** RFC 4648|
-|`isBase64`   |**Standard:** RFC 4648|
-|`isBase64Url`|**Standard:** RFC 4648|
+#### `isTypedArray(value): boolean`
+Vérifie si la valeur fournie est de type **array** et si elle est une vue sur un **ArrayBuffer**, à l’exception des **DataView**.
+
+#### `isFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function**.
+
+#### `isBasicFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **async**, **generator** ou **async generator**.
+
+#### `isAsyncFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **generator** ou **async generator**.
+
+#### `isGeneratorFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **async** ou **async generator**.
+
+#### `isAsyncGeneratorFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **async** ou **generator**.
 
 <br/>
 
-```ts
-isAscii(str: string, params: AsciiParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`onlyPrintable?: boolean`||
+## String
 
-<br/>
+#### `isAscii(str): boolean`
+Vérifie si la chaîne fournie n'est composée que de caractères ASCII. 
 
-```ts
-isIp(str: string, params: IpParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`cidr?: boolean`|Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).|
+#### `isIpV4(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV4.
 
-<br/>
+#### `isIpV6(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV6.
 
-```ts
-isEmail(str: string, params: EmailParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
-|`allowIpAddress?: boolean`      |Allows an IPv4 or IPv6 address in place of the domain name.|
-|`allowGeneralAddress?: boolean`|Allows an general address in place of the domain name.|
+#### `isIp(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV4 ou une IPV6.
 
-<br/>
+**Options:**
+<ul>
+  <li>
+    <strong>cidr?</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Si <strong>true</strong>, rend obligatoire la présence d'un suffixe CIDR, sinon si <strong>false</strong> un suffixe n'est pas accepté.
+  </li>
+</ul>
 
-```ts
-isDataURL(str: string, params: DataUrlParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`type?: string`     |Specifies the type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
-|`subtype?: string[]`|Specifies the sub-type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
+#### `isEmail(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une adresse email.
 
-<br/>
+**Options:**
+<ul>
+  <li>
+    <strong>allowLocalQuotes?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la première partie (partie locale) de l'adresse email peut être formée à l'aide de guillemets. Par exemple, <strong>"Jean Dupont"@exemple.com</strong> sera considéré comme valide.
+  </li>
+  <li>
+    <strong>allowIpAddress?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la deuxième partie (partie domain) de l'adresse email peut être une adresse IP. Par exemple, <strong>foo@8.8.8.8</strong> sera considéré comme valide.
+  </li>
+  <li>
+    <strong>allowGeneralAddress?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la deuxième partie (partie domain) de l'adresse email peut être une adresse general. Par exemple, <strong>foo@8.8.8.8</strong> sera considéré comme valide.
+  </li>
+</ul>
 
-```ts
-isUuid(str: string, params?: UuidParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`version?: 1\|2\|3\|4\|5\|6\|7`|The version you wish to validate. By default, all versions are validated.|
+**Standards:** RFC 5321
+
+#### `isDomain(str): boolean`
+Vérifie si la chaîne fournie correspond un nom de domain.
+
+**Standards:** RFC 1035
+
+#### `isDataURL(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une **DataURL**.
+
+**Options:**
+<ul>
+  <li>
+    <strong>type?: string[]</strong>
+    <br/>
+    Spécifie un ou plusieurs types MIME autorisés.
+    <br/>
+    <a href="http://www.iana.org/assignments/media-types/">Liste des types MIME enregistrés par l'IANA ↗</a>
+  </li>
+  <li>
+    <strong>subtype?: string[]</strong>
+    <br/>
+    Spécifie un ou plusieurs sous-types MIME autorisés.
+    <br/>
+    <a href="http://www.iana.org/assignments/media-types/">Liste des types MIME enregistrés par l'IANA ↗</a>
+  </li>
+</ul>
+
+**Standards:** RFC 2397
+
+#### `isUuid(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à un **UUID** valide.
+
+**Options:**
+<ul>
+  <li>
+    <strong>version?: number</strong>
+    <br/>
+    Spécifie le numéro de version autorisé, compris entre 1 et 7.
+  </li>
+</ul>
+
+**Standards:** RFC 9562
+
+#### `isBase16(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base16** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase32(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base32** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase32Hex(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base32Hex** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase64(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base64** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase64Url(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base64Url** valide.
+
+**Standards:** RFC 4648
 
 <br/><br/>
 
 # Helpers
 
-### Object
+## Object
 
-|Function|Description|
-|--|--|
-|`getInternalTag`|Extracts the internal type tag of a value (e.g. `"Array"`, `"Date"`).|
-
+#### `getInternalTag(target): string`
+Retourne le tag interne de la cible. Par exemple pour une cible **async () => {}** le tag retourné est **"AsyncFunction"**.
 
 <br/>
 
-### String
+## String
 
-|Function|Description|
-|--|--|
-|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.|
-|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.|
-|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.|
-|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.|
+#### `base16ToBase32(str [, to, padding]): string`
+Convertie une chaîne en **base16** en une chaîne en **base32** ou **base32Hex**.
 
-```ts
-base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
+**Arguments:**
+<ul>
+  <li>
+    <strong>to?: "B32" | "B32HEX"</strong> — (Default: <strong>"B32"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être convertie.
+  </li>
+  <br/>
+  <li>
+    <strong>padding?: boolean</strong> — (Default: <strong>true</strong>)
+    <br/>
+    Spécifie si la chaîne doit être complétée par un remplissage si nécessaire.
+  </li>
+</ul>
 
-base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true): string;
+**Standards:** RFC 4648
 
-base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
+#### `base16ToBase64(str [, to, padding]): string`
+Convertie une chaîne en **base16** en une chaîne en **base64** ou **base64Url**.
 
-base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16"): string;
-```
-<br/><br/>
+**Arguments:**
+<ul>
+  <li>
+    <strong>to?: "B64" | "B64URL"</strong> — (Default: <strong>"B64"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être convertie.
+  </li>
+  <br/>
+  <li>
+    <strong>padding?: boolean</strong> — (Default: <strong>true</strong>)
+    <br/>
+    Spécifie si la chaîne doit être complétée par un remplissage si nécessaire.
+  </li>
+</ul>
 
-Developed with passion 🇫🇷
+**Standards:** RFC 4648
+
+#### `base32ToBase16(str [, from]): string`
+Convertie une chaîne en **base32** ou **base32Hex** en une chaîne en **base16**.
+
+**Arguments:**
+<ul>
+  <li>
+    <strong>from?: "B32" | "B32HEX"</strong> — (Default: <strong>"B32"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être fournie.
+  </li>
+</ul>
+
+**Standards:** RFC 4648
+
+#### `base64ToBase16(str [, from]): string`
+Convertie une chaîne en **base64** ou **base64Url** en une chaîne en **base16**.
+
+**Arguments:**
+<ul>
+  <li>
+    <strong>from?: "B64" | "B64URL"</strong> — (Default: <strong>"B64"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être fournie.
+  </li>
+</ul>

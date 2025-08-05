@@ -78,6 +78,88 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 		return ({ rejection: null, data });
 	}
 }
+
+const sectionTitleSchema = new Schema({
+	type: "object",
+	shape: {
+		type: { type: "string", literal: "title" },
+		size: { type: "number", min: 1, max: 5 },
+		title: { type: "string", max: 32 }
+	}
+});
+
+const sectionTextSchema = new Schema({
+	type: "object",
+	shape: {
+		type: { type: "string", literal: "text" },
+		text: { type: "string" }
+	}
+});
+
+const cardSchema = new Schema({
+	type: "object",
+	shape: {
+		title: { type: "string", max: 128 },
+		description: { type: "string", max: 2048 },
+		is_public: { type: "boolean" },
+		sections: { 
+			type: "array",
+			shape: [],
+			additional: {
+				item: {
+					type: "union",
+					union: [sectionTitleSchema.criteria, sectionTextSchema.criteria]
+				}
+			}
+		}
+	}
+});
+
+const userSchema = new Schema({
+	type: "object",
+	shape: {
+		email: {
+			type: "string",
+			constraint: {
+				isEmail: true
+			}
+		},
+		password: {
+			type: "string",
+			constraint: {
+				isAscii: true
+			}
+		},
+		avatar_url: { type: "string" },
+		cards: {
+			type: "array",
+			shape: [],
+			additional: {
+				item: cardSchema.criteria
+			}
+		}
+	}
+});
+
+type User = SchemaInfer<typeof userSchema>;
+
+const sections = {
+	type: "object",
+	shape: {
+		test: { type: "string" },
+		test2: { type: "number" } 
+	},
+	optional: true,
+	record: {
+		min: 1,
+		max: 2,
+		keys: { type: "string" },
+		values: { type: "string" },
+	}
+	min: 0,
+	max: 3,
+}
+
 /*
 const function_variant_string = new Schema({
 	type: "function",

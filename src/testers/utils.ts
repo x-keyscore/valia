@@ -22,7 +22,7 @@ export function weakly<O extends object>(callback: () => O): () => O {
 /**
  * @see https://www.garykessler.net/library/file_sigs.html
  * @see https://en.wikipedia.org/wiki/List_of_file_signatures
- */
+ *
 const signatures = [
 	// Image
 	{ ext: "png" as const, offset: 0, flags: ["89504E470D0A1A0A"]},
@@ -53,4 +53,4 @@ export function hasFileSignature(hex: string, extensions: Array<(typeof signatur
 			if (j === 0) return (true);
 		}
 	}
-}
+}*/

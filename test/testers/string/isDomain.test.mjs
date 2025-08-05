@@ -5,7 +5,11 @@ import { isDomain } from "../../../dist/index.js";
 
 describe("\ntesters > string > isDomain", () => {
     describe("Default", () => {
-         it("should invalidate incorrect values", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isDomain(0), Error);
+		});
+
+        it("should invalidate incorrect values", () => {
 			assert.strictEqual(isDomain(""), false);
 			assert.strictEqual(isDomain("-foo.bar"), false);
 			assert.strictEqual(isDomain("foo-.bar"), false);

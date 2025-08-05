@@ -18,6 +18,8 @@ Links :
     https://datatracker.ietf.org/doc/html/rfc2397#section-3
 */
 
+import { isArray } from "../object";
+
 interface DataUrlObject {
 	data: string;
 	type: string;
@@ -48,8 +50,6 @@ const valueRegex = new RegExp(`^(?:${paramTokenPattern}|${paramTokenQuotePattern
 const tokenRegex = new RegExp(`^[a-zA-Z0-9](?:[a-zA-Z0-9!#$&^/_.+-]{0,125}[a-zA-Z0-9!#$&^/_.-])?$`);
 
 const dataRegex = new RegExp(`^(?:[a-zA-Z0-9._~!$&'()*+,;=:@-]|%[a-zA-Z0-9]{2})*$`);
-
-
 
 function parseDataUrl(str: string): DataUrlObject | null {
 	const result: DataUrlObject = {
@@ -125,6 +125,21 @@ function parseDataUrl(str: string): DataUrlObject | null {
  * @version 2.0.0
  */
 export function isDataUrl(str: string, options?: DataUrlOptions): boolean {
+	if (typeof str !== "string") {
+		throw new Error("The 'str' argument must be of type string.");
+	}
+	if (options !== undefined) {
+        if (typeof options !== "object") {
+            throw new Error("The 'options' argument must be of type object.");
+        }
+        if (options.type !== undefined && !isArray(options.type)) {
+            throw new Error("The 'type' property of the 'options' argument must be of type string.");
+        }
+		 if (options.subtype !== undefined && !isArray(options.subtype)) {
+            throw new Error("The 'subtype' property of the 'options' argument must be of type string.");
+        }
+	}
+
 	const dataUrl = parseDataUrl(str);
 	if (!dataUrl) return (false);
 
@@ -148,8 +163,10 @@ export function isDataUrl(str: string, options?: DataUrlOptions): boolean {
 		if (!valueRegex.test(parameter.value)) return (false);
 
 		// RFC 6838 4.3: Identical name restriction and case insensitive
-		if (dataUrl.parameters.some(({ name }, j) =>
-			j !== i && name.toLowerCase() === name.toLowerCase())) return (false);
+		const hasIdenticalName = dataUrl.parameters.some(({ name }, j) =>
+			j !== i && name.toLowerCase() === name.toLowerCase()
+		);
+		if (hasIdenticalName) return (false);
 	}
 
 	// CHECK DATA
@@ -157,12 +174,14 @@ export function isDataUrl(str: string, options?: DataUrlOptions): boolean {
 
 	if (options?.type) {
 		const hasValidType = options.type.some(type => 
-			type.toLowerCase() === dataUrl.type.toLowerCase());
+			type.toLowerCase() === dataUrl.type.toLowerCase()
+		);
 		if (!hasValidType) return (false);
 	}
 	if (options?.subtype) {
 		const hasValidSubtype = options.subtype.some(subtype => 
-			subtype.toLowerCase() === dataUrl.subtype.toLowerCase());
+			subtype.toLowerCase() === dataUrl.subtype.toLowerCase()
+		);
 		if (!hasValidSubtype) return (false);
 	}
 

@@ -59,14 +59,9 @@ describe("\nschema > formats > string", () => {
 	});
 
 	describe("'regex' parameter", () => {
-		let string_regex_string, string_regex_regexp;
+		let string_regex_regexp;
 
 		before(() => {
-			string_regex_string = new Schema({
-				type: "string",
-				regex: "^#[a-fA-F0-9]{6}$"
-			});
-
 			string_regex_regexp = new Schema({
 				type: "string",
 				regex: /^#[a-fA-F0-9]{6}$/
@@ -74,14 +69,10 @@ describe("\nschema > formats > string", () => {
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(string_regex_string.validate("#0000000"), false);
-
 			assert.strictEqual(string_regex_regexp.validate("#0000000"), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(string_regex_string.validate("#000000"), true);
-
 			assert.strictEqual(string_regex_regexp.validate("#000000"), true);
 		});
 	});

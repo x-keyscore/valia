@@ -76,10 +76,10 @@ export {
 } from './helpers/object';
 
 export {
-	base16ToBase64,
 	base16ToBase32,
-	base64ToBase16,
-	base32ToBase16
+	base16ToBase64,
+	base32ToBase16,
+	base64ToBase16
 } from './helpers/string';
 
 export {

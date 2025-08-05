@@ -5,9 +5,24 @@ import { isIp } from "../../../dist/index.js";
 
 describe("\ntesters > string > isIp", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isIp(0), Error);
+			assert.throws(() => isIp("", 0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isIp(""), false);
-			assert.strictEqual(isIp("a"), false);
+			assert.strictEqual(isIp("x"), false);
+			assert.strictEqual(
+				isIp("::/0"),
+				false,
+				"should be invalid because 'cidr' property set on 'reject' by default"
+			);
+			assert.strictEqual(
+				isIp("0.0.0.0/0"),
+				false,
+				"should be invalid because 'cidr' property set on 'reject' by default"
+			);
 		});
 	});
 
@@ -49,17 +64,39 @@ describe("\ntesters > string > isIp", () => {
 		});
 	});
 
-	describe("'allowPrefix' parameter", () => {
+	describe("'cidr' property of options", () => {
+		it("should throw on incorrect options", () => {
+			assert.throws(() => isIp("", { cidr: 0 }), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(isIp("::/129", { allowPrefix: true }), false);
-			assert.strictEqual(isIp("0.0.0.0/33", { allowPrefix: true }), false);
+			assert.strictEqual(isIp("::/0", { cidr: "reject" }), false);
+			assert.strictEqual(isIp("::/128", { cidr: "reject" }), false);
+			assert.strictEqual(isIp("0.0.0.0/0", { cidr: "reject" }), false);
+			assert.strictEqual(isIp("0.0.0.0/32", { cidr: "reject" }), false);
+
+			assert.strictEqual(isIp("::/129", { cidr: "expect" }), false);
+			assert.strictEqual(isIp("0.0.0.0/33", { cidr: "expect" }), false);
+
+			assert.strictEqual(isIp("::/129", { cidr: "accept" }), false);
+			assert.strictEqual(isIp("0.0.0.0/33", { cidr: "accept" }), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(isIp("::/128", { allowPrefix: true }), true);
-			assert.strictEqual(isIp("::/0", { allowPrefix: true }), true);
-			assert.strictEqual(isIp("0.0.0.0/32", { allowPrefix: true }), true);
-			assert.strictEqual(isIp("0.0.0.0/0", { allowPrefix: true }), true);
+			assert.strictEqual(isIp("::", { cidr: "reject" }), true);
+			assert.strictEqual(isIp("0.0.0.0", { cidr: "reject" }), true);
+
+			assert.strictEqual(isIp("::/0", { cidr: "expect" }), true);
+			assert.strictEqual(isIp("::/128", { cidr: "expect" }), true);
+			assert.strictEqual(isIp("0.0.0.0/0", { cidr: "expect" }), true);
+			assert.strictEqual(isIp("0.0.0.0/32", { cidr: "expect" }), true);
+
+			assert.strictEqual(isIp("::", { cidr: "accept" }), true);
+			assert.strictEqual(isIp("0.0.0.0", { cidr: "accept" }), true);
+			assert.strictEqual(isIp("::/0", { cidr: "accept" }), true);
+			assert.strictEqual(isIp("::/128", { cidr: "accept" }), true);
+			assert.strictEqual(isIp("0.0.0.0/0", { cidr: "accept" }), true);
+			assert.strictEqual(isIp("0.0.0.0/32", { cidr: "accept" }), true);
 		});
 	});
 });

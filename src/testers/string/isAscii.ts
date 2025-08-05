@@ -1,17 +1,9 @@
-interface AsciiOptions {
-    /** **Default:** `false` */
-	onlyPrintable?: boolean;
-}
 
 /**
- * Check if all characters of the string are in the ASCII table (%d0-%d127).
+ * Check if all characters in the string are part of the ASCII table.
  * 
- * If you enable `onlyPrintable` valid characters will be limited to
- * printable characters from the ASCII table (%32-%d126).
- * 
- * Empty returns `false`.
+ * An empty string will return `false`.
  */
-export function isAscii(str: string, options?: AsciiOptions): boolean {
-    if (options?.onlyPrintable) return (RegExp("^[\\x20-\\x7E]+$").test(str))
+export function isAscii(str: string, options?: undefined): boolean {
     return (RegExp("^[\\x00-\\x7F]+$").test(str));
 }

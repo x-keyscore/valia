@@ -5,6 +5,10 @@ import { isBase16, isBase32, isBase32Hex, isBase64, isBase64Url } from "../../..
 
 describe("\ntesters > string > isBase16", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isBase16(0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase16("*"), false);
 			assert.strictEqual(isBase16("0"), false);
@@ -24,6 +28,10 @@ describe("\ntesters > string > isBase16", () => {
 
 describe("\ntesters > string > isBase32", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isBase32(0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase32("*"), false);
 			assert.strictEqual(isBase32("A"), false);
@@ -48,6 +56,10 @@ describe("\ntesters > string > isBase32", () => {
 
 describe("\ntesters > string > isBase32Hex", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isBase32Hex(0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase32Hex("*"), false);
 			assert.strictEqual(isBase32Hex("A"), false);
@@ -72,6 +84,10 @@ describe("\ntesters > string > isBase32Hex", () => {
 
 describe("\ntesters > string > isBase64", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isBase64(0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase64("*"), false);
 			assert.strictEqual(isBase64("A"), false);
@@ -97,6 +113,10 @@ describe("\ntesters > string > isBase64", () => {
 
 describe("\ntesters > string > isBase64Url", () => {
 	describe("Default", () => {
+		it("should throw on incorrect arguments", () => {
+			assert.throws(() => isBase64Url(0), Error);
+		});
+
 		it("should invalidate incorrect values", () => {
 			assert.strictEqual(isBase64Url("*"), false);
 			assert.strictEqual(isBase64Url("A"), false);

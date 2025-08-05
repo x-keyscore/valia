@@ -62,7 +62,7 @@ export interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
 	shape: MountedShape<T['shape']>;
 	nature:
 		unknown extends T['nature']
-			? "standard"
+			? "STANDARD"
 			: ObjectSetableCriteria['nature'] extends T['nature']
 				? NonNullable<ObjectSetableCriteria['nature']>
 				: T['nature'];
