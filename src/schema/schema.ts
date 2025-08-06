@@ -113,15 +113,15 @@ const userSchema = new Schema({
 				isAscii: true
 			}
 		},
-		avatar_url: { type: "string" },
 		cards: {
 			type: "array",
-			items: cardSchema.criteria
+			tuple: [{ type: "string" }],
+			items: { type: "simple", nature: "UNKNOWN" },
 		}
-	}
+	},
 });
 
-userSchema.criteria.shape.cards.
+userSchema.criteria.shape.cards
 type User = SchemaInfer<typeof userSchema>;
 
 /*

@@ -8,13 +8,21 @@ import type {
 } from "../types";
 
 /*
-nature?:
+nature?: string;
 min?: number;
 max?: number;
 keys?: SetableKeys<T>;
 values?: SetableValues<T>;
 struct?: SetableStruct<T>;
 optional?: string[] | boolean;
+additional?: boolean;
+*/
+
+/*
+min?: number;
+max?: number;
+items?: SetableItems<T>;
+tuple?: SetableTuple<T>;
 additional?: boolean;
 */
 
@@ -29,23 +37,7 @@ export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> exten
 	max?: number;
 	items?: SetableItems<T>;
 	tuple?: SetableTuple<T>;
-	additional?: boolean;
 }
-
-/*
-interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
-	min?: number;
-	max?: number;
-	item:
-		unknown extends T['item']
-			? undefined
-			: SetableAdditionalOptions['item'] extends T['item']
-				? MountedCriteria<SetableItem> | undefined
-				: T['item'] extends SetableItem
-					? MountedCriteria<T['item']>
-					: T['item'];
-}
-*/
 
 type MountedTuple<T extends SetableTuple> =
 	T extends infer U

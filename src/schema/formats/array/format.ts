@@ -10,20 +10,18 @@ export const ArrayFormat: Format<
 > = {
 	type: "array",
 	exceptions: {
-		SHAPE_PROPERTY_REQUIRED:
-            "The 'shape' property is required.",
-        SHAPE_PROPERTY_MALFORMED:
-			"The 'shape' property must be of type Array.",
-		SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED:
-            "The array items of the 'shape' property must be of type Plain Object or Array.",
+        TUPLE_PROPERTY_MALFORMED:
+			"The 'tuple' property must be of type array.",
+		TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED:
+            "The array items of the 'tuple' property must be of type plain-object or array.",
 		ADDITIONAL_PROPERTY_MALFORMED:
-			"The 'additional' property must be of type Boolean or a Plain Object.",
+			"The 'additional' property must be of type Boolean or a plain-object.",
 		ADDITIONAL__ITEM_PROPERTY_MALFORMED:
-			"The 'additional.item' property, must be a criteria node Object.",
+			"The 'additional.item' property, must be a criteria node object.",
 		ADDITIONAL__MIN_PROPERTY_MALFORMED:
-			"The 'additional.min' property, must be of type Number.",
+			"The 'additional.min' property, must be of type number.",
 		ADDITIONAL__MAX_PROPERTY_MALFORMED:
-			"The 'additional.max' property, must be of type Number.",
+			"The 'additional.max' property, must be of type number.",
 		ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
 			"The 'additional.min' property cannot be greater than 'additional.max' property."
 	},
@@ -31,17 +29,15 @@ export const ArrayFormat: Format<
 		return (isArray(obj));
 	},
 	mount(chunk, criteria) {
-		const { shape, additional } = criteria;
-
-		if (!("shape" in criteria)) {
-			return ("SHAPE_PROPERTY_REQUIRED");
-		}
-		if (!isArray(shape)) {
-			return ("SHAPE_PROPERTY_MALFORMED");
-		}
-		for (const item of shape) {
-			if (!isPlainObject(item) && !isArray(item)) {
-				return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
+		const { tuple, items } = criteria;
+		if (tuple !== undefined) {
+			if (!isArray(tuple)) {
+				return ("TUPLE_PROPERTY_MALFORMED");
+			}
+			for (const item of tuple) {
+				if (!isPlainObject(item) && !isArray(item)) {
+					return ("TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED");
+				}
 			}
 		}
 		if (additional !== undefined) {
