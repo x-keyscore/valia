@@ -180,11 +180,11 @@ if (user.validate(mock)) {
 
 ## Formats
 
+[Number](#number) • [String](#string) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Symbol](#symbol) • [Simple](#simple) • [Union](#union)
+
 Les formats définissent les types de noeuds disponibles pour les critères d'un schéma.
 <br/>
 *L'ordre des propriétés décrites ici respecte l'ordre d'exécution.*
-
-[Number](#number) • [String](#string) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Symbol](#symbol) • [Simple](#simple) • [Union](#union)
 
 ### Global
 

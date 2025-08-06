@@ -116,7 +116,7 @@ const userSchema = new Schema({
 		cards: {
 			type: "array",
 			tuple: [{ type: "string" }],
-			items: { type: "simple", nature: "UNKNOWN" },
+			items: { type: "unknown" },
 		}
 	},
 });

@@ -1,37 +1,31 @@
-import type { SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes, SimpleCustomMembers } from "./types";
+import type { SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes } from "./types";
 import type { Format } from "../types";
 
 export const SimpleFormat: Format<
 	SimpleSetableCriteria,
 	SimpleExceptionCodes,
-	SimpleRejectionCodes,
-	SimpleCustomMembers
+	SimpleRejectionCodes
 > = {
 	type: "simple",
 	exceptions: {
-		NATURE_PROPERTY_REQUIRED:
-            "The 'nature' property must be defined.",
-        NATURE_PROPERTY_MALFORMED:
-            "The 'nature' property must be of type String.",
-		NATURE_PROPERTY_STRING_MISCONFIGURED:
-            "The 'nature' property must be a known string."
+		SIMPLE_PROPERTY_REQUIRED:
+            "The 'simple' property must be defined.",
+        SIMPLE_PROPERTY_MALFORMED:
+            "The 'simple' property must be of type String.",
+		SIMPLE_PROPERTY_STRING_MISCONFIGURED:
+            "The 'simple' property must be a known string."
 	},
-	natureBitflags: {
-		UNKNOWN:	1 << 0,
-		NULLISH:	1 << 1,
-		NULL:		1 << 2,
-		UNDEFINED:	1 << 3
-	},
+	flags: ["NULLISH", "NULL", "UNDEFINED"],
 	mount(chunk, criteria) {
-		const { nature } = criteria;
+		const { simple } = criteria;
 
-		if (!("nature" in criteria)) {
+		if (!("simple" in criteria)) {
 			return ("NATURE_PROPERTY_REQUIRED");
 		}
-		if (typeof nature !== "string") {
+		if (typeof simple !== "string") {
 			return ("NATURE_PROPERTY_MALFORMED");
 		}
-		if (!(nature in this.natureBitflags)) {
+		if (!(simple in this.natureBitflags)) {
 			return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
 		}
 
