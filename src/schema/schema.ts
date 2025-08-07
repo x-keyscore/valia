@@ -78,7 +78,7 @@ const sectionTextSchema = new Schema({
 	type: "object",
 	shape: {
 		type: { type: "string", literal: "text" },
-		text: { type: "unknown" }
+		text: { type: "string" }
 	}
 });
 
@@ -115,12 +115,12 @@ const userSchema = new Schema({
 		},
 		cards: {
 			type: "array",
-			items: cardSchema.criteria
+			items: { type: "number" },
+			tuple: [{ type: "string" }]
 		}
 	},
 });
 
-userSchema.criteria.shape.cards
 type User = SchemaInfer<typeof userSchema>;
 
 /*

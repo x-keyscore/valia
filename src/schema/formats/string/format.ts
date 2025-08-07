@@ -12,15 +12,15 @@ export const StringFormat: Format<
 	type: "string",
 	exceptions: {
 		MIN_PROPERTY_MALFORMED:
-			"The 'min' property must be of type Number.",
+			"The 'min' property must be of type number.",
 		MAX_PROPERTY_MALFORMED:
-			"The 'max' property must be of type Number.",
+			"The 'max' property must be of type number.",
 		MIN_MAX_PROPERTIES_MISCONFIGURED:
 			"The 'min' property cannot be greater than 'max' property.",
 		REGEX_PROPERTY_MALFORMED:
-			"The 'regex' property must be of type String or RegExp Object.",
+			"The 'regex' property must be of type String or RegExp object.",
 		LITERAL_PROPERTY_MALFORMED:
-			"The 'literal' property must be of type String, Array or Plain Object.",
+			"The 'literal' property must be of type string, array or plain-object.",
 		LITERAL_PROPERTY_ARRAY_MISCONFIGURED:
 			"The array of the 'literal' property must contain at least one item.",
 		LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED:
@@ -28,21 +28,21 @@ export const StringFormat: Format<
 		LITERAL_PROPERTY_OBJECT_MISCONFIGURED:
 			"The object of the 'literal' property must contain at least one key.",
 		LITERAL_PROPERTY_OBJECT_KEY_MALFORMED:
-			"The object keys of the 'literal' property must be of type String.",
+			"The object keys of the 'literal' property must be of type string.",
 		LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED:
-			"The object values of the 'literal' property must be of type String.",
+			"The object values of the 'literal' property must be of type string.",
 		CONSTRAINT_PROPERTY_MALFORMED:
 			"The 'constraint' property must be of type Plain Object.",
 		CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED:
 			"The object of the 'constraint' property must contain at least one key.",
 		CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED:
-			"The object keys of the 'constraint' property must be of type String.",
+			"The object keys of the 'constraint' property must be of type string.",
 		CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED:
 			"The object keys of the 'constraint' property must be a known string.",
 		CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED:
-			"The object values of the 'constraint' property must be of type True or Plain Object.",
+			"The object values of the 'constraint' property must be of type true or plain-object.",
 		CUSTOM_PROPERTY_MALFORMED:
-			"The 'custom' property must be of type Basic Function."
+			"The 'custom' property must be of type basic-function."
 	},
 	mount(chunk, criteria) {
 		const { min, max, regex, literal, constraint, custom } = criteria;

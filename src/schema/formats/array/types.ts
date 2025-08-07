@@ -32,9 +32,9 @@ export type SetableTuple<T extends FormatTypes = FormatTypes> = [
 
 export interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
 	min?: number;
-	max?: number;
-	items?: SetableItems<T>;
+	max?: number;		
 	tuple?: SetableTuple<T>;
+	items?: SetableItems<T> | boolean;
 }
 
 type MountedTuple<T extends SetableTuple> =
@@ -52,7 +52,7 @@ type MountedTuple<T extends SetableTuple> =
 export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
 	items:
 		unknown extends T['items']
-			? undefined
+			? false
 			: ArraySetableCriteria['items'] extends T['items']
 				? MountedCriteria<SetableItems> | undefined
 				: T['items'] extends SetableItems
@@ -69,16 +69,14 @@ export interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
 }
 
 type GuardedDynamic<T extends ArraySetableCriteria['items']> =
-	[T] extends [ArraySetableCriteria['items']]
-		? T extends SetableItems
-			? GuardedCriteria<T>[]
-			: []
-		: [T] extends [true]
+	T extends SetableCriteria
+		? GuardedCriteria<T>[]
+		: T extends true
 			? unknown[]
 			: [];
 
 type GuardedStatic<T extends ArraySetableCriteria['tuple']> =
-	T extends any[]
+	T extends SetableCriteria[]
 		? {
 			[I in keyof T]:
 				T[I] extends SetableCriteria
@@ -100,46 +98,20 @@ type ArrayGuardedCriteria<T extends ArraySetableCriteria> =
 			: never
 		: never;
 
-/*
-	undefined extends T['tuple']
-		? undefined extends T['items']
-			? [...unknown[]]
-			: GuardedDynamic<T['items']> extends infer U
-				? U extends any[]
-					? [...U]
-					: never
-				: never
-		: undefined extends T['items']
-			? GuardedStatic<T['tuple']> extends infer U
-				? U extends any[]
-					? [...U]
-					: never
-				: never
-			: GuardedStatic<T['tuple']> extends infer U
-				? GuardedDynamic<T['items']> extends infer V
-					? U extends any[]
-						? V extends any[]
-							? [...U, ...V]
-							: never
-						: never
-					: never
-				: never;
-*/
-
 export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends DerivedCriteriaTemplate<
 	ArrayMountedCriteria<T>,
 	ArrayGuardedCriteria<T>
 > {}
 
 export type ArrayExceptionCodes =
-	| "TUPLE_PROPERTY_REQUIRED"
+	| "MIN_PROPERTY_MALFORMED"
+	| "MAX_PROPERTY_MALFORMED"
+	| "MAX_MIN_PROPERTIES_MISCONFIGURED"
 	| "TUPLE_PROPERTY_MALFORMED"
+	| "TUPLE_MIN_PROPERTIES_MISCONFIGURED"
 	| "TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED"
-    | "ADDITIONAL_PROPERTY_MALFORMED"
-	| "ADDITIONAL__ITEM_PROPERTY_MALFORMED"
-	| "ADDITIONAL__MIN_PROPERTY_MALFORMED"
-	| "ADDITIONAL__MAX_PROPERTY_MALFORMED"
-	| "ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
+	
+    | "ITEMS_PROPERTY_MALFORMED";
 
 export type ArrayRejectionCodes =
 	| "TYPE_ARRAY_UNSATISFIED"
@@ -149,5 +121,5 @@ export type ArrayRejectionCodes =
 	| "ADDITIONAL_MAX_UNSATISFIED";
 
 export interface ArrayCustomMembers {
-	isShorthandShape(obj: object): obj is SetableTuple;
+	isShorthandTuple(obj: object): obj is SetableTuple;
 }

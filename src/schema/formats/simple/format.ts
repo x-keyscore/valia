@@ -12,11 +12,11 @@ export const SimpleFormat: Format<
 		SIMPLE_PROPERTY_REQUIRED:
             "The 'simple' property must be defined.",
         SIMPLE_PROPERTY_MALFORMED:
-            "The 'simple' property must be of type String.",
+            "The 'simple' property must be of type string.",
 		SIMPLE_PROPERTY_STRING_MISCONFIGURED:
             "The 'simple' property must be a known string."
 	},
-	flags: ["NULL", "UNDEFINED", "NULLISH"],
+	simples: ["NULL", "UNDEFINED", "NULLISH"],
 	mount(chunk, criteria) {
 		const { simple } = criteria;
 
@@ -26,7 +26,7 @@ export const SimpleFormat: Format<
 		if (typeof simple !== "string") {
 			return ("SIMPLE_PROPERTY_MALFORMED");
 		}
-		if (!this.flags.includes(simple)) {
+		if (!this.simples.includes(simple)) {
 			return ("SIMPLE_PROPERTY_STRING_MISCONFIGURED");
 		}
 

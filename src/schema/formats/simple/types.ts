@@ -26,5 +26,5 @@ export type SimpleRejectionCodes =
 	| "SIMPLE_UNDEFINED_UNSATISFIED";
 
 export interface SimpleCustomMembers {
-	flags: (keyof SimpleMap)[];
+	simples: (keyof SimpleMap)[];
 }
