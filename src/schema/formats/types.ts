@@ -1,6 +1,7 @@
-import type { UndefinedSetableCriteria, UnknownSetableCriteria, NullSetableCriteria } from "./simple/types";
 import type { FunctionSetableCriteria, FunctionDerivedCriteria } from "./function/types";
 import type { BooleanSetableCriteria, BooleanDerivedCriteria } from "./boolean/types";
+import type { UnknownSetableCriteria, UnknownDerivedCriteria } from "./unknown/types";
+import type { SimpleSetableCriteria, SimpleDerivedCriteria } from "./simple/types";
 import type { SymbolSetableCriteria, SymbolDerivedCriteria } from "./symbol/types";
 import type { NumberSetableCriteria, NumberDerivedCriteria } from "./number/types";
 import type { StringSetableCriteria, StringDerivedCriteria } from "./string/types";
@@ -28,15 +29,14 @@ export interface SetableCriteriaTemplate<T extends string> {
 export interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
 	function: FunctionSetableCriteria;
 	boolean: BooleanSetableCriteria;
+	unknown: UnknownSetableCriteria;
 	symbol: SymbolSetableCriteria;
 	number: NumberSetableCriteria;
 	string: StringSetableCriteria;
+	simple: SimpleSetableCriteria;
 	object: ObjectSetableCriteria<T>;
 	array: ArraySetableCriteria<T>;
 	union: UnionSetableCriteria<T>;
-	undefined: UndefinedSetableCriteria;
-	unknown: UnknownSetableCriteria;
-	null: NullSetableCriteria;
 }
 
 export type FormatTypes = keyof SetableCriteriaMap;
@@ -59,16 +59,15 @@ export interface DerivedCriteriaTemplate<Mounted, Guarded> {
 
 export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria> {
 	function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
-	boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
 	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
 	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never;
 	string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
+	simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;
 	object: T extends ObjectSetableCriteria ? ObjectDerivedCriteria<T> : never;
 	array: T extends ArraySetableCriteria ? ArrayDerivedCriteria<T> : never;
 	union: T extends UnionSetableCriteria ? UnionDerivedCriteria<T> : never;
-	undefined: DerivedCriteriaTemplate<{}, undefined>;
-	unknown: DerivedCriteriaTemplate<{}, unknown>;
-	null: DerivedCriteriaTemplate<{}, null>;
+	boolean: BooleanDerivedCriteria;
+	unknown: UnknownDerivedCriteria;
 }
 
 // SETABLE CRITERIA

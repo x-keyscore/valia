@@ -1,10 +1,11 @@
-import type { SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes } from "./types";
+import type { SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes, SimpleCustomMembers } from "./types";
 import type { Format } from "../types";
 
 export const SimpleFormat: Format<
 	SimpleSetableCriteria,
 	SimpleExceptionCodes,
-	SimpleRejectionCodes
+	SimpleRejectionCodes,
+	SimpleCustomMembers
 > = {
 	type: "simple",
 	exceptions: {
@@ -15,40 +16,33 @@ export const SimpleFormat: Format<
 		SIMPLE_PROPERTY_STRING_MISCONFIGURED:
             "The 'simple' property must be a known string."
 	},
-	flags: ["NULLISH", "NULL", "UNDEFINED"],
+	flags: ["NULL", "UNDEFINED", "NULLISH"],
 	mount(chunk, criteria) {
 		const { simple } = criteria;
 
 		if (!("simple" in criteria)) {
-			return ("NATURE_PROPERTY_REQUIRED");
+			return ("SIMPLE_PROPERTY_REQUIRED");
 		}
 		if (typeof simple !== "string") {
-			return ("NATURE_PROPERTY_MALFORMED");
+			return ("SIMPLE_PROPERTY_MALFORMED");
 		}
-		if (!(simple in this.natureBitflags)) {
-			return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
+		if (!this.flags.includes(simple)) {
+			return ("SIMPLE_PROPERTY_STRING_MISCONFIGURED");
 		}
-
-		Object.assign(criteria, {
-			natureBitcode: this.natureBitflags[nature]
-		});
 
 		return (null);
 	},
 	check(chunk, criteria, value) {
-		const { natureBitcode } = criteria, { natureBitflags } = this;
-	
-		if (natureBitcode & natureBitflags.UNKNOWN) {
-			return (null);
+		const { simple } = criteria;
+
+		if (simple === "NULLISH" && value != null) {
+			return ("SIMPLE_NULLISH_UNSATISFIED");
 		}
-		if (natureBitcode & natureBitflags.NULLISH && value != null) {
-			return ("NATURE_NULLISH_UNSATISFIED");
+		if (simple === "NULL" && value !== null) {
+			return ("SIMPLE_NULL_UNSATISFIED");
 		}
-		if (natureBitcode & natureBitflags.NULL && value !== null) {
-			return ("NATURE_NULL_UNSATISFIED");
-		}
-		if ((natureBitcode & natureBitflags.UNDEFINED) && value !== undefined) {
-			return ("NATURE_UNDEFINED_UNSATISFIED");
+		if (simple === "UNDEFINED" && value !== undefined) {
+			return ("SIMPLE_UNDEFINED_UNSATISFIED");
 		}
 
 		return (null);

@@ -15,7 +15,6 @@ keys?: SetableKeys<T>;
 values?: SetableValues<T>;
 struct?: SetableStruct<T>;
 optional?: string[] | boolean;
-additional?: boolean;
 */
 
 /*
@@ -23,7 +22,6 @@ min?: number;
 max?: number;
 items?: SetableItems<T>;
 tuple?: SetableTuple<T>;
-additional?: boolean;
 */
 
 type SetableItems<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
@@ -134,9 +132,9 @@ export interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends De
 > {}
 
 export type ArrayExceptionCodes =
-	| "SHAPE_PROPERTY_REQUIRED"
-	| "SHAPE_PROPERTY_MALFORMED"
-	| "SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED"
+	| "TUPLE_PROPERTY_REQUIRED"
+	| "TUPLE_PROPERTY_MALFORMED"
+	| "TUPLE_PROPERTY_ARRAY_ITEM_MALFORMED"
     | "ADDITIONAL_PROPERTY_MALFORMED"
 	| "ADDITIONAL__ITEM_PROPERTY_MALFORMED"
 	| "ADDITIONAL__MIN_PROPERTY_MALFORMED"
@@ -145,7 +143,7 @@ export type ArrayExceptionCodes =
 
 export type ArrayRejectionCodes =
 	| "TYPE_ARRAY_UNSATISFIED"
-	| "SHAPE_UNSATISFIED"
+	| "TUPLE_UNSATISFIED"
 	| "ADDITIONAL_UNALLOWED"
 	| "ADDITIONAL_MIN_UNSATISFIED"
 	| "ADDITIONAL_MAX_UNSATISFIED";

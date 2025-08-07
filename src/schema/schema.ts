@@ -78,7 +78,7 @@ const sectionTextSchema = new Schema({
 	type: "object",
 	shape: {
 		type: { type: "string", literal: "text" },
-		text: { type: "string" }
+		text: { type: "unknown" }
 	}
 });
 
@@ -115,8 +115,7 @@ const userSchema = new Schema({
 		},
 		cards: {
 			type: "array",
-			tuple: [{ type: "string" }],
-			items: { type: "unknown" },
+			items: cardSchema.criteria
 		}
 	},
 });

@@ -30,6 +30,7 @@ export const ArrayFormat: Format<
 	},
 	mount(chunk, criteria) {
 		const { tuple, items } = criteria;
+
 		if (tuple !== undefined) {
 			if (!isArray(tuple)) {
 				return ("TUPLE_PROPERTY_MALFORMED");
@@ -40,8 +41,8 @@ export const ArrayFormat: Format<
 				}
 			}
 		}
-		if (additional !== undefined) {
-			if (isPlainObject(additional)) {
+		if (items !== undefined) {
+			if (isPlainObject(items)) {
 				const { item, min, max } = additional;
 
 				if (item !== undefined && !isPlainObject(item)) {
