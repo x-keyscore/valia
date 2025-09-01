@@ -11,53 +11,53 @@ export const StringFormat: Format<
 > = {
 	type: "string",
 	exceptions: {
-		MIN_PROPERTY_MALFORMED:
+		MIN_PROPERTY_MISDECLARED:
 			"The 'min' property must be of type number.",
-		MAX_PROPERTY_MALFORMED:
+		MAX_PROPERTY_MISDECLARED:
 			"The 'max' property must be of type number.",
 		MIN_MAX_PROPERTIES_MISCONFIGURED:
 			"The 'min' property cannot be greater than 'max' property.",
-		REGEX_PROPERTY_MALFORMED:
-			"The 'regex' property must be of type String or RegExp object.",
-		LITERAL_PROPERTY_MALFORMED:
-			"The 'literal' property must be of type string, array or plain-object.",
+		REGEX_PROPERTY_MISDECLARED:
+			"The 'regex' property must be of type RegExp object.",
+		LITERAL_PROPERTY_MISDECLARED:
+			"The 'literal' property must be of type string, array or plain object.",
 		LITERAL_PROPERTY_ARRAY_MISCONFIGURED:
-			"The array of the 'literal' property must contain at least one item.",
-		LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED:
+			"The array of the 'literal' property must have a number of items greater than 0.",
+		LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED:
 			"The array items of the 'literal' property must be of type String.",
 		LITERAL_PROPERTY_OBJECT_MISCONFIGURED:
-			"The object of the 'literal' property must contain at least one key.",
-		LITERAL_PROPERTY_OBJECT_KEY_MALFORMED:
+			"The object of the 'literal' property must have a number of keys greater than 0.",
+		LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED:
 			"The object keys of the 'literal' property must be of type string.",
-		LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED:
+		LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED:
 			"The object values of the 'literal' property must be of type string.",
-		CONSTRAINT_PROPERTY_MALFORMED:
+		CONSTRAINT_PROPERTY_MISDECLARED:
 			"The 'constraint' property must be of type Plain Object.",
 		CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED:
-			"The object of the 'constraint' property must contain at least one key.",
-		CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED:
+			"The object of the 'constraint' property must have a number of keys greater than 0.",
+		CONSTRAINT_PROPERTY_OBJECT_KEY_MISDECLARED:
 			"The object keys of the 'constraint' property must be of type string.",
 		CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED:
 			"The object keys of the 'constraint' property must be a known string.",
-		CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED:
-			"The object values of the 'constraint' property must be of type true or plain-object.",
-		CUSTOM_PROPERTY_MALFORMED:
-			"The 'custom' property must be of type basic-function."
+		CONSTRAINT_PROPERTY_OBJECT_VALUE_MISDECLARED:
+			"The object values of the 'constraint' property must be of type true or plain object.",
+		CUSTOM_PROPERTY_MISDECLARED:
+			"The 'custom' property must be of type basic function."
 	},
 	mount(chunk, criteria) {
 		const { min, max, regex, literal, constraint, custom } = criteria;
 
 		if (min !== undefined && typeof min !== "number") {
-			return ("MAX_PROPERTY_MALFORMED");
+			return ("MIN_PROPERTY_MISDECLARED");
 		}
 		if (max !== undefined && typeof max !== "number") {
-			return ("MAX_PROPERTY_MALFORMED");
+			return ("MAX_PROPERTY_MISDECLARED");
 		}
 		if (min !== undefined && max !== undefined && min > max) {
 			return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
 		}
 		if (regex !== undefined && !(regex instanceof RegExp)) {
-			return ("REGEX_PROPERTY_MALFORMED");
+			return ("REGEX_PROPERTY_MISDECLARED");
 		}
 		if (literal !== undefined) {
 			let resolvedLiteral;
@@ -71,7 +71,7 @@ export const StringFormat: Format<
 
 				for (const item of literal) {
 					if (typeof item !== "string") {
-						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+						return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
 					}
 				}
 
@@ -84,16 +84,16 @@ export const StringFormat: Format<
 
 				for (const key of keys) {
 					if (typeof key !== "string") {
-						return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
 					}
 					if (typeof literal[key] !== "string") {
-						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
 					}
 				}
 
 				resolvedLiteral = new Set(Object.values(literal));
 			} else {
-				return ("LITERAL_PROPERTY_MALFORMED");
+				return ("LITERAL_PROPERTY_MISDECLARED");
 			}
 
 			Object.assign(criteria, { resolvedLiteral });
@@ -108,7 +108,7 @@ export const StringFormat: Format<
 				const resolvedConstraint = new Map();
 				for (const key of keys) {
 					if (typeof key !== "string") {
-						return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
+						return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISDECLARED");
 					}
 					if (!stringTesters.has(key)) {
 						return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
@@ -116,21 +116,26 @@ export const StringFormat: Format<
 
 					const value = constraint[key as keyof SetableConstraint];
 					if (typeof value !== "boolean" && !isPlainObject(value)) {
-						return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
+						return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MISDECLARED");
 					}
 					
 					if (value === false) continue;
-					if (value === true) resolvedConstraint.set(key, undefined);
-					else resolvedConstraint.set(key, value);
+
+					if (value === true) {
+						resolvedConstraint.set(key, undefined);
+					}
+					else {
+						resolvedConstraint.set(key, value);
+					}
 				}
 
 				Object.assign(criteria, { resolvedConstraint });
 			} else {
-				return ("CONSTRAINT_PROPERTY_MALFORMED");
+				return ("CONSTRAINT_PROPERTY_MISDECLARED");
 			}
 		}
 		if (custom !== undefined && !isFunction(custom)) {
-			return ("CUSTOM_PROPERTY_MALFORMED");
+			return ("CUSTOM_PROPERTY_MISDECLARED");
 		}
 
 		return (null);

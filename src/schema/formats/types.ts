@@ -1,18 +1,21 @@
+import type { UndefinedSetableCriteria, UndefinedDerivedCriteria } from "./undefined/types";
 import type { FunctionSetableCriteria, FunctionDerivedCriteria } from "./function/types";
 import type { BooleanSetableCriteria, BooleanDerivedCriteria } from "./boolean/types";
 import type { UnknownSetableCriteria, UnknownDerivedCriteria } from "./unknown/types";
-import type { SimpleSetableCriteria, SimpleDerivedCriteria } from "./simple/types";
 import type { SymbolSetableCriteria, SymbolDerivedCriteria } from "./symbol/types";
 import type { NumberSetableCriteria, NumberDerivedCriteria } from "./number/types";
 import type { StringSetableCriteria, StringDerivedCriteria } from "./string/types";
 import type { ObjectSetableCriteria, ObjectDerivedCriteria } from "./object/types";
 import type { ArraySetableCriteria, ArrayDerivedCriteria } from "./array/types";
 import type { UnionSetableCriteria, UnionDerivedCriteria } from "./union/types";
-import type { NodePath, MounterChunk, CheckerChunk } from "../services";
+import type { NullSetableCriteria, NullDerivedCriteria } from "./null/types";
+import type { NodePath, MounterChunkTask, CheckerChunkTask } from "../services";
 import { formatNatives } from "./formats";
 import { nodeSymbol } from "../services";
 
 // FORMATS SETABLE TYPES
+
+type SetableMessage = string | ((code?: string, data?: unknown, node?: MountedCriteria, nodePath?: NodePath) => string);
 
 /**
  * Defines the criteria users must or can specify.
@@ -22,21 +25,21 @@ import { nodeSymbol } from "../services";
 export interface SetableCriteriaTemplate<T extends string> {
 	type: T;
 	label?: string;
-	message?: string;
-	nullable?: boolean;
+	message?: SetableMessage;
 }
 
 export interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
+	undefined: UndefinedSetableCriteria;
 	function: FunctionSetableCriteria;
 	boolean: BooleanSetableCriteria;
 	unknown: UnknownSetableCriteria;
 	symbol: SymbolSetableCriteria;
 	number: NumberSetableCriteria;
 	string: StringSetableCriteria;
-	simple: SimpleSetableCriteria;
 	object: ObjectSetableCriteria<T>;
 	array: ArraySetableCriteria<T>;
 	union: UnionSetableCriteria<T>;
+	null: NullSetableCriteria;
 }
 
 export type FormatTypes = keyof SetableCriteriaMap;
@@ -62,12 +65,13 @@ export interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria>
 	symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
 	number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never;
 	string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
-	simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;
 	object: T extends ObjectSetableCriteria ? ObjectDerivedCriteria<T> : never;
 	array: T extends ArraySetableCriteria ? ArrayDerivedCriteria<T> : never;
 	union: T extends UnionSetableCriteria ? UnionDerivedCriteria<T> : never;
+	undefined: UndefinedDerivedCriteria;
 	boolean: BooleanDerivedCriteria;
 	unknown: UnknownDerivedCriteria;
+	null: NullDerivedCriteria;
 }
 
 // SETABLE CRITERIA
@@ -84,6 +88,10 @@ export interface CommonMountedCriteria {
 	};
 }
 
+type MethodMountedCriteria<T extends SetableCriteria> = {
+	validate(data: unknown): data is GuardedCriteria<T>
+} & T;
+
 export type MountedCriteria<T extends SetableCriteria = SetableCriteria> = 
 	T extends any
 		? T extends { [nodeSymbol]: any }
@@ -98,36 +106,40 @@ export type MountedCriteria<T extends SetableCriteria = SetableCriteria> =
 // GUARDED CRITERIA
 
 export type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = 
-	T['nullable'] extends true
-		? DerivedCriteriaMap<T>[T['type']]['guarded'] | null
-		: DerivedCriteriaMap<T>[T['type']]['guarded'];
+	DerivedCriteriaMap<T>[T['type']]['guarded'];
 
 // FORMAT
 
 /**
- * @template T Extended interface of `SettableCriteriaTemplate` that
- * defines the format criteria users must or can specify.
- * @template E Except codes you want to use in the format.
- * @template R Reject codes you want to use in the format.
- * @template C Custom members you want to add to the format.
+ * @template T
+ * Type of the criteria this format handles.
+ * 
+ * @template ExceptionCodes
+ * Possible exception codes that can be returned by the `mount` method.
+ * 
+ * @template RejectionCodes
+ * Possible rejection codes that can be returned by the `check` method.
+ * 
+ * @template CustomMembers
+ * Additional custom properties or methods added to the format object.
  */
 export type Format<
 	T extends SetableCriteria = SetableCriteria,
-	E extends string = string,
-	R extends string = string,
-	C extends object = object
+	ExceptionCodes extends string = string,
+	RejectionCodes extends string = string,
+	CustomMembers extends object = object
 > = {
 	type: T['type'];
-	exceptions: { [K in E]: string };
+	exceptions: { [K in ExceptionCodes]: string };
 	mount(
-		chunk: MounterChunk,
+		chunk: MounterChunkTask[],
 		criteria: T
-	): E | null;
+	): ExceptionCodes | null;
     check(
-		chunk: CheckerChunk,
+		chunk: CheckerChunkTask[],
         criteria: MountedCriteria<T>,
-        value: unknown
-    ): R | null;
-} & C;
+        data: unknown
+    ): RejectionCodes | null;
+} & CustomMembers;
 
 export type FormatNativeTypes = (typeof formatNatives)[number]['type'];

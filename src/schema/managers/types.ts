@@ -1,6 +1,6 @@
-import type { NodePath, CheckerRejection } from "../services";
 import type { MountedCriteria } from "../formats";
-import { SchemaDataRejection } from "../utils";
+import type { NodePath } from "../services";
+import { SchemaDataRejection, SchemaDataAdmission } from "../utils";
 
 // EVENTS
 
@@ -13,12 +13,9 @@ export interface Events {
         rootNode: MountedCriteria
     ) => void;
     DATA_REJECTED: (
-        rootNode: MountedCriteria,
-        rootData: unknown,
         rejection: SchemaDataRejection
     ) => void;
-    DATA_ACCEPTED: (
-        rootNode: MountedCriteria,
-        rootData: unknown
+    DATA_ADMITTED: (
+        admission: SchemaDataAdmission
     ) => void;
 }

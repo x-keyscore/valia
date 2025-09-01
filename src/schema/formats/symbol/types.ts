@@ -4,6 +4,7 @@ type SetableLiteral = symbol | symbol[] | Record<string | number, symbol>;
 
 export interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol"> {
 	literal?: SetableLiteral;
+	custom?: (value: symbol) => boolean;
 }
 
 export interface SymbolMountedCriteria {
@@ -25,13 +26,15 @@ export interface SymbolDerivedCriteria<T extends SymbolSetableCriteria> extends 
 > {}
 
 export type SymbolExceptionCodes =
-	| "LITERAL_PROPERTY_MALFORMED"
+	| "LITERAL_PROPERTY_MISDECLARED"
 	| "LITERAL_PROPERTY_ARRAY_MISCONFIGURED"
-    | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED"
+    | "LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED"
 	| "LITERAL_PROPERTY_OBJECT_MISCONFIGURED"
-	| "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED"
-    | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED";
+	| "LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED"
+    | "LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED"
+	| "CUSTOM_PROPERTY_MISDECLARED";
 
 export type SymbolRejectionCodes =
 	| "TYPE_SYMBOL_UNSATISFIED"
-	| "LITERAL_UNSATISFIED";
+	| "LITERAL_UNSATISFIED"
+	| "CUSTOM_UNSATISFIED";

@@ -1,12 +1,13 @@
 import type { SetableCriteria, MountedCriteria, GuardedCriteria, FormatNativeTypes } from "./formats";
-import type { SchemaEvaluateResult, SchemaInfer } from "./types";
+import type { SchemaEvaluateResult } from "./types";
 import { EventsManager, FormatsManager } from "./managers";
 import { cloner, mounter, checker } from "./services";
+import { SchemaException } from "./utils";
 import { formatNatives } from "./formats";
+import { isPlainObject } from "../testers";
 
 /**
- * The `Schema` class is used to define and validate data structures,
- * ensuring they conform to specified criteria.
+ * The `Schema` class is used to define and validate data structures, ensuring they conform to criteria node.
  */
 export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeTypes>> {
 	private mountedCriteria: MountedCriteria<T> | undefined;
@@ -17,9 +18,14 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	}
 
 	protected initiate(criteria: T) {
+		if (!isPlainObject(criteria)) {
+			throw new SchemaException(
+				"The 'criteria' parameter must be of type plain object."
+			);
+		}
+
 		this.managers.formats.add(formatNatives);
-		const clonedCriteria = cloner(criteria);
-		this.mountedCriteria = mounter(this.managers, clonedCriteria);
+		this.mountedCriteria = mounter(this.managers, cloner(criteria));
 	}
 
 	constructor(criteria: T) {
@@ -35,11 +41,13 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 */
 	get criteria(): MountedCriteria<T> {
 		if (!this.mountedCriteria) {
-			throw new Error("Criteria are not initialized.");
+			throw new SchemaException(
+				"The 'mountedCriteria' class property is not initialized."
+			);
 		}
 		return (this.mountedCriteria);
 	}
-	
+
 	/**
 	 * Validates the provided data against the schema.
 	 * 
@@ -48,9 +56,7 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 * @returns A boolean.
 	 */
 	validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>> {
-		const rejection = checker(this.managers, this.criteria, data);
-		
-		return (!rejection);
+		return (checker(this.managers, this.criteria, data).success);
 	}
 
 	/**
@@ -58,170 +64,23 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 	 *
 	 * @param data - The data to be evaluated.
 	 */
-	evaluate(data: unknown): SchemaEvaluateResult<T> {
-		const rejection = checker(this.managers, this.criteria, data);
-		if (rejection) return ({ rejection, data: null });
-		return ({ rejection: null, data });
+	evaluate(data: unknown): SchemaEvaluateResult<GuardedCriteria<MountedCriteria<T>>> {
+		return (checker(this.managers, this.criteria, data));
+	}
+
+	public listener = {
+		on: this.managers.events.on,
+		off: this.managers.events.off
 	}
 }
 
-const sectionTitleSchema = new Schema({
+const objectSchema = new Schema({
 	type: "object",
 	shape: {
-		type: { type: "string", literal: "title" },
-		size: { type: "number", min: 1, max: 5 },
-		title: { type: "string", max: 32 }
-	}
-});
-
-const sectionTextSchema = new Schema({
-	type: "object",
-	shape: {
-		type: { type: "string", literal: "text" },
-		text: { type: "string" }
-	}
-});
-
-const cardSchema = new Schema({
-	type: "object",
-	shape: {
-		title: { type: "string", max: 128 },
-		description: { type: "string", max: 2048 },
-		is_public: { type: "boolean" },
-		sections: {
-			type: "array",
-			items: {
-				type: "union",
-				union: [sectionTitleSchema.criteria, sectionTextSchema.criteria]
-			}
-		}
-	}
-});
-
-const userSchema = new Schema({
-	type: "object",
-	shape: {
-		email: {
-			type: "string",
-			constraint: {
-				isEmail: true
-			}
-		},
-		password: {
-			type: "string",
-			constraint: {
-				isAscii: true
-			}
-		},
-		cards: {
-			type: "array",
-			items: { type: "number" },
-			tuple: [{ type: "string" }]
-		}
+		foo: { type: "string" }
 	},
-});
-
-type User = SchemaInfer<typeof userSchema>;
-
-/*
-const function_variant_string = new Schema({
-	type: "function",
-	variant: "BASIC"
-});
-const xAsyncFunction = async function () {};
-console.log(function_variant_string.validate(xAsyncFunction))*/
-/*
-function testf(): ("ASYNC" | "BASIC"  | undefined) {
-	return ("" as ("ASYNC" | "BASIC" | undefined))
-}
-
-const test = new Schema({
-	type: "string",
-	literal: ["test"]
-});
-
-type Test = SchemaInfer<typeof test>;
-*/
-/*
-const test = new Schema({
-	type: "object",
-
-	shape: {},
-	expandable: true
-});
-console.log(test.evaluate(Array));
-
-console.log(isObject(Array));*/
-/*
-const hslItem = new Schema({
-	type: "object",
-	shape: {
-		h: { type: "number" },
-		s: { type: "number" },
-		l: { type: "number" }
+	values: {
+		type: "array",
+		tuple: [{ type: "string" }]
 	}
 });
-
-const test = new Schema({
-	type: "array",
-	shape: [],
-	expandable: {
-		max: 10,
-		item: hslItem.criteria
-	}
-});
-
-type Test = SchemaInfer<typeof test>;
-
-console.log(test.evaluate([{ h: 10, s: 10, l: 20 }]));
-*/
-
-
-//type Debug = Test['additional']
-/*
-const union_object = new Schema({
-	type: "union",
-	union: [{
-		type: "object",
-		shape: {
-			foo: { type: "string" },
-			bar: {
-				type: "object",
-				shape: {
-					foo: {
-						foo: {
-							type: "object",
-							shape: {
-								foo: { type: "string" }
-							}
-						},
-						bar: { type: "string" }
-					}
-				}
-			}
-		}
-	}, {
-		type: "object",
-		shape: {
-			foo: {
-				type: "object",
-				shape: {
-					foo: {
-						type: "object",
-						shape: {
-							foo: { type: "string" },
-							bar: {
-								type: "object",
-								shape: {
-									foo: { type: "string" }
-								}
-							}
-						}
-					}
-				}
-			},
-			bar: { type: "string" }
-		}
-	}]
-});
-*/

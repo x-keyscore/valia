@@ -1,42 +1,52 @@
-import { describe, it, before } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { Schema, SchemaNodeException, SchemaDataRejection } from "../../dist/index.js";
+import { Schema, SchemaException, SchemaNodeException, SchemaDataRejection, SchemaDataAdmission } from "../../dist/index.js";
 
-describe("\nschema > instance", () => {
-	describe("'criteria' property", () => {
+describe("\nschema > constructor", () => {
+	describe("'criteria' parameter", () => {
 		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema(0),
-				SchemaNodeException,
-				"throws if the node is malformed"
+				SchemaException
 			);
 		});
+	});
+});
 
-		let string_criteria, string_schema, array_criteria, array_schema, object_schema, root_schema;
+describe("\nschema > instance", () => {
+	describe("'criteria' property", () => {
+		const string_criteria = {
+			type: "string",
+			enum: ["foo", "bar"]
+		};
+		const array_criteria = {
+			type: "array",
+			shape: [
+				{ type: "string" },
+				{ type: "string" }
+			]
+		};
+		const string_schema = new Schema(string_criteria);
+		const array_schema = new Schema(array_criteria);
 
-		before(() => {
-			string_criteria = { type: "string", enum: ["foo", "bar"] };
-			string_schema = new Schema(string_criteria);
-			array_criteria = { type: "array", shape: [{ type: "string" }, { type: "string" }] };
-			array_schema = new Schema(array_criteria);
+		const object_B_criteria = {
+			type: "object",
+			shape: {
+				foo: string_schema.criteria,
+				bar: array_schema.criteria
+			}
+		}
+		const object_B_schema = new Schema(object_B_criteria);
 
-			object_schema = new Schema({
-				type: "object",
-				shape: {
-					foo: string_schema.criteria,
-					bar: array_schema.criteria
-				}
-			});
-
-			root_schema = new Schema({
-				type: "object",
-				shape: {
-					foo: object_schema.criteria,
-					bar: object_schema.criteria
-				}
-			});
-		});
+		const object_A_criteria = {
+			type: "object",
+			shape: {
+				foo: object_B_schema.criteria,
+				bar: object_B_schema.criteria
+			}
+		};
+		const object_A_schema = new Schema(object_A_criteria);
 
 		it("All objects defined in the schema with a prototype of Object.prototype or null\n" +
 			"(except for arrays and sub-objects of mounted node grafts) must have a distinct\n" +
@@ -55,96 +65,101 @@ describe("\nschema > instance", () => {
 			"the definition of a new schema, all have distinct references after the instantiation\n" +
 			"of the new schema.",
 			() => {
-				assert.notStrictEqual(root_schema.criteria.shape.foo, object_schema.criteria);
-				assert.notStrictEqual(root_schema.criteria.shape.bar, object_schema.criteria);
-				assert.notStrictEqual(root_schema.criteria.shape.foo, root_schema.criteria.shape.bar);
+				assert.notStrictEqual(object_A_schema.criteria.shape.foo, object_B_schema.criteria);
+				assert.notStrictEqual(object_A_schema.criteria.shape.bar, object_B_schema.criteria);
+				assert.notStrictEqual(object_A_schema.criteria.shape.foo, object_A_schema.criteria.shape.bar);
 
 				/* Verification that the sub-objects of mounted node grafts retain references to their previous schema. */
-				assert.strictEqual(root_schema.criteria.shape.foo.shape, object_schema.criteria.shape);
-				assert.strictEqual(root_schema.criteria.shape.bar.shape, object_schema.criteria.shape);
-				assert.strictEqual(root_schema.criteria.shape.foo.shape.foo.enum, string_schema.criteria.enum);
-				assert.strictEqual(root_schema.criteria.shape.bar.shape.bar.shape, array_schema.criteria.shape);
+				assert.strictEqual(object_A_schema.criteria.shape.foo.shape, object_B_schema.criteria.shape);
+				assert.strictEqual(object_A_schema.criteria.shape.bar.shape, object_B_schema.criteria.shape);
+				assert.strictEqual(object_A_schema.criteria.shape.foo.shape.foo.enum, string_schema.criteria.enum);
+				assert.strictEqual(object_A_schema.criteria.shape.bar.shape.bar.shape, array_schema.criteria.shape);
 			}
 		);
 	});
-	describe("'validate()' method", () => {
-		let schema;
 
-		before(() => {
-			schema = new Schema({ type: "string" });
+	describe("'validate()' method", () => {
+		const schema = new Schema({
+			type: "string"
 		});
 
-		it("should return a correct result", () => {
-			assert.strictEqual(typeof schema.validate(0), "boolean");
-			assert.strictEqual(typeof schema.validate("x"), "boolean");
+		it("should return a correct results", () => {
+			assert.strictEqual(schema.validate(0), false);
+			assert.strictEqual(schema.validate("x"), true);
 		});
 	});
+
 	describe("'evaluate()' method", () => {
-		let schema;
-
-		before(() => {
-			schema = new Schema({
-				type: "object",
-				shape: {
-					foo: { type: "string" },
-					bar: {
-						type: "string",
-						label: "TEST_LABEL",
-						message: "TEST_MESSAGE"
-					}
-				}
-			});
+		const schema = new Schema({
+			type: "object",
+			shape: {
+				foo: { type: "string" },
+				bar: { type: "string" }
+			}
 		});
+		const rootNode = schema.criteria;
 
-		it("should return a correct rejection", () => {
+		it("should return the correct results", () => {
+			const invalidRootData = { foo: "x", bar: 0 };
+			const validRootData = { foo: "x", bar: "x" };
+
 			assert.deepStrictEqual(
-				schema.evaluate({ foo: "x", bar: 0 }),
+				schema.evaluate(invalidRootData),
 				{
-					rejection: new SchemaDataRejection({
-						code: "TYPE_STRING_UNSATISFIED",
-						node: schema.criteria.shape.bar,
-						nodePath: {
+					success: false,
+					rejection: new SchemaDataRejection(
+						invalidRootData,
+						rootNode,
+						"TYPE_STRING_UNSATISFIED",
+						0,
+						rootNode.shape.bar,
+						{
 							explicit: ["shape", "bar"],
 							implicit: ["&", "bar"]
 						}
-					}),
-					data: null
+					),
+					admission: null
 				}
 			);
-		});
 
-		it("should return a correct acceptation", () => {
-			const candidate = { foo: "x", bar: "x" };
 			assert.deepStrictEqual(
-				schema.evaluate(candidate),
+				schema.evaluate(validRootData),
 				{
+					success: true,
 					rejection: null,
-					data: candidate
+					admission: new SchemaDataAdmission(
+						validRootData,
+						rootNode
+					)
 				}
 			);
 		});
 	});
 });
 
-describe("\nschema > formats > (Common properties)", () => {
+describe("\nschema > formats > (common)", () => {
 	describe("'type' property", () => {
 		it("should throw on incorrect definitions", () => {
 			assert.throws(
 				() => new Schema({}),
-				SchemaNodeException,
-				"throws if the key is not defined"
+				{
+					name: "SchemaNodeException",
+					code: "TYPE_PROPERTY_UNDEFINED"
+				}
 			);
-
 			assert.throws(
 				() => new Schema({ type: 0 }),
-				SchemaNodeException,
-				"throws if the value is malformed"
+				{
+					name: "SchemaNodeException",
+					code: "TYPE_PROPERTY_MISDECLARED"
+				}
 			);
-
 			assert.throws(
 				() => new Schema({ type: "" }),
-				SchemaNodeException,
-				"throws if the value is misconfigured"
+				{
+					name: "SchemaNodeException",
+					code: "TYPE_PROPERTY_MISCONFIGURED"
+				}
 			);
 		});
 	});
@@ -152,9 +167,11 @@ describe("\nschema > formats > (Common properties)", () => {
 	describe("'label' property", () => {
 		it("should throw on incorrect definitions", () => {
 			assert.throws(
-				() => new Schema({ label: 0 }),
-				SchemaNodeException,
-				"throws if the value is malformed"
+				() => new Schema({ type: "string", label: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "LABEL_PROPERTY_MISDECLARED"
+				}
 			);
 		});
 	});
@@ -162,47 +179,49 @@ describe("\nschema > formats > (Common properties)", () => {
 	describe("'message' property", () => {
 		it("should throw on incorrect definitions", () => {
 			assert.throws(
-				() => new Schema({ message: 0 }),
-				SchemaNodeException,
-				"throws if the value is malformed"
-			);
-		});
-	});
-
-	describe("'nullable' property", () => {
-		it("should throw on incorrect definitions", () => {
-			assert.throws(
-				() => new Schema({ nullable: 0 }),
-				SchemaNodeException,
-				"throws if the value is malformed"
+				() => new Schema({ type: "string", message: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "MESSAGE_PROPERTY_MISDECLARED"
+				}
 			);
 		});
 
-		let nullable_true, nullable_false;
-		before(() => {
-			nullable_true = new Schema({
-				type: "string",
-				nullable: true
-			});
-
-			nullable_false = new Schema({
-				type: "string",
-				nullable: false
-			});
+		it("should not throw on correct definitions", () => {
+			assert.doesNotThrow(
+				() => new Schema({ type: "string", message: "" }),
+				SchemaNodeException
+			);
+			assert.doesNotThrow(
+				() => new Schema({ type: "string", message: () => { return (""); } }),
+				SchemaNodeException
+			);
 		});
 
-		it("should invalidate incorrect values", () => {
-			assert.strictEqual(nullable_false.validate(null), false);
-			assert.strictEqual(nullable_false.validate(undefined), false);
+		it("should provide correct arguments", () => {
+			const captured = {};
 
-			assert.strictEqual(nullable_true.validate(undefined), false);
-		});
+			const schema = new Schema({
+				type: "string",
+				message: (code, data, node, nodePath) => {
+					Object.assign(captured, {
+						code, data, node, nodePath
+					});
+					return ("");
+				}
+			});
 
-		it("should validate correct values", () => {
-			assert.strictEqual(nullable_false.validate(""), true);
+			schema.validate(0);
 
-			assert.strictEqual(nullable_true.validate(""), true);
-			assert.strictEqual(nullable_true.validate(null), true);
+			assert.deepStrictEqual(captured, {
+				code: "TYPE_STRING_UNSATISFIED",
+				data: 0,
+				node: schema.criteria,
+				nodePath: {
+					explicit: [],
+					implicit: []
+				}
+			});
 		});
 	});
 });

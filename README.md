@@ -1,22 +1,21 @@
-# Valia &middot; [![npm version](https://img.shields.io/npm/v/valia.svg?style=flat)](https://www.npmjs.com/package/valia)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ea937a53-9b80-43d7-93ac-81538d9526f8" align="center" alt="VALIA logo" />
+  <br/>
+  <br/>
+  <img src="https://img.shields.io/npm/v/valia.svg?style=flat" align="center" alt="NPM version" />
+  <br/>
+  <h2 align="center">Bibliothèque de validation pour TypeScript et JavaScript</h2>
+</p>
 
-A powerful, type-safe validation library for modern TypeScript apps, built for both server and client.
+🔌 S’intègre naturellement à vos projets, qu’ils soient front-end ou back-end, et permet de définir des schémas de manière intuitive tout en favorisant leur réutilisation.
 
-⚡ **Smart & Flexible**
-<br/>
-Seamlessly validate data in any environment. Designed to integrate naturally into your backend, frontend, or shared code.
 
-🧠 **Type Inference**
-<br/>
-Define your schema once, and instantly get strongly typed data. No need for redundant interfaces. Combined with type guards, you get safe, predictable data handling across your codebase.
+💡 Pensée pour allier simplicité et puissance, elle propose des fonctionnalités avancées comme l’inférence de types, ainsi que des validateurs standards tels que <strong>isEmail</strong>, <strong>isUuid</strong> ou <strong>isIp</strong>.
 
-📦 **Built-in Validators**
-<br/>
-Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, `isIp`, and more. Saving you time and boilerplate.
+## Table des matières
 
-## Table of Contents
 - [Schema](#schema)
-  - [Instance](#instance)
+  - [Instances](#instances)
   - [Formats](#formats)
   - [Exemples](#exemples)
 - [Testers](#testers)
@@ -26,16 +25,16 @@ Includes ready-to-use, standards-compliant validators like `isEmail`, `isUuid`, 
   - [Object](#object-1)
   - [String](#string-2)
 
-## Getting started
+## Installation
+
 ```
 > npm install valia
 ```
 
-Schema definition 
 ```ts
 import { Schema } from 'valia';
 
-const user = new Schema({ 
+const userSchema = new Schema({ 
   type: "object",
   shape: {
     name: { type: "string" },
@@ -45,173 +44,491 @@ const user = new Schema({
     }
   }
 });
-```
 
-Schema inference
-```ts
-type User = SchemaInfer<typeof user>;
-```
-
-Data validation
-```ts
-let data: unknown = {
+let data = {
   name: "Alice",
   role: "WORKER"
 };
 
-if (user.validate(data)) {
+if (userSchema.validate(data)) {
   console.log(data.name, data.role);
 }
 ```
 
-<br/><br/>
+```ts
+import type { SchemaInfer } from 'valia';
+
+type User = SchemaInfer<typeof userSchema>;
+```
+
+<br/>
+
 # Schema
 
-## Instance
-|Member|Description|
-|--|--|
-|`criteria`  |Property representing the mounted validation criteria.|
-|`validate()`|Validates the provided data against the schema. A boolean is returned. This function is a type guard, so if it returns true, the value passed as a parameter will be of the type defined by your schema.<br/>[Learn more about type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)|
-|`evaluate()`|Validates the provided data against the schema. If the data is not validated, an object with `reject` is returned to allow the problem to be inspected.|
+## Instances
 
-```ts
-interface SchemaInstance {
-  criteria: MountedCriteria;
-  validate(data: unknown): data is GuardedCriteria;
-  evaluate(data: unknown): {
-    reject: SchemaReject
-  } | {
-    data: GuardedCriteria
-  };
-}
-```
-```ts
-interface SchemaReject {
-  path: {
-    explicit: [];
-    implicit: [];
-  };
-  code: string;
-  type: string;
-  label: string | undefined;
-  message: string | undefined;
-};
-```
+### Schema
+
+<ul>
+  <li>
+    <strong>criteria</strong>
+    <br/>
+    Propriété représentant la racine des noeuds de critères.
+  </li>
+  <li>
+    <strong>validate(data)</strong>
+    <br/>
+    Methode qui valide les données fournies selon les critères et retourne un booléen.
+    <br/>
+    Cette méthode utilise la <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates"> prédiction de types ↗</a>.
+  </li>
+  <li>
+    <strong>evaluate(data)</strong>
+    <br/>
+    Methode qui valide les données fournies selon les critères et retourne un objet avec les propriétés suivantes :
+    <ul>
+      <li>
+        <strong>success</strong>: Un boolean qui indique si la validation a réussi.
+      </li>
+      <li>
+        <strong>rejection</strong>: Instance de <strong>SchemaDataRejection</strong> si les données sont rejetées sinon <strong>null</strong>.
+      </li>
+      <li>
+        <strong>admission</strong>: Instance de <strong>SchemaDataAdmission</strong> si les données sont admises sinon <strong>null</strong>.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+### SchemaException
+
+<ul>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message décrivant le problème rencontré.
+  </li>
+</ul>
+
+### SchemaNodeException
+
+<ul>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code de l'exception.
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message décrivant le problème rencontré.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud noeud lié à l'exception.
+  </li>
+  <li>
+    <strong>nodePath</strong>
+    Chemin du noeud noeud lié à l'exception.
+    <ul>
+      <li>
+        <strong>explicit</strong>: Tableau représentant le chemin vers le noeud dans l'arbre des critères.
+      </li>
+      <li>
+        <strong>implicit</strong>: Tableau représentant le chemin virtuel vers les données représentées par noeud.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+### SchemaDataRejection
+
+<ul>
+  <li>
+    <strong>rootData</strong>
+    <br/>
+    Racine des données à valider.
+  </li>
+  <li>
+    <strong>rootNode</strong>
+    <br/>
+    Noeud racine utilisé pour la validation.
+  </li>
+  <li>
+    <strong>rootLabel</strong>
+    <br/>
+    Label du noeud racine utilisé pour la validation ou <strong>undefined</strong> si le label n'a pas été défini.
+  </li>
+    <li>
+    <strong>data</strong>
+    <br/>
+    Données rejetées.
+  </li>
+  <li>
+    <strong>code</strong>
+    <br/>
+    Code lié au rejet.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud lié au rejet.
+  </li>
+  <li>
+    <strong>nodePath</strong>
+    <br/>
+    Chemin du noeud noeud lié au rejet.
+    <ul>
+      <li>
+        <strong>explicit</strong>: Tableau représentant le chemin vers le noeud dans l'arbre des critères.
+      </li>
+      <li>
+        <strong>implicit</strong>: Tableau représentant le chemin virtuel vers les données représentées par noeud.
+      </li>
+    </ul>
+  </li>
+  <li>
+    <strong>label</strong>
+    <br/>
+    Label défini sur le noeud lié au rejet ou <strong>undefined</strong> si le label n'a pas été défini.
+  </li>
+  <li>
+    <strong>message</strong>
+    <br/>
+    Message défini sur le noeud lié au rejet ou <strong>undefined</strong> si le message n'a pas été défini.
+  </li>
+</ul>
+
+### SchemaDataAdmission
+
+<ul>
+  <li>
+    <strong>data</strong>
+    <br/>
+    Racine des données valider.
+  </li>
+  <li>
+    <strong>node</strong>
+    <br/>
+    Noeud racine utilisé pour la validation.
+  </li>
+  <li>
+    <strong>label</strong>
+    <br/>
+    Label du noeud racine utilisé pour la validation ou <strong>undefined</strong> si le label n'a pas été défini.
+  </li>
+</ul>
 
 ## Formats
 
-[Number](#number) • [String](#string) • [Symbol](#symbol) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Simple](#simple) • [Union](#union)
+[Number](#number) • [String](#string) • [Boolean](#boolean) • [Object](#object) • [Array](#array) • [Function](#function) • [Symbol](#symbol) • [Union](#union) • [Null](#null) • [Undefined](#undefined)
 
-> The order in the property tables is the same order in which the checker performs validation.
+Les formats représentent les noeuds de critères qui pourront être utilisés dans les schémas.
+<br/>
+*L'ordre des propriétés décrites pour chaque formats respecte l'ordre de validation.*
 
 ### Global
 
-#### **Properties :**
+#### **Propriétés :**
 
-- **`label?`**
-
-  An array with criteria nodes defining the expected items.
-
-- **`message?`**
-
-   An array with criteria nodes defining the expected items.
-
-- **`nullable?`**
-  - **boolean**:
-    - **true**: Allows items not defined in `shape`.
-    - **false**: Disallows items not defined in `shape`.
-
-```ts
-interface Criteria {
-  label?: string;
-  message?: string;
-  nullable?: boolean;
-}
-```
+<ul>
+  <li>
+    <strong>label?</strong>
+    <br/>
+    Une chaine de caratéres permetant d'idantifié le noeud, celle-ci vous sera retournée dans les instance de <strong>SchemaDataRejection</strong> et <strong>SchemaNodeException</strong>.
+  </li>
+  <br/>
+  <li>
+    <strong>message?</strong>
+    <br/>
+    <ul>
+      <li><strong>string</strong>: Chaîne de caractères qui sera disponible dans l'instance de <strong>SchemaDataRejection</strong>.</li>
+      <li><strong>function</strong>: Fonction qui doit renvoyer une chaîne de caractères qui sera disponible dans l'instance de <strong>SchemaDataRejection</strong>.</li>
+    </ul>
+  </li>
+</ul>
 
 ### Number
 
-|Property|Default|Description|
-|--|--|--|
-|`min?`    |      |Minimum numeric value.|
-|`max?`    |      |Maximum numeric value.|
-|`literal?`|      |Restricts the value to a single number, an array of numbers or to the numeric values of an object (TypeScript enum).|
-|`custom?` |      |Custom validation function returning a boolean.|
+#### **Propriétés :**
 
+<ul>
+  <li>
+    <strong>type: "number"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>min?</strong>
+    <br/>
+    Nombre minimale.
+  </li>
+  <br/>
+  <li>
+    <strong>max?</strong>
+    <br/>
+    Nombre maximale.
+  </li>
+  <br/>
+  <li>
+    <strong>literal?</strong>
+    <br/>
+    <ul>
+      <li><strong>string</strong>: Restreint la valeur à une seul nombre valide.</li>
+      <li><strong>array</strong>: Restreint la valeur avec un tableau dont les items représentent les nombres valides.</li>
+      <li><strong>object</strong>: Restreint la valeur avec un objet dont les valeurs représentent les nombres valides.</li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>custom(value)?</strong>
+    <br/>
+    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
+  </li>
+</ul>
+
+#### **Exemples :**
+
+**Validé n'importe quel nombre**
 ```ts
-interface Criteria {
-  type: "number";
-  min?: number;
-  max?: number;
-  literal?: number | number[] | Record<string | number, number>;
-  custom?: (x: number) => boolean;
-}
+const schema = new Schema({
+  type: "number"
+});
+
+✅ schema.validate(0);
+✅ schema.validate(10);
+✅ schema.validate(-10);
+```
+
+**Valide des nombres qui appartiennent à une plage spécifique**
+```ts
+const schema = new Schema({
+  type: "number",
+  min: 0,
+  max: 10
+});
+
+✅ schema.validate(0);
+✅ schema.validate(10);
+
+❌ schema.validate(-1);
+❌ schema.validate(-10);
+```
+
+**Validé un nombre spécifique**
+```ts
+const schema = new Schema({
+  type: "number",
+  literal: 141
+});
+
+✅ schema.validate(141);
+
+❌ schema.validate(-1);
+❌ schema.validate(-10);
+```
+
+**Validé des nombres spécifique avec un tableau**
+```ts
+const schema = new Schema({
+  type: "number",
+  literal: [141, 282]
+});
+
+✅ schema.validate(141);
+✅ schema.validate(282);
+
+❌ schema.validate(0);
+❌ schema.validate(100);
+❌ schema.validate(200);
 ```
 
 ### String
 
-|Property|Default|Description|
-|--|--|--|
-|`min?`       ||Minimum string length.|
-|`max?`       ||Maximum string length.|
-|`regex?`     ||Regular expression (as a RegExp object or a string).|
-|`literal?`   ||Restricts the value to a single string, an array of strings or to the string values of an object (TypeScript enum).|
-|`constraint?`||Restricts the value using string testers. Each key refers to a [string tester](#string-1) name and the value is either a boolean (to activate the tester or not) or an options object (in which case the tester is active).|
-|`custom?`    ||Custom validation function returning a boolean.|
+#### **Propriétés :**
 
-```ts
-interface Criteria {
-  type: "string";
-  min?: number;
-  max?: number;
-  regex?: RegExp | string;
-  literal?: string | string[] | Record<string | number, string>;
-  constraint?: { [key: string]: object  | boolean };
-  custom?: (x: string) => boolean;
-}
-```
-
-
-### Symbol
-
-#### **Properties :**
-
-- **`literal?`**
-  <br/>• **symbol**: Restricts the accepted value to a single `symbol`.
-  <br/>• **array**: Restricts the accepted value to an array of `symbol`.
-  <br/>• **object**: Restricts the accepted value to the `symbol` values of an object.
-
-- **`custom?`**
-  <br/>A custom validation function that receives the value and must
-  return a boolean indicating whether the value is valid.
+<ul>
+  <li>
+    <strong>type: "string"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>min?</strong>
+    <br/>
+    Longueur minimale de la chaîne de caractères.
+  </li>
+  <br/>
+  <li>
+    <strong>max?</strong>
+    <br/>
+    Longueur maximale de la chaîne de caractères.
+  </li>
+  <br/>
+  <li>
+    <strong>regex?</strong>
+    <br/>
+    Une expression régulière fournie sous forme d'objet (<strong>RegExp</strong>).
+  </li>
+  <br/>
+  <li>
+    <strong>literal?</strong>
+    <br/>
+    <ul>
+      <li><strong>string</strong>: Restreint la valeur à une seul chaîne de caractères valides.</li>
+      <li><strong>array</strong>: Restreint la valeur avec un tableau où les items représentent les chaîne de caractères valides.</li>
+      <li><strong>object</strong>: Restreint la valeur avec un objet où les valeurs représentent les chaîne de caractères valides.</li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>constraint?</strong>
+    <br/>
+    Un objet dont les clés correspondent à des noms de testeurs de chaîne et dont les valeurs possible sont :
+    <ul>
+      <li><strong>boolean</strong> : active ou désactive le testeur.</li>
+      <li><strong>objet</strong> : le testeur est activé avec les options spécifiés dans l'objet.</li>
+    </ul>
+    La valeur sera considérée comme valide si au moins un testeur renvoie un résultat positif.
+  </li>
+  <br/>
+  <li>
+    <strong>custom(value)?</strong>
+    <br/>
+    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
+  </li>
+</ul>
 
 #### **Exemples :**
 
+**Validé n'importe quel chaîne de caractères**
 ```ts
-interface Criteria {
-  type: "symbol";
-  literal?: symbol | symbol[] | Record<string | number, symbol>;
-  custom?: (x: symbol) => boolean;
-}
+const schema = new Schema({
+  type: "string"
+});
+
+✅ schema.validate("");
+✅ schema.validate("abc");
+```
+
+**Validé des chaînes de caractères ayant une longueur spécifique**
+```ts
+const schema = new Schema({
+  type: "string",
+  min: 3,
+  max: 3
+});
+
+✅ schema.validate("abc");
+
+❌ schema.validate("");
+❌ schema.validate("a");
+❌ schema.validate("abcd");
+```
+
+**Validé des chaînes de caractères avec une expression régulière**
+```ts
+const schema = new Schema({
+  type: "string",
+  regex: /^#[a-fA-F0-9]{6}$/
+});
+
+✅ schema.validate("#000000");
+✅ schema.validate("#FFFFFF");
+
+❌ schema.validate("");
+❌ schema.validate("#000");
+❌ schema.validate("#FFF");
+```
+
+**Validé une chaîne de caractères spécifique**
+```ts
+const schema = new Schema({
+  type: "string",
+  literal: "ABC"
+});
+
+✅ schema.validate("ABC");
+
+❌ schema.validate("");
+❌ schema.validate("a");
+❌ schema.validate("abc");
+```
+
+**Validé des chaînes de caractères spécifique avec un tableau**
+```ts
+const schema = new Schema({
+  type: "string",
+  literal: ["ABC", "XYZ"]
+});
+
+✅ schema.validate("ABC");
+✅ schema.validate("XYZ");
+
+❌ schema.validate("");
+❌ schema.validate("a");
+❌ schema.validate("abc");
+```
+
+**Validé des chaînes de caractères avec un testeur de chaîne**
+```ts
+const schema = new Schema({
+  type: "string",
+  constraint: {
+    idIp: { cidr: true }
+  }
+});
+
+✅ schema.validate("127.0.0.1/24");
+
+❌ schema.validate("");
+❌ schema.validate("127.0.0.1");
+```
+
+**Validé des chaînes de caractères avec plusieurs testeurs de chaîne**
+```ts
+const schema = new Schema({
+  type: "string",
+  constraint: {
+    isEmail: true,
+    idIp: { cidr: true }
+
+  }
+});
+
+✅ schema.validate("foo@bar");
+✅ schema.validate("127.0.0.1/24");
+
+❌ schema.validate("");
+❌ schema.validate("foo@");
+❌ schema.validate("127.0.0.1");
 ```
 
 
 ### Boolean
 
-#### **Properties :**
+#### **Propriétés :**
 
-- **`literal?`**
-
-  Restricts the accepted value to a single boolean state: `true` or `false`.
-
-- **`custom?`**
-
-  A custom validation function that receives the value and must
-  return a boolean indicating whether the value is valid.
+<ul>
+  <li>
+    <strong>type: "boolean"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>literal?</strong>
+    <br/>
+    Restreint la valeur à un seul état de booléen valide.
+  </li>
+  <br/>
+  <li>
+    <strong>custom(value)?</strong>
+    <br/>
+    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
+  </li>
+</ul>
 
 #### **Exemples :**
 
-**Validates any boolean**
+**Validé n'importe quel booléen**
 ```ts
 const schema = new Schema({
   type: "boolean"
@@ -224,7 +541,7 @@ const schema = new Schema({
 ❌ schema.validate({});
 ```
 
-**Validates only a boolean state**
+**Validé un booléen avec un état spécifique**
 ```ts
 const schema = new Schema({
   type: "boolean",
@@ -241,35 +558,81 @@ const schema = new Schema({
 
 ### Object
 
-#### **Properties :**
+#### **Propriétés :**
 
-- **`nature?`** — *(Default: `"STANDARD"`)*
-  - **"STANDARD"**: Expects an object that can be validated by the `isObject` function.
-  - **"PLAIN"**: Expects an object that can be validated by the `isPlainObject` function.
-
-- **`shape?`**
-  
-  An object with expected property names or symbols as keys and criteria nodes defining the expected values.
-
-- **`optional?`** — *(Default: `false`, Only usable if `shape` is defined)*
-  - **boolean**:
-    - **true**: All properties defined in `shape` are optional.
-    - **false**: All properties defined in `shape` are required.
-  - **string[]**: List of property names in `shape` that optional (the rest will be required).
-
-- **`additional?`** — *(Default: `false`; Only usable if `shape` is defined)*
-  - **boolean**:
-    - **true**: Allows properties not defined in `shape`.
-    - **false**: Disallows properties not defined in `shape`.
-  - **object**:
-    - **min?**: Minimum number of additional keys required.
-    - **max?**: Maximum number of additional keys required.
-    - **key?**: Criteria node that each additional key must satisfy.
-    - **value?**: Criteria node that each additional value must satisfy.
+<ul>
+  <li>
+    <strong>type: "object"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>nature?</strong> — (Default: <strong>"STANDARD"</strong>)
+    <ul>
+      <li>
+        <strong>"STANDARD"</strong>: Accepte toute valeur de type <strong>object</strong>, c’est-à-dire tout ce pour quoi <strong>typeof value === "object"</strong>.
+      </li>
+      <li>
+        <strong>"PLAIN"</strong>: Accepte uniquement les objets dont le prototype est
+        soit <strong>Object.prototype</strong> (comme les objets créés via <strong>{}</strong>),
+        soit <strong>null</strong> (créés via <strong>Object.create(null)</strong>).
+      </li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>min?</strong>
+    <br/>
+    Nombre de propriétés minimum.
+  </li>
+  <br/>
+  <li>
+    <strong>max?</strong>
+    <br/>
+    Nombre de propriétés maximun.
+  </li>
+  <br/>
+  <li>
+    <strong>shape?</strong>
+    <br/>
+    Un objet dont les clés sont de type <strong>string</strong> ou <strong>symbol</strong> et dont les valeurs sont des noeuds de critères. Représente des propriétés fixes que l'objet doit satisfaire.
+  </li>
+  <br/>
+  <li>
+    <strong>optional?</strong> — (Default: <strong>false</strong> | Utilisable seulement si <strong>shape</strong> est défini)
+    <ul>
+      <li>
+        <strong>boolean</strong>
+        <ul>
+          <li><strong>true</strong>: Toutes les propriétés définies dans l'objet <strong>shape</strong> sont optionnelles.</li>
+          <li><strong>false</strong>: Toutes les propriétés définies dans l'objet <strong>shape</strong> sont obligatoires.</li>
+        </ul>
+      </li>
+      <li>
+        <strong>array</strong>
+        <br/>
+        Un tableau dont les éléments sont des clés de l’objet <strong>shape</strong> qui sont optionnelles.
+      </li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>keys?</strong>
+    <br/>
+    Noeud de critères que les clés de l'objet doivent satisfaire.<br/>
+    Les clés définies dans l'objet <strong>shape</strong> ne sont pas affectées.
+  </li>
+  <br/>
+  <li>
+    <strong>values?</strong>
+    <br/>
+    Noeud de critères que les valeurs doivent satisfaire.<br/>
+    Les valeurs définies dans l'objet <strong>shape</strong> ne sont pas affectées.
+  </li>
+</ul>
 
 #### **Exemples :**
 
-**Validates any standard JavaScript object**
+**Validé n'importe quel objet**
 ```ts
 const schema = new Schema({
   type: "object"
@@ -283,7 +646,7 @@ const schema = new Schema({
 ❌ schema.validate("");
 ```
 
-**Validates only plain objects**
+**Validé un objet de nature simple**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -295,10 +658,10 @@ const schema = new Schema({
 
 ❌ schema.validate("");
 ❌ schema.validate([]);
-❌schema.validate(new Date());
+❌ schema.validate(new Date());
 ```
 
-**Validates an object with a fixed property structure**
+**Validé un objet avec des propriétés fixes**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -316,7 +679,32 @@ const schema = new Schema({
 ❌ schema.validate({ foo: "x", bar: "x", a: "" });
 ```
 
-**Validates an object with all properties optional**
+**Validé un objet et un sous-objet de propriétés fixes**
+<br/>
+
+```ts
+const schema = new Schema({
+  type: "object",
+  shape: {
+    foo: { type: "string" },
+    bar: { type: "string" },
+    baz: {
+      foo: { type: "number" },
+      bar: { type: "number" }
+    }
+  }
+});
+
+✅ schema.validate({ foo: "x", bar: "x", baz: { foo: 0, bar: 0 } });
+
+❌ schema.validate({});
+❌ schema.validate({ foo: "x" });
+❌ schema.validate({ foo: "x", bar: "x" });
+❌ schema.validate({ foo: "x", bar: "x", baz: {} });
+❌ schema.validate({ foo: "x", bar: "x", baz: { foo: 0 } });
+```
+
+**Validé un objet avec des propriétés facultatives**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -335,7 +723,7 @@ const schema = new Schema({
 ❌ schema.validate({ foo: "x", bar: "x", a: "x" });
 ```
 
-**Validates an object with a mix of required and optional properties**
+**Validé un objet avec une propriété fixe et une propriété facultative**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -354,7 +742,7 @@ const schema = new Schema({
 ❌ schema.validate({ foo: "x", bar: "x", a: "x" });
 ```
 
-**Allows additional properties without validation**
+**Validé un objet avec des propriétés fixes et des propriétés dynamiques libres**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -362,7 +750,7 @@ const schema = new Schema({
     foo: { type: "string" },
     bar: { type: "string" }
   },
-  additional: true
+  values: { type: "unknown" }
 });
 
 ✅ schema.validate({ foo: "x", bar: "x" });
@@ -373,7 +761,7 @@ const schema = new Schema({
 ❌ schema.validate({ foo: "x" });
 ```
 
-**Allows additional properties with validation**
+**Validé un objet avec des propriétés fixes et des propriétés dynamiques contraintes**
 ```ts
 const schema = new Schema({
   type: "object",
@@ -381,10 +769,8 @@ const schema = new Schema({
     foo: { type: "string" },
     bar: { type: "string" }
   },
-  additional: {
-    key: { type: "string" },
-    value: { type: "number" }
-  }
+  keys: { type: "string" },
+  values: { type: "number" }
 });
 
 ✅ schema.validate({ foo: "x", bar: "x" });
@@ -396,28 +782,61 @@ const schema = new Schema({
 ❌ schema.validate({ bar: "x" });
 ❌ schema.validate({ foo: "x", bar: "x", a: "x", b: 0 });
 ```
-*The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
+
+**Validé un objet avec des propriétés dynamiques contraintes**
+```ts
+const schema = new Schema({
+  type: "object",
+  keys: { type: "string" },
+  values: { type: "string" }
+});
+
+✅ schema.validate({});
+✅ schema.validate({ a: "x" });
+✅ schema.validate({ a: "x", b: "x" });
+
+❌ schema.validate({ a: 0 });
+❌ schema.validate({ a: "x", b: 0 });
+```
 
 ### Array
 
-#### **Properties :**
+#### **Propriétés :**
 
-- **`shape?`**
-  
-  An array with criteria nodes defining the expected items.
-
-- **`additional?`** — *(Default: `false`; Only usable if `shape` is defined)*
-  - **boolean**:
-    - **true**: Allows items not defined in `shape`.
-    - **false**: Disallows items not defined in `shape`.
-  - **object**:
-    - **min?**: Minimum number of additional items required.
-    - **max?**: Maximum number of additional items required.
-    - **item?**: Criteria node that each additional item must satisfy.
+<ul>
+  <li>
+    <strong>type: "array"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>min?</strong>
+    <br/>
+    Nombre d'éléments minimum.
+  </li>
+  <br/>
+  <li>
+    <strong>max?</strong>
+    <br/>
+    Nombre d'éléments maximum.
+  </li>
+  <br/>
+  <li>
+    <strong>tuple?</strong>
+    <br/>
+    Un tableau dont les éléments sont des noeuds de critères. Représente les éléments fixes que le tableau doit satisfaire.
+  </li>
+  <br/>
+  <li>
+    <strong>items?</strong>
+    <br/>
+    Noeud de critères que les éléments du tableau doivent satisfaire.<br/>
+    Les éléments définies dans le tableau <strong>tuple</strong> ne sont pas affectées.
+  </li>
+</ul>
 
 #### **Exemples :**
 
-**Validates any standard JavaScript array**
+**Validé n'importe quel tableau**
 ```ts
 const schema = new Schema({
   type: "array"
@@ -427,14 +846,14 @@ const schema = new Schema({
 ✅ schema.validate(["x"]);
 
 ❌ schema.validate({});
-❌ schema.validate("");
+❌ schema.validate("x");
 ```
 
-**Validates an array with a fixed item structure**
+**Validé un tableau d'éléments fixes**
 ```ts
 const schema = new Schema({
   type: "array",
-  shape: [
+  tuple: [
     { type: "string" },
     { type: "string" }
   ]
@@ -447,38 +866,63 @@ const schema = new Schema({
 ❌ schema.validate(["x", "x", "x"]);
 ```
 
-**Allows additional items without validation**
+**Validé un tableau et un sous-tableau d'éléments fixes**
+<br/>
+
 ```ts
 const schema = new Schema({
   type: "array",
-  shape: [
+  tuple: [
     { type: "string" },
-    { type: "string" }
-  ],
-  additional: true
+    { type: "string" },
+    [
+      { type: "number" },
+      { type: "number" }
+    ]
+  ]
 });
 
-✅ schema.validate(["x", "x"]);
-✅ schema.validate(["x", "x", "x"]);
-✅ schema.validate(["x", "x", "x", 0]);
+✅ schema.validate(["x", "x", [0, 0]]);
 
 ❌ schema.validate([]);
 ❌ schema.validate(["x"]);
+❌ schema.validate(["x", "x", []]);
+❌ schema.validate(["x", "x", [0]]);
 ```
 
-**Allows additional items with validation**
+**Validé un tableau d'éléments fixes et des éléments dynamiques libres**
 ```ts
 const schema = new Schema({
   type: "array",
-  shape: [
+  tuple: [
     { type: "string" },
     { type: "string" }
   ],
-  additional: {
-    item: { type: "number" }
-  }
+  items: { type: "unknown" }
 });
 
+✅ schema.validate(["x", "x"]);
+✅ schema.validate(["x", "x", 0]);
+✅ schema.validate(["x", "x", ""]);
+✅ schema.validate(["x", "x", {}]);
+
+❌ schema.validate([]);
+❌ schema.validate(["x"]);
+❌ schema.validate([0, "x"]);
+```
+
+**Validé un tableau d'éléments fixes et des éléments dynamiques contraints**
+```ts
+const schema = new Schema({
+  type: "array",
+  tuple: [
+    { type: "string" },
+    { type: "string" }
+  ],
+  items: { type: "number" }
+});
+
+✅ schema.validate(["x"]);
 ✅ schema.validate(["x", "x"]);
 ✅ schema.validate(["x", "x", 0]);
 ✅ schema.validate(["x", "x", 0, 0]);
@@ -486,43 +930,132 @@ const schema = new Schema({
 ❌ schema.validate([]);
 ❌ schema.validate(["x"]);
 ❌ schema.validate(["x", "x", "x"]);
+❌ schema.validate(["x", "x", "x", "x"]);
 ```
-*The examples provided don’t cover every possible case, but they give you the essential tools to define your own validation criteria.*
 
-### Simple
+**Validé un tableau avec éléments dynamiques contraints**
+```ts
+const schema = new Schema({
+  type: "array",
+  items: { type: "string" }
+});
 
-#### **Properties :**
+✅ schema.validate([]);
+✅ schema.validate(["x"]);
+✅ schema.validate(["x", "x"]);
 
-- **`simple`**
+❌ schema.validate([0]);
+❌ schema.validate(["x", 0]);
+❌ schema.validate(["x", "x", 0]);
+```
 
-  - **"NULL"**: The value must be strictly `null`.
-  - **"UNDEFINED"**: The value must be strictly `undefined`.
-  - **"NULLISH"**: The value can be either `null` or `undefined`.
-  - **"UNKNOWN"**: Any value is accepted (no constraint).
+### Symbol
+
+#### **Propriétés :**
+
+<ul>
+  <li>
+    <strong>type: "symbol"</strong>
+  </li>
+  <br/>
+  <li>
+    <strong>literal?</strong>
+    <br/>
+    <ul>
+      <li><strong>symbol</strong>: Restreint la valeur à un seul symbole valide.</li>
+      <li><strong>array</strong>: Restreint la valeur avec un tableau où les items représentent les symboles valides.</li>
+      <li><strong>object</strong>: Restreint la valeur avec un objet où les valeurs représentent les symboles valides.</li>
+    </ul>
+  </li>
+  <br/>
+  <li>
+    <strong>custom(value)?</strong>
+    <br/>
+    Fonction de validation custom qui reçoit la valeur en paramètre et doit renvoyer un booléen indiquant si la celle-ci est valide.
+  </li>
+</ul>
 
 #### **Exemples :**
 
+**Validé n'importe quel symbole**
 ```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+
 const schema = new Schema({
-  type: "simple",
-  simple: "NULL"
+  type: "symbol"
 });
 
-✅ schema.validate(null);
+✅ schema.validate(xSymbol);
+✅ schema.validate(ySymbol);
+```
 
-❌ schema.validate(0);
-❌ schema.validate("");
-❌ schema.validate({});
+**Validé un symbole spécifique**
+```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+
+const schema = new Schema({
+  type: "symbol",
+  literal: xSymbol
+});
+
+✅ schema.validate(xSymbol);
+
+❌ schema.validate(ySymbol);
+```
+
+**Validé des symboles spécifiques avec un tableau**
+```ts
+const xSymbol = Symbol("x");
+const ySymbol = Symbol("y");
+const zSymbol = Symbol("z");
+
+const schema = new Schema({
+  type: "symbol",
+  literal: [xSymbol, ySymbol]
+});
+
+✅ schema.validate(xSymbol);
+✅ schema.validate(ySymbol);
+
+❌ schema.validate(zSymbol);
+```
+
+**Validé des symboles spécifiques avec un enum**
+```ts
+enum mySymbol {
+  X = Symbol("x"),
+  Y = Symbol("y")
+};
+
+enum otherSymbol {
+  Z = Symbol("z")
+};
+
+const schema = new Schema({
+  type: "symbol",
+  literal: mySymbol
+});
+
+✅ schema.validate(mySymbol.X);
+✅ schema.validate(mySymbol.Y);
+
+❌ schema.validate(otherSymbol.Z);
 ```
 
 ### Union
 
-#### **Properties :**
+#### **Propriétés :**
 
-- **`union`**
-
-  An array of criteria nodes, where each node defines an acceptable structure or value.<br/>
-  A value is considered **valid if it matches at least one** of the provided criteria.
+<ul>
+  <li>
+    <strong>union</strong>
+    <br/>
+    Un tableau de noeuds de critères, où chaque noeud définit une valeur acceptable.<br/>
+    Une valeur est considérée comme valide si elle correspond à au moins un des noeuds de critères fournis.
+  </li>
+</ul>
 
 #### **Exemples :**
 
@@ -541,14 +1074,62 @@ const schema = new Schema({
 ❌ schema.validate({});
 ```
 
+### Null
+
+#### **Propriétés :**
+
+<ul>
+  <li>
+    <strong>type: "null"</strong>
+  </li>
+</ul>
+
+#### **Exemples :**
+
+```ts
+const schema = new Schema({
+  type: "null"
+});
+
+✅ schema.validate(null);
+
+❌ schema.validate(0);
+❌ schema.validate("");
+❌ schema.validate({});
+```
+
+### Undefined
+
+#### **Propriétés :**
+
+<ul>
+  <li>
+    <strong>type: "undefined"</strong>
+  </li>
+</ul>
+
+#### **Exemples :**
+
+```ts
+const schema = new Schema({
+  type: "undefined"
+});
+
+✅ schema.validate(undefined);
+
+❌ schema.validate(0);
+❌ schema.validate("");
+❌ schema.validate({});
+```
+
 ## Exemples
 
-### Simple schema
+### Schéma simple
 
 ```ts
 const user = new Schema({ 
-  type: "struct",
-  struct: {
+  type: "object",
+  shape: {
     name: {
       type: "string",
       min: 3,
@@ -556,18 +1137,23 @@ const user = new Schema({
     },
     role: {
       type: "string",
-      enum: ["WORKER", "CUSTOMER"]
+      literal: ["WORKER", "CUSTOMER"]
     }
   }
 });
 
-const data = {
+✅ user.validate({
   name: "Alice",
   role: "WORKER"
-};
+});
+
+❌ user.validate({
+  name: "Alice",
+  role: "MANAGER"
+});
 ```
 
-### Composite schema
+### Schéma composite
 
 ```ts
 const name = new Schema({
@@ -578,24 +1164,29 @@ const name = new Schema({
 
 const role = new Schema({
   type: "string",
-  enum: ["WORKER", "CUSTOMER"]
+  literal: ["WORKER", "CUSTOMER"]
 });
 
 const user = new Schema({ 
-  type: "struct",
-  struct: {
+  type: "object",
+  shape: {
     name: name.criteria,
     role: role.criteria
   }
 });
 
-const data = {
+✅ user.validate({
   name: "Bob",
-  role: "WORKER"
-};
+  role: "CUSTOMER"
+});
+
+❌ user.validate({
+  name: "Bob",
+  role: "MANAGER"
+});
 ```
 
-### Deep composite schema
+### Schéma composite profond
 
 ```ts
 const name = new Schema({
@@ -605,190 +1196,260 @@ const name = new Schema({
 });
 
 const setting = new Schema({
-  type: "struct",
-  struct: {
+  type: "object",
+  shape: {
     theme: {
       type: "string",
-      enum: ["DARK", "LIGHT"]
+      literal: ["DARK", "LIGHT"]
     },
-    notification: {
-      type: "boolean"
-    }
+    notification: { type: "boolean" }
   }
 });
 
 const user = new Schema({ 
-  type: "struct",
-  struct: {
+  type: "object",
+  object: {
     name: name.criteria,
-    theme: setting.criteria.struct.theme
+    theme: setting.criteria.shape.theme
   }
 });
 
-const data = {
+✅ user.validate({
   name: "Alice",
   theme: "DARK"
-};
-```
-
-### Shorthand struct schema
-
-In this schema only direct keys of the struct property can be defined as optional
-
-```ts
-const user = new Schema({ 
-  type: "struct",
-  struct: {
-    name: {
-      first: { type: "string" },
-      last: { type: "string" }
-    },
-  }
 });
 
-const data = {
-  name: {
-    first: "Anders",
-    last: "Hejlsberg"
-  }
-};
-```
-
-### Shorthand tuple schema
-
-```ts
-const color = new Schema({ 
-  type: "tuple",
-  tuple: [
-    { type: "string" },
-    [
-      { type: "number" },
-      { type: "number" },
-      { type: "number" }
-    ]
-  ]
+❌ user.validate({
+  name: "Alice",
+  theme: "DEFAULT"
 });
-
-const data = ["red", [0, 100, 50]];
 ```
 
 <br/><br/>
 
 # Testers
 
-### Object
+## Object
 
-|Function|Description|
-|--|--|
-|`isObject`                |Checks if it is an object|
-|`isPlainObject`           |Checks if it is an object and if it has a prototype of `Object.prototype` or `null`|
-|`isArray`                 |Checks if it is an array|
-|`isTypedArray`            |Checks if it is an typed array|
-|`isFunction`              |Checks if it is an function|
-|`isBasicFunction`         |Checks if it is an function and if it is not `async`, `generator` or `async generator`.|
-|`isAsyncFunction`         |Checks if it is an async function|
-|`isGeneratorFunction`     |Checks if it is an generator function|
-|`isAsyncGeneratorFunction`|Checks if it is an async generator function|
+#### `isObject(value): boolean`
+Vérifie si la valeur fournie est de type **object**.
 
-<br/>
+#### `isPlainObject(value): boolean`
+Vérifie si la valeur fournie est de type **object** et dont le prototype est soit **Object.prototype**, soit **null**.
+<br/>Par exemple les valeurs créées via le littérale **{}** ou via **Object.create(null)** font partie des valeurs acceptées.
 
-### String
+#### `isArray(value): boolean`
+Vérifie si la valeur fournie est de type **array**.
 
-|Function|Description|
-|--|--|
-|`isAscii`    |**Standard:** No standard|
-|`isIpV4`     |**Standard:** No standard|
-|`isIpV6`     |**Standard:** No standard|
-|`isIp`       |See **isIpV4** and **isIpV6**|
-|`isEmail`    |**Standard:** RFC 5321|
-|`isDomain`   |**Standard:** RFC 1035|
-|`isDataURL`  |**Standard:** RFC 2397|
-|`isUuid`     |**Standard:** RFC 9562|
-|`isBase16`   |**Standard:** RFC 4648|
-|`isBase32`   |**Standard:** RFC 4648|
-|`isBase32Hex`|**Standard:** RFC 4648|
-|`isBase64`   |**Standard:** RFC 4648|
-|`isBase64Url`|**Standard:** RFC 4648|
+#### `isTypedArray(value): boolean`
+Vérifie si la valeur fournie est de type **array** et si elle est une vue sur un **ArrayBuffer**, à l’exception des **DataView**.
+
+#### `isFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function**.
+
+#### `isBasicFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **async**, **generator** ou **async generator**.
+
+#### `isAsyncFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **generator** ou **async generator**.
+
+#### `isGeneratorFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **async** ou **async generator**.
+
+#### `isAsyncGeneratorFunction(value): boolean`
+Vérifie si la valeur fournie est de type **function** et qu'elle n'est pas de nature **basic**, **async** ou **generator**.
 
 <br/>
 
-```ts
-isAscii(str: string, params: AsciiParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`onlyPrintable?: boolean`||
+## String
 
-<br/>
+#### `isAscii(str): boolean`
+Vérifie si la chaîne fournie n'est composée que de caractères ASCII. 
 
-```ts
-isIp(str: string, params: IpParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`allowPrefix?: boolean`|Allow prefixes at the end of IP addresses (e.g., `192.168.0.1/22`).|
+#### `isIpV4(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV4.
 
-<br/>
+#### `isIpV6(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV6.
 
-```ts
-isEmail(str: string, params: EmailParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`allowQuotedString?: boolean`  |Allows a string enclosed in quotes in the first part of the email address.|
-|`allowIpAddress?: boolean`      |Allows an IPv4 or IPv6 address in place of the domain name.|
-|`allowGeneralAddress?: boolean`|Allows an general address in place of the domain name.|
+#### `isIp(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une IPV4 ou une IPV6.
 
-<br/>
+**Options:**
+<ul>
+  <li>
+    <strong>cidr?</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Si <strong>true</strong>, rend obligatoire la présence d'un suffixe CIDR, sinon si <strong>false</strong> un suffixe n'est pas accepté.
+  </li>
+</ul>
 
-```ts
-isDataURL(str: string, params: DataUrlParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`type?: string`     |Specifies the type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
-|`subtype?: string[]`|Specifies the sub-type of media. [Standard type](http://www.iana.org/assignments/media-types/)|
+#### `isEmail(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une adresse email.
 
-<br/>
+**Options:**
+<ul>
+  <li>
+    <strong>allowLocalQuotes?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la première partie (partie locale) de l'adresse email peut être formée à l'aide de guillemets. Par exemple, <strong>"Jean Dupont"@exemple.com</strong> sera considéré comme valide.
+  </li>
+  <li>
+    <strong>allowIpAddress?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la deuxième partie (partie domain) de l'adresse email peut être une adresse IP. Par exemple, <strong>foo@8.8.8.8</strong> sera considéré comme valide.
+  </li>
+  <li>
+    <strong>allowGeneralAddress?: boolean</strong> — (Default: <strong>false</strong>)
+    <br/>
+    Spécifie si la deuxième partie (partie domain) de l'adresse email peut être une adresse general. Par exemple, <strong>foo@8.8.8.8</strong> sera considéré comme valide.
+  </li>
+</ul>
 
-```ts
-isUuid(str: string, params?: UuidParams): boolean;
-```
-|Parameter|Description|
-|--|--|
-|`version?: 1\|2\|3\|4\|5\|6\|7`|The version you wish to validate. By default, all versions are validated.|
+**Standards:** RFC 5321
+
+#### `isDomain(str): boolean`
+Vérifie si la chaîne fournie correspond un nom de domain.
+
+**Standards:** RFC 1035
+
+#### `isDataURL(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à une **DataURL**.
+
+**Options:**
+<ul>
+  <li>
+    <strong>type?: string[]</strong>
+    <br/>
+    Spécifie un ou plusieurs types MIME autorisés.
+    <br/>
+    <a href="http://www.iana.org/assignments/media-types/">Liste des types MIME enregistrés par l'IANA ↗</a>
+  </li>
+  <li>
+    <strong>subtype?: string[]</strong>
+    <br/>
+    Spécifie un ou plusieurs sous-types MIME autorisés.
+    <br/>
+    <a href="http://www.iana.org/assignments/media-types/">Liste des types MIME enregistrés par l'IANA ↗</a>
+  </li>
+</ul>
+
+**Standards:** RFC 2397
+
+#### `isUuid(str [, options]): boolean`
+Vérifie si la chaîne fournie correspond à un **UUID** valide.
+
+**Options:**
+<ul>
+  <li>
+    <strong>version?: number</strong>
+    <br/>
+    Spécifie le numéro de version autorisé, compris entre 1 et 7.
+  </li>
+</ul>
+
+**Standards:** RFC 9562
+
+#### `isBase16(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base16** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase32(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base32** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase32Hex(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base32Hex** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase64(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base64** valide.
+
+**Standards:** RFC 4648
+
+#### `isBase64Url(str): boolean`
+Vérifie si la chaîne fournie correspond à un encodage **base64Url** valide.
+
+**Standards:** RFC 4648
 
 <br/><br/>
 
 # Helpers
 
-### Object
+## Object
 
-|Function|Description|
-|--|--|
-|`getInternalTag`|Extracts the internal type tag of a value (e.g. `"Array"`, `"Date"`).|
-
+#### `getInternalTag(target): string`
+Retourne le tag interne de la cible. Par exemple pour une cible **async () => {}** le tag retourné est **"AsyncFunction"**.
 
 <br/>
 
-### String
+## String
 
-|Function|Description|
-|--|--|
-|`base16ToBase64`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base64** or **base64Url**.|
-|`base16ToBase32`|**Standard :** RFC 4648<br/>Conversion of a string from **base16** to a string in **base32** or **base32Hex**.|
-|`base64ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base64** or **base64Url** to a string in **base16**.|
-|`base32ToBase16`|**Standard :** RFC 4648<br/>Conversion of a string from **base32** or **base32Hex** to a string in **base16**.|
+#### `base16ToBase32(str [, to, padding]): string`
+Convertie une chaîne en **base16** en une chaîne en **base32** ou **base32Hex**.
 
-```ts
-base16ToBase64(input: string, to: "B64" | "B64URL" = "B64", padding: boolean = true): string;
+**Arguments:**
+<ul>
+  <li>
+    <strong>to?: "B32" | "B32HEX"</strong> — (Default: <strong>"B32"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être convertie.
+  </li>
+  <br/>
+  <li>
+    <strong>padding?: boolean</strong> — (Default: <strong>true</strong>)
+    <br/>
+    Spécifie si la chaîne doit être complétée par un remplissage si nécessaire.
+  </li>
+</ul>
 
-base16ToBase32(input: string, to: "B16" | "B16HEX" = "B16", padding: boolean = true): string;
+**Standards:** RFC 4648
 
-base64ToBase16(input: string, from: "B64" | "B64URL" = "B64"): string;
+#### `base16ToBase64(str [, to, padding]): string`
+Convertie une chaîne en **base16** en une chaîne en **base64** ou **base64Url**.
 
-base32ToBase16(input: string, from: "B16" | "B16HEX" = "B16"): string;
-```
-<br/><br/>
+**Arguments:**
+<ul>
+  <li>
+    <strong>to?: "B64" | "B64URL"</strong> — (Default: <strong>"B64"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être convertie.
+  </li>
+  <br/>
+  <li>
+    <strong>padding?: boolean</strong> — (Default: <strong>true</strong>)
+    <br/>
+    Spécifie si la chaîne doit être complétée par un remplissage si nécessaire.
+  </li>
+</ul>
 
-Developed with passion 🇫🇷
+**Standards:** RFC 4648
+
+#### `base32ToBase16(str [, from]): string`
+Convertie une chaîne en **base32** ou **base32Hex** en une chaîne en **base16**.
+
+**Arguments:**
+<ul>
+  <li>
+    <strong>from?: "B32" | "B32HEX"</strong> — (Default: <strong>"B32"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être fournie.
+  </li>
+</ul>
+
+**Standards:** RFC 4648
+
+#### `base64ToBase16(str [, from]): string`
+Convertie une chaîne en **base64** ou **base64Url** en une chaîne en **base16**.
+
+**Arguments:**
+<ul>
+  <li>
+    <strong>from?: "B64" | "B64URL"</strong> — (Default: <strong>"B64"</strong>)
+    <br/>
+    Spécifie dans quel encodage la chaîne doit être fournie.
+  </li>
+</ul>

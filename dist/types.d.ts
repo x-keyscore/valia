@@ -1,93 +1,14 @@
-type LooseAutocomplete<T extends string> = T | Omit<string, T>;
-
-interface NodePath {
-    /**
-     * **Composition of explicit path :**
-     * ```py
-     * segment = (string / number / symbol)
-     * path    = [*(...segment)]
-     * ```
-     *
-     * **Exemple :**
-     *  ```py
-     * my-path = ["struct", "products", "item", "price"]
-     * ```
-    */
-    explicit: (string | number | symbol)[];
-    /**
-     * #### Composition of implicit path :
-     * ```py
-     * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
-     * static-key    = ["&", (string / number / symbol)]
-     * segment       = dynamic-key / static-key
-     * path          = [*(...segment)]
-     * ```
-     *
-     * #### Exemple :
-     * ```py
-     * my-path = ["&", "products", "%", "number", "&", "price"]
-     * my-path is products[0].price or products[1].price and continue
-     * ```
-    */
-    implicit: (LooseAutocomplete<"&" | "%" | "string" | "number" | "symbol"> | number | symbol)[];
+interface UndefinedSetableCriteria extends SetableCriteriaTemplate<"undefined"> {
 }
-interface MounterChunkTask {
-    node: SetableCriteria | MountedCriteria;
-    partPath: Partial<NodePath>;
+interface UndefinedDerivedCriteria extends DerivedCriteriaTemplate<{}, null> {
 }
-type MounterChunk = MounterChunkTask[];
-interface CheckerHooks<R extends string = string> {
-    onAccept(): {
-        action: "DEFAULT";
-    } | {
-        action: "IGNORE";
-        target: "CHUNK";
-    } | {
-        action: "REJECT";
-        code: R;
-    };
-    onReject(rejection: CheckerRejection): {
-        action: "DEFAULT";
-    } | {
-        action: "IGNORE";
-        target: "CHUNK" | "BRANCH";
-    } | {
-        action: "REJECT";
-        code: R;
-    };
-}
-interface CheckerWrapHooks extends CheckerHooks {
-    taskOwner: CheckerTask;
-    stackIndex: {
-        chunk: number;
-        branch: number;
-    };
-}
-interface CheckerTask {
-    data: unknown;
-    node: MountedCriteria;
-    fullPath: NodePath;
-    stackHooks?: CheckerWrapHooks[];
-}
-interface CheckerChunkTask {
-    data: CheckerTask['data'];
-    node: CheckerTask['node'];
-    hooks?: CheckerHooks;
-}
-type CheckerChunk = CheckerChunkTask[];
-interface CheckerRejection {
-    code: string;
-    task: CheckerTask;
-}
-
-declare const nodeSymbol: unique symbol;
 
 interface BasicObject {
     [key: string | symbol | number]: unknown;
 }
-type PlainObject = {
+interface PlainObject {
     [key: string | symbol]: unknown;
-};
+}
 interface BasicArray extends Array<unknown> {
 }
 interface TypedArray extends ArrayBufferView {
@@ -320,38 +241,44 @@ declare const testers: {
     string: typeof stringTesters;
 };
 
-interface NatureMap$1 {
+interface NatureMap {
     BASIC: BasicFunction;
     ASYNC: AsyncFunction;
     BASIC_GENERATOR: GeneratorFunction;
     ASYNC_GENERATOR: AsyncGeneratorFunction;
 }
 interface FunctionSetableCriteria extends SetableCriteriaTemplate<"function"> {
-    nature?: keyof NatureMap$1 | (keyof NatureMap$1)[];
+    nature?: keyof NatureMap | (keyof NatureMap)[];
 }
 interface FunctionMountedCriteria {
     natureBitcode: number;
 }
-type FunctionGuardedCriteria<T extends FunctionSetableCriteria> = T['nature'] extends (keyof NatureMap$1)[] ? NatureMap$1[T['nature'][number]] : [T['nature']] extends [keyof NatureMap$1] ? NatureMap$1[T['nature']] : Function;
+type FunctionGuardedCriteria<T extends FunctionSetableCriteria> = T['nature'] extends (keyof NatureMap)[] ? NatureMap[T['nature'][number]] : [T['nature']] extends [keyof NatureMap] ? NatureMap[T['nature']] : Function;
 interface FunctionDerivedCriteria<T extends FunctionSetableCriteria> extends DerivedCriteriaTemplate<FunctionMountedCriteria, FunctionGuardedCriteria<T>> {
 }
-type FunctionExceptionCodes = "NATURE_PROPERTY_MALFORMED" | "NATURE_PROPERTY_STRING_MISCONFIGURED" | "NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED" | "NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED";
+type FunctionExceptionCodes = "NATURE_PROPERTY_MISDECLARED" | "NATURE_PROPERTY_STRING_MISCONFIGURED" | "NATURE_PROPERTY_ARRAY_MISCONFIGURED" | "NATURE_PROPERTY_ARRAY_ITEM_MISDECLARED" | "NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED";
 type FunctionRejectionCodes = "TYPE_FUNCTION_UNSATISFIED" | "NATURE_UNSATISFIED";
 interface FunctionCustomMembers {
-    natureBitflags: Record<keyof NatureMap$1, number>;
+    natureBitflags: Record<keyof NatureMap, number>;
     tagBitflags: Record<string, number>;
 }
 
 interface BooleanSetableCriteria extends SetableCriteriaTemplate<"boolean"> {
-    literal: boolean;
+    literal?: boolean;
 }
 interface BooleanDerivedCriteria extends DerivedCriteriaTemplate<{}, boolean> {
 }
 type BooleanRejectionCodes = "TYPE_BOOLEAN_UNSATISFIED" | "LITERAL_UNSATISFIED";
 
+interface UnknownSetableCriteria extends SetableCriteriaTemplate<"unknown"> {
+}
+interface UnknownDerivedCriteria extends DerivedCriteriaTemplate<{}, unknown> {
+}
+
 type SetableLiteral$2 = symbol | symbol[] | Record<string | number, symbol>;
 interface SymbolSetableCriteria extends SetableCriteriaTemplate<"symbol"> {
     literal?: SetableLiteral$2;
+    custom?: (value: symbol) => boolean;
 }
 interface SymbolMountedCriteria {
     resolvedLiteral?: Set<symbol>;
@@ -359,8 +286,8 @@ interface SymbolMountedCriteria {
 type SymbolGuardedCriteria<T extends SymbolSetableCriteria> = T['literal'] extends Record<string | number, symbol> ? T['literal'][keyof T['literal']] : T["literal"] extends symbol[] ? T['literal'][number] : T['literal'] extends symbol ? T["literal"] : symbol;
 interface SymbolDerivedCriteria<T extends SymbolSetableCriteria> extends DerivedCriteriaTemplate<SymbolMountedCriteria, SymbolGuardedCriteria<T>> {
 }
-type SymbolExceptionCodes = "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED";
-type SymbolRejectionCodes = "TYPE_SYMBOL_UNSATISFIED" | "LITERAL_UNSATISFIED";
+type SymbolExceptionCodes = "LITERAL_PROPERTY_MISDECLARED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED" | "CUSTOM_PROPERTY_MISDECLARED";
+type SymbolRejectionCodes = "TYPE_SYMBOL_UNSATISFIED" | "LITERAL_UNSATISFIED" | "CUSTOM_UNSATISFIED";
 
 type SetableLiteral$1 = number | number[] | Record<string | number, number>;
 interface NumberSetableCriteria extends SetableCriteriaTemplate<"number"> {
@@ -375,7 +302,7 @@ interface NumberMountedCriteria {
 type NumberGuardedCriteria<T extends NumberSetableCriteria> = T['literal'] extends Record<string | number, number> ? T['literal'][keyof T['literal']] : T["literal"] extends number[] ? T['literal'][number] : T['literal'] extends number ? T["literal"] : number;
 interface NumberDerivedCriteria<T extends NumberSetableCriteria> extends DerivedCriteriaTemplate<NumberMountedCriteria, NumberGuardedCriteria<T>> {
 }
-type NumberExceptionCodes = "MIN_PROPERTY_MALFORMED" | "MAX_PROPERTY_MALFORMED" | "MIN_AND_MAX_PROPERTIES_MISCONFIGURED" | "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED" | "CUSTOM_PROPERTY_MALFORMED";
+type NumberExceptionCodes = "MIN_PROPERTY_MISDECLARED" | "MAX_PROPERTY_MISDECLARED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "LITERAL_PROPERTY_MISDECLARED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED" | "CUSTOM_PROPERTY_MISDECLARED";
 type NumberRejectionCodes = "TYPE_NUMBER_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "LITERAL_UNSATISFIED" | "CUSTOM_UNSATISFIED";
 
 type StringTesters = typeof testers.string;
@@ -399,77 +326,37 @@ interface StringMountedCriteria {
 type StringGuardedCriteria<T extends StringSetableCriteria> = T['literal'] extends Record<string | number, string> ? T['literal'][keyof T['literal']] : T["literal"] extends string[] ? T['literal'][number] : T['literal'] extends string ? T["literal"] : string;
 interface StringDerivedCriteria<T extends StringSetableCriteria> extends DerivedCriteriaTemplate<StringMountedCriteria, StringGuardedCriteria<T>> {
 }
-type StringExceptionCodes = "MIN_PROPERTY_MALFORMED" | "MAX_PROPERTY_MALFORMED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "REGEX_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_MALFORMED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MALFORMED" | "LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED" | "CONSTRAINT_PROPERTY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED" | "CUSTOM_PROPERTY_MALFORMED";
+type StringExceptionCodes = "MIN_PROPERTY_MISDECLARED" | "MAX_PROPERTY_MISDECLARED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "REGEX_PROPERTY_MISDECLARED" | "LITERAL_PROPERTY_MISDECLARED" | "LITERAL_PROPERTY_ARRAY_MISCONFIGURED" | "LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_MISCONFIGURED" | "LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED" | "LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED" | "CONSTRAINT_PROPERTY_MISDECLARED" | "CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISDECLARED" | "CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED" | "CONSTRAINT_PROPERTY_OBJECT_VALUE_MISDECLARED" | "CUSTOM_PROPERTY_MISDECLARED";
 type StringRejectionCodes = "TYPE_STRING_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "REGEX_UNSATISFIED" | "LITERAL_UNSATISFIED" | "CONSTRAINT_UNSATISFIED" | "CUSTOM_UNSATISFIED";
 
-interface NatureMap {
-    UNKNOWN: unknown;
-    NULL: null;
-    UNDEFINED: undefined;
-    NULLISH: undefined | null;
-}
-interface SimpleSetableCriteria extends SetableCriteriaTemplate<"simple"> {
-    nature: keyof NatureMap;
-}
-interface SimpleMountedCriteria {
-    natureBitcode: number;
-}
-interface SimpleDerivedCriteria<T extends SimpleSetableCriteria> extends DerivedCriteriaTemplate<SimpleMountedCriteria, NatureMap[T['nature']]> {
-}
-type SimpleExceptionCodes = "NATURE_PROPERTY_REQUIRED" | "NATURE_PROPERTY_MALFORMED" | "NATURE_PROPERTY_STRING_MISCONFIGURED";
-type SimpleRejectionCodes = "NATURE_NULLISH_UNSATISFIED" | "NATURE_NULL_UNSATISFIED" | "NATURE_UNDEFINED_UNSATISFIED";
-interface SimpleCustomMembers {
-    natureBitflags: Record<keyof NatureMap, number>;
-}
-
-interface SetableShape$1<T extends FormatTypes = FormatTypes> {
-    [key: string | symbol | number]: SetableCriteria<T> | SetableShape$1<T>;
+interface SetableShape<T extends FormatTypes = FormatTypes> {
+    [key: string | symbol | number]: SetableCriteria<T> | SetableShape<T>;
 }
 type SetableKey = SetableCriteria<"string" | "symbol">;
 type SetableValue<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
-interface SetableAdditionalOptions$1<T extends FormatTypes = FormatTypes> {
+interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
+    nature?: "PLAIN";
     min?: number;
     max?: number;
-    key?: SetableKey;
-    value?: SetableValue<T>;
-}
-interface ObjectSetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"object"> {
-    shape: SetableShape$1<T>;
-    nature?: "STANDARD" | "PLAIN";
+    shape?: SetableShape<T>;
     optional?: (string | symbol)[] | boolean;
-    additional?: SetableAdditionalOptions$1<T> | boolean;
+    keys?: SetableKey;
+    values?: SetableValue<T>;
 }
-type MountedShape$1<T extends SetableShape$1> = {
-    [K in keyof T]: T[K] extends SetableCriteria ? MountedCriteria<T[K]> : T[K] extends SetableShape$1 ? MountedCriteria<{
+type MountedShape<T extends SetableShape> = {
+    [K in keyof T]: T[K] extends SetableCriteria ? MountedCriteria<T[K]> : T[K] extends SetableShape ? MountedCriteria<{
         type: "object";
         shape: T[K];
     }> : never;
 };
-interface MountedAdditionalOptions$1<T extends SetableAdditionalOptions$1> {
-    min?: number;
-    max?: number;
-    key: unknown extends T['key'] ? undefined : SetableAdditionalOptions$1['key'] extends T['key'] ? MountedCriteria<SetableKey> | undefined : T['key'] extends SetableKey ? MountedCriteria<T['key']> : T['key'];
-    value: unknown extends T['value'] ? undefined : SetableAdditionalOptions$1['value'] extends T['value'] ? MountedCriteria<SetableCriteria> | undefined : T['value'] extends SetableCriteria ? MountedCriteria<T['value']> : T['value'];
-}
 interface ObjectMountedCriteria<T extends ObjectSetableCriteria> {
-    shape: MountedShape$1<T['shape']>;
-    nature: unknown extends T['nature'] ? "standard" : ObjectSetableCriteria['nature'] extends T['nature'] ? NonNullable<ObjectSetableCriteria['nature']> : T['nature'];
-    additional: unknown extends T['additional'] ? false : ObjectSetableCriteria['additional'] extends T['additional'] ? MountedAdditionalOptions$1<SetableAdditionalOptions$1> | boolean : T['additional'] extends SetableAdditionalOptions$1 ? MountedAdditionalOptions$1<T['additional']> : T['additional'];
+    shape: unknown extends T['shape'] ? undefined : ObjectSetableCriteria['shape'] extends T['shape'] ? MountedShape<SetableShape> | undefined : T['shape'] extends SetableShape ? MountedShape<T['shape']> : T['shape'];
+    keys: unknown extends T['keys'] ? undefined : ObjectSetableCriteria['keys'] extends T['keys'] ? MountedCriteria<SetableKey> | undefined : T['keys'] extends SetableKey ? MountedCriteria<T['keys']> : T['keys'];
+    values: unknown extends T['values'] ? undefined : ObjectSetableCriteria['values'] extends T['values'] ? MountedCriteria<SetableCriteria> | undefined : T['values'] extends SetableCriteria ? MountedCriteria<T['values']> : T['values'];
     declaredKeySet?: Set<string | symbol>;
     unforcedKeySet?: Set<string | symbol>;
     enforcedKeySet?: Set<string | symbol>;
 }
-type GuardedDynamic$1<T extends ObjectSetableCriteria['additional']> = [
-    T
-] extends [SetableAdditionalOptions$1] ? T['key'] extends SetableKey ? T['value'] extends SetableCriteria ? GuardedCriteria<T['key']> extends infer U ? {
-    [P in U as U extends PropertyKey ? U : never]: GuardedCriteria<T['value']>;
-} : never : GuardedCriteria<T['key']> extends infer U ? {
-    [P in U as U extends PropertyKey ? U : never]: unknown;
-} : never : T['value'] extends SetableCriteria ? {
-    [key: PropertyKey]: GuardedCriteria<T['value']>;
-} : {} : [T] extends [true] ? {
-    [key: PropertyKey]: unknown;
-} : {};
 type GuardedStaticKeys<T, U extends ObjectSetableCriteria['optional']> = [
     U
 ] extends [(string | symbol)[]] ? {
@@ -481,67 +368,73 @@ type GuardedStaticKeys<T, U extends ObjectSetableCriteria['optional']> = [
 } : {
     [P in keyof T]-?: T[P];
 };
-type GuardedStatic$1<T extends SetableShape$1, U extends ObjectSetableCriteria['optional']> = {
+type GuardedStatic$1<T extends ObjectSetableCriteria['shape'], U extends ObjectSetableCriteria['optional']> = T extends SetableShape ? {
     -readonly [K in keyof GuardedStaticKeys<T, U>]: T[K] extends SetableCriteria ? GuardedCriteria<T[K]> : never;
-};
-type ObjectGuardedCriteria<T extends ObjectSetableCriteria> = GuardedDynamic$1<T['additional']> extends infer D ? GuardedStatic$1<T['shape'], T['optional']> extends infer S ? {
+} : {};
+type GuardedDynamic$1<T extends ObjectSetableCriteria['keys'], U extends ObjectSetableCriteria['values']> = T extends SetableKey ? U extends SetableCriteria ? GuardedCriteria<T> extends infer V ? {
+    [P in V as V extends PropertyKey ? V : never]: GuardedCriteria<U>;
+} : never : GuardedCriteria<T> extends infer V ? {
+    [P in V as V extends PropertyKey ? V : never]: unknown;
+} : never : U extends SetableCriteria ? {
+    [key: string | symbol]: GuardedCriteria<U>;
+} : {};
+type ObjectGuardedCriteria<T extends ObjectSetableCriteria> = [
+    T['shape'],
+    T['keys'],
+    T['values']
+] extends [undefined, undefined, undefined] ? {
+    [key: string | symbol]: unknown;
+} : GuardedStatic$1<T['shape'], T['optional']> extends infer S ? GuardedDynamic$1<T['keys'], T['values']> extends infer D ? [S, D] extends [never, never] ? {
+    [key: string | symbol]: unknown;
+} : S extends object ? D extends object ? {
     [K in keyof (D & S)]: K extends keyof S ? S[K] : K extends keyof D ? D[K] : never;
-} : never : never;
+} : never : never : never : never;
 interface ObjectDerivedCriteria<T extends ObjectSetableCriteria> extends DerivedCriteriaTemplate<ObjectMountedCriteria<T>, ObjectGuardedCriteria<T>> {
 }
-type ObjectExceptionCodes = "SHAPE_PROPERTY_MALFORMED" | "SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED" | "NATURE_PROPERTY_MALFORMED" | "NATURE_PROPERTY_STRING_MISCONFIGURED" | "OPTIONAL_PROPERTY_MALFORMED" | "OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED" | "OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED" | "ADDITIONAL_PROPERTY_MALFORMED" | "ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED" | "ADDITIONAL__KEY_PROPERTY_MALFORMED" | "ADDITIONAL__KEY_PROPERTY_MISCONFIGURED" | "ADDITIONAL__VALUE_PROPERTY_MALFORMED" | "ADDITIONAL__MIN_PROPERTY_MALFORMED" | "ADDITIONAL__MAX_PROPERTY_MALFORMED" | "ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
-type ObjectRejectionCodes = "TYPE_PLAIN_OBJECT_UNSATISFIED" | "TYPE_OBJECT_UNSATISFIED" | "SHAPE_UNSATISFIED" | "EXTENSIBLE_UNALLOWED" | "EXTENSIBLE_MIN_UNSATISFIED" | "EXTENSIBLE_MAX_UNSATISFIED";
+type ObjectExceptionCodes = "NATURE_PROPERTY_MISDECLARED" | "NATURE_PROPERTY_MISCONFIGURED" | "MIN_PROPERTY_MISDECLARED" | "MAX_PROPERTY_MISDECLARED" | "MAX_MIN_PROPERTIES_MISCONFIGURED" | "SHAPE_PROPERTY_MISDECLARED" | "SHAPE_PROPERTY_OBJECT_VALUE_MISDECLARED" | "SHAPE_MIN_PROPERTIES_MISCONFIGURED" | "SHAPE_MAX_PROPERTIES_MISCONFIGURED" | "SHAPE_MIN_MAX_PROPERTIES_KEYS_VALUES_PROPERTIES_UNDEFINED" | "OPTIONAL_PROPERTY_MISDECLARED" | "OPTIONAL_PROPERTY_ARRAY_ITEM_MISDECLARED" | "OPTIONAL_PROPERTY_SHAPE_PROPERTY_UNDEFINED" | "KEYS_PROPERTY_MISDECLARED" | "KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_UNDEFINED" | "KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISDECLARED" | "KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISCONFIGURED" | "VALUES_PROPERTY_MISDECLARED";
+type ObjectRejectionCodes = "TYPE_OBJECT_UNSATISFIED" | "NATURE_PLAIN_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "SHAPE_UNSATISFIED";
 interface ObjectCustomMembers {
     natures: (ObjectSetableCriteria['nature'])[];
     getUnforcedKeys: (optional: boolean | (string | symbol)[], declaredKeys: (string | symbol)[]) => (string | symbol)[];
     getEnforcedKeys: (optional: boolean | (string | symbol)[], declaredKeys: (string | symbol)[]) => (string | symbol)[];
-    isShorthandShape(obj: object): obj is SetableShape$1;
+    isShorthandShape(obj: object): obj is SetableShape;
 }
 
-type SetableShape<T extends FormatTypes = FormatTypes> = [
-    ...(SetableCriteria<T> | SetableShape)[]
-];
-type SetableItem<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
-interface SetableAdditionalOptions<T extends FormatTypes = FormatTypes> {
-    min?: number;
-    max?: number;
-    item?: SetableItem<T>;
-}
+type SetableItems<T extends FormatTypes = FormatTypes> = SetableCriteria<T>;
+type SetableTuple<T extends FormatTypes = FormatTypes> = (SetableCriteria<T> | SetableTuple)[];
 interface ArraySetableCriteria<T extends FormatTypes = FormatTypes> extends SetableCriteriaTemplate<"array"> {
-    shape: SetableShape<T>;
-    additional?: boolean | SetableAdditionalOptions<T>;
-}
-type MountedShape<T extends SetableShape> = T extends infer U ? {
-    [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : U[I] extends SetableShape ? MountedCriteria<{
-        type: "array";
-        shape: U[I];
-    }> : never;
-} : never;
-interface MountedAdditionalOptions<T extends SetableAdditionalOptions> {
     min?: number;
     max?: number;
-    item: unknown extends T['item'] ? undefined : SetableAdditionalOptions['item'] extends T['item'] ? MountedCriteria<SetableItem> | undefined : T['item'] extends SetableItem ? MountedCriteria<T['item']> : T['item'];
+    tuple?: SetableTuple<T>;
+    items?: SetableItems<T>;
 }
-interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
-    shape: MountedShape<T['shape']>;
-    additional: unknown extends T['additional'] ? false : ArraySetableCriteria['additional'] extends T['additional'] ? MountedAdditionalOptions<SetableAdditionalOptions> | boolean : T['additional'] extends SetableAdditionalOptions ? MountedAdditionalOptions<T['additional']> : T['additional'];
-}
-type GuardedDynamic<T extends ArraySetableCriteria['additional']> = [
-    T
-] extends [SetableAdditionalOptions] ? T['item'] extends SetableItem ? GuardedCriteria<T['item']>[] : [] : [T] extends [true] ? unknown[] : [];
-type GuardedStatic<T extends SetableShape> = T extends infer U ? {
-    [I in keyof U]: U[I] extends SetableCriteria ? GuardedCriteria<U[I]> : U[I] extends SetableShape ? GuardedCriteria<{
+type MountedTuple<T extends SetableTuple> = T extends infer U ? {
+    [I in keyof U]: U[I] extends SetableCriteria ? MountedCriteria<U[I]> : U[I] extends SetableTuple ? MountedCriteria<{
         type: "array";
-        shape: U[I];
+        tuple: U[I];
     }> : never;
 } : never;
-type ArrayGuardedCriteria<T extends ArraySetableCriteria> = GuardedDynamic<T['additional']> extends infer U ? GuardedStatic<T['shape']> extends infer V ? U extends any[] ? V extends any[] ? [...V, ...U] : never : never : never : never;
+interface ArrayMountedCriteria<T extends ArraySetableCriteria> {
+    tuple: unknown extends T['tuple'] ? undefined : ArraySetableCriteria['tuple'] extends T['tuple'] ? MountedTuple<SetableTuple> | undefined : T['tuple'] extends SetableTuple ? MountedTuple<T['tuple']> : T['tuple'];
+    items: unknown extends T['items'] ? undefined : ArraySetableCriteria['items'] extends T['items'] ? MountedCriteria<SetableItems> | undefined : T['items'] extends SetableItems ? MountedCriteria<T['items']> : T['items'];
+}
+type GuardedDynamic<T extends ArraySetableCriteria['items']> = T extends SetableItems ? GuardedCriteria<T>[] : [];
+type GuardedStatic<T extends ArraySetableCriteria['tuple']> = T extends SetableTuple ? {
+    [I in keyof T]: T[I] extends SetableCriteria ? GuardedCriteria<T[I]> : T[I] extends SetableTuple ? GuardedCriteria<{
+        type: "array";
+        tuple: T[I];
+    }> : never;
+} : [];
+type ArrayGuardedCriteria<T extends ArraySetableCriteria> = [
+    T['tuple'],
+    T['items']
+] extends [undefined, undefined] ? unknown[] : GuardedStatic<T['tuple']> extends infer U ? GuardedDynamic<T['items']> extends infer V ? [U, V] extends [never, never] ? unknown[] : U extends any[] ? V extends any[] ? [...U, ...V] : never : never : never : never;
 interface ArrayDerivedCriteria<T extends ArraySetableCriteria> extends DerivedCriteriaTemplate<ArrayMountedCriteria<T>, ArrayGuardedCriteria<T>> {
 }
-type ArrayExceptionCodes = "SHAPE_PROPERTY_REQUIRED" | "SHAPE_PROPERTY_MALFORMED" | "SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED" | "ADDITIONAL_PROPERTY_MALFORMED" | "ADDITIONAL__ITEM_PROPERTY_MALFORMED" | "ADDITIONAL__MIN_PROPERTY_MALFORMED" | "ADDITIONAL__MAX_PROPERTY_MALFORMED" | "ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED";
-type ArrayRejectionCodes = "TYPE_ARRAY_UNSATISFIED" | "SHAPE_UNSATISFIED" | "ADDITIONAL_UNALLOWED" | "ADDITIONAL_MIN_UNSATISFIED" | "ADDITIONAL_MAX_UNSATISFIED";
+type ArrayExceptionCodes = "MIN_PROPERTY_MISDECLARED" | "MAX_PROPERTY_MISDECLARED" | "MIN_MAX_PROPERTIES_MISCONFIGURED" | "TUPLE_PROPERTY_MISDECLARED" | "TUPLE_PROPERTY_ARRAY_ITEM_MISDECLARED" | "TUPLE_MIN_PROPERTIES_MISCONFIGURED" | "TUPLE_MAX_PROPERTIES_MISCONFIGURED" | "TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED" | "ITEMS_PROPERTY_MISDECLARED";
+type ArrayRejectionCodes = "TYPE_ARRAY_UNSATISFIED" | "MIN_UNSATISFIED" | "MAX_UNSATISFIED" | "TUPLE_UNSATISFIED";
 interface ArrayCustomMembers {
-    isShorthandShape(obj: object): obj is SetableShape;
+    isShorthandTuple(obj: object): obj is SetableTuple;
 }
 
 type SetableUnion<T extends FormatTypes = FormatTypes> = [
@@ -562,10 +455,194 @@ type UnionGuardedCriteria<T extends UnionSetableCriteria> = T['union'] extends i
 }[any] : never;
 interface UnionDerivedCriteria<T extends UnionSetableCriteria> extends DerivedCriteriaTemplate<UnionMountedCriteria<T>, UnionGuardedCriteria<T>> {
 }
-type UnionExceptionCodes = "UNION_PROPERTY_REQUIRED" | "UNION_PROPERTY_MALFORMED" | "UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED" | "UNION_PROPERTY_ARRAY_ITEM_MALFORMED";
+type UnionExceptionCodes = "UNION_PROPERTY_UNDEFINED" | "UNION_PROPERTY_MISDECLARED" | "UNION_PROPERTY_ARRAY_MISCONFIGURED" | "UNION_PROPERTY_ARRAY_ITEM_MISDECLARED";
 
-declare const formatNatives: (Format<FunctionSetableCriteria, FunctionExceptionCodes, FunctionRejectionCodes, FunctionCustomMembers> | Format<BooleanSetableCriteria, "LITERAL_PROPERTY_MALFORMED", BooleanRejectionCodes> | Format<SymbolSetableCriteria, SymbolExceptionCodes, SymbolRejectionCodes> | Format<NumberSetableCriteria, NumberExceptionCodes, NumberRejectionCodes> | Format<StringSetableCriteria, StringExceptionCodes, StringRejectionCodes> | Format<SimpleSetableCriteria, SimpleExceptionCodes, SimpleRejectionCodes, SimpleCustomMembers> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectExceptionCodes, ObjectRejectionCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayExceptionCodes, ArrayRejectionCodes, ArrayCustomMembers> | Format<UnionSetableCriteria<keyof SetableCriteriaMap<any>>, UnionExceptionCodes>)[];
+interface NullSetableCriteria extends SetableCriteriaTemplate<"null"> {
+}
+interface NullDerivedCriteria extends DerivedCriteriaTemplate<{}, null> {
+}
 
+type LooseAutocomplete<T extends string> = T | Omit<string, T>;
+
+declare class SchemaException extends Error {
+    name: string;
+    constructor(message: string);
+}
+declare class SchemaNodeException extends Error {
+    name: string;
+    /**
+     * Code related to the exception.
+     */
+    code: string;
+    /**
+     * Node related to the exception.
+     */
+    node: SetableCriteria;
+    /**
+     * Path of the node related to the rejection.
+     */
+    nodePath: NodePath;
+    constructor(code: string, message: string, node: SetableCriteria, nodePath: NodePath);
+}
+declare class SchemaDataRejection {
+    /**
+     * Root of the data to be validated.
+     */
+    rootData: unknown;
+    /**
+     * Root node used for validation.
+     */
+    rootNode: MountedCriteria;
+    /**
+     * Label of the root node used for validation.
+     */
+    rootLabel: string | undefined;
+    /**
+     * Code related to the rejection.
+     */
+    code: string;
+    /**
+    * Data rejected.
+    */
+    data: unknown;
+    /**
+     * Node related to the rejection.
+     */
+    node: MountedCriteria;
+    /**
+     * Path of the node related to the rejection.
+     */
+    nodePath: NodePath;
+    /**
+     * Label of the  node related to the rejection.
+     */
+    label: string | undefined;
+    /**
+     * Message of the node related to the rejection.
+     */
+    message: string | undefined;
+    constructor(rootData: unknown, rootNode: MountedCriteria, code: string, data: unknown, node: MountedCriteria, nodePath: NodePath);
+}
+declare class SchemaDataAdmission<GuardedData = unknown> {
+    /**
+     * Root of the validated data.
+     */
+    data: GuardedData;
+    /**
+     * Root node used for validation.
+     */
+    node: MountedCriteria;
+    /**
+     * Label of the root node used for validation.
+     */
+    label: string | undefined;
+    constructor(data: GuardedData, node: MountedCriteria);
+}
+
+interface NodePath {
+    /**
+     * #### Explanation :
+     * Array representing the path to the node in the criteria tree.
+     *
+     * #### Composition :
+     * ```py
+     * segment = (string / number / symbol)
+     * path    = [*(...segment)]
+     * ```
+     *
+     * #### Exemple :
+     *  ```py
+     * my-path = ["struct", "products", "item", "price"]
+     * ```
+    */
+    explicit: (string | number | symbol)[];
+    /**
+     * #### Explanation :
+     * Array representing the virtual path to the data represented by the node.
+     *
+     * #### Composition :
+     * ```py
+     * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
+     * static-key    = ["&", (string / number / symbol)]
+     * segment       = dynamic-key / static-key
+     * path          = [*(...segment)]
+     * ```
+     *
+     * #### Exemple :
+     * ```py
+     * my-path = ["&", "products", "%", "number", "&", "price"]
+     * my-path is products[0].price or products[1].price and continue
+     * ```
+    */
+    implicit: (LooseAutocomplete<"&" | "%" | "string" | "number" | "symbol"> | number | symbol)[];
+}
+interface MounterChunkTask {
+    node: SetableCriteria | MountedCriteria;
+    partPath: Partial<NodePath>;
+}
+interface CheckerTask {
+    data: unknown;
+    node: MountedCriteria;
+    nodePath: NodePath;
+    /** The hook associated with this task or a descendant of the task */
+    closerHook: CheckerHook | null;
+}
+/**
+ * @template RejectionCodes
+ * Strings representing possible rejection codes for the `“REJECT”` action.
+ */
+interface CheckerChunkTaskHook<RejectionCodes extends string = string> {
+    onReject(rejection: CheckerRejection): {
+        action: "REJECT";
+        code: RejectionCodes;
+    } | {
+        action: "CANCEL";
+        target: "CHUNK" | "BRANCH";
+    };
+    onAccept(): {
+        action: "REJECT";
+        code: RejectionCodes;
+    } | {
+        action: "CANCEL";
+        target: "CHUNK";
+    };
+}
+interface CheckerHook extends CheckerChunkTaskHook {
+    /** Task that created (issued) this hook */
+    sourceTask: CheckerTask;
+    /** Index of the first task in the chunk that this hook’s sourceTask controls */
+    chunkTaskIndex: number;
+    /** Index of the specific task in the branch controlled by this hook’s sourceTask */
+    branchTaskIndex: number;
+    /** Index of the first hook in the chunk that this hook’s sourceTask controls */
+    chunkHookIndex: number;
+    /** Index of the specific hook in the branch controlled by this hook’s sourceTask */
+    branchHookIndex: number;
+}
+interface CheckerChunkTask {
+    data: CheckerTask['data'];
+    node: CheckerTask['node'];
+    hook?: CheckerChunkTaskHook;
+}
+type CheckerRejection = {
+    issuerTask: CheckerTask;
+    code: string;
+};
+type CheckerResult<GuardedData = unknown> = {
+    success: false;
+    rejection: SchemaDataRejection;
+    admission: null;
+} | {
+    success: true;
+    rejection: null;
+    admission: SchemaDataAdmission<GuardedData>;
+};
+
+declare const nodeSymbol: unique symbol;
+
+declare const formatNatives: (Format<UndefinedSetableCriteria, never, "TYPE_UNDEFINED_UNSATISFIED"> | Format<FunctionSetableCriteria, FunctionExceptionCodes, FunctionRejectionCodes, FunctionCustomMembers> | Format<BooleanSetableCriteria, "LITERAL_PROPERTY_MISDECLARED", BooleanRejectionCodes> | Format<UnknownSetableCriteria> | Format<SymbolSetableCriteria, SymbolExceptionCodes, SymbolRejectionCodes> | Format<NumberSetableCriteria, NumberExceptionCodes, NumberRejectionCodes> | Format<StringSetableCriteria, StringExceptionCodes, StringRejectionCodes> | Format<ObjectSetableCriteria<keyof SetableCriteriaMap<any>>, ObjectExceptionCodes, ObjectRejectionCodes, ObjectCustomMembers> | Format<ArraySetableCriteria<keyof SetableCriteriaMap<any>>, ArrayExceptionCodes, ArrayRejectionCodes, ArrayCustomMembers> | Format<UnionSetableCriteria<keyof SetableCriteriaMap<any>>, UnionExceptionCodes> | Format<NullSetableCriteria, never, "TYPE_NULL_UNSATISFIED">)[];
+
+type SetableMessage = string | ((code?: string, data?: unknown, node?: MountedCriteria, nodePath?: NodePath) => string);
 /**
  * Defines the criteria users must or can specify.
  *
@@ -574,19 +651,20 @@ declare const formatNatives: (Format<FunctionSetableCriteria, FunctionExceptionC
 interface SetableCriteriaTemplate<T extends string> {
     type: T;
     label?: string;
-    message?: string;
-    nullable?: boolean;
+    message?: SetableMessage;
 }
 interface SetableCriteriaMap<T extends keyof SetableCriteriaMap = any> {
+    undefined: UndefinedSetableCriteria;
     function: FunctionSetableCriteria;
     boolean: BooleanSetableCriteria;
+    unknown: UnknownSetableCriteria;
     symbol: SymbolSetableCriteria;
     number: NumberSetableCriteria;
     string: StringSetableCriteria;
-    simple: SimpleSetableCriteria;
     object: ObjectSetableCriteria<T>;
     array: ArraySetableCriteria<T>;
     union: UnionSetableCriteria<T>;
+    null: NullSetableCriteria;
 }
 type FormatTypes = keyof SetableCriteriaMap;
 /**
@@ -604,14 +682,16 @@ interface DerivedCriteriaTemplate<Mounted, Guarded> {
 }
 interface DerivedCriteriaMap<T extends SetableCriteria = SetableCriteria> {
     function: T extends FunctionSetableCriteria ? FunctionDerivedCriteria<T> : never;
-    boolean: T extends BooleanSetableCriteria ? BooleanDerivedCriteria : never;
     symbol: T extends SymbolSetableCriteria ? SymbolDerivedCriteria<T> : never;
     number: T extends NumberSetableCriteria ? NumberDerivedCriteria<T> : never;
     string: T extends StringSetableCriteria ? StringDerivedCriteria<T> : never;
-    simple: T extends SimpleSetableCriteria ? SimpleDerivedCriteria<T> : never;
     object: T extends ObjectSetableCriteria ? ObjectDerivedCriteria<T> : never;
     array: T extends ArraySetableCriteria ? ArrayDerivedCriteria<T> : never;
     union: T extends UnionSetableCriteria ? UnionDerivedCriteria<T> : never;
+    undefined: UndefinedDerivedCriteria;
+    boolean: BooleanDerivedCriteria;
+    unknown: UnknownDerivedCriteria;
+    null: NullDerivedCriteria;
 }
 type SetableCriteria<T extends FormatTypes = FormatTypes> = SetableCriteriaMap<T>[T];
 interface CommonMountedCriteria {
@@ -623,58 +703,43 @@ interface CommonMountedCriteria {
 type MountedCriteria<T extends SetableCriteria = SetableCriteria> = T extends any ? T extends {
     [nodeSymbol]: any;
 } ? T : (Omit<T, keyof DerivedCriteriaMap<T>[T['type']]['mounted']> & DerivedCriteriaMap<T>[T['type']]['mounted'] & CommonMountedCriteria) : never;
-type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = T['nullable'] extends true ? DerivedCriteriaMap<T>[T['type']]['guarded'] | null : DerivedCriteriaMap<T>[T['type']]['guarded'];
+type GuardedCriteria<T extends SetableCriteria = SetableCriteria> = DerivedCriteriaMap<T>[T['type']]['guarded'];
 /**
- * @template T Extended interface of `SettableCriteriaTemplate` that
- * defines the format criteria users must or can specify.
- * @template E Except codes you want to use in the format.
- * @template R Reject codes you want to use in the format.
- * @template C Custom members you want to add to the format.
+ * @template T
+ * Type of the criteria this format handles.
+ *
+ * @template ExceptionCodes
+ * Possible exception codes that can be returned by the `mount` method.
+ *
+ * @template RejectionCodes
+ * Possible rejection codes that can be returned by the `check` method.
+ *
+ * @template CustomMembers
+ * Additional custom properties or methods added to the format object.
  */
-type Format<T extends SetableCriteria = SetableCriteria, E extends string = string, R extends string = string, C extends object = object> = {
+type Format<T extends SetableCriteria = SetableCriteria, ExceptionCodes extends string = string, RejectionCodes extends string = string, CustomMembers extends object = object> = {
     type: T['type'];
     exceptions: {
-        [K in E]: string;
+        [K in ExceptionCodes]: string;
     };
-    mount(chunk: MounterChunk, criteria: T): E | null;
-    check(chunk: CheckerChunk, criteria: MountedCriteria<T>, value: unknown): R | null;
-} & C;
+    mount(chunk: MounterChunkTask[], criteria: T): ExceptionCodes | null;
+    check(chunk: CheckerChunkTask[], criteria: MountedCriteria<T>, data: unknown): RejectionCodes | null;
+} & CustomMembers;
 type FormatNativeTypes = (typeof formatNatives)[number]['type'];
 
-declare class SchemaNodeException extends Error {
-    code: string;
-    message: string;
-    node: SetableCriteria;
-    nodePath: NodePath;
-    constructor(report: NodeExceptionReport);
-}
-declare class SchemaDataRejection {
-    /**
-     * Syntax: `<MEMBER>[<DETAIL>]<REASON>`
-     *
-     * Components:
-     * - `<MEMBER>`    : The criterion involved (e.g. EMPTY, MIN, ENUM)
-     * - `<DETAIL>`    : Specific detail or sub-aspect of the criteria (e.g. LENGTH, PATTERN)
-     * - `<REASON>`    : The reason for rejection (e.g. NOT_SATISFIED, NOT_ALLOWED)
-     */
-    code: string;
-    node: SetableCriteria;
-    nodePath: NodePath;
-    constructor(report: DataRejectionReport);
+interface Events {
+    NODE_MOUNTED: (node: MountedCriteria, nodePath: NodePath) => void;
+    TREE_MOUNTED: (rootNode: MountedCriteria) => void;
+    DATA_REJECTED: (rejection: SchemaDataRejection) => void;
+    DATA_ADMITTED: (admission: SchemaDataAdmission) => void;
 }
 
 declare class FormatsManager {
     private store;
     constructor();
     add(formats: Format[]): void;
-    has(type: string): boolean;
+    has(type: FormatTypes): boolean;
     get(type: FormatTypes): Format;
-}
-
-interface Events {
-    "NODE_MOUNTED": (node: MountedCriteria, path: NodePath) => void;
-    "TREE_MOUNTED": (rootNode: MountedCriteria) => void;
-    "DATA_CHECKED": (rootNode: MountedCriteria, rootData: unknown, rejection: CheckerRejection | null) => void;
 }
 
 declare class EventsManager {
@@ -686,8 +751,7 @@ declare class EventsManager {
 }
 
 /**
- * The `Schema` class is used to define and validate data structures,
- * ensuring they conform to specified criteria.
+ * The `Schema` class is used to define and validate data structures, ensuring they conform to criteria node.
  */
 declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNativeTypes>> {
     private mountedCriteria;
@@ -707,9 +771,7 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      *
      * @param data - The data to be validated.
      *
-     * @returns `true` if the value is **valid**, otherwise `false`.
-     * This function acts as a **type guard**, ensuring that
-     * the validated data conforms to `GuardedCriteria<T>`.
+     * @returns A boolean.
      */
     validate(data: unknown): data is GuardedCriteria<MountedCriteria<T>>;
     /**
@@ -717,27 +779,14 @@ declare class Schema<const T extends SetableCriteria = SetableCriteria<FormatNat
      *
      * @param data - The data to be evaluated.
      */
-    evaluate(data: unknown): SchemaEvaluateResult<T>;
+    evaluate(data: unknown): SchemaEvaluateResult<GuardedCriteria<MountedCriteria<T>>>;
+    listener: {
+        on: <K extends keyof Events>(event: K, callback: Events[K]) => void;
+        off: <K extends keyof Events>(event: K, callback: Events[K]) => void;
+    };
 }
 
-interface NodeExceptionReport {
-    code: string;
-    message: string;
-    node: SetableCriteria;
-    nodePath: NodePath;
-}
-interface DataRejectionReport {
-    code: string;
-    node: MountedCriteria;
-    nodePath: NodePath;
-}
-type SchemaEvaluateResult<T extends SetableCriteria> = {
-    rejection: SchemaDataRejection;
-    data: null;
-} | {
-    rejection: null;
-    data: GuardedCriteria<MountedCriteria<T>>;
-};
+type SchemaEvaluateResult<GuardedData = unknown> = CheckerResult<GuardedData>;
 type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<MountedCriteria<U>> : never;
 type SchemaInstance<T extends SetableCriteria = SetableCriteria> = InstanceType<typeof Schema<T>>;
 type SchemaParameters<T extends SetableCriteria = SetableCriteria> = ConstructorParameters<typeof Schema<T>>;
@@ -785,10 +834,5 @@ declare const helpers: {
     string: typeof stringHelpers;
 };
 
-declare class Issue extends Error {
-    constructor(context: string, message: string, stack?: string, plugin?: string);
-    toString(): string;
-}
-
-export { Issue, Schema, SchemaDataRejection, SchemaFactory, SchemaNodeException, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, helpers, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
-export type { AsyncFunction, BasicArray, BasicFunction, BasicObject, DerivedCriteriaTemplate, Format, FormatNativeTypes, FormatTypes, GuardedCriteria, InternalTags, MountedCriteria, PlainObject, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, SetableCriteria, SetableCriteriaTemplate, TypedArray };
+export { Schema, SchemaDataAdmission, SchemaDataRejection, SchemaException, SchemaFactory, SchemaNodeException, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, helpers, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
+export type { AsyncFunction, BasicArray, BasicFunction, BasicObject, Format, DerivedCriteriaTemplate as FormatDerivedCriteriaTemplate, GuardedCriteria as FormatGuardedCriteria, MountedCriteria as FormatMountedCriteria, FormatNativeTypes, SetableCriteria as FormatSetableCriteria, SetableCriteriaTemplate as FormatSetableCriteriaTemplate, FormatTypes, InternalTags, PlainObject, SchemaInfer, SchemaInstance, SchemaParameters, SchemaPlugin, TypedArray };

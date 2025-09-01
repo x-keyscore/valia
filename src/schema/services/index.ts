@@ -1,10 +1,10 @@
 export type {
     NodePath,
     MounterTask,
-    MounterChunk,
+    MounterChunkTask,
     CheckerTask,
-    CheckerChunk,
-    CheckerHooks,
+    CheckerChunkTask,
+    CheckerChunkTaskHook,
     CheckerRejection
 } from './types';
 

@@ -1,8 +1,10 @@
 export {
 	Schema,
 	SchemaFactory,
+	SchemaException,
 	SchemaNodeException,
-	SchemaDataRejection
+	SchemaDataRejection,
+	SchemaDataAdmission
 } from './schema';
 
 export type {
@@ -13,11 +15,11 @@ export type {
 } from './schema';
 
 export type {
-	SetableCriteriaTemplate,
-    SetableCriteria,
-	DerivedCriteriaTemplate,
-    MountedCriteria,
-    GuardedCriteria,
+	SetableCriteriaTemplate as FormatSetableCriteriaTemplate,
+    SetableCriteria as FormatSetableCriteria,
+	DerivedCriteriaTemplate as FormatDerivedCriteriaTemplate,
+    MountedCriteria as FormatMountedCriteria,
+    GuardedCriteria as FormatGuardedCriteria,
 	Format,
 	FormatTypes,
 	FormatNativeTypes
@@ -81,7 +83,3 @@ export {
 	base32ToBase16,
 	base64ToBase16
 } from './helpers/string';
-
-export {
-	Issue
-} from './utils';

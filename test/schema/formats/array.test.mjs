@@ -1,364 +1,408 @@
-
-import { describe, it, before } from "node:test";
+import { describe, it} from "node:test";
 import assert from "node:assert";
 
-import { Schema, SchemaDataRejection } from "../../../dist/index.js";
+import { Schema } from "../../../dist/index.js";
 
 describe("\nschema > formats > array", () => {
-	const xSymbol = Symbol("x");
-	const ySymbol = Symbol("y");
-
-	describe("Default", () => {
-		let array_default;
-
-		before(() => {
-			array_default = new Schema({
-				type: "array",
-				shape: []
-			});
+	describe("default", () => {
+		const array_default = new Schema({
+			type: "array"
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_default.validate(0), false);
-			assert.strictEqual(array_default.validate(""), false);
-			assert.strictEqual(array_default.validate({}), false);
-			assert.strictEqual(
-				array_default.validate([""]),
-				false,
-				"Should be invalid because 'additional' parameter set on 'false' by default"
+			const cases = [
+				[array_default, 0],
+				[array_default, ""],
+				[array_default, {}]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[array_default, []],
+				[array_default, [0]],
+				[array_default, [""]],
+				[array_default, [{}]]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				array_default.evaluate(0).rejection,
+				{ code: "TYPE_ARRAY_UNSATISFIED" }
+			);
+		});
+	});
+
+	describe("'min' property", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "array", min: "" }),
+				{
+					name: "SchemaNodeException",
+					code: "MIN_PROPERTY_MISDECLARED"
+				}
 			);
 		});
 
-		it("should validate correct values", () => {
-			assert.strictEqual(array_default.validate([]), true);
-		});
-	});
-
-	describe("'shape' property", () => {
-		let array_shape_0, array_shape_1, array_shape_2, array_shape_symbol;
-
-		before(() => {
-			array_shape_0 = new Schema({
-				type: "array",
-				shape: []
-			});
-
-			array_shape_1 = new Schema({
-				type: "array",
-				shape: [
-					{ type: "string" }
-				]
-			});
-
-			array_shape_2 = new Schema({
-				type: "array",
-				shape: [
-					{ type: "string" },
-					{ type: "number" }
-				]
-			});
-
-			array_shape_symbol = new Schema({
-				type: "array",
-				shape: [
-					{ type: "symbol", literal: xSymbol }
-				]
-			});
+		const array_min = new Schema({
+			type: "array",
+			min: 4
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_shape_0.validate([0]), false);
-			assert.strictEqual(array_shape_0.validate([""]), false);
-
-			assert.strictEqual(array_shape_1.validate([]), false);
-			assert.strictEqual(array_shape_1.validate([0]), false);
-			assert.strictEqual(array_shape_1.validate(["", ""]), false);
-
-			assert.strictEqual(array_shape_2.validate([]), false);
-			assert.strictEqual(array_shape_2.validate([0]), false);
-			assert.strictEqual(array_shape_2.validate([""]), false);
-			assert.strictEqual(array_shape_2.validate([0, 0]), false);
-			assert.strictEqual(array_shape_2.validate([0, ""]), false);
-			assert.strictEqual(array_shape_2.validate(["", ""]), false);
-			assert.strictEqual(array_shape_2.validate(["", 0, 0]), false);
-			assert.strictEqual(array_shape_2.validate([0, "", 0]), false);
-			assert.strictEqual(array_shape_2.validate([0, 0, ""]), false);
-			assert.strictEqual(array_shape_2.validate(["", "", 0]), false);
-			assert.strictEqual(array_shape_2.validate(["", 0, ""]), false);
-			assert.strictEqual(array_shape_2.validate([0, "", ""]), false);
-
-			assert.strictEqual(array_shape_symbol.validate([]), false);
-			assert.strictEqual(array_shape_symbol.validate([ySymbol]), false);
+			assert.strictEqual(array_min.validate(["x", "x", "x"]), false);
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(array_shape_0.validate([]), true);
+			assert.strictEqual(array_min.validate(["x", "x", "x", "x"]), true);
+		});
 
-			assert.strictEqual(array_shape_1.validate([""]), true);
-
-			assert.strictEqual(array_shape_2.validate(["", 0]), true);
-
-			assert.strictEqual(array_shape_symbol.validate([xSymbol]), true);
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				array_min.evaluate(["x", "x", "x"]).rejection,
+				{ code: "MIN_UNSATISFIED" }
+			);
 		});
 	});
-	describe("'shape' property (Shorthand Shape)", () => {
-		let array_shape_shorthand;
 
-		before(() => {
-			array_shape_shorthand = new Schema({
-				type: "array",
-				shape: [
-					[{ type: "string" }]
-				]
-			});
-		});
-
-		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_shape_shorthand.validate([]), false);
-			assert.strictEqual(array_shape_shorthand.validate([0]), false);
-			assert.strictEqual(array_shape_shorthand.validate([""]), false);
-			assert.strictEqual(array_shape_shorthand.validate([[]]), false);
-			assert.strictEqual(array_shape_shorthand.validate([[0]]), false);
-			assert.strictEqual(array_shape_shorthand.validate([["", 0]]), false);
-			assert.strictEqual(array_shape_shorthand.validate([[0, ""]]), false);
-			assert.strictEqual(array_shape_shorthand.validate([[""], ""]), false);
-		});
-
-		it("should validate correct values", () => {
-			assert.strictEqual(array_shape_shorthand.validate([[""]]), true);
-		});
-
-		it("should return the correct rejection", () => {
-			assert.deepStrictEqual(
-				array_shape_shorthand.evaluate([[0]]),
+	describe("'max' property", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "array", max: "" }),
 				{
-					rejection: new SchemaDataRejection({
-						code: "TYPE_STRING_UNSATISFIED",
-						node: array_shape_shorthand.criteria.shape[0].shape[0],
-						nodePath: {
-							explicit: ['shape', 0, 'shape', 0],
-							implicit: ['&', 0, '&', 0]
-						},
-					}),
-					data: null
+					name: "SchemaNodeException",
+					code: "MAX_PROPERTY_MISDECLARED"
+				}
+			);
+		});
+
+		const array_max = new Schema({
+			type: "array",
+			max: 4
+		});
+
+		it("should invalidate incorrect values", () => {
+			assert.strictEqual(array_max.validate(["x", "x", "x", "x", "x"]), false);
+		});
+
+		it("should validate correct values", () => {
+			assert.strictEqual(array_max.validate(["x", "x", "x", "x"]), true);
+		});
+
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				array_max.evaluate(["x", "x", "x", "x", "x"]).rejection,
+				{ code: "MAX_UNSATISFIED" }
+			);
+		});
+	});
+
+	describe("'min' property and 'max' property", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "array", min: 1, max: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "MIN_MAX_PROPERTIES_MISCONFIGURED"
 				}
 			);
 		});
 	});
 
-	describe("'additional' property (Boolean value with 'shape' used)", () => {
-		let array_additional_true, array_additional_false;
+	describe("'tuple' property", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "array", tuple: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_PROPERTY_MISDECLARED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", tuple: [0] }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_PROPERTY_ARRAY_ITEM_MISDECLARED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", min: 0, tuple: [{ type: "string" }] }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", max: 0, tuple: [{ type: "string" }] }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", min: 0, max: 0, tuple: [{ type: "string" }] }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", min: 0, tuple: [{ type: "string" }], items: { type: "string" } }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_MIN_PROPERTIES_MISCONFIGURED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "array", max: 0, tuple: [{ type: "string" }], items: { type: "string" } }),
+				{
+					name: "SchemaNodeException",
+					code: "TUPLE_MAX_PROPERTIES_MISCONFIGURED"
+				}
+			);
+		});
 
-		before(() => {
-			array_additional_true = new Schema({
-				type: "array",
-				shape: [
-					{ type: "string" }
-				],
-				additional: true
-			});
+		const array_tuple_0 = new Schema({
+			type: "array",
+			tuple: []
+		});
 
-			array_additional_false = new Schema({
-				type: "array",
-				shape: [
-					{ type: "string" }
-				],
-				additional: false
-			});
+		const array_tuple_1 = new Schema({
+			type: "array",
+			tuple: [
+				{ type: "string" }
+			]
+		});
+
+		const array_tuple_2 = new Schema({
+			type: "array",
+			tuple: [
+				{ type: "string" },
+				{ type: "number" }
+			]
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_additional_true.validate([]), false);
-			assert.strictEqual(array_additional_true.validate([0]), false);
+			const cases = [
+				[array_tuple_0, [0]],
+				[array_tuple_0, [""]],
 
-			assert.strictEqual(array_additional_false.validate([]), false);
-			assert.strictEqual(array_additional_false.validate([0]), false);
-			assert.strictEqual(array_additional_false.validate(["", 0]), false);
-			assert.strictEqual(array_additional_false.validate([0, ""]), false);
-		});
+				[array_tuple_1, []],
+				[array_tuple_1, [0]],
+				[array_tuple_1, ["", ""]],
 
-		it("should validate correct values", () => {
-			assert.strictEqual(array_additional_true.validate([""]), true);
-			assert.strictEqual(array_additional_true.validate(["", 0]), true);
-			assert.strictEqual(array_additional_true.validate(["", 0, 0]), true);
+				[array_tuple_2, []],
+				[array_tuple_2, [0]],
+				[array_tuple_2, [""]],
+				[array_tuple_2, [0, 0]],
+				[array_tuple_2, [0, ""]],
+				[array_tuple_2, ["", ""]],
+				[array_tuple_2, ["", 0, 0]],
+				[array_tuple_2, [0, "", 0]],
+				[array_tuple_2, [0, 0, ""]],
+				[array_tuple_2, ["", "", 0]],
+				[array_tuple_2, ["", 0, ""]],
+				[array_tuple_2, [0, "", ""]]
+			];
 
-			assert.strictEqual(array_additional_true.validate([""]), true);
-		});
-	});
-
-	describe("'additional' property (Boolean value with 'shape' not used)", () => {
-		let array_additional_true, array_additional_false;
-
-		before(() => {
-			array_additional_true = new Schema({
-				type: "array",
-				shape: [],
-				additional: true
-			});
-
-			array_additional_false = new Schema({
-				type: "array",
-				shape: [],
-				additional: false
-			});
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(array_additional_false.validate([0]), false);
-			assert.strictEqual(array_additional_false.validate([0, 0]), false);
+			const cases = [
+				[array_tuple_0, []],
+
+				[array_tuple_1, [""]],
+
+				[array_tuple_2, ["", 0]],
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
 		});
 
-		it("should validate correct values", () => {
-			assert.strictEqual(array_additional_true.validate([]), true);
-			assert.strictEqual(array_additional_true.validate([0]), true);
-			assert.strictEqual(array_additional_true.validate([0, 0]), true);
-
-			assert.strictEqual(array_additional_false.validate([]), true);
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				array_tuple_0.evaluate([0]).rejection,
+				{ code: "TUPLE_UNSATISFIED" }
+			);
 		});
 	});
 
-	describe("'additional' property (Object)", () => {
-		describe("'item' property ('shape' used)", () => {
-			let additional_item_string, additional_item_object;
-
-			before(() => {
-				additional_item_string = new Schema({
-					type: "array",
-					shape: [{ type: "string" }],
-					additional: {
-						item: { type: "number" }
-					}
-				});
-
-				additional_item_object = new Schema({
-					type: "array",
-					shape: [{ type: "string" }],
-					additional: {
-						item: {
-							type: "object",
-							shape: { foo: { type: "string" } }
-						}
-					}
-				});
-			});
-
-			it("should invalidate incorrect values", () => {
-				assert.strictEqual(additional_item_string.validate([]), false);
-				assert.strictEqual(additional_item_string.validate([0]), false);
-				assert.strictEqual(additional_item_string.validate([0, ""]), false);
-				assert.strictEqual(additional_item_string.validate(["", "", 0]), false);
-				assert.strictEqual(additional_item_string.validate(["", 0, ""]), false);
-
-				assert.strictEqual(additional_item_object.validate([]), false);
-				assert.strictEqual(additional_item_object.validate([0]), false);
-				assert.strictEqual(additional_item_object.validate(["", {}]), false);
-				assert.strictEqual(additional_item_object.validate(["", { foo: 0 }]), false);
-				assert.strictEqual(additional_item_object.validate(["", { bar: "" }]), false);
-				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { foo: 0 }]), false);
-				assert.strictEqual(additional_item_object.validate(["", { foo: 0 }, { foo: "" }]), false);
-				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { bar: "" }]), false);
-				assert.strictEqual(additional_item_object.validate(["", { bar: "" }, { foo: "" }]), false);
-			});
-
-			it("should validate correct values", () => {
-				assert.strictEqual(additional_item_string.validate([""]), true);
-				assert.strictEqual(additional_item_string.validate(["", 0]), true);
-				assert.strictEqual(additional_item_string.validate(["", 0, 0]), true);
-
-				assert.strictEqual(additional_item_object.validate(["", { foo: "" }]), true);
-				assert.strictEqual(additional_item_object.validate(["", { foo: "" }, { foo: "" }]), true);
-			});
+	describe("'tuple' property (shorthand)", () => {
+		const array_tuple_shorthand = new Schema({
+			type: "array",
+			tuple: [
+				[{ type: "string" }]
+			]
 		});
 
-		describe("'item' property ('shape' not used)", () => {
-			let additional_item_string, additional_item_object;
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[array_tuple_shorthand, []],
+				[array_tuple_shorthand, [0]],
+				[array_tuple_shorthand, [""]],
+				[array_tuple_shorthand, [[]]],
+				[array_tuple_shorthand, [[0]]],
+				[array_tuple_shorthand, [["", 0]]],
+				[array_tuple_shorthand, [[0, ""]]],
+				[array_tuple_shorthand, [[""], ""]]
+			];
 
-			before(() => {
-				additional_item_string = new Schema({
-					type: "array",
-					shape: [],
-					additional: {
-						item: { type: "string" }
-					}
-				});
-
-				additional_item_object = new Schema({
-					type: "array",
-					shape: [],
-					additional: {
-						item: {
-							type: "object",
-							shape: { foo: { type: "string" } }
-						}
-					}
-				});
-			});
-
-			it("should invalidate incorrect values", () => {
-				assert.strictEqual(additional_item_string.validate([0]), false);
-				assert.strictEqual(additional_item_string.validate(["", 0]), false);
-				assert.strictEqual(additional_item_string.validate([0, ""]), false);
-
-				assert.strictEqual(additional_item_object.validate([{}]), false);
-				assert.strictEqual(additional_item_object.validate([{ foo: 0 }]), false);
-				assert.strictEqual(additional_item_object.validate([{ bar: "" }]), false);
-				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { foo: 0 }]), false);
-				assert.strictEqual(additional_item_object.validate([{ foo: 0 }, { foo: "" }]), false);
-				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { bar: "" }]), false);
-				assert.strictEqual(additional_item_object.validate([{ bar: "" }, { foo: "" }]), false);
-			});
-
-			it("should validate correct values", () => {
-				assert.strictEqual(additional_item_string.validate([""]), true);
-				assert.strictEqual(additional_item_string.validate(["", ""]), true);
-
-				assert.strictEqual(additional_item_object.validate([{ foo: "" }]), true);
-				assert.strictEqual(additional_item_object.validate([{ foo: "" }, { foo: "" }]), true);
-			});
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
 		});
 
-		describe("'min' property", () => {
-			let additional_min;
+		it("should validate correct values", () => {
+			const cases = [
+				[array_tuple_shorthand, [[""]]]
+			];
 
-			before(() => {
-				additional_min = new Schema({
-					type: "array",
-					shape: [],
-					additional: {
-						min: 4
-					}
-				});
-			});
-
-			it("should invalidate incorrect values", () => {
-				assert.strictEqual(additional_min.validate(["x", "x", "x"]), false);
-			});
-
-			it("should validate correct values", () => {
-				assert.strictEqual(additional_min.validate(["x", "x", "x", "x"]), true);
-			});
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
 		});
 
-		describe("'max' property", () => {
-			let additional_max;
-
-			before(() => {
-				additional_max = new Schema({
-					type: "array",
-					shape: [],
-					additional: {
-						max: 4
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				array_tuple_shorthand.evaluate([[]]).rejection,
+				{
+					code: "TUPLE_UNSATISFIED",
+					node: array_tuple_shorthand.criteria.tuple[0],
+					nodePath: {
+						explicit: ["tuple", 0],
+						implicit: ["&", 0]
 					}
-				});
-			});
+				}
+			);
+		});
+	});
 
-			it("should invalidate incorrect values", () => {
-				assert.strictEqual(additional_max.validate(["x", "x", "x", "x", "x"]), false);
-			});
+	describe("'items' property", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "array", items: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "ITEMS_PROPERTY_MISDECLARED"
+				}
+			);
+		});
 
-			it("should validate correct values", () => {
-				assert.strictEqual(additional_max.validate(["x", "x", "x", "x"]), true);
-			});
+		const items_string = new Schema({
+			type: "array",
+			items: { type: "string" }
+		});
+		const items_object = new Schema({
+			type: "array",
+			items: {
+				type: "object",
+				shape: { foo: { type: "string" } }
+			}
+		});
+
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[items_string, [0]],
+				[items_string, ["", 0]],
+				[items_string, [0, ""]],
+
+				[items_object, [{}]],
+				[items_object, [{ foo: 0 }]],
+				[items_object, [{ bar: "" }]],
+				[items_object, [{ foo: "" }, { foo: 0 }]],
+				[items_object, [{ foo: 0 }, { foo: "" }]],
+				[items_object, [{ foo: "" }, { bar: "" }]],
+				[items_object, [{ bar: "" }, { foo: "" }]]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[items_string, []],
+				[items_string, [""]],
+				[items_string, ["", ""]],
+
+				[items_object, []],
+				[items_object, [{ foo: "" }]],
+				[items_object, [{ foo: "" }, { foo: "" }]]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+	});
+
+	describe("'items' property and 'tuple' property", () => {
+		const items_string = new Schema({
+			type: "array",
+			tuple: [{ type: "string" }],
+			items: { type: "number" }
+		});
+		const items_object = new Schema({
+			type: "array",
+			tuple: [{ type: "string" }],
+			items: {
+				type: "object",
+				shape: { foo: { type: "string" } }
+			}
+		});
+
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[items_string, []],
+				[items_string, [0]],
+				[items_string, ["", ""]],
+				[items_string, ["", "", 0]],
+				[items_string, ["", 0, ""]],
+
+				[items_object, []],
+				[items_object, [0]],
+				[items_object, ["", {}]],
+				[items_object, ["", { foo: 0 }]],
+				[items_object, ["", { bar: "" }]],
+				[items_object, ["", { foo: "" }, { foo: 0 }]],
+				[items_object, ["", { foo: 0 }, { foo: "" }]],
+				[items_object, ["", { foo: "" }, { bar: "" }]],
+				[items_object, ["", { bar: "" }, { foo: "" }]]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[items_string, [""]],
+				[items_string, ["", 0]],
+				[items_string, ["", 0, 0]],
+
+				[items_object, ["", { foo: "" }]],
+				[items_object, ["", { foo: "" }, { foo: "" }]]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
 		});
 	});
 });

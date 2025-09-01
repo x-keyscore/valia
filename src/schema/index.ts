@@ -14,8 +14,8 @@ export {
 } from "./plugin";
 
 export {
+    SchemaException,
     SchemaNodeException,
-    SchemaDataRejection
+    SchemaDataRejection,
+    SchemaDataAdmission
 } from "./utils";
-
-

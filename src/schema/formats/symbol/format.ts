@@ -1,6 +1,6 @@
 import type { SymbolSetableCriteria, SymbolExceptionCodes, SymbolRejectionCodes } from "./types";
 import type { Format } from "../types";
-import { isArray, isPlainObject } from "../../../testers";
+import { isPlainObject, isArray, isFunction } from "../../../testers";
 
 export const SymbolFormat: Format<
 	SymbolSetableCriteria,
@@ -9,21 +9,23 @@ export const SymbolFormat: Format<
 > = {
 	type: "symbol",
 	exceptions: {
-		LITERAL_PROPERTY_MALFORMED:
-			"The 'literal' property must be of type Symbol, Array or Plain Object.",
+		LITERAL_PROPERTY_MISDECLARED:
+			"The 'literal' property must be of type symbol, array or plain object.",
 		LITERAL_PROPERTY_ARRAY_MISCONFIGURED:
-			"The array of the 'literal' property must contain at least one item.",
-		LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED:
-			"The array items of the 'literal' property must be of type Symbol.",
+			"The array of the 'literal' property must have a number of items greater than 0.",
+		LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED:
+			"The array items of the 'literal' property must be of type symbol.",
 		LITERAL_PROPERTY_OBJECT_MISCONFIGURED:
-			"The object of the 'literal' property must contain at least one key.",
-		LITERAL_PROPERTY_OBJECT_KEY_MALFORMED:
-			"The object keys of the 'literal' property must be of type String.",
-		LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED:
-			"The object values of the 'literal' property must be of type Symbol.",
+			"The object of the 'literal' property must must have a number of keys greater than 0.",
+		LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED:
+			"The object keys of the 'literal' property must be of type string.",
+		LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED:
+			"The object values of the 'literal' property must be of type symbol.",
+		CUSTOM_PROPERTY_MISDECLARED:
+            "The 'custom' property must be of type basic function."
 	},
 	mount(chunk, criteria) {
-		const { literal } = criteria;
+		const { literal, custom } = criteria;
 
 		if (literal !== undefined) {
 			let resolvedLiteral;
@@ -37,7 +39,7 @@ export const SymbolFormat: Format<
 
 				for (const item of literal) {
 					if (typeof item !== "symbol") {
-						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+						return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
 					}
 				}
 
@@ -50,19 +52,22 @@ export const SymbolFormat: Format<
 
 				for (const key of keys) {
 					if (typeof key !== "string") {
-						return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
 					}
 					if (typeof literal[key] !== "symbol") {
-						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
 					}
 				}
 
 				resolvedLiteral = new Set(Object.values(literal));
 			} else {
-				return ("LITERAL_PROPERTY_MALFORMED");
+				return ("LITERAL_PROPERTY_MISDECLARED");
 			}
 
 			Object.assign(criteria, { resolvedLiteral });
+		}
+		if (custom !== undefined && !isFunction(custom)) {
+			return ("CUSTOM_PROPERTY_MISDECLARED");
 		}
 
 		return (null);
@@ -72,10 +77,13 @@ export const SymbolFormat: Format<
 			return ("TYPE_SYMBOL_UNSATISFIED");
 		}
 
-		const { resolvedLiteral } = criteria;
+		const { resolvedLiteral, custom } = criteria;
 
 		if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
 			return ("LITERAL_UNSATISFIED");
+		}
+		if (custom && !custom(value)) {
+			return ("CUSTOM_UNSATISFIED");
 		}
 
 		return (null);

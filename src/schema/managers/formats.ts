@@ -1,10 +1,8 @@
-import type { SetableCriteria, Format, FormatTypes } from '../formats';
-import { isArray } from '../../testers';
-import { Issue } from '../../utils';
-
+import type { Format, FormatTypes } from '../formats';
+import { SchemaException } from '../utils';
 
 export class FormatsManager {
-    private store = new Map<string, Format>();
+    private store = new Map<FormatTypes, Format>();
 
     constructor() {}
 
@@ -14,15 +12,14 @@ export class FormatsManager {
         }
     }
 
-    has(type: string): boolean {
-        return (!!this.store.has(type));
+    has(type: FormatTypes) {
+        return this.store.has(type);
     }
 
     get(type: FormatTypes): Format {
         const format = this.store.get(type);
-        if (!format) throw new Issue(
-            "FORMATS MANAGER",
-            "This type is not recognized: " + type
+        if (!format) throw new SchemaException(
+            "The format is unknown : " + type
         );
 
         return (format);

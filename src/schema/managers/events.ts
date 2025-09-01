@@ -2,7 +2,7 @@ import type { Events } from "./types";
 
 export class EventsManager {
 	listeners = new Map<keyof Events, ((...args: any[]) => any)[]>();
-
+	
 	constructor() {}
 
 	on<K extends keyof Events>(event: K, callback: Events[K]) {

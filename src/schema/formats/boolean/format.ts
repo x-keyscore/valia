@@ -8,14 +8,14 @@ export const BooleanFormat: Format<
 > = {
 	type: "boolean",
 	exceptions: {
-		LITERAL_PROPERTY_MALFORMED:
-			"The 'literal' property must be of type Boolean."
+		LITERAL_PROPERTY_MISDECLARED:
+			"The 'literal' property must be of type boolean."
 	},
 	mount(chunk, criteria) {
 		const { literal } = criteria;
 
 		if (literal !== undefined && typeof literal !== "boolean") {
-			return ("LITERAL_PROPERTY_MALFORMED");
+			return ("LITERAL_PROPERTY_MISDECLARED");
 		}
 
 		return (null);
@@ -32,5 +32,5 @@ export const BooleanFormat: Format<
 		}
 
 		return (null);
-	},
+	}
 }

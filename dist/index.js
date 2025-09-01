@@ -1,16 +1,41 @@
-class Issue extends Error {
-    constructor(context, message, stack, plugin) {
+class SchemaException extends Error {
+    constructor(message) {
         super(message);
-        const red = "\x1b[31m", cyan = "\x1b[36m", gray = "\x1b[90m", reset = "\x1b[0m";
-        const emitter = "Valia" + (plugin ? ":" + plugin : "");
-        const timestamp = new Date().toISOString();
-        this.message =
-            `\n${red}[Error]${reset} ${cyan}[${emitter}]${reset} ${gray}${timestamp}${reset}` +
-                `\nContext: ${context}` +
-                `\nMessage: ${message}`;
+        this.name = "SchemaException";
     }
-    toString() {
-        return `[Error] [Valia] ${new Date().toISOString()}\nContext: test`;
+}
+class SchemaNodeException extends Error {
+    constructor(code, message, node, nodePath) {
+        super(message);
+        this.name = "SchemaNodeException";
+        this.code = code;
+        this.node = node;
+        this.nodePath = nodePath;
+    }
+}
+class SchemaDataRejection {
+    constructor(rootData, rootNode, code, data, node, nodePath) {
+        this.rootData = rootData;
+        this.rootNode = rootNode;
+        this.rootLabel = rootNode.label;
+        this.code = code;
+        this.data = data;
+        this.node = node;
+        this.nodePath = nodePath;
+        this.label = node.label;
+        if (typeof node.message === "function") {
+            this.message = node.message(code, data, node, nodePath);
+        }
+        else {
+            this.message = node.message;
+        }
+    }
+}
+class SchemaDataAdmission {
+    constructor(data, node) {
+        this.data = data;
+        this.node = node;
+        this.label = node.label;
     }
 }
 
@@ -24,12 +49,12 @@ class FormatsManager {
         }
     }
     has(type) {
-        return (!!this.store.has(type));
+        return this.store.has(type);
     }
     get(type) {
         const format = this.store.get(type);
         if (!format)
-            throw new Issue("FORMATS MANAGER", "This type is not recognized: " + type);
+            throw new SchemaException("The format is unknown : " + type);
         return (format);
     }
 }
@@ -62,21 +87,233 @@ class EventsManager {
     }
 }
 
-class SchemaNodeException extends Error {
-    constructor(report) {
-        super();
-        this.code = report.code;
-        this.message = report.message;
-        this.node = report.node;
-        this.nodePath = report.nodePath;
+const nodeSymbol = Symbol("node");
+const commonExceptions = {
+    TYPE_PROPERTY_UNDEFINED: "",
+    TYPE_PROPERTY_MISDECLARED: "",
+    TYPE_PROPERTY_MISCONFIGURED: "",
+    LABEL_PROPERTY_MISDECLARED: "",
+    MESSAGE_PROPERTY_MISDECLARED: ""
+};
+function commonMount(managers, node) {
+    const { type, label, message } = node;
+    if (!("type" in node)) {
+        return ("TYPE_PROPERTY_UNDEFINED");
+    }
+    if (typeof type !== "string") {
+        return ("TYPE_PROPERTY_MISDECLARED");
+    }
+    if (!managers.formats.has(type)) {
+        return ("TYPE_PROPERTY_MISCONFIGURED");
+    }
+    if (label !== undefined && typeof label !== "string") {
+        return ("LABEL_PROPERTY_MISDECLARED");
+    }
+    if (message !== undefined
+        && typeof message !== "string"
+        && typeof message !== "function") {
+        return ("MESSAGE_PROPERTY_MISDECLARED");
+    }
+    return (null);
+}
+function hasNodeSymbol(obj) {
+    return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
+}
+class MounterStack {
+    constructor(rootNode) {
+        this.tasks = [];
+        this.tasks.push({
+            node: rootNode,
+            partPath: { explicit: [], implicit: [] },
+            nodePath: { explicit: [], implicit: [] }
+        });
+    }
+    pushChunk(sourceTask, chunk) {
+        const prevNodePath = sourceTask.nodePath;
+        for (let i = 0; i < chunk.length; i++) {
+            const { node, partPath } = chunk[i];
+            this.tasks.push({
+                node,
+                partPath,
+                nodePath: {
+                    explicit: partPath.explicit
+                        ? prevNodePath.explicit.concat(partPath.explicit)
+                        : prevNodePath.explicit,
+                    implicit: partPath.implicit
+                        ? prevNodePath.implicit.concat(partPath.implicit)
+                        : prevNodePath.implicit
+                }
+            });
+        }
     }
 }
-class SchemaDataRejection {
-    constructor(report) {
-        this.code = report.code;
-        this.node = report.node;
-        this.nodePath = report.nodePath;
+function mounter(managers, rootNode) {
+    const { formats, events } = managers;
+    const stack = new MounterStack(rootNode);
+    while (stack.tasks.length) {
+        const currentTask = stack.tasks.pop();
+        const { node, nodePath, partPath } = currentTask;
+        if (hasNodeSymbol(node)) {
+            node[nodeSymbol] = {
+                ...node[nodeSymbol],
+                partPath
+            };
+        }
+        else {
+            let code = null;
+            code = commonMount(managers, node);
+            if (code) {
+                const message = commonExceptions[code];
+                throw new SchemaNodeException(code, message, node, nodePath);
+            }
+            const format = formats.get(node.type);
+            const chunkTasks = [];
+            code = format.mount(chunkTasks, node);
+            if (code) {
+                const message = format.exceptions[code];
+                throw new SchemaNodeException(code, message, node, nodePath);
+            }
+            Object.assign(node, {
+                [nodeSymbol]: {
+                    partPath,
+                    childNodes: chunkTasks.map((task) => task.node)
+                }
+            });
+            Object.freeze(node);
+            if (chunkTasks.length) {
+                stack.pushChunk(currentTask, chunkTasks);
+            }
+            events.emit("NODE_MOUNTED", node, nodePath);
+        }
     }
+    events.emit("TREE_MOUNTED", rootNode);
+    return rootNode;
+}
+
+class CheckerStack {
+    constructor(rootNode, rootData) {
+        this.tasks = [];
+        this.hooks = [];
+        this.tasks.push({
+            data: rootData,
+            node: rootNode,
+            nodePath: { explicit: [], implicit: [] },
+            closerHook: null
+        });
+    }
+    pushChunk(sourceTask, chunk) {
+        const prevCloserHook = sourceTask.closerHook;
+        const prevNodePath = sourceTask.nodePath;
+        const staskTaskLength = this.tasks.length;
+        const stackHookLength = this.hooks.length;
+        const chunkTaskLength = chunk.length;
+        let chunkTaskIndex = 0, chunkHookCount = 0;
+        while (chunkTaskIndex < chunkTaskLength) {
+            const { data, node, hook } = chunk[chunkTaskIndex];
+            const partPath = node[nodeSymbol].partPath;
+            let closerHook = prevCloserHook;
+            if (hook) {
+                closerHook = {
+                    ...hook,
+                    sourceTask,
+                    chunkTaskIndex: staskTaskLength,
+                    branchTaskIndex: staskTaskLength + chunkTaskIndex,
+                    chunkHookIndex: stackHookLength,
+                    branchHookIndex: stackHookLength + chunkHookCount
+                };
+                this.hooks.push(closerHook);
+                chunkHookCount++;
+            }
+            this.tasks.push({
+                data,
+                node,
+                nodePath: {
+                    explicit: partPath.explicit
+                        ? prevNodePath.explicit.concat(partPath.explicit)
+                        : prevNodePath.explicit,
+                    implicit: partPath.implicit
+                        ? prevNodePath.implicit.concat(partPath.implicit)
+                        : prevNodePath.implicit
+                },
+                closerHook
+            });
+            chunkTaskIndex++;
+        }
+    }
+    playHooks(closerHook, rejection) {
+        if (!rejection && closerHook.branchTaskIndex !== this.tasks.length) {
+            return (null);
+        }
+        let currentHook = closerHook;
+        while (currentHook) {
+            const result = rejection
+                ? currentHook.onReject(rejection)
+                : currentHook.onAccept();
+            switch (result.action) {
+                case "REJECT":
+                    this.tasks.length = currentHook.branchTaskIndex;
+                    this.hooks.length = currentHook.branchHookIndex;
+                    rejection = {
+                        issuerTask: currentHook.sourceTask,
+                        code: result.code
+                    };
+                    break;
+                case "CANCEL":
+                    if (result.target === "CHUNK") {
+                        this.tasks.length = currentHook.chunkTaskIndex;
+                        this.hooks.length = currentHook.chunkHookIndex;
+                    }
+                    else if (result.target === "BRANCH") {
+                        this.tasks.length = currentHook.branchTaskIndex;
+                        this.hooks.length = currentHook.branchHookIndex;
+                    }
+                    return (null);
+            }
+            if (rejection || currentHook.chunkHookIndex === 0)
+                break;
+            currentHook = this.hooks[currentHook.chunkHookIndex];
+        }
+        return (rejection);
+    }
+}
+function checker(managers, rootNode, rootData) {
+    const { formats, events } = managers;
+    const stack = new CheckerStack(rootNode, rootData);
+    let rejection = null;
+    while (stack.tasks.length) {
+        const currentTask = stack.tasks.pop();
+        const { data, node, closerHook } = currentTask;
+        const format = formats.get(node.type);
+        const chunkTasks = [];
+        const code = format.check(chunkTasks, node, data);
+        if (chunkTasks.length) {
+            stack.pushChunk(currentTask, chunkTasks);
+        }
+        if (code) {
+            rejection = { issuerTask: currentTask, code };
+        }
+        if (closerHook) {
+            rejection = stack.playHooks(closerHook, rejection);
+        }
+        if (rejection)
+            break;
+    }
+    if (rejection) {
+        const rejectionInstance = new SchemaDataRejection(rootData, rootNode, rejection.code, rejection.issuerTask.data, rejection.issuerTask.node, rejection.issuerTask.nodePath);
+        events.emit("DATA_REJECTED", rejectionInstance);
+        return ({
+            success: false,
+            rejection: rejectionInstance,
+            admission: null
+        });
+    }
+    const admissionInstance = new SchemaDataAdmission(rootData, rootNode);
+    events.emit("DATA_ADMITTED", admissionInstance);
+    return ({
+        success: true,
+        rejection: null,
+        admission: admissionInstance
+    });
 }
 
 function getInternalTag(target) {
@@ -1025,225 +1262,6 @@ const testers = {
     string: stringTesters$1
 };
 
-const nodeSymbol = Symbol("node");
-const commonErrors = {
-    NODE_MALFORMED: "Criteria node must be of type Plain Object.",
-    TYPE_PROPERTY_REQUIRED: "",
-    TYPE_PROPERTY_MALFORMED: "",
-    TYPE_PROPERTY_MISCONFIGURED: "",
-    LABEL_PROPERTY_MALFORMED: "",
-    MESSAGE_PROPERTY_MALFORMED: "",
-    NULLABLE_PROPERTY_MALFORMED: ""
-};
-function commonMount(managers, node) {
-    if (!isPlainObject(node))
-        return ("NODE_MALFORMED");
-    const { type, label, message, nullable } = node;
-    if (!("type" in node)) {
-        return ("TYPE_PROPERTY_REQUIRED");
-    }
-    if (typeof type !== "string") {
-        return ("TYPE_PROPERTY_MALFORMED");
-    }
-    if (!managers.formats.has(type)) {
-        return ("TYPE_PROPERTY_MISCONFIGURED");
-    }
-    if (label !== undefined && typeof label !== "string") {
-        return ("LABEL_PROPERTY_MALFORMED");
-    }
-    if (message !== undefined && typeof message !== "string") {
-        return ("MESSAGE_PROPERTY_MALFORMED");
-    }
-    if (nullable !== undefined && typeof nullable !== "boolean") {
-        return ("NULLABLE_PROPERTY_MALFORMED");
-    }
-    return (null);
-}
-function hasNodeSymbol(obj) {
-    return (typeof obj === "object" && Reflect.has(obj, nodeSymbol));
-}
-class MounterStack {
-    constructor(rootNode) {
-        this.tasks = [];
-        this.tasks.push({
-            node: rootNode,
-            partPath: { explicit: [], implicit: [] },
-            fullPath: { explicit: [], implicit: [] }
-        });
-    }
-    pushChunk(sourceTask, chunk) {
-        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
-        for (let i = 0; i < chunk.length; i++) {
-            const { node, partPath } = chunk[i];
-            this.tasks.push({
-                node,
-                partPath,
-                fullPath: {
-                    explicit: partPath.explicit
-                        ? fullPathExplicit.concat(partPath.explicit)
-                        : fullPathExplicit,
-                    implicit: partPath.implicit
-                        ? fullPathImplicit.concat(partPath.implicit)
-                        : fullPathImplicit
-                }
-            });
-        }
-    }
-}
-function mounter(managers, rootNode) {
-    const { formats, events } = managers;
-    const stack = new MounterStack(rootNode);
-    while (stack.tasks.length) {
-        const currentTask = stack.tasks.pop();
-        const { node, partPath, fullPath } = currentTask;
-        if (hasNodeSymbol(node)) {
-            node[nodeSymbol] = {
-                ...node[nodeSymbol],
-                partPath
-            };
-        }
-        else {
-            let code = null;
-            code = commonMount(managers, node);
-            if (code) {
-                throw new SchemaNodeException({
-                    node: node,
-                    nodePath: fullPath,
-                    code: code,
-                    message: commonErrors[code]
-                });
-            }
-            const chunk = [];
-            const format = formats.get(node.type);
-            code = format.mount(chunk, node);
-            if (code) {
-                throw new SchemaNodeException({
-                    node: node,
-                    nodePath: fullPath,
-                    code: code,
-                    message: format.exceptions[code]
-                });
-            }
-            Object.assign(node, {
-                [nodeSymbol]: {
-                    partPath,
-                    childNodes: chunk.map((task) => task.node)
-                }
-            });
-            Object.freeze(node);
-            if (chunk.length)
-                stack.pushChunk(currentTask, chunk);
-            events.emit("NODE_MOUNTED", node, fullPath);
-        }
-    }
-    events.emit("TREE_MOUNTED", rootNode);
-    return rootNode;
-}
-
-class CheckerStack {
-    constructor(rootNode, rootData) {
-        this.tasks = [];
-        this.tasks.push({
-            data: rootData,
-            node: rootNode,
-            fullPath: { explicit: [], implicit: [] }
-        });
-    }
-    pushChunk(sourceTask, chunk) {
-        const { explicit: fullPathExplicit, implicit: fullPathImplicit } = sourceTask.fullPath;
-        for (let i = 0; i < chunk.length; i++) {
-            const task = chunk[i];
-            const partPath = task.node[nodeSymbol].partPath;
-            let stackHooks = sourceTask.stackHooks;
-            if (task.hooks) {
-                const hooks = {
-                    taskOwner: sourceTask,
-                    stackIndex: {
-                        chunk: this.tasks.length - i,
-                        branch: this.tasks.length
-                    },
-                    ...task.hooks
-                };
-                stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
-            }
-            this.tasks.push({
-                data: task.data,
-                node: task.node,
-                fullPath: {
-                    explicit: partPath.explicit
-                        ? fullPathExplicit.concat(partPath.explicit)
-                        : fullPathExplicit,
-                    implicit: partPath.implicit
-                        ? fullPathImplicit.concat(partPath.implicit)
-                        : fullPathImplicit
-                },
-                stackHooks
-            });
-        }
-    }
-    callHooks(sourceTask, rejection) {
-        const stackHooks = sourceTask.stackHooks;
-        if (!stackHooks)
-            return (null);
-        const lastHooks = stackHooks[stackHooks.length - 1];
-        if (!rejection && lastHooks.stackIndex.branch !== this.tasks.length) {
-            return (null);
-        }
-        loop: for (let i = stackHooks.length - 1; i >= 0; i--) {
-            const hooks = stackHooks[i];
-            const claim = rejection ? hooks.onReject(rejection) : hooks.onAccept();
-            switch (claim.action) {
-                case "DEFAULT":
-                    this.tasks.length = hooks.stackIndex.branch;
-                    if (!rejection) {
-                        rejection = null;
-                        break loop;
-                    }
-                    continue;
-                case "REJECT":
-                    this.tasks.length = hooks.stackIndex.branch;
-                    rejection = { task: hooks.taskOwner, code: claim.code };
-                    continue;
-                case "IGNORE":
-                    if (claim?.target === "CHUNK") {
-                        this.tasks.length = hooks.stackIndex.chunk;
-                    }
-                    else {
-                        this.tasks.length = hooks.stackIndex.branch;
-                    }
-                    rejection = null;
-                    break loop;
-            }
-        }
-        return (rejection);
-    }
-}
-function checker(managers, rootNode, rootData) {
-    const { formats, events } = managers;
-    const stack = new CheckerStack(rootNode, rootData);
-    let rejection = null;
-    while (stack.tasks.length) {
-        const currentTask = stack.tasks.pop();
-        const { data, node, stackHooks } = currentTask;
-        const chunk = [];
-        let code = null;
-        if (!(node.nullable && data === null)) {
-            const format = formats.get(node.type);
-            code = format.check(chunk, node, data);
-        }
-        if (code)
-            rejection = { task: currentTask, code };
-        else if (chunk.length)
-            stack.pushChunk(currentTask, chunk);
-        if (stackHooks)
-            rejection = stack.callHooks(currentTask, rejection);
-        if (rejection)
-            break;
-    }
-    events.emit("DATA_CHECKED", rootNode, rootData, rejection);
-    return (rejection);
-}
-
 /**
  * Clones the object starting from the root and stops traversing a branch
  * when a mounted criteria node is encountered. In such cases, the mounted
@@ -1328,13 +1346,28 @@ function cloner(rootSrc) {
     return rootCpy;
 }
 
+const UndefinedFormat = {
+    type: "undefined",
+    exceptions: {},
+    mount(chunk, criteria) {
+        return (null);
+    },
+    check(chunk, criteria, value) {
+        if (value !== undefined) {
+            return ("TYPE_UNDEFINED_UNSATISFIED");
+        }
+        return (null);
+    }
+};
+
 const FunctionFormat = {
     type: "function",
     exceptions: {
-        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
+        NATURE_PROPERTY_MISDECLARED: "The 'nature' property must be of type string.",
         NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string.",
-        NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: "The array length of the 'nature' must be greater than 0.",
-        NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED: "The array items of the 'nature' property must be a known string."
+        NATURE_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'nature' must have a number of items greater than 0.",
+        NATURE_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'nature' property must be of type string.",
+        NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED: "The array items of the 'nature' property must be known strings."
     },
     natureBitflags: {
         BASIC: 1 << 1,
@@ -1358,16 +1391,19 @@ const FunctionFormat = {
             }
             else if (isArray(nature)) {
                 if (nature.length < 1) {
-                    return ("NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
+                    return ("NATURE_PROPERTY_ARRAY_MISCONFIGURED");
                 }
                 for (const item of nature) {
+                    if (typeof item !== "string") {
+                        return ("NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
+                    }
                     if (!(item in this.natureBitflags)) {
                         return ("NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
                     }
                 }
             }
             else {
-                return ("NATURE_PROPERTY_MALFORMED");
+                return ("NATURE_PROPERTY_MISDECLARED");
             }
         }
         if (isArray(nature)) {
@@ -1404,12 +1440,12 @@ const FunctionFormat = {
 const BooleanFormat = {
     type: "boolean",
     exceptions: {
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Boolean."
+        LITERAL_PROPERTY_MISDECLARED: "The 'literal' property must be of type boolean."
     },
     mount(chunk, criteria) {
         const { literal } = criteria;
         if (literal !== undefined && typeof literal !== "boolean") {
-            return ("LITERAL_PROPERTY_MALFORMED");
+            return ("LITERAL_PROPERTY_MISDECLARED");
         }
         return (null);
     },
@@ -1422,21 +1458,33 @@ const BooleanFormat = {
             return ("LITERAL_UNSATISFIED");
         }
         return (null);
+    }
+};
+
+const UnknownFormat = {
+    type: "unknown",
+    exceptions: {},
+    mount(chunk, criteria) {
+        return (null);
     },
+    check(chunk, criteria, value) {
+        return (null);
+    }
 };
 
 const SymbolFormat = {
     type: "symbol",
     exceptions: {
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type Symbol, Array or Plain Object.",
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type Symbol.",
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must contain at least one key.",
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type String.",
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type Symbol.",
+        LITERAL_PROPERTY_MISDECLARED: "The 'literal' property must be of type symbol, array or plain object.",
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must have a number of items greater than 0.",
+        LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'literal' property must be of type symbol.",
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must must have a number of keys greater than 0.",
+        LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED: "The object keys of the 'literal' property must be of type string.",
+        LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED: "The object values of the 'literal' property must be of type symbol.",
+        CUSTOM_PROPERTY_MISDECLARED: "The 'custom' property must be of type basic function."
     },
     mount(chunk, criteria) {
-        const { literal } = criteria;
+        const { literal, custom } = criteria;
         if (literal !== undefined) {
             let resolvedLiteral;
             if (typeof literal === "symbol") {
@@ -1448,7 +1496,7 @@ const SymbolFormat = {
                 }
                 for (const item of literal) {
                     if (typeof item !== "symbol") {
-                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(literal);
@@ -1460,18 +1508,21 @@ const SymbolFormat = {
                 }
                 for (const key of keys) {
                     if (typeof key !== "string") {
-                        return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
                     }
                     if (typeof literal[key] !== "symbol") {
-                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(Object.values(literal));
             }
             else {
-                return ("LITERAL_PROPERTY_MALFORMED");
+                return ("LITERAL_PROPERTY_MISDECLARED");
             }
             Object.assign(criteria, { resolvedLiteral });
+        }
+        if (custom !== undefined && !isFunction(custom)) {
+            return ("CUSTOM_PROPERTY_MISDECLARED");
         }
         return (null);
     },
@@ -1479,9 +1530,12 @@ const SymbolFormat = {
         if (typeof value !== "symbol") {
             return ("TYPE_SYMBOL_UNSATISFIED");
         }
-        const { resolvedLiteral } = criteria;
+        const { resolvedLiteral, custom } = criteria;
         if (resolvedLiteral !== undefined && !resolvedLiteral.has(value)) {
             return ("LITERAL_UNSATISFIED");
+        }
+        if (custom && !custom(value)) {
+            return ("CUSTOM_UNSATISFIED");
         }
         return (null);
     }
@@ -1490,27 +1544,27 @@ const SymbolFormat = {
 const NumberFormat = {
     type: "number",
     exceptions: {
-        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type number.",
-        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type number.",
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property.",
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type number, array or plain-object.",
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type number.",
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must contain at least one key.",
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type string.",
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type number.",
-        CUSTOM_PROPERTY_MALFORMED: "The 'custom' property must be of type basic-function."
+        MIN_PROPERTY_MISDECLARED: "The 'min' property must be of type number.",
+        MAX_PROPERTY_MISDECLARED: "The 'max' property must be of type number.",
+        MIN_MAX_PROPERTIES_MISCONFIGURED: "The 'max' property cannot be less than 'min' property.",
+        LITERAL_PROPERTY_MISDECLARED: "The 'literal' property must be of type number, array or plain object.",
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must have a number of items greater than 0.",
+        LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'literal' property must be of type number.",
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must have a number of keys greater than 0.",
+        LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED: "The object keys of the 'literal' property must be of type string.",
+        LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED: "The object values of the 'literal' property must be of type number.",
+        CUSTOM_PROPERTY_MISDECLARED: "The 'custom' property must be of type basic function."
     },
     mount(chunk, criteria) {
         const { min, max, literal, custom } = criteria;
         if (min !== undefined && typeof min !== "number") {
-            return ("MIN_PROPERTY_MALFORMED");
+            return ("MIN_PROPERTY_MISDECLARED");
         }
         if (max !== undefined && typeof max !== "number") {
-            return ("MAX_PROPERTY_MALFORMED");
+            return ("MAX_PROPERTY_MISDECLARED");
         }
         if (min !== undefined && max !== undefined && min > max) {
-            return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+            return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
         }
         if (literal !== undefined) {
             let resolvedLiteral;
@@ -1523,7 +1577,7 @@ const NumberFormat = {
                 }
                 for (const item of literal) {
                     if (typeof item !== "number") {
-                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(literal);
@@ -1535,21 +1589,21 @@ const NumberFormat = {
                 }
                 for (const key of keys) {
                     if (typeof key !== "string") {
-                        return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
                     }
                     if (typeof literal[key] !== "number") {
-                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(Object.values(literal));
             }
             else {
-                return ("LITERAL_PROPERTY_MALFORMED");
+                return ("LITERAL_PROPERTY_MISDECLARED");
             }
             Object.assign(criteria, { resolvedLiteral });
         }
         if (custom !== undefined && !isFunction(custom)) {
-            return ("CUSTOM_PROPERTY_MALFORMED");
+            return ("CUSTOM_PROPERTY_MISDECLARED");
         }
         return (null);
     },
@@ -1578,36 +1632,36 @@ const stringTesters = new Map(Object.entries(testers.string));
 const StringFormat = {
     type: "string",
     exceptions: {
-        MIN_PROPERTY_MALFORMED: "The 'min' property must be of type Number.",
-        MAX_PROPERTY_MALFORMED: "The 'max' property must be of type Number.",
+        MIN_PROPERTY_MISDECLARED: "The 'min' property must be of type number.",
+        MAX_PROPERTY_MISDECLARED: "The 'max' property must be of type number.",
         MIN_MAX_PROPERTIES_MISCONFIGURED: "The 'min' property cannot be greater than 'max' property.",
-        REGEX_PROPERTY_MALFORMED: "The 'regex' property must be of type String or RegExp Object.",
-        LITERAL_PROPERTY_MALFORMED: "The 'literal' property must be of type String, Array or Plain Object.",
-        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must contain at least one item.",
-        LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'literal' property must be of type String.",
-        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must contain at least one key.",
-        LITERAL_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'literal' property must be of type String.",
-        LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'literal' property must be of type String.",
-        CONSTRAINT_PROPERTY_MALFORMED: "The 'constraint' property must be of type Plain Object.",
-        CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'constraint' property must contain at least one key.",
-        CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED: "The object keys of the 'constraint' property must be of type String.",
+        REGEX_PROPERTY_MISDECLARED: "The 'regex' property must be of type RegExp object.",
+        LITERAL_PROPERTY_MISDECLARED: "The 'literal' property must be of type string, array or plain object.",
+        LITERAL_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'literal' property must have a number of items greater than 0.",
+        LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'literal' property must be of type String.",
+        LITERAL_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'literal' property must have a number of keys greater than 0.",
+        LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED: "The object keys of the 'literal' property must be of type string.",
+        LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED: "The object values of the 'literal' property must be of type string.",
+        CONSTRAINT_PROPERTY_MISDECLARED: "The 'constraint' property must be of type Plain Object.",
+        CONSTRAINT_PROPERTY_OBJECT_MISCONFIGURED: "The object of the 'constraint' property must have a number of keys greater than 0.",
+        CONSTRAINT_PROPERTY_OBJECT_KEY_MISDECLARED: "The object keys of the 'constraint' property must be of type string.",
         CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED: "The object keys of the 'constraint' property must be a known string.",
-        CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'constraint' property must be of type True or Plain Object.",
-        CUSTOM_PROPERTY_MALFORMED: "The 'custom' property must be of type Basic Function."
+        CONSTRAINT_PROPERTY_OBJECT_VALUE_MISDECLARED: "The object values of the 'constraint' property must be of type true or plain object.",
+        CUSTOM_PROPERTY_MISDECLARED: "The 'custom' property must be of type basic function."
     },
     mount(chunk, criteria) {
         const { min, max, regex, literal, constraint, custom } = criteria;
         if (min !== undefined && typeof min !== "number") {
-            return ("MAX_PROPERTY_MALFORMED");
+            return ("MIN_PROPERTY_MISDECLARED");
         }
         if (max !== undefined && typeof max !== "number") {
-            return ("MAX_PROPERTY_MALFORMED");
+            return ("MAX_PROPERTY_MISDECLARED");
         }
         if (min !== undefined && max !== undefined && min > max) {
             return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
         }
         if (regex !== undefined && !(regex instanceof RegExp)) {
-            return ("REGEX_PROPERTY_MALFORMED");
+            return ("REGEX_PROPERTY_MISDECLARED");
         }
         if (literal !== undefined) {
             let resolvedLiteral;
@@ -1620,7 +1674,7 @@ const StringFormat = {
                 }
                 for (const item of literal) {
                     if (typeof item !== "string") {
-                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(literal);
@@ -1632,16 +1686,16 @@ const StringFormat = {
                 }
                 for (const key of keys) {
                     if (typeof key !== "string") {
-                        return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
                     }
                     if (typeof literal[key] !== "string") {
-                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+                        return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
                     }
                 }
                 resolvedLiteral = new Set(Object.values(literal));
             }
             else {
-                return ("LITERAL_PROPERTY_MALFORMED");
+                return ("LITERAL_PROPERTY_MISDECLARED");
             }
             Object.assign(criteria, { resolvedLiteral });
         }
@@ -1654,30 +1708,32 @@ const StringFormat = {
                 const resolvedConstraint = new Map();
                 for (const key of keys) {
                     if (typeof key !== "string") {
-                        return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MALFORMED");
+                        return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISDECLARED");
                     }
                     if (!stringTesters.has(key)) {
                         return ("CONSTRAINT_PROPERTY_OBJECT_KEY_MISCONFIGURED");
                     }
                     const value = constraint[key];
                     if (typeof value !== "boolean" && !isPlainObject(value)) {
-                        return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MALFORMED");
+                        return ("CONSTRAINT_PROPERTY_OBJECT_VALUE_MISDECLARED");
                     }
                     if (value === false)
                         continue;
-                    if (value === true)
+                    if (value === true) {
                         resolvedConstraint.set(key, undefined);
-                    else
+                    }
+                    else {
                         resolvedConstraint.set(key, value);
+                    }
                 }
                 Object.assign(criteria, { resolvedConstraint });
             }
             else {
-                return ("CONSTRAINT_PROPERTY_MALFORMED");
+                return ("CONSTRAINT_PROPERTY_MISDECLARED");
             }
         }
         if (custom !== undefined && !isFunction(custom)) {
-            return ("CUSTOM_PROPERTY_MALFORMED");
+            return ("CUSTOM_PROPERTY_MISDECLARED");
         }
         return (null);
     },
@@ -1718,73 +1774,29 @@ const StringFormat = {
     }
 };
 
-const SimpleFormat = {
-    type: "simple",
-    exceptions: {
-        NATURE_PROPERTY_REQUIRED: "The 'nature' property must be defined.",
-        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
-        NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string."
-    },
-    natureBitflags: {
-        UNKNOWN: 1 << 0,
-        NULLISH: 1 << 1,
-        NULL: 1 << 2,
-        UNDEFINED: 1 << 3
-    },
-    mount(chunk, criteria) {
-        const { nature } = criteria;
-        if (!("nature" in criteria)) {
-            return ("NATURE_PROPERTY_REQUIRED");
-        }
-        if (typeof nature !== "string") {
-            return ("NATURE_PROPERTY_MALFORMED");
-        }
-        if (!(nature in this.natureBitflags)) {
-            return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
-        }
-        Object.assign(criteria, {
-            natureBitcode: this.natureBitflags[nature]
-        });
-        return (null);
-    },
-    check(chunk, criteria, value) {
-        const { natureBitcode } = criteria, { natureBitflags } = this;
-        if (natureBitcode & natureBitflags.UNKNOWN) {
-            return (null);
-        }
-        if (natureBitcode & natureBitflags.NULLISH && value != null) {
-            return ("NATURE_NULLISH_UNSATISFIED");
-        }
-        if (natureBitcode & natureBitflags.NULL && value !== null) {
-            return ("NATURE_NULL_UNSATISFIED");
-        }
-        if ((natureBitcode & natureBitflags.UNDEFINED) && value !== undefined) {
-            return ("NATURE_UNDEFINED_UNSATISFIED");
-        }
-        return (null);
-    }
-};
-
 const ObjectFormat = {
     type: "object",
     exceptions: {
-        SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Plain Object.",
-        SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED: "The object values of the 'shape' property must be of type Plain Object.",
-        NATURE_PROPERTY_MALFORMED: "The 'nature' property must be of type String.",
-        NATURE_PROPERTY_STRING_MISCONFIGURED: "The 'nature' property must be a known string.",
-        OPTIONAL_PROPERTY_MALFORMED: "The 'optional' property must be of type Boolean or Array.",
-        OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'optional' property must be of type String or Symbol.",
-        OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED: "The 'optional' property cannot be defined without the 'shape' property.",
-        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
-        ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED: "The 'additional' property cannot be defined without the 'shape' property.",
-        ADDITIONAL__KEY_PROPERTY_MALFORMED: "The 'additional.key' property, must be a criteria node of type Plain Object.",
-        ADDITIONAL__KEY_PROPERTY_MISCONFIGURED: "The value of the 'additional.key' property, must be a criteria node with a 'type' property equal to 'string' or 'symbol'",
-        ADDITIONAL__VALUE_PROPERTY_MALFORMED: "The 'additional.value' property, must be a criteria node Object.",
-        ADDITIONAL__MIN_PROPERTY_MALFORMED: "The 'additional.min' property, must be of type Number.",
-        ADDITIONAL__MAX_PROPERTY_MALFORMED: "The 'additional.max' property, must be of type Number.",
-        ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'additional.min' property cannot be greater than 'additional.max' property."
+        NATURE_PROPERTY_MISDECLARED: "The 'nature' property must be of type string.",
+        NATURE_PROPERTY_MISCONFIGURED: "The 'nature' property must be a known string.",
+        MIN_PROPERTY_MISDECLARED: "The 'min' property must be of type number.",
+        MAX_PROPERTY_MISDECLARED: "The 'max' property must be of type number.",
+        MAX_MIN_PROPERTIES_MISCONFIGURED: "The 'max' property cannot be less than 'min' property.",
+        SHAPE_PROPERTY_MISDECLARED: "The 'shape' property must be of type plain object.",
+        SHAPE_PROPERTY_OBJECT_VALUE_MISDECLARED: "The object values of the 'shape' property must be of type plain object.",
+        SHAPE_MIN_PROPERTIES_MISCONFIGURED: "The object of the 'shape' property must have a number of properties less than the 'min' property.",
+        SHAPE_MAX_PROPERTIES_MISCONFIGURED: "The object of the 'shape' property must have a number of properties less than the 'max' property.",
+        SHAPE_MIN_MAX_PROPERTIES_KEYS_VALUES_PROPERTIES_UNDEFINED: "The 'shape' property with the 'min' property or/and 'max' property cannot be defined without the 'keys' property or 'values' property.",
+        OPTIONAL_PROPERTY_MISDECLARED: "The 'optional' property must be of type boolean or array.",
+        OPTIONAL_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'optional' property must be of type string or symbol.",
+        OPTIONAL_PROPERTY_SHAPE_PROPERTY_UNDEFINED: "The 'optional' property cannot be defined without the 'shape' property.",
+        KEYS_PROPERTY_MISDECLARED: "The 'keys' property must be of type plain object.",
+        KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_UNDEFINED: "The object's 'type' property of the 'keys' property must be defined.",
+        KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISDECLARED: "The object's 'type' property of the 'keys' property must be of type string.",
+        KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISCONFIGURED: "The object's 'type' property of the 'keys' property must be 'string' or 'symbol'.",
+        VALUES_PROPERTY_MISDECLARED: "The 'values' property must be of type plain object."
     },
-    natures: ["STANDARD", "PLAIN"],
+    natures: ["PLAIN"],
     getUnforcedKeys(optional, declaredKeys) {
         if (optional === true)
             return (declaredKeys);
@@ -1803,215 +1815,214 @@ const ObjectFormat = {
         return (isPlainObject(obj) && (!("type" in obj) || typeof obj.type !== "string"));
     },
     mount(chunk, criteria) {
-        const { shape, nature, optional, additional } = criteria;
-        if (shape !== undefined) {
-            if (!isPlainObject(shape)) {
-                return ("SHAPE_PROPERTY_MALFORMED");
-            }
-            for (const key of Reflect.ownKeys(shape)) {
-                if (!isPlainObject(shape[key])) {
-                    return ("SHAPE_PROPERTY_OBJECT_VALUE_MALFORMED");
-                }
-            }
-        }
+        const { nature, min, max, shape, optional, keys, values } = criteria;
+        const resolvedOptional = optional ?? false;
         if (nature !== undefined) {
             if (typeof nature !== "string") {
-                return ("NATURE_PROPERTY_MALFORMED");
+                return ("NATURE_PROPERTY_MISDECLARED");
             }
             if (!this.natures.includes(nature)) {
-                return ("NATURE_PROPERTY_STRING_MISCONFIGURED");
+                return ("NATURE_PROPERTY_MISCONFIGURED");
             }
         }
-        if (optional !== undefined) {
-            if (!("shape" in criteria)) {
-                return ("OPTIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED");
+        if (min !== undefined && typeof min !== "number") {
+            return ("MIN_PROPERTY_MISDECLARED");
+        }
+        if (max !== undefined && typeof max !== "number") {
+            return ("MAX_PROPERTY_MISDECLARED");
+        }
+        if (min !== undefined && max !== undefined && min > max) {
+            return ("MAX_MIN_PROPERTIES_MISCONFIGURED");
+        }
+        if (shape !== undefined) {
+            if (!isPlainObject(shape)) {
+                return ("SHAPE_PROPERTY_MISDECLARED");
             }
+            if ((min !== undefined || max !== undefined)
+                && !("keys" in criteria)
+                && !("values" in criteria)) {
+                return ("SHAPE_MIN_MAX_PROPERTIES_KEYS_VALUES_PROPERTIES_UNDEFINED");
+            }
+            const shapeKeys = Reflect.ownKeys(shape);
+            const shapeKeysLength = shapeKeys.length;
+            if (min !== undefined && min < shapeKeysLength) {
+                return ("SHAPE_MIN_PROPERTIES_MISCONFIGURED");
+            }
+            if (max !== undefined && max < shapeKeysLength) {
+                return ("SHAPE_MAX_PROPERTIES_MISCONFIGURED");
+            }
+            for (let i = 0; i < shapeKeysLength; i++) {
+                const key = shapeKeys[i];
+                let node = shape[key];
+                if (!isPlainObject(node)) {
+                    return ("SHAPE_PROPERTY_OBJECT_VALUE_MISDECLARED");
+                }
+                if (this.isShorthandShape(node)) {
+                    node = {
+                        type: "object",
+                        shape: node
+                    };
+                    shape[key] = node;
+                }
+                chunk.push({
+                    node: node,
+                    partPath: {
+                        explicit: ["shape", key],
+                        implicit: ["&", key]
+                    }
+                });
+            }
+            Object.assign(criteria, {
+                declaredKeySet: new Set(shapeKeys),
+                unforcedKeySet: new Set(this.getUnforcedKeys(resolvedOptional, shapeKeys)),
+                enforcedKeySet: new Set(this.getEnforcedKeys(resolvedOptional, shapeKeys))
+            });
+        }
+        if (optional !== undefined) {
             if (isArray(optional)) {
                 for (const item of optional) {
                     if (typeof item !== "string" && typeof item !== "symbol") {
-                        return ("OPTIONAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+                        return ("OPTIONAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
                     }
                 }
             }
             else if (typeof optional !== "boolean") {
-                return ("OPTIONAL_PROPERTY_MALFORMED");
+                return ("OPTIONAL_PROPERTY_MISDECLARED");
             }
+            if (shape === undefined) {
+                return ("OPTIONAL_PROPERTY_SHAPE_PROPERTY_UNDEFINED");
+            }
+            Object.assign(criteria, {
+                optional: resolvedOptional
+            });
         }
-        if (additional !== undefined) {
-            if (!("shape" in criteria)) {
-                return ("ADDITIONAL_PROPERTY_WITHOUT_SHAPE_PROPERTY_DEFINED");
+        if (keys !== undefined) {
+            if (!isPlainObject(keys)) {
+                return ("KEYS_PROPERTY_MISDECLARED");
             }
-            if (isPlainObject(additional)) {
-                const { key, value, min, max } = additional;
-                if (isPlainObject(key)) {
-                    if (key.type !== "string" && key.type !== "symbol") {
-                        return ("ADDITIONAL__KEY_PROPERTY_MISCONFIGURED");
-                    }
-                }
-                else if (key !== undefined) {
-                    return ("ADDITIONAL__KEY_PROPERTY_MALFORMED");
-                }
-                if (value !== undefined && !isPlainObject(value)) {
-                    return ("ADDITIONAL__VALUE_PROPERTY_MALFORMED");
-                }
-                if (min !== undefined && typeof min !== "number") {
-                    return ("ADDITIONAL__MIN_PROPERTY_MALFORMED");
-                }
-                if (max !== undefined && typeof max !== "number") {
-                    return ("ADDITIONAL__MAX_PROPERTY_MALFORMED");
-                }
-                if (min !== undefined && max !== undefined && min > max) {
-                    return ("ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
-                }
+            if (!("type" in keys)) {
+                return ("KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_UNDEFINED");
             }
-            else if (typeof additional !== "boolean") {
-                return ("ADDITIONAL_PROPERTY_MALFORMED");
+            if (typeof keys.type !== "string") {
+                return ("KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISDECLARED");
             }
-        }
-        const resolvedOptional = optional ?? false;
-        const resolvedAdditional = additional ?? false;
-        Object.assign(criteria, {
-            nature: nature ?? "STANDARD",
-            optional: resolvedOptional,
-            additional: resolvedAdditional
-        });
-        if (shape === undefined)
-            return (null);
-        const declaredKeyArray = Reflect.ownKeys(shape);
-        const unforcedKeyArray = this.getUnforcedKeys(resolvedOptional, declaredKeyArray);
-        const enforcedKeyArray = this.getEnforcedKeys(resolvedOptional, declaredKeyArray);
-        Object.assign(criteria, {
-            declaredKeySet: new Set(declaredKeyArray),
-            unforcedKeySet: new Set(unforcedKeyArray),
-            enforcedKeySet: new Set(enforcedKeyArray)
-        });
-        for (let i = 0; i < declaredKeyArray.length; i++) {
-            const key = declaredKeyArray[i];
-            let node = shape[key];
-            if (this.isShorthandShape(node)) {
-                node = {
-                    type: "object",
-                    shape: node
-                };
-                shape[key] = node;
+            if (keys.type !== "string" && keys.type !== "symbol") {
+                return ("KEYS_PROPERTY_OBJECT_TYPE_PROPERTY_MISCONFIGURED");
             }
             chunk.push({
-                node: node,
+                node: keys,
                 partPath: {
-                    explicit: ["shape", key],
-                    implicit: ["&", key]
+                    explicit: ["keys"],
+                    implicit: []
                 }
             });
         }
-        if (isPlainObject(resolvedAdditional)) {
-            if (resolvedAdditional.key) {
-                chunk.push({
-                    node: resolvedAdditional.key,
-                    partPath: {
-                        explicit: ["additional", "key"]
-                    }
-                });
+        if (values !== undefined) {
+            if (!isPlainObject(values)) {
+                return ("VALUES_PROPERTY_MISDECLARED");
             }
-            if (resolvedAdditional.value) {
-                chunk.push({
-                    node: resolvedAdditional.value,
-                    partPath: {
-                        explicit: ["additional", "value"],
-                        implicit: ["%", "string", "symbol"]
-                    }
-                });
-            }
+            chunk.push({
+                node: values,
+                partPath: {
+                    explicit: ["values"],
+                    implicit: ["%", "string", "symbol"]
+                }
+            });
         }
         return (null);
     },
     check(chunk, criteria, data) {
-        if (criteria.nature === "STANDARD") {
-            if (!isObject(data)) {
-                return ("TYPE_OBJECT_UNSATISFIED");
-            }
+        if (!isObject(data)) {
+            return ("TYPE_OBJECT_UNSATISFIED");
         }
-        else if (!isPlainObject(data)) {
-            return ("TYPE_PLAIN_OBJECT_UNSATISFIED");
+        const { nature, min, max, shape, keys, values, declaredKeySet, unforcedKeySet, enforcedKeySet } = criteria;
+        if (nature === "PLAIN" && !isPlainObject(data)) {
+            return ("NATURE_PLAIN_UNSATISFIED");
         }
-        const { shape, additional, declaredKeySet, unforcedKeySet, enforcedKeySet } = criteria;
-        if (shape === undefined)
-            return (null);
-        const declaredKeyCount = declaredKeySet.size;
-        const enforcedKeyCount = enforcedKeySet.size;
         const definedKeyArray = Reflect.ownKeys(data);
         const definedKeyCount = definedKeyArray.length;
-        if (definedKeyCount < enforcedKeyCount) {
-            return ("SHAPE_UNSATISFIED");
+        if (min !== undefined && definedKeyCount < min) {
+            return ("MIN_UNSATISFIED");
         }
-        if (!additional && definedKeyCount > declaredKeyCount) {
-            return ("EXTENSIBLE_UNALLOWED");
+        if (max !== undefined && definedKeyCount > max) {
+            return ("MAX_UNSATISFIED");
         }
-        if (typeof additional === "boolean") {
-            let enforcedMiss = enforcedKeyCount;
-            for (let i = 0; i < definedKeyCount; i++) {
-                const key = definedKeyArray[i];
-                if (enforcedKeySet.has(key)) {
-                    enforcedMiss--;
-                }
-                else if (enforcedMiss > i) {
+        if (shape !== undefined) {
+            const declaredKeyCount = declaredKeySet.size;
+            const enforcedKeyCount = enforcedKeySet.size;
+            if (definedKeyCount < enforcedKeyCount) {
+                return ("SHAPE_UNSATISFIED");
+            }
+            if (keys === undefined && values === undefined) {
+                if (definedKeyCount > declaredKeyCount) {
                     return ("SHAPE_UNSATISFIED");
                 }
-                else if (!unforcedKeySet.has(key)) {
-                    if (!additional) {
-                        return ("EXTENSIBLE_UNALLOWED");
+                let enforcedMissing = enforcedKeyCount;
+                for (let i = 0; i < definedKeyCount; i++) {
+                    const key = definedKeyArray[i];
+                    if (enforcedKeySet.has(key)) {
+                        enforcedMissing--;
                     }
-                    continue;
+                    else if (enforcedMissing > i) {
+                        return ("SHAPE_UNSATISFIED");
+                    }
+                    else if (!unforcedKeySet.has(key)) {
+                        return ("SHAPE_UNSATISFIED");
+                    }
+                    chunk.push({
+                        data: data[key],
+                        node: shape[key]
+                    });
                 }
+            }
+            else {
+                let enforcedMissing = enforcedKeyCount;
+                for (let i = 0; i < definedKeyCount; i++) {
+                    const key = definedKeyArray[i];
+                    if (enforcedKeySet.has(key)) {
+                        enforcedMissing--;
+                    }
+                    else if (enforcedMissing > i) {
+                        return ("SHAPE_UNSATISFIED");
+                    }
+                    else if (!unforcedKeySet.has(key)) {
+                        if (keys !== undefined) {
+                            chunk.push({
+                                data: key,
+                                node: keys
+                            });
+                        }
+                        if (values !== undefined) {
+                            chunk.push({
+                                data: data[key],
+                                node: values
+                            });
+                        }
+                        continue;
+                    }
+                    chunk.push({
+                        data: data[key],
+                        node: shape[key]
+                    });
+                }
+            }
+        }
+        if (shape === undefined && keys !== undefined) {
+            for (let i = 0; i < definedKeyCount; i++) {
+                const key = definedKeyArray[i];
                 chunk.push({
-                    data: data[key],
-                    node: shape[key]
+                    data: key,
+                    node: keys
                 });
             }
         }
-        else {
-            const extendedKeyArray = [];
-            const { min, max } = additional;
-            let enforcedMiss = enforcedKeyCount;
+        if (shape === undefined && values !== undefined) {
             for (let i = 0; i < definedKeyCount; i++) {
                 const key = definedKeyArray[i];
-                if (enforcedKeySet.has(key)) {
-                    enforcedMiss--;
-                }
-                else if (enforcedMiss > i) {
-                    return ("SHAPE_UNSATISFIED");
-                }
-                else if (!unforcedKeySet.has(key)) {
-                    extendedKeyArray.push(key);
-                    continue;
-                }
                 chunk.push({
                     data: data[key],
-                    node: shape[key]
+                    node: values
                 });
-            }
-            const extendedKeyCount = extendedKeyArray.length;
-            if (min !== undefined && extendedKeyCount < min) {
-                return ("EXTENSIBLE_MIN_UNSATISFIED");
-            }
-            if (max !== undefined && extendedKeyCount > max) {
-                return ("EXTENSIBLE_MAX_UNSATISFIED");
-            }
-            if (extendedKeyCount && (additional.key || additional.value)) {
-                for (let i = 0; i < extendedKeyCount; i++) {
-                    const key = extendedKeyArray[i];
-                    if (additional.key) {
-                        chunk.push({
-                            data: key,
-                            node: additional.key
-                        });
-                    }
-                    if (additional.value) {
-                        chunk.push({
-                            data: data[key],
-                            node: additional.value
-                        });
-                    }
-                }
             }
         }
         return (null);
@@ -2021,78 +2032,75 @@ const ObjectFormat = {
 const ArrayFormat = {
     type: "array",
     exceptions: {
-        SHAPE_PROPERTY_REQUIRED: "The 'shape' property is required.",
-        SHAPE_PROPERTY_MALFORMED: "The 'shape' property must be of type Array.",
-        SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'shape' property must be of type Plain Object or Array.",
-        ADDITIONAL_PROPERTY_MALFORMED: "The 'additional' property must be of type Boolean or a Plain Object.",
-        ADDITIONAL__ITEM_PROPERTY_MALFORMED: "The 'additional.item' property, must be a criteria node Object.",
-        ADDITIONAL__MIN_PROPERTY_MALFORMED: "The 'additional.min' property, must be of type Number.",
-        ADDITIONAL__MAX_PROPERTY_MALFORMED: "The 'additional.max' property, must be of type Number.",
-        ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED: "The 'additional.min' property cannot be greater than 'additional.max' property."
+        MIN_PROPERTY_MISDECLARED: "The 'min' property must be of type number.",
+        MAX_PROPERTY_MISDECLARED: "The 'max' property must be of type number.",
+        MIN_MAX_PROPERTIES_MISCONFIGURED: "The 'max' property cannot be less than 'min' property.",
+        TUPLE_PROPERTY_MISDECLARED: "The 'tuple' property must be of type array.",
+        TUPLE_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'tuple' property must be of type array or plain object.",
+        TUPLE_MIN_PROPERTIES_MISCONFIGURED: "The array of the 'tuple' property must have a number of items less than the 'min' property.",
+        TUPLE_MAX_PROPERTIES_MISCONFIGURED: "The array of the 'tuple' property must have a number of items less than the 'max' property.",
+        TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED: "The 'tuple' property with the 'min' property or/and 'max' property cannot be defined without the 'items' property.",
+        ITEMS_PROPERTY_MISDECLARED: "The 'items' property must be of type object."
     },
-    isShorthandShape(obj) {
+    isShorthandTuple(obj) {
         return (isArray(obj));
     },
     mount(chunk, criteria) {
-        const { shape, additional } = criteria;
-        if (!("shape" in criteria)) {
-            return ("SHAPE_PROPERTY_REQUIRED");
+        const { min, max, tuple, items } = criteria;
+        if (min !== undefined && typeof min !== "number") {
+            return ("MIN_PROPERTY_MISDECLARED");
         }
-        if (!isArray(shape)) {
-            return ("SHAPE_PROPERTY_MALFORMED");
+        if (max !== undefined && typeof max !== "number") {
+            return ("MAX_PROPERTY_MISDECLARED");
         }
-        for (const item of shape) {
-            if (!isPlainObject(item) && !isArray(item)) {
-                return ("SHAPE_PROPERTY_ARRAY_ITEM_MALFORMED");
+        if (min !== undefined && max !== undefined && min > max) {
+            return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
+        }
+        if (tuple !== undefined) {
+            if (!isArray(tuple)) {
+                return ("TUPLE_PROPERTY_MISDECLARED");
             }
-        }
-        if (additional !== undefined) {
-            if (isPlainObject(additional)) {
-                const { item, min, max } = additional;
-                if (item !== undefined && !isPlainObject(item)) {
-                    return ("ADDITIONAL__ITEM_PROPERTY_MALFORMED");
-                }
-                if (min !== undefined && typeof min !== "number") {
-                    return ("ADDITIONAL__MIN_PROPERTY_MALFORMED");
-                }
-                if (max !== undefined && typeof max !== "number") {
-                    return ("ADDITIONAL__MAX_PROPERTY_MALFORMED");
-                }
-                if (min !== undefined && max !== undefined && min > max) {
-                    return ("ADDITIONAL__MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
-                }
+            if ((min !== undefined || max !== undefined) && !("items" in criteria)) {
+                return ("TUPLE_MIN_MAX_PROPERTIES_ITEMS_PROPERTY_UNDEFINED");
             }
-            else if (typeof additional !== "boolean") {
-                return ("ADDITIONAL_PROPERTY_MALFORMED");
+            const tupleLength = tuple.length;
+            if (min !== undefined && min < tupleLength) {
+                return ("TUPLE_MIN_PROPERTIES_MISCONFIGURED");
             }
-        }
-        const resolvedExtensible = additional ?? false;
-        Object.assign(criteria, {
-            additional: resolvedExtensible
-        });
-        for (let i = 0; i < shape.length; i++) {
-            let node = shape[i];
-            if (this.isShorthandShape(node)) {
-                node = {
-                    type: "array",
-                    shape: node
-                };
-                shape[i] = node;
+            if (max !== undefined && max < tupleLength) {
+                return ("TUPLE_MAX_PROPERTIES_MISCONFIGURED");
             }
-            chunk.push({
-                node: node,
-                partPath: {
-                    explicit: ["shape", i],
-                    implicit: ["&", i]
+            for (let i = 0; i < tupleLength; i++) {
+                let node = tuple[i];
+                if (!isPlainObject(node) && !isArray(node)) {
+                    return ("TUPLE_PROPERTY_ARRAY_ITEM_MISDECLARED");
                 }
-            });
-        }
-        if (typeof resolvedExtensible === "object") {
-            if (resolvedExtensible.item) {
+                if (this.isShorthandTuple(node)) {
+                    node = {
+                        type: "array",
+                        tuple: node
+                    };
+                    tuple[i] = node;
+                }
                 chunk.push({
-                    node: resolvedExtensible.item,
+                    node: node,
                     partPath: {
-                        explicit: ["additional", "item"]
+                        explicit: ["tuple", i],
+                        implicit: ["&", i]
+                    }
+                });
+            }
+        }
+        if (items !== undefined) {
+            if (!isPlainObject(items)) {
+                return ("ITEMS_PROPERTY_MISDECLARED");
+            }
+            if (items.type !== "unknown") {
+                chunk.push({
+                    node: items,
+                    partPath: {
+                        explicit: ["items"],
+                        implicit: ["%", "number"]
                     }
                 });
             }
@@ -2103,40 +2111,38 @@ const ArrayFormat = {
         if (!isArray(data)) {
             return ("TYPE_ARRAY_UNSATISFIED");
         }
-        const { shape, additional } = criteria;
-        const declaredLength = shape.length;
+        const { min, max, tuple, items } = criteria;
+        const declaredLength = tuple?.length ?? 0;
         const definedLength = data.length;
-        if (definedLength < declaredLength) {
-            return ("SHAPE_UNSATISFIED");
+        if (min !== undefined && definedLength < min) {
+            return ("MIN_UNSATISFIED");
         }
-        if (!additional && definedLength > declaredLength) {
-            return ("ADDITIONAL_UNALLOWED");
+        if (max !== undefined && definedLength > max) {
+            return ("MAX_UNSATISFIED");
         }
-        for (let i = 0; i < declaredLength; i++) {
-            chunk.push({
-                data: data[i],
-                node: shape[i]
-            });
-        }
-        if (definedLength === declaredLength) {
-            return (null);
-        }
-        if (typeof additional === "object") {
-            const extendedItemCount = definedLength - declaredLength;
-            const { min, max } = additional;
-            if (min !== undefined && extendedItemCount < min) {
-                return ("ADDITIONAL_MIN_UNSATISFIED");
+        if (tuple !== undefined) {
+            if (definedLength < declaredLength) {
+                return ("TUPLE_UNSATISFIED");
             }
-            if (max !== undefined && extendedItemCount > max) {
-                return ("ADDITIONAL_MAX_UNSATISFIED");
+            if (!items && definedLength > declaredLength) {
+                return ("TUPLE_UNSATISFIED");
             }
-            if (extendedItemCount && additional.item) {
-                for (let i = declaredLength; i < definedLength; i++) {
-                    chunk.push({
-                        data: data[i],
-                        node: additional.item
-                    });
-                }
+            for (let i = 0; i < declaredLength; i++) {
+                chunk.push({
+                    data: data[i],
+                    node: tuple[i]
+                });
+            }
+        }
+        if (items !== undefined) {
+            if (declaredLength === definedLength || items.type === "unknown") {
+                return (null);
+            }
+            for (let i = declaredLength; i < definedLength; i++) {
+                chunk.push({
+                    data: data[i],
+                    node: items
+                });
             }
         }
         return (null);
@@ -2146,27 +2152,27 @@ const ArrayFormat = {
 const UnionFormat = {
     type: "union",
     exceptions: {
-        UNION_PROPERTY_REQUIRED: "The 'union' property is required.",
-        UNION_PROPERTY_MALFORMED: "The 'union' property must be of type Array.",
-        UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED: "The array length of the 'union' must be greater than 0.",
-        UNION_PROPERTY_ARRAY_ITEM_MALFORMED: "The array items of the 'union' property must be of type Plain Object.",
+        UNION_PROPERTY_UNDEFINED: "The 'union' property must be defined.",
+        UNION_PROPERTY_MISDECLARED: "The 'union' property must be of type array.",
+        UNION_PROPERTY_ARRAY_MISCONFIGURED: "The array of the 'union' property must have a number of items greater than 0.",
+        UNION_PROPERTY_ARRAY_ITEM_MISDECLARED: "The array items of the 'union' property must be of type plain object.",
     },
     mount(chunk, criteria) {
         if (!("union" in criteria)) {
-            return ("UNION_PROPERTY_REQUIRED");
+            return ("UNION_PROPERTY_UNDEFINED");
         }
         const union = criteria.union;
         const unionLength = union.length;
         if (!isArray(union)) {
-            return ("UNION_PROPERTY_MALFORMED");
+            return ("UNION_PROPERTY_MISDECLARED");
         }
         if (unionLength < 1) {
-            return ("UNION_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
+            return ("UNION_PROPERTY_ARRAY_MISCONFIGURED");
         }
         for (let i = 0; i < unionLength; i++) {
             const node = union[i];
             if (!isPlainObject(node) && !isArray(node)) {
-                return ("UNION_PROPERTY_ARRAY_ITEM_MALFORMED");
+                return ("UNION_PROPERTY_ARRAY_ITEM_MISDECLARED");
             }
             chunk.push({
                 node: node,
@@ -2180,64 +2186,85 @@ const UnionFormat = {
     check(chunk, criteria, data) {
         const union = criteria.union;
         const unionLength = union.length;
-        let rejectCount = 0;
-        const hooks = {
+        let rejectionCount = 0;
+        const hook = {
             onAccept() {
                 return ({
-                    action: "IGNORE",
+                    action: "CANCEL",
                     target: "CHUNK"
                 });
             },
             onReject() {
-                if (++rejectCount === unionLength) {
+                if (++rejectionCount === unionLength) {
                     return ({
                         action: "REJECT",
                         code: "UNION_UNSATISFIED"
                     });
                 }
                 return ({
-                    action: "IGNORE",
+                    action: "CANCEL",
                     target: "BRANCH"
                 });
             }
         };
         for (let i = 0; i < unionLength; i++) {
             chunk.push({
-                hooks,
+                hook,
                 data,
-                node: union[i]
+                node: union[i],
             });
         }
         return (null);
     }
 };
 
+const NullFormat = {
+    type: "null",
+    exceptions: {},
+    mount(chunk, criteria) {
+        return (null);
+    },
+    check(chunk, criteria, value) {
+        if (value !== null) {
+            return ("TYPE_NULL_UNSATISFIED");
+        }
+        return (null);
+    }
+};
+
 const formatNatives = [
+    UndefinedFormat,
     FunctionFormat,
     BooleanFormat,
+    UnknownFormat,
     SymbolFormat,
     NumberFormat,
     StringFormat,
-    SimpleFormat,
     ObjectFormat,
     ArrayFormat,
-    UnionFormat
+    UnionFormat,
+    NullFormat
 ];
 
 /**
- * The `Schema` class is used to define and validate data structures,
- * ensuring they conform to specified criteria.
+ * The `Schema` class is used to define and validate data structures, ensuring they conform to criteria node.
  */
 class Schema {
     initiate(criteria) {
+        if (!isPlainObject(criteria)) {
+            throw new SchemaException("The 'criteria' parameter must be of type plain object.");
+        }
         this.managers.formats.add(formatNatives);
-        const clonedCriteria = cloner(criteria);
-        this.mountedCriteria = mounter(this.managers, clonedCriteria);
+        this.mountedCriteria = mounter(this.managers, cloner(criteria));
     }
     constructor(criteria) {
         this.managers = {
             formats: new FormatsManager(),
             events: new EventsManager()
+        };
+        this.listener = {
+            on: this.managers.events.on,
+            off: this.managers.events.off
         };
         // Deferred initiation of criteria if not called directly,
         // as plugins (or custom extensions) may set up specific
@@ -2251,7 +2278,7 @@ class Schema {
      */
     get criteria() {
         if (!this.mountedCriteria) {
-            throw new Issue("SCHEMA", "Criteria are not initialized.");
+            throw new SchemaException("The 'mountedCriteria' class property is not initialized.");
         }
         return (this.mountedCriteria);
     }
@@ -2260,13 +2287,10 @@ class Schema {
      *
      * @param data - The data to be validated.
      *
-     * @returns `true` if the value is **valid**, otherwise `false`.
-     * This function acts as a **type guard**, ensuring that
-     * the validated data conforms to `GuardedCriteria<T>`.
+     * @returns A boolean.
      */
     validate(data) {
-        const rejection = checker(this.managers, this.criteria, data);
-        return (!rejection);
+        return (checker(this.managers, this.criteria, data).success);
     }
     /**
      * Evaluates the provided data against the schema.
@@ -2274,120 +2298,35 @@ class Schema {
      * @param data - The data to be evaluated.
      */
     evaluate(data) {
-        const rejection = checker(this.managers, this.criteria, data);
-        if (rejection) {
-            return ({
-                rejection: new SchemaDataRejection({
-                    code: rejection.code,
-                    node: rejection.task.node,
-                    nodePath: rejection.task.fullPath
-                }),
-                data: null
-            });
-        }
-        return ({ rejection: null, data });
+        return (checker(this.managers, this.criteria, data));
     }
 }
-/*
-const function_variant_string = new Schema({
-    type: "function",
-    variant: "BASIC"
-});
-const xAsyncFunction = async function () {};
-console.log(function_variant_string.validate(xAsyncFunction))*/
-/*
-function testf(): ("ASYNC" | "BASIC"  | undefined) {
-    return ("" as ("ASYNC" | "BASIC" | undefined))
-}
-
-const test = new Schema({
-    type: "string",
-    literal: ["test"]
-});
-
-type Test = SchemaInfer<typeof test>;
-*/
-/*
-const test = new Schema({
-    type: "object",
-
-    shape: {},
-    expandable: true
-});
-console.log(test.evaluate(Array));
-
-console.log(isObject(Array));*/
-/*
-const hslItem = new Schema({
+new Schema({
     type: "object",
     shape: {
-        h: { type: "number" },
-        s: { type: "number" },
-        l: { type: "number" }
+        foo: { type: "string" }
+    },
+    values: {
+        type: "array",
+        tuple: [{ type: "string" }]
     }
 });
 
-const test = new Schema({
-    type: "array",
-    shape: [],
-    expandable: {
-        max: 10,
-        item: hslItem.criteria
+class Issue extends Error {
+    constructor(context, message, stack, plugin) {
+        super(message);
+        const red = "\x1b[31m", cyan = "\x1b[36m", gray = "\x1b[90m", reset = "\x1b[0m";
+        const emitter = "Valia" + (plugin ? ":" + plugin : "");
+        const timestamp = new Date().toISOString();
+        this.message =
+            `\n${red}[Error]${reset} ${cyan}[${emitter}]${reset} ${gray}${timestamp}${reset}` +
+                `\nContext: ${context}` +
+                `\nMessage: ${message}`;
     }
-});
-
-type Test = SchemaInfer<typeof test>;
-
-console.log(test.evaluate([{ h: 10, s: 10, l: 20 }]));
-*/
-//type Debug = Test['additional']
-/*
-const union_object = new Schema({
-    type: "union",
-    union: [{
-        type: "object",
-        shape: {
-            foo: { type: "string" },
-            bar: {
-                type: "object",
-                shape: {
-                    foo: {
-                        foo: {
-                            type: "object",
-                            shape: {
-                                foo: { type: "string" }
-                            }
-                        },
-                        bar: { type: "string" }
-                    }
-                }
-            }
-        }
-    }, {
-        type: "object",
-        shape: {
-            foo: {
-                type: "object",
-                shape: {
-                    foo: {
-                        type: "object",
-                        shape: {
-                            foo: { type: "string" },
-                            bar: {
-                                type: "object",
-                                shape: {
-                                    foo: { type: "string" }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            bar: { type: "string" }
-        }
-    }]
-});
-*/
+    toString() {
+        return `[Error] [Valia] ${new Date().toISOString()}\nContext: test`;
+    }
+}
 
 function SchemaFactory(plugin1, plugin2, plugin3) {
     return class extends Schema {
@@ -2463,5 +2402,5 @@ const SchemaA = SchemaFactory(plugin_A);
 const InstanceA = new SchemaA({ type: "mongoId", mongoParam: true });
 */
 
-export { Issue, Schema, SchemaDataRejection, SchemaFactory, SchemaNodeException, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, helpers, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
+export { Schema, SchemaDataAdmission, SchemaDataRejection, SchemaException, SchemaFactory, SchemaNodeException, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, helpers, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
 //# sourceMappingURL=index.js.map

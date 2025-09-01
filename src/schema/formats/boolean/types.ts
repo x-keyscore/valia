@@ -10,7 +10,7 @@ export interface BooleanDerivedCriteria extends DerivedCriteriaTemplate<
 > {}
 
 export type BooleanExceptionCodes =
-	| "LITERAL_PROPERTY_MALFORMED";
+	| "LITERAL_PROPERTY_MISDECLARED";
 
 export type BooleanRejectionCodes = 
 	| "TYPE_BOOLEAN_UNSATISFIED"

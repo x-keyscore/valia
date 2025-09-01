@@ -1,22 +1,29 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
 import type { LooseAutocomplete } from "../../types";
+import { SchemaDataRejection, SchemaDataAdmission } from "../utils";
 
 export interface NodePath {
 	/**
-	 * **Composition of explicit path :**
+	 * #### Explanation :
+	 * Array representing the path to the node in the criteria tree.
+	 * 
+	 * #### Composition :
 	 * ```py
 	 * segment = (string / number / symbol)
 	 * path    = [*(...segment)]
 	 * ```
 	 * 
-	 * **Exemple :**
+	 * #### Exemple :
 	 *  ```py
 	 * my-path = ["struct", "products", "item", "price"]
 	 * ```
 	*/
 	explicit: (string | number | symbol)[];
 	/**
-	 * #### Composition of implicit path :
+	 * #### Explanation :
+	 * Array representing the virtual path to the data represented by the node.
+	 * 
+	 * #### Composition :
 	 * ```py
 	 * dynamic-key   = ["%", 1*3("string" / "number" / "symbol")]
 	 * static-key    = ["&", (string / number / symbol)]
@@ -37,8 +44,9 @@ export interface NodePath {
 
 export interface MounterTask {
 	node: SetableCriteria | MountedCriteria;
+	nodePath: NodePath;
 	partPath: Partial<NodePath>;
-	fullPath: NodePath;
+	
 }
 
 export interface MounterChunkTask {
@@ -46,66 +54,74 @@ export interface MounterChunkTask {
 	partPath: Partial<NodePath>;
 };
 
-export type MounterChunk = MounterChunkTask[];
-
 // CHECKER
-
-export interface CheckerHooks<R extends string = string> {
-	onAccept(): {
-		action: "DEFAULT"
-	} | {
-		action: "IGNORE";
-		target: "CHUNK";
-	} | {
-		action: "REJECT";
-		code: R;
-	};
-	onReject(rejection: CheckerRejection): {
-		action: "DEFAULT"
-	} | {
-		action: "IGNORE";
-		target: "CHUNK" | "BRANCH";
-	} | {
-		action: "REJECT";
-		code: R;
-	};
-}
-
-export interface CheckerWrapHooks extends CheckerHooks {
-	taskOwner: CheckerTask;
-	stackIndex: {
-		chunk: number;
-		branch: number;
-	};
-}
 
 export interface CheckerTask {
 	data: unknown;
 	node: MountedCriteria;
-	fullPath: NodePath;
-	stackHooks?: CheckerWrapHooks[];
+	nodePath: NodePath;
+	/** The hook associated with this task or a descendant of the task */
+	closerHook: CheckerHook | null;
+}
+
+/**
+ * @template RejectionCodes
+ * Strings representing possible rejection codes for the `“REJECT”` action.
+ */
+export interface CheckerChunkTaskHook<RejectionCodes extends string = string> {
+	onReject(rejection: CheckerRejection): {
+		action: "REJECT";
+		code: RejectionCodes;
+	} | {
+		action: "CANCEL";
+		target: "CHUNK" | "BRANCH";
+	};
+	onAccept(): {
+		action: "REJECT";
+		code: RejectionCodes;
+	} | {
+		action: "CANCEL";
+		target: "CHUNK";
+	};
+}
+
+export interface CheckerHook extends CheckerChunkTaskHook {
+	/** Task that created (issued) this hook */
+	sourceTask: CheckerTask;
+	/** Index of the first task in the chunk that this hook’s sourceTask controls */
+	chunkTaskIndex: number;
+	/** Index of the specific task in the branch controlled by this hook’s sourceTask */
+	branchTaskIndex: number;
+	/** Index of the first hook in the chunk that this hook’s sourceTask controls */
+	chunkHookIndex: number;
+	/** Index of the specific hook in the branch controlled by this hook’s sourceTask */
+	branchHookIndex: number;
 }
 
 export interface CheckerChunkTask {
 	data: CheckerTask['data'];
 	node: CheckerTask['node'];
-	hooks?: CheckerHooks;
+	hook?: CheckerChunkTaskHook;
 };
 
-export type CheckerChunk = CheckerChunkTask[];
-
-export interface CheckerRejection {
+export type CheckerRejection = {
+	issuerTask: CheckerTask;
 	code: string;
-	task: CheckerTask;
-}
+};
 
-// COMMON
+export type CheckerResult<GuardedData = unknown> = {
+	success: false;
+	rejection: SchemaDataRejection;
+	admission: null;
+} | {
+	success: true;
+	rejection: null;
+	admission: SchemaDataAdmission<GuardedData>;
+};
 
 export type CommonExceptionCodes =
-	| "NODE_MALFORMED"
-	| "TYPE_PROPERTY_REQUIRED"
-	| "TYPE_PROPERTY_MALFORMED"
+	| "TYPE_PROPERTY_UNDEFINED"
+	| "TYPE_PROPERTY_MISDECLARED"
 	| "TYPE_PROPERTY_MISCONFIGURED"
-	| "LABEL_PROPERTY_MALFORMED"
-	| "MESSAGE_PROPERTY_MALFORMED"
-	| "NULLABLE_PROPERTY_MALFORMED";
+	| "LABEL_PROPERTY_MISDECLARED"
+	| "MESSAGE_PROPERTY_MISDECLARED";

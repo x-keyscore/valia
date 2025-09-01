@@ -1,24 +1,8 @@
 import type { SetableCriteria, MountedCriteria, GuardedCriteria, Format } from "./formats";
-import type { NodePath } from "./services";
-import { SchemaDataRejection } from "./utils";
+import type { CheckerResult } from "./services/types";
 import { Schema } from "./schema";
 
-export interface NodeExceptionReport {
-	code: string;
-	message: string;
-	node: SetableCriteria;
-	nodePath: NodePath;
-}
-
-export interface DataRejectionReport {
-	code: string;
-	node: MountedCriteria;
-	nodePath: NodePath;
-}
-
-export type SchemaEvaluateResult<T extends SetableCriteria> =
-	| { rejection: SchemaDataRejection, data: null }
-	| { rejection: null, data: GuardedCriteria<MountedCriteria<T>> }
+export type SchemaEvaluateResult<GuardedData = unknown> = CheckerResult<GuardedData>;
 
 export type SchemaInfer<T> = T extends Schema<infer U> ? GuardedCriteria<MountedCriteria<U>> : never;
 

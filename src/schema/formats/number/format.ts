@@ -9,40 +9,40 @@ export const NumberFormat: Format<
 > = {
 	type: "number",
 	exceptions: {
-        MIN_PROPERTY_MALFORMED:
+        MIN_PROPERTY_MISDECLARED:
 		    "The 'min' property must be of type number.",
-       	MAX_PROPERTY_MALFORMED:
+       	MAX_PROPERTY_MISDECLARED:
             "The 'max' property must be of type number.",
-        MIN_AND_MAX_PROPERTIES_MISCONFIGURED:
-			"The 'min' property cannot be greater than 'max' property.",
-        LITERAL_PROPERTY_MALFORMED:
-			"The 'literal' property must be of type number, array or plain-object.",
+        MIN_MAX_PROPERTIES_MISCONFIGURED:
+			"The 'max' property cannot be less than 'min' property.",
+        LITERAL_PROPERTY_MISDECLARED:
+			"The 'literal' property must be of type number, array or plain object.",
 		LITERAL_PROPERTY_ARRAY_MISCONFIGURED:
-			"The array of the 'literal' property must contain at least one item.",
-		LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED:
+			"The array of the 'literal' property must have a number of items greater than 0.",
+		LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED:
 			"The array items of the 'literal' property must be of type number.",
 		LITERAL_PROPERTY_OBJECT_MISCONFIGURED:
-			"The object of the 'literal' property must contain at least one key.",
-		LITERAL_PROPERTY_OBJECT_KEY_MALFORMED:
+			"The object of the 'literal' property must have a number of keys greater than 0.",
+		LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED:
 			"The object keys of the 'literal' property must be of type string.",
-		LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED:
+		LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED:
 			"The object values of the 'literal' property must be of type number.",
-        CUSTOM_PROPERTY_MALFORMED:
-            "The 'custom' property must be of type basic-function."
+        CUSTOM_PROPERTY_MISDECLARED:
+            "The 'custom' property must be of type basic function."
     },
 	mount(chunk, criteria) {
 		const { min, max, literal, custom } = criteria;
 
 		if (min !== undefined && typeof min !== "number") {
-			return ("MIN_PROPERTY_MALFORMED");
+			return ("MIN_PROPERTY_MISDECLARED");
 		}
 		if (max !== undefined && typeof max !== "number") {
-			return ("MAX_PROPERTY_MALFORMED");
+			return ("MAX_PROPERTY_MISDECLARED");
 		}
 		if (min !== undefined && max !== undefined && min > max) {
-			return ("MIN_AND_MAX_PROPERTIES_MISCONFIGURED");
+			return ("MIN_MAX_PROPERTIES_MISCONFIGURED");
 		}
-		
+
 		if (literal !== undefined) {
 			let resolvedLiteral;
 
@@ -55,7 +55,7 @@ export const NumberFormat: Format<
 
 				for (const item of literal) {
 					if (typeof item !== "number") {
-						return ("LITERAL_PROPERTY_ARRAY_ITEM_MALFORMED");
+						return ("LITERAL_PROPERTY_ARRAY_ITEM_MISDECLARED");
 					}
 				}
 
@@ -68,22 +68,22 @@ export const NumberFormat: Format<
 
 				for (const key of keys) {
 					if (typeof key !== "string") {
-						return ("LITERAL_PROPERTY_OBJECT_KEY_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_KEY_MISDECLARED");
 					}
 					if (typeof literal[key] !== "number") {
-						return ("LITERAL_PROPERTY_OBJECT_VALUE_MALFORMED");
+						return ("LITERAL_PROPERTY_OBJECT_VALUE_MISDECLARED");
 					}
 				}
 
 				resolvedLiteral = new Set(Object.values(literal));
 			} else {
-				return ("LITERAL_PROPERTY_MALFORMED");
+				return ("LITERAL_PROPERTY_MISDECLARED");
 			}
 
 			Object.assign(criteria, { resolvedLiteral });
 		}
 		if (custom !== undefined && !isFunction(custom)) {
-			return ("CUSTOM_PROPERTY_MALFORMED");
+			return ("CUSTOM_PROPERTY_MISDECLARED");
 		}
 
 		return (null);

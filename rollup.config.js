@@ -8,19 +8,19 @@ export default [
       {
         file: 'dist/index.js',
         format: 'es',
-        sourcemap: true,
-      },
+        sourcemap: true
+      }
     ],
     plugins: [
       typescript({
         tsconfig: './tsconfig.json',
-      }),
+      })
     ],
-    external: [],
+    external: []
   },
   {
     input: "src/index.ts",
     output: [{ file: "./dist/types.d.ts", format: "esm" }],
-    plugins: [dts()],
+    plugins: [dts()]
 },
 ];

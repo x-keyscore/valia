@@ -1,11 +1,12 @@
-import type { CheckerTask, CheckerChunk, CheckerRejection } from "./types";
+import type { CheckerTask, CheckerHook, CheckerChunkTask, CheckerRejection, CheckerResult } from "./types";
 import type { MountedCriteria } from "../formats";
 import type { SchemaInstance } from "../types";
+import { SchemaDataRejection, SchemaDataAdmission } from "../utils";
 import { nodeSymbol } from "./mounter";
-import { SchemaDataRejection } from "../utils";
 
 export class CheckerStack {
 	tasks: CheckerTask[] = [];
+	hooks: CheckerHook[] = [];
 
 	constructor(
 		rootNode: MountedCriteria,
@@ -14,91 +15,98 @@ export class CheckerStack {
 		this.tasks.push({
 			data: rootData,
 			node: rootNode,
-			fullPath: { explicit: [], implicit: [] }
+			nodePath: { explicit: [], implicit: [] },
+			closerHook: null
 		});
 	}
 
 	pushChunk(
 		sourceTask: CheckerTask,
-		chunk: CheckerChunk
+		chunk: CheckerChunkTask[]
 	): void {
-		const {
-			explicit: fullPathExplicit,
-			implicit: fullPathImplicit
-		} = sourceTask.fullPath;
+		const prevCloserHook = sourceTask.closerHook;
+		const prevNodePath = sourceTask.nodePath;
 
-		for (let i = 0; i < chunk.length; i++) {
-			const task = chunk[i];
-			const partPath = task.node[nodeSymbol].partPath;
-			let stackHooks = sourceTask.stackHooks;
+		const staskTaskLength = this.tasks.length;
+		const stackHookLength = this.hooks.length;
+		const chunkTaskLength = chunk.length;
 
-			if (task.hooks) {
-				const hooks = {
-					taskOwner: sourceTask,
-					stackIndex: {
-						chunk: this.tasks.length - i,
-						branch: this.tasks.length
-					},
-					...task.hooks
+		let chunkTaskIndex = 0, chunkHookCount = 0;
+		while (chunkTaskIndex < chunkTaskLength) {
+			const { data, node, hook } = chunk[chunkTaskIndex];
+			const partPath = node[nodeSymbol].partPath;
+			let closerHook = prevCloserHook;
+
+			if (hook) {
+				closerHook = {
+					...hook,
+					sourceTask,
+					chunkTaskIndex: staskTaskLength,
+					branchTaskIndex: staskTaskLength + chunkTaskIndex,
+					chunkHookIndex: stackHookLength,
+					branchHookIndex: stackHookLength + chunkHookCount
 				}
+				this.hooks.push(closerHook);
 
-				stackHooks = stackHooks ? stackHooks.concat(hooks) : [hooks];
+				chunkHookCount++;
 			}
 
 			this.tasks.push({
-				data: task.data,
-				node: task.node,
-				fullPath: {
+				data,
+				node,
+				nodePath: {
 					explicit: partPath.explicit
-						? fullPathExplicit.concat(partPath.explicit)
-						: fullPathExplicit,
+						? prevNodePath.explicit.concat(partPath.explicit)
+						: prevNodePath.explicit,
 					implicit: partPath.implicit
-						? fullPathImplicit.concat(partPath.implicit)
-						: fullPathImplicit
+						? prevNodePath.implicit.concat(partPath.implicit)
+						: prevNodePath.implicit
 				},
-				stackHooks
+				closerHook
 			});
+
+			chunkTaskIndex++;
 		}
 	}
 
-	callHooks(
-		sourceTask: CheckerTask,
+	playHooks(
+		closerHook: CheckerHook,
 		rejection: CheckerRejection | null
 	): CheckerRejection | null {
-		const stackHooks = sourceTask.stackHooks;
-		if (!stackHooks) return (null);
-
-		const lastHooks = stackHooks[stackHooks.length - 1];
-		if (!rejection && lastHooks.stackIndex.branch !== this.tasks.length) {
+		if (!rejection && closerHook.branchTaskIndex !== this.tasks.length) {
 			return (null);
 		}
 
-		loop: for (let i = stackHooks.length - 1; i >= 0; i--) {
-			const hooks = stackHooks[i];
+		let currentHook = closerHook;
+		while (currentHook) {
+			const result = rejection
+				? currentHook.onReject(rejection)
+				: currentHook.onAccept();
 
-			const claim = rejection ? hooks.onReject(rejection) : hooks.onAccept();
-
-			switch (claim.action) {
-				case "DEFAULT":
-					this.tasks.length = hooks.stackIndex.branch;
-					if (!rejection) {
-						rejection = null;
-						break loop;
-					}
-					continue;
+			switch (result.action) {
 				case "REJECT":
-					this.tasks.length = hooks.stackIndex.branch;
-					rejection = { task: hooks.taskOwner, code: claim.code };
-					continue;
-				case "IGNORE":
-					if (claim?.target === "CHUNK") {
-						this.tasks.length = hooks.stackIndex.chunk;
-					} else {
-						this.tasks.length = hooks.stackIndex.branch;
+					this.tasks.length = currentHook.branchTaskIndex;
+					this.hooks.length = currentHook.branchHookIndex;
+					rejection = {
+						issuerTask: currentHook.sourceTask,
+						code: result.code
+					};
+					break;
+				case "CANCEL":
+					if (result.target === "CHUNK") {
+						this.tasks.length = currentHook.chunkTaskIndex;
+						this.hooks.length = currentHook.chunkHookIndex;
 					}
-					rejection = null;
-					break loop;
+					else if (result.target === "BRANCH") {
+						this.tasks.length = currentHook.branchTaskIndex;
+						this.hooks.length = currentHook.branchHookIndex;
+					}
+					return (null);
 			}
+
+			if (rejection || currentHook.chunkHookIndex === 0) break;
+
+			currentHook = this.hooks[currentHook.chunkHookIndex];
 		}
 
 		return (rejection);
@@ -109,41 +117,65 @@ export function checker(
 	managers: SchemaInstance['managers'],
 	rootNode: MountedCriteria,
 	rootData: unknown
-): SchemaDataRejection | null {
+): CheckerResult {
 	const { formats, events } = managers;
 	const stack = new CheckerStack(rootNode, rootData);
-
 	let rejection: CheckerRejection | null = null;
+
+	let loopCount = 0;
 	while (stack.tasks.length) {
 		const currentTask = stack.tasks.pop()!;
-		const { data, node, stackHooks } = currentTask;
-		const chunk: CheckerChunk = [];
+		const { data, node, closerHook } = currentTask;
 
-		let code: string | null = null;
-		if (!(node.nullable && data === null)) {
-			const format = formats.get(node.type)!;
-			code = format.check(chunk, node, data);
+		const format = formats.get(node.type);
+		const chunkTasks: CheckerChunkTask[] = [];
+
+		const code = format.check(chunkTasks, node, data);
+
+		if (chunkTasks.length) {
+			stack.pushChunk(currentTask, chunkTasks);
 		}
 
-		if (code) rejection = { task: currentTask, code };
-		else if (chunk.length) stack.pushChunk(currentTask, chunk);
-		if (stackHooks) rejection = stack.callHooks(currentTask, rejection);
+		if (code) {
+			rejection = { issuerTask: currentTask, code };
+		}
+
+		if (closerHook) {
+			rejection = stack.playHooks(closerHook, rejection);
+		}
 
 		if (rejection) break;
+
+		loopCount++;
 	}
 
 	if (rejection) {
-		const rejectionInstance = new SchemaDataRejection({
-			code: rejection.code,
-			node: rejection.task.node,
-			nodePath: rejection.task.fullPath
+		const rejectionInstance = new SchemaDataRejection(
+			rootData,
+			rootNode,
+			rejection.code,
+			rejection.issuerTask.data,
+			rejection.issuerTask.node,
+			rejection.issuerTask.nodePath
+		);
+
+		events.emit("DATA_REJECTED", rejectionInstance);
+		return ({
+			success: false,
+			rejection: rejectionInstance,
+			admission: null
 		});
-
-		events.emit("DATA_REJECTED", rootNode, rootData, rejectionInstance);
-		return (rejectionInstance);
-	} else {
-		events.emit("DATA_ACCEPTED", rootNode, rootData);
-		return (null);
 	}
-};
 
+	const admissionInstance = new SchemaDataAdmission(
+		rootData,
+		rootNode
+	);
+
+	events.emit("DATA_ADMITTED", admissionInstance);
+	return ({
+		success: true,
+		rejection: null,
+		admission: admissionInstance
+	});
+};

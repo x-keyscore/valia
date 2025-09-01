@@ -1,5 +1,5 @@
 import type { SetableCriteria, MountedCriteria } from "../formats";
-import type { MounterTask, MounterChunk, CommonExceptionCodes } from "./types";
+import type { MounterTask, CommonExceptionCodes, MounterChunkTask } from "./types";
 import type { SchemaInstance } from "../types";
 import { SchemaNodeException } from "../utils";
 import { isPlainObject } from "../../testers";
@@ -7,19 +7,15 @@ import { isPlainObject } from "../../testers";
 export const nodeSymbol = Symbol("node");
 
 const commonExceptions: Record<string, string> = {
-	NODE_MALFORMED:
-		"Criteria node must be of type Plain Object.",
-	TYPE_PROPERTY_REQUIRED:
+	TYPE_PROPERTY_UNDEFINED:
 		"",
-	TYPE_PROPERTY_MALFORMED:
+	TYPE_PROPERTY_MISDECLARED:
 		"",
 	TYPE_PROPERTY_MISCONFIGURED:
 		"",
-	LABEL_PROPERTY_MALFORMED:
+	LABEL_PROPERTY_MISDECLARED:
 		"",
-	MESSAGE_PROPERTY_MALFORMED:
-		"",
-	NULLABLE_PROPERTY_MALFORMED:
+	MESSAGE_PROPERTY_MISDECLARED:
 		""
 } satisfies Record<CommonExceptionCodes, string>;
 
@@ -27,26 +23,26 @@ function commonMount(
 	managers: SchemaInstance['managers'],
 	node: SetableCriteria
 ): CommonExceptionCodes | null {
-	if (!isPlainObject(node)) return ("NODE_MALFORMED");
-	const { type, label, message, nullable } = node;
+	const { type, label, message } = node;
 
 	if (!("type" in node)) {
-		return ("TYPE_PROPERTY_REQUIRED");
+		return ("TYPE_PROPERTY_UNDEFINED");
 	}
 	if (typeof type !== "string") {
-		return ("TYPE_PROPERTY_MALFORMED");
+		return ("TYPE_PROPERTY_MISDECLARED");
 	}
 	if (!managers.formats.has(type)) {
 		return ("TYPE_PROPERTY_MISCONFIGURED");
 	}
 	if (label !== undefined && typeof label !== "string") {
-		return ("LABEL_PROPERTY_MALFORMED");
+		return ("LABEL_PROPERTY_MISDECLARED");
 	}
-	if (message !== undefined && typeof message !== "string") {
-		return ("MESSAGE_PROPERTY_MALFORMED");
-	}
-	if (nullable !== undefined && typeof nullable !== "boolean") {
-		return ("NULLABLE_PROPERTY_MALFORMED");
+	if (
+		message !== undefined
+		&& typeof message !== "string"
+		&& typeof message !== "function"
+	) {
+		return ("MESSAGE_PROPERTY_MISDECLARED");
 	}
 
 	return (null);
@@ -59,24 +55,19 @@ export function hasNodeSymbol(obj: object): obj is MountedCriteria {
 export class MounterStack {
 	tasks: MounterTask[] = [];
 
-	constructor(
-		rootNode: SetableCriteria | MountedCriteria
-	) {
+	constructor(rootNode: SetableCriteria | MountedCriteria) {
 		this.tasks.push({
 			node: rootNode,
 			partPath: { explicit: [], implicit: [] },
-			fullPath: { explicit: [], implicit: [] }
+			nodePath: { explicit: [], implicit: [] }
 		})
 	}
 
 	pushChunk(
 		sourceTask: MounterTask,
-		chunk: MounterChunk
+		chunk: MounterChunkTask[]
 	) {
-		const {
-			explicit: fullPathExplicit,
-			implicit: fullPathImplicit
-		} = sourceTask.fullPath;
+		const prevNodePath = sourceTask.nodePath;
 
 		for (let i = 0; i < chunk.length; i++) {
 			const { node, partPath } = chunk[i];
@@ -84,13 +75,13 @@ export class MounterStack {
 			this.tasks.push({
 				node,
 				partPath,
-				fullPath: {
+				nodePath: {
 					explicit: partPath.explicit
-						? fullPathExplicit.concat(partPath.explicit)
-						: fullPathExplicit,
+						? prevNodePath.explicit.concat(partPath.explicit)
+						: prevNodePath.explicit,
 					implicit: partPath.implicit
-						? fullPathImplicit.concat(partPath.implicit)
-						: fullPathImplicit
+						? prevNodePath.implicit.concat(partPath.implicit)
+						: prevNodePath.implicit
 				}
 			});
 		}
@@ -106,7 +97,7 @@ export function mounter<T extends SetableCriteria>(
 
 	while (stack.tasks.length) {
 		const currentTask = stack.tasks.pop()!;
-		const { node, partPath, fullPath } = currentTask;
+		const { node, nodePath, partPath } = currentTask;
 
 		if (hasNodeSymbol(node)) {
 			node[nodeSymbol] = {
@@ -118,38 +109,38 @@ export function mounter<T extends SetableCriteria>(
 
 			code = commonMount(managers, node);
 			if (code) {
-				throw new SchemaNodeException({
-					node: node,
-					nodePath: fullPath,
-					code: code,
-					message: commonExceptions[code]
-				});
+				const message = commonExceptions[code];
+
+				throw new SchemaNodeException(
+					code, message, node, nodePath
+				);
 			}
 
-			const chunk: MounterChunk = [];
 			const format = formats.get(node.type);
+			const chunkTasks: MounterChunkTask[] = [];
 
-			code = format.mount(chunk, node);
+			code = format.mount(chunkTasks, node);
 			if (code) {
-				throw new SchemaNodeException({
-					node: node,
-					nodePath: fullPath,
-					code: code,
-					message: format.exceptions[code]
-				});
+				const message = format.exceptions[code];
+
+				throw new SchemaNodeException(
+					code, message, node, nodePath
+				);
 			}
 
 			Object.assign(node, {
 				[nodeSymbol]: {
 					partPath,
-					childNodes: chunk.map((task) => task.node)
+					childNodes: chunkTasks.map((task) => task.node)
 				}
 			});
 			Object.freeze(node);
 
-			if (chunk.length) stack.pushChunk(currentTask, chunk);
+			if (chunkTasks.length) {
+				stack.pushChunk(currentTask, chunkTasks);
+			}
 
-			events.emit("NODE_MOUNTED", node as MountedCriteria, fullPath);
+			events.emit("NODE_MOUNTED", node as MountedCriteria, nodePath);
 		}
 	}
 

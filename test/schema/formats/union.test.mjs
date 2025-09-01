@@ -1,212 +1,312 @@
-import { describe, it, before } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { Schema, SchemaDataRejection } from "../../../dist/index.js";
+import { Schema } from "../../../dist/index.js";
 
 describe("\nschema > formats > union", () => {
-	describe("Default (Primitive Union)", () => {
-		let union_primitve;
+	describe("default", () => {
+		it("should throw on incorrect definitions", () => {
+			assert.throws(
+				() => new Schema({ type: "union" }),
+				{
+					name: "SchemaNodeException",
+					code: "UNION_PROPERTY_UNDEFINED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "union", union: 0 }),
+				{
+					name: "SchemaNodeException",
+					code: "UNION_PROPERTY_MISDECLARED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "union", union: [] }),
+				{
+					name: "SchemaNodeException",
+					code: "UNION_PROPERTY_ARRAY_MISCONFIGURED"
+				}
+			);
+			assert.throws(
+				() => new Schema({ type: "union", union: [0] }),
+				{
+					name: "SchemaNodeException",
+					code: "UNION_PROPERTY_ARRAY_ITEM_MISDECLARED"
+				}
+			);
+		});
 
-		before(() => {
-			union_primitve = new Schema({
-				type: "union",
-				union: [{ type: "number" }, { type: "string" }]
-			});
+		const union_default = new Schema({
+			type: "union",
+			union: [{ type: "string" }]
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(union_primitve.validate({}), false);
-			assert.strictEqual(union_primitve.validate([]), false);
+			const cases = [
+				[union_default, 0],
+				[union_default, {}]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(union_primitve.validate(0), true);
-			assert.strictEqual(union_primitve.validate("x"), true);
+			const cases = [
+				[union_default, ""]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				union_default.evaluate(0).rejection,
+				{ code: "UNION_UNSATISFIED" }
+			);
 		});
 	});
 
-	describe("Default (Object Union)", () => {
-		let union_object;
+	describe("default (primitive)", () => {
+		const union_primitve = new Schema({
+			type: "union",
+			union: [{ type: "string" }, { type: "number" }]
+		});
 
-		before(() => {
-			union_object = new Schema({
-				type: "union",
-				union: [{
-					type: "object",
-					shape: {
-						foo: { type: "string" },
-						bar: {
-							type: "object",
-							shape: {
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[union_primitve, {}],
+				[union_primitve, null]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[union_primitve, 0],
+				[union_primitve, ""]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+	});
+
+	describe("default (object)", () => {
+		const union_object = new Schema({
+			type: "union",
+			union: [{
+				type: "object",
+				shape: {
+					foo: { type: "string" },
+					bar: {
+						type: "object",
+						shape: {
+							foo: {
 								foo: {
-									foo: {
+									type: "object",
+									shape: {
+										foo: { type: "string" }
+									}
+								},
+								bar: { type: "string" }
+							}
+						}
+					}
+				}
+			}, {
+				type: "object",
+				shape: {
+					foo: {
+						type: "object",
+						shape: {
+							foo: {
+								type: "object",
+								shape: {
+									foo: { type: "string" },
+									bar: {
 										type: "object",
 										shape: {
 											foo: { type: "string" }
 										}
-									},
-									bar: { type: "string" }
+									}
 								}
 							}
 						}
+					},
+					bar: { type: "string" }
+				}
+			}]
+		});
+
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[union_object, 0],
+				[union_object, ""],
+				[union_object, {}],
+				[union_object, { foo: "x", bar: {} }],
+				[union_object, { foo: "x", bar: { foo: {} } }],
+				[union_object, { foo: "x", bar: { foo: { foo: {}, bar: "x" } } }],
+				[union_object, { foo: "x", bar: { foo: { foo: { foo: 0 }, bar: "x" } } }],
+				[union_object, { foo: "x", bar: { foo: { foo: { foo: "x" }, bar: 0 } } }],
+				[union_object, { foo: 0, bar: { foo: { foo: { foo: "x" }, bar: "x" } } }],
+				[union_object, { foo: {}, bar: "x" }],
+				[union_object, { foo: { foo: {} }, bar: "x" }],
+				[union_object, { foo: { foo: { foo: "x", bar: {} } }, bar: "x" }],
+				[union_object, { foo: { foo: { foo: "x", bar: { foo: 0 } } }, bar: "x" }],
+				[union_object, { foo: { foo: { foo: 0, bar: { foo: "x" } } }, bar: "x" }],
+				[union_object, { foo: { foo: { foo: "x", bar: { foo: "x" } } }, bar: 0 }]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[union_object, { foo: "x", bar: { foo: { foo: { foo: "x" }, bar: "x" } } }],
+				[union_object, { foo: { foo: { foo: "x", bar: { foo: "x" } } }, bar: "x" }]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+	});
+
+	describe("Default (primitive union and object union)", () => {
+		const union_primitive_object = new Schema({
+			type: "union",
+			union: [
+				{ type: "number" },
+				{ type: "string" },
+				{ type: "object", shape: { foo: { type: "string" }, bar: { type: "string" } } },
+				{ type: "array", tuple: [{ type: "string" }, { type: "string" }] }
+			]
+		});
+
+		it("should invalidate incorrect values", () => {
+			const cases = [
+				[union_primitive_object, []],
+				[union_primitive_object, [0]],
+				[union_primitive_object, ["x", 0]],
+				[union_primitive_object, [0, "x"]],
+				[union_primitive_object, {}],
+				[union_primitive_object, { foo: 0 }],
+				[union_primitive_object, { foo: "x", bar: 0 }],
+				[union_primitive_object, { foo: 0, bar: "x" }]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
+		});
+
+		it("should validate correct values", () => {
+			const cases = [
+				[union_primitive_object, 0],
+				[union_primitive_object, "x"],
+				[union_primitive_object, ["x", "x"]],
+				[union_primitive_object, { foo: "x", bar: "x" }]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
+		});
+	});
+
+	describe("Default (nested)", () => {
+		const union_nested = new Schema({
+			type: "union",
+			union: [
+				{
+					type: "object",
+					shape: {
+						foo: { type: "string" },
+						bar: {
+							type: "union",
+							union: [{
+								type: "object",
+								shape: {
+									foo: { type: "string" },
+									bar: { type: "number" }
+								}
+							}, {
+								type: "string"
+							}]
+						}
 					}
-				}, {
+				},
+				{
 					type: "object",
 					shape: {
 						foo: {
-							type: "object",
-							shape: {
-								foo: { 
-									type: "object",
-									shape: {
-										foo: { type: "string" },
-										bar: {
-											type: "object",
-											shape: {
-												foo: { type: "string" }
-											}
-										}
-									}
+							type: "union",
+							union: [{
+								type: "object",
+								shape: {
+									foo: { type: "number" },
+									bar: { type: "string" }
 								}
-							}
+							}, {
+								type: "string"
+							}]
 						},
 						bar: { type: "string" }
 					}
-				}]
-			});
+				},
+			]
 		});
 
 		it("should invalidate incorrect values", () => {
-			assert.strictEqual(union_object.validate(0), false);
-			assert.strictEqual(union_object.validate([]), false);
-			assert.strictEqual(union_object.validate({}), false);
-			assert.strictEqual(union_object.validate({ foo: "x", bar: {} }), false);
-			assert.strictEqual(union_object.validate({ foo: "x", bar: { foo: {} } }), false);
-			assert.strictEqual(union_object.validate({ foo: "x", bar: { foo: { foo: {}, bar: "x" } } }), false);
-			assert.strictEqual(union_object.validate({ foo: "x", bar: { foo: { foo: { foo: 0 }, bar: "x" } } }), false);
-			assert.strictEqual(union_object.validate({ foo: "x", bar: { foo: { foo: { foo: "x" }, bar: 0 } } }), false);
-			assert.strictEqual(union_object.validate({ foo: 0, bar: { foo: { foo: { foo: "x" }, bar: "x" } } }), false);
-			assert.strictEqual(union_object.validate({ foo: {}, bar: "x" }), false);
-			assert.strictEqual(union_object.validate({ foo: { foo: {} }, bar: "x" }), false);
-			assert.strictEqual(union_object.validate({ foo: { foo: { foo: "x", bar: {} } }, bar: "x" }), false);
-			assert.strictEqual(union_object.validate({ foo: { foo: { foo: "x", bar: { foo: 0 } } }, bar: "x" }), false);
-			assert.strictEqual(union_object.validate({ foo: { foo: { foo: 0, bar: { foo: "x" } } }, bar: "x" }), false);
-			assert.strictEqual(union_object.validate({ foo: { foo: { foo: "x", bar: { foo: "x" } } }, bar: 0 }), false);
+			const cases = [
+				[union_nested, {}],
+				[union_nested, { foo: "x" }],
+				[union_nested, { foo: "x", bar: {} }],
+				[union_nested, { foo: "x", bar: { foo: "x" } }],
+				[union_nested, { foo: "x", bar: { foo: "x", bar: "x" } }],
+				[union_nested, { bar: "x" }],
+				[union_nested, { bar: "x", foo: {} }],
+				[union_nested, { bar: "x", foo: { foo: "x" } }],
+				[union_nested, { bar: "x", foo: { foo: "x", bar: "x" } }]
+			];
+
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), false);
+			}
 		});
 
 		it("should validate correct values", () => {
-			assert.strictEqual(union_object.validate({ foo: "x", bar: { foo: { foo: { foo: "x" }, bar: "x" } } }), true);
-			assert.strictEqual(union_object.validate({ foo: { foo: { foo: "x", bar: { foo: "x" } } }, bar: "x" }), true);
-		});
-	});
+			const cases = [
+				[union_nested, { foo: "x", bar: "x" }],
+				[union_nested, { foo: "x", bar: { foo: "x", bar: 0 } }],
+				[union_nested, { bar: "x", foo: { bar: "x", foo: 0 } }]
+			];
 
-	describe("Default (Primitive Union and Object Union)", () => {
-		let union_primitive_object;
-
-		before(() => {
-			union_primitive_object = new Schema({
-				type: "union",
-				union: [
-					{ type: "number" },
-					{ type: "string" },
-					{ type: "object", shape: { foo: { type: "string" }, bar: { type: "string" } }},
-					{ type: "array", shape: [{ type: "string" }, { type: "string" }]}
-				]
-			});
+			for (const [schema, value] of cases) {
+				assert.strictEqual(schema.validate(value), true);
+			}
 		});
 
-		it("should invalidate incorrect values", () => {
-			assert.strictEqual(union_primitive_object.validate({}), false);
-			assert.strictEqual(union_primitive_object.validate({ foo: 0 }), false);
-			assert.strictEqual(union_primitive_object.validate({ foo: "x", bar: 0 }), false);
-			assert.strictEqual(union_primitive_object.validate([]), false);
-			assert.strictEqual(union_primitive_object.validate([0]), false);
-			assert.strictEqual(union_primitive_object.validate(["x", 0]), false);
-		});
-
-		it("should validate correct values", () => {
-			assert.strictEqual(union_primitive_object.validate(0), true);
-			assert.strictEqual(union_primitive_object.validate("x"), true);
-			assert.strictEqual(union_primitive_object.validate(["x", "x"]), true);
-			assert.strictEqual(union_primitive_object.validate({ foo: "x", bar: "x" }), true);
-		});
-	});
-
-	describe("Default (Nested Union)", () => {
-		let union_nested;
-
-		before(() => {
-			union_nested = new Schema({
-				type: "union",
-				union: [
-					{
-						type: "object",
-						shape: {
-							foo: { type: "string" }, 
-							bar: {
-								type: "union",
-								union: [{
-									type: "object",
-									shape: {
-										foo: { type: "string" },
-										bar: { type: "number" }
-									}
-								}, {
-									type: "string"
-								}]
-							}
-						}
-					},
-					{
-						type: "object",
-						shape: {
-							foo: {
-								type: "union",
-								union: [{
-									type: "object",
-									shape: {
-										foo: { type: "number" },
-										bar: { type: "string" }
-									}
-								}, {
-									type: "string"
-								}]
-							},
-							bar: { type: "string" }
-						}
-					},
-				]
-			});
-		});
-
-		it("should invalidate incorrect values", () => {
-			assert.strictEqual(union_nested.validate({}), false);
-			assert.strictEqual(union_nested.validate({ foo: "x" }), false);
-			assert.strictEqual(union_nested.validate({ foo: "x", bar: {} }), false);
-			assert.strictEqual(union_nested.validate({ foo: "x", bar: { foo: "x" } }), false);
-			assert.strictEqual(union_nested.validate({ foo: "x", bar: { foo: "x", bar: "x" } }), false);
-			assert.strictEqual(union_nested.validate({ bar: "x" }), false);
-			assert.strictEqual(union_nested.validate({ foo: {}, bar: "x" }), false);
-			assert.strictEqual(union_nested.validate({ foo: { foo: "x" }, bar: "x" }), false);
-			assert.strictEqual(union_nested.validate({ foo: { foo: "x", bar: "x" }, bar: "x" }), false);
-		});
-
-		it("should validate correct values", () => {
-			assert.strictEqual(union_nested.validate({ foo: "x", bar: "x" }), true);
-			assert.strictEqual(union_nested.validate({ foo: "x", bar: { foo: "x", bar: 0 } }), true);
-			assert.strictEqual(union_nested.validate({ foo: { foo: 0, bar: "x" }, bar: "x" }), true);
-		});
-
-		it("should return the correct rejection", () => {
-			assert.deepStrictEqual(
-				union_nested.evaluate({ foo: { foo: "x", bar: "x" }, bar: "x" }),
+		it("should return the correct rejections", () => {
+			assert.partialDeepStrictEqual(
+				union_nested.evaluate({ bar: "x", foo: { foo: "x", bar: "x" } }).rejection,
 				{
-					rejection: new SchemaDataRejection({
-						code: "UNION_UNSATISFIED",
-						node: union_nested.criteria,
-						nodePath: { explicit: [], implicit: [] }
-					}),
-					data: null
+					code: "UNION_UNSATISFIED",
+					node: union_nested.criteria.union[1].shape.foo,
+					nodePath: {
+						explicit: ["union", 1, "shape", "foo"],
+						implicit: ["&", "foo"]
+					}
 				}
 			);
 		});

@@ -11,14 +11,16 @@ export const FunctionFormat: Format<
 > = {
 	type: "function",
 	exceptions: {
-		NATURE_PROPERTY_MALFORMED:
-			"The 'nature' property must be of type String.",
+		NATURE_PROPERTY_MISDECLARED:
+			"The 'nature' property must be of type string.",
 		NATURE_PROPERTY_STRING_MISCONFIGURED:
 			"The 'nature' property must be a known string.",
-		NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED:
-			"The array length of the 'nature' must be greater than 0.",
+		NATURE_PROPERTY_ARRAY_MISCONFIGURED:
+			"The array of the 'nature' must have a number of items greater than 0.",
+		NATURE_PROPERTY_ARRAY_ITEM_MISDECLARED:
+			"The array items of the 'nature' property must be of type string.",
 		NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED:
-			"The array items of the 'nature' property must be a known string."
+			"The array items of the 'nature' property must be known strings."
 	},
 	natureBitflags: {
 		BASIC:				1 << 1,
@@ -42,15 +44,18 @@ export const FunctionFormat: Format<
 				}
 			} else if (isArray(nature)) {
 				if (nature.length < 1) {
-					return ("NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED");
+					return ("NATURE_PROPERTY_ARRAY_MISCONFIGURED");
 				}
 				for (const item of nature) {
+					if (typeof item !== "string") {
+						return ("NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
+					}
 					if (!(item in this.natureBitflags)) {
 						return ("NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED");
 					}
 				}
 			} else {
-				return ("NATURE_PROPERTY_MALFORMED");
+				return ("NATURE_PROPERTY_MISDECLARED");
 			}
 		}
 
@@ -86,7 +91,6 @@ export const FunctionFormat: Format<
 				return ("NATURE_UNSATISFIED");
 			}
 		}
-
 
 		return (null);
 	}

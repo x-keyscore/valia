@@ -18,7 +18,7 @@ export interface FunctionMountedCriteria {
 
 type FunctionGuardedCriteria<T extends FunctionSetableCriteria> =
 	T['nature'] extends (keyof NatureMap)[]
-		?  NatureMap[T['nature'][number]]
+		? NatureMap[T['nature'][number]]
 		: [T['nature']] extends [keyof NatureMap]
 			? NatureMap[T['nature']]
 			: Function;
@@ -29,9 +29,10 @@ export interface FunctionDerivedCriteria<T extends FunctionSetableCriteria> exte
 > {}
 
 export type FunctionExceptionCodes =
-	| "NATURE_PROPERTY_MALFORMED"
+	| "NATURE_PROPERTY_MISDECLARED"
 	| "NATURE_PROPERTY_STRING_MISCONFIGURED"
-	| "NATURE_PROPERTY_ARRAY_LENGTH_MISCONFIGURED"
+	| "NATURE_PROPERTY_ARRAY_MISCONFIGURED"
+	| "NATURE_PROPERTY_ARRAY_ITEM_MISDECLARED"
 	| "NATURE_PROPERTY_ARRAY_ITEM_MISCONFIGURED";
 
 export type FunctionRejectionCodes =
