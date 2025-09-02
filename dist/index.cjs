@@ -1,3 +1,5 @@
+'use strict';
+
 class SchemaException extends Error {
     constructor(message) {
         super(message);
@@ -2402,5 +2404,37 @@ const SchemaA = SchemaFactory(plugin_A);
 const InstanceA = new SchemaA({ type: "mongoId", mongoParam: true });
 */
 
-export { Schema, SchemaDataAdmission, SchemaDataRejection, SchemaException, SchemaFactory, SchemaNodeException, base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16, getInternalTag, helpers, isArray, isAscii, isAsyncFunction, isAsyncGeneratorFunction, isBase16, isBase32, isBase32Hex, isBase64, isBase64Url, isDataUrl, isDomain, isEmail, isFunction, isGeneratorFunction, isIp, isIpV4, isIpV6, isObject, isPlainObject, isTypedArray, isUuid, testers };
-//# sourceMappingURL=index.js.map
+exports.Schema = Schema;
+exports.SchemaDataAdmission = SchemaDataAdmission;
+exports.SchemaDataRejection = SchemaDataRejection;
+exports.SchemaException = SchemaException;
+exports.SchemaFactory = SchemaFactory;
+exports.SchemaNodeException = SchemaNodeException;
+exports.base16ToBase32 = base16ToBase32;
+exports.base16ToBase64 = base16ToBase64;
+exports.base32ToBase16 = base32ToBase16;
+exports.base64ToBase16 = base64ToBase16;
+exports.getInternalTag = getInternalTag;
+exports.helpers = helpers;
+exports.isArray = isArray;
+exports.isAscii = isAscii;
+exports.isAsyncFunction = isAsyncFunction;
+exports.isAsyncGeneratorFunction = isAsyncGeneratorFunction;
+exports.isBase16 = isBase16;
+exports.isBase32 = isBase32;
+exports.isBase32Hex = isBase32Hex;
+exports.isBase64 = isBase64;
+exports.isBase64Url = isBase64Url;
+exports.isDataUrl = isDataUrl;
+exports.isDomain = isDomain;
+exports.isEmail = isEmail;
+exports.isFunction = isFunction;
+exports.isGeneratorFunction = isGeneratorFunction;
+exports.isIp = isIp;
+exports.isIpV4 = isIpV4;
+exports.isIpV6 = isIpV6;
+exports.isObject = isObject;
+exports.isPlainObject = isPlainObject;
+exports.isTypedArray = isTypedArray;
+exports.isUuid = isUuid;
+exports.testers = testers;

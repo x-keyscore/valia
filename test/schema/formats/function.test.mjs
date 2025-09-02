@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { Schema, SchemaNodeException } from "../../../dist/index.js";
+import { Schema, SchemaNodeException } from "../../../dist/index.mjs";
 
 describe("\nschema > formats > function", () => {
 	const xBasicFunction = function () {};

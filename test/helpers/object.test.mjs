@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { getInternalTag } from "../../dist/index.js";
+import { getInternalTag } from "../../dist/index.mjs";
 
 describe("\nhelpers / object / getInternalTag", () => {
 	describe("Default", () => {

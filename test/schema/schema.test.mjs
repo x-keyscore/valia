@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { Schema, SchemaException, SchemaNodeException, SchemaDataRejection, SchemaDataAdmission } from "../../dist/index.js";
+import { Schema, SchemaException, SchemaNodeException, SchemaDataRejection, SchemaDataAdmission } from "../../dist/index.mjs";
 
 describe("\nschema > constructor", () => {
 	describe("'criteria' parameter", () => {

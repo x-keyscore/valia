@@ -4,11 +4,10 @@
   <br/>
   <img src="https://img.shields.io/npm/v/valia.svg?style=flat" align="center" alt="NPM version" />
   <br/>
-  <h2 align="center">Bibliothèque de validation pour TypeScript et JavaScript</h2>
+  <h3 align="center">Bibliothèque de validation pour TypeScript et JavaScript</h3>
 </p>
 
 🔌 S’intègre naturellement à vos projets, qu’ils soient front-end ou back-end, et permet de définir des schémas de manière intuitive tout en favorisant leur réutilisation.
-
 
 💡 Pensée pour allier simplicité et puissance, elle propose des fonctionnalités avancées comme l’inférence de types, ainsi que des validateurs standards tels que <strong>isEmail</strong>, <strong>isUuid</strong> ou <strong>isIp</strong>.
 
