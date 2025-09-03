@@ -5,8 +5,8 @@ export default [
   {
     input: "src/index.ts",
     output: [
-      { file: "dist/index.cjs", format: "cjs" },
-      { file: "dist/index.mjs", format: "esm" }
+      { file: "dist/index.cjs.js", format: "cjs" },
+      { file: "dist/index.mjs.js", format: "esm" }
     ],
     plugins: [
       typescript({
