@@ -73,14 +73,3 @@ export class Schema<const T extends SetableCriteria = SetableCriteria<FormatNati
 		off: this.managers.events.off
 	}
 }
-
-const objectSchema = new Schema({
-	type: "object",
-	shape: {
-		foo: { type: "string" }
-	},
-	values: {
-		type: "array",
-		tuple: [{ type: "string" }]
-	}
-});

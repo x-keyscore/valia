@@ -1,4 +1,5 @@
 <p align="center">
+  <br/>
   <img src="https://github.com/user-attachments/assets/ea937a53-9b80-43d7-93ac-81538d9526f8" align="center" alt="VALIA logo" />
   <br/>
   <br/>
@@ -6,6 +7,7 @@
   <br/>
   <h3 align="center">Bibliothèque de validation pour TypeScript et JavaScript</h3>
 </p>
+<br/>
 
 🔌 S’intègre naturellement à vos projets, qu’ils soient front-end ou back-end, et permet de définir des schémas de manière intuitive tout en favorisant leur réutilisation.
 

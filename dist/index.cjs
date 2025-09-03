@@ -2303,16 +2303,6 @@ class Schema {
         return (checker(this.managers, this.criteria, data));
     }
 }
-new Schema({
-    type: "object",
-    shape: {
-        foo: { type: "string" }
-    },
-    values: {
-        type: "array",
-        tuple: [{ type: "string" }]
-    }
-});
 
 class Issue extends Error {
     constructor(context, message, stack, plugin) {
