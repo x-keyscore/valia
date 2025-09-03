@@ -1,6 +1,6 @@
 {
 	"name": "valia",
-	"version": "4.0.5",
+	"version": "4.0.6",
 	"description": "Validation library for TypeScript and JavaScript.",
 	"homepage": "https://github.com/x-keyscore/valia#readme",
 	"type": "module",
