@@ -1958,7 +1958,7 @@ const ObjectFormat = {
                     return ("SHAPE_UNSATISFIED");
                 }
                 let enforcedMissing = enforcedKeyCount;
-                for (let i = 0; i < definedKeyCount; i++) {
+                for (let i = definedKeyCount - 1; i >= 0; i--) {
                     const key = definedKeyArray[i];
                     if (enforcedKeySet.has(key)) {
                         enforcedMissing--;
@@ -1977,7 +1977,7 @@ const ObjectFormat = {
             }
             else {
                 let enforcedMissing = enforcedKeyCount;
-                for (let i = 0; i < definedKeyCount; i++) {
+                for (let i = definedKeyCount - 1; i >= 0; i--) {
                     const key = definedKeyArray[i];
                     if (enforcedKeySet.has(key)) {
                         enforcedMissing--;
@@ -2095,15 +2095,13 @@ const ArrayFormat = {
             if (!isPlainObject(items)) {
                 return ("ITEMS_PROPERTY_MISDECLARED");
             }
-            if (items.type !== "unknown") {
-                chunk.push({
-                    node: items,
-                    partPath: {
-                        explicit: ["items"],
-                        implicit: ["%", "number"]
-                    }
-                });
-            }
+            chunk.push({
+                node: items,
+                partPath: {
+                    explicit: ["items"],
+                    implicit: ["%", "number"]
+                }
+            });
         }
         return (null);
     },

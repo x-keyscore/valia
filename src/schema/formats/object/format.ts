@@ -232,7 +232,7 @@ export const ObjectFormat: Format<
 				}
 
 				let enforcedMissing = enforcedKeyCount;
-				for (let i = 0; i < definedKeyCount; i++) {
+				for (let i = definedKeyCount - 1; i >= 0; i--) {
 					const key = definedKeyArray[i];
 
 					if (enforcedKeySet!.has(key)) {
@@ -252,7 +252,7 @@ export const ObjectFormat: Format<
 				}
 			} else {
 				let enforcedMissing = enforcedKeyCount;
-				for (let i = 0; i < definedKeyCount; i++) {
+				for (let i = definedKeyCount - 1; i >= 0; i--) {
 					const key = definedKeyArray[i];
 
 					if (enforcedKeySet!.has(key)) {

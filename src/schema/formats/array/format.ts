@@ -90,15 +90,13 @@ export const ArrayFormat: Format<
 				return ("ITEMS_PROPERTY_MISDECLARED");
 			}
 
-			if (items.type !== "unknown") {
-				chunk.push({
-					node: items,
-					partPath: {
-						explicit: ["items"],
-						implicit: ["%", "number"]
-					}
-				});
-			}
+			chunk.push({
+				node: items,
+				partPath: {
+					explicit: ["items"],
+					implicit: ["%", "number"]
+				}
+			});
 		}
 
 		return (null);

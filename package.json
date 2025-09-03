@@ -4,12 +4,12 @@
 	"description": "Validation library for TypeScript and JavaScript.",
 	"homepage": "https://github.com/x-keyscore/valia#readme",
 	"type": "module",
-	"main": "./dist/index.cjs",
-	"module": "./dist/index.mjs",
+	"main": "./dist/index.cjs.js",
+	"module": "./dist/index.mjs.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
-		"import": "./dist/index.mjs",
-		"require": "./dist/index.cjs"
+		"import": "./dist/index.mjs.js",
+		"require": "./dist/index.cjs.js"
 	},
 	"scripts": {
 		"start": "rollup -c && node ./dist",
