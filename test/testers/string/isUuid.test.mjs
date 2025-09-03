@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { isUuid } from "../../../dist/index.mjs";
+import { isUuid } from "../../../dist/index.mjs.js";
 
 describe("\ntesters > string > isUuid", () => {
     describe("Default", () => {

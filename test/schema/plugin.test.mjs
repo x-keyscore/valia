@@ -1,7 +1,7 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
-import { SchemaFactory } from "../../dist/index.mjs";
+import { SchemaFactory } from "../../dist/index.mjs.js";
 
 describe("\nschema > plugin", () => {
     describe("Mix of 1 plugin", () => {

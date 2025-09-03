@@ -6,7 +6,15 @@
 	"type": "module",
 	"main": "./dist/index.cjs.js",
 	"module": "./dist/index.mjs.js",
-	"types": "./dist/index.d.ts",
+	"types": "./dist/types.d.ts",
+	"exports": {
+		"./package.json": "./package.json",
+		".": {
+			"types": "./types.d.ts",
+			"import": "./index.mjs.js",
+			"require": "./index.cjs.js"
+		}
+	},
 	"scripts": {
 		"start": "rollup -c && node ./dist",
 		"clean": "rm -rf ./dist",
@@ -18,15 +26,15 @@
 	},
 	"keywords": [
 		"validator",
+		"data-validator",
+		"runtime-validator",
 		"validation",
 		"data-validation",
 		"runtime-validation",
-		"type-safety",
-		"type-checking",
-		"type-validation",
+		"javascript",
+		"javascript-validator",
 		"typescript",
-		"typescript-validator",
-		"type-guard"
+		"typescript-validator"
 	],
 	"author": "x-keyscore",
 	"license": "ISC",

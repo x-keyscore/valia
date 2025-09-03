@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { isDataUrl } from "../../../dist/index.mjs";
+import { isDataUrl } from "../../../dist/index.mjs.js";
 
 describe("\ntesters > string > isDataUrl", () => {
 	describe("Default", () => {

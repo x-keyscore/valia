@@ -9,7 +9,7 @@ import {
 	isAsyncFunction,
 	isGeneratorFunction,
 	isAsyncGeneratorFunction
-} from "../../../dist/index.mjs";
+} from "../../../dist/index.mjs.js";
 
 describe("\ntesters > object > isObject", () => {
 	describe("Default", () => {

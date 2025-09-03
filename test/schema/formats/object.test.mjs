@@ -1,7 +1,7 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
 
-import { Schema } from "../../../dist/index.mjs";
+import { Schema } from "../../../dist/index.mjs.js";
 
 describe("\nschema > formats > object", () => {
 	const xSymbol = Symbol("x");

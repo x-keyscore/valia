@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16 } from "../../dist/index.mjs";
+import { base16ToBase32, base16ToBase64, base32ToBase16, base64ToBase16 } from "../../dist/index.mjs.js";
 
 describe("\nhelpers / string / base16ToBase32", () => {
 	describe("Default", () => {

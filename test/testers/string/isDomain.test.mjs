@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-import { isDomain } from "../../../dist/index.mjs";
+import { isDomain } from "../../../dist/index.mjs.js";
 
 describe("\ntesters > string > isDomain", () => {
     describe("Default", () => {
