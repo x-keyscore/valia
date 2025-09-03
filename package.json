@@ -10,9 +10,9 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"types": "./types.d.ts",
-			"import": "./index.mjs.js",
-			"require": "./index.cjs.js"
+			"types": "./dist/types.d.ts",
+			"import": "./dist/index.mjs.js",
+			"require": "./dist/index.cjs.js"
 		}
 	},
 	"scripts": {
