@@ -9,7 +9,8 @@
 	"types": "./dist/index.d.ts",
 	"exports": {
 		"require": "./dist/index.cjs",
-		"import": "./dist/index.mjs"
+		"import": "./dist/index.mjs",
+		"types": "./dist/index.d.ts"
 	},
 	"scripts": {
 		"start": "rollup -c && node ./dist",
